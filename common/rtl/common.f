@@ -1,0 +1,9 @@
+-v ${PROJ_DIR}/common/rtl/asyncfifo.sv
+-v ${PROJ_DIR}/common/rtl/levelsync_sr.sv
+-v ${PROJ_DIR}/common/rtl/levelsync.sv
+-v ${PROJ_DIR}/common/rtl/rrarb.sv
+-v ${PROJ_DIR}/common/rtl/syncfifo_mem1r1w.sv
+-v ${PROJ_DIR}/common/rtl/syncfifo.sv
+-v ${PROJ_DIR}/common/rtl/level_delay.sv
+-v ${PROJ_DIR}/common/rtl/syncfifo_reg.sv
+-v ${PROJ_DIR}/common/rtl/syncfifo_ram.sv
