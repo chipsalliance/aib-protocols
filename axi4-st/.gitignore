@@ -1,0 +1,8 @@
+.simvision/
+*.history
+*.log
+dut/
+waves.shm/
+xcelium.d/
+xmverilog.key
+archive

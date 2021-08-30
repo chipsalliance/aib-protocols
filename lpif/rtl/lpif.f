@@ -1,0 +1,16 @@
+-v ${PROJ_DIR}/lpif/rtl/lpif.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_ctl.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_lpbk.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_lsm.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_q2_master_concat.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_q2_master_name.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_q2_master_top.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_h2_master_concat.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_h2_master_name.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_h2_master_top.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_concat.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_name.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_top.sv
+-v ${PROJ_DIR}/llink/rtl/ll_auto_sync.sv
+-v ${PROJ_DIR}/common/rtl/level_delay.sv

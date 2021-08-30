@@ -1,0 +1,377 @@
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink MAIN ar_lite  TX  33 RX   1
+    LogicLink MAIN aw_lite  TX  33 RX   1
+    LogicLink MAIN w_lite   TX  37 RX   1
+    LogicLink MAIN r_lite   TX   1 RX  35
+    LogicLink MAIN b_lite   TX   1 RX   3
+                            -------------
+    Total     MAIN          TX 105 RX  41
+
+  Channel Info
+    MAIN: Each channel is Gen2 PHY running at Half Rate with 160 bits
+    MAIN: 1x channels
+    MAIN: Total AIB bits is 160 bits
+
+       TX: DBI enabled adds 8 overhead bits per channel
+       TX: Persistent Strobe adds 1 overhead bits per channel
+       TX: Persistent Marker adds 2 overhead bits per channel
+       TX: Total overhead bits across 1 channels is 11
+       TX: Total data bits available 149
+
+       RX: DBI enabled adds 8 overhead bits per channel
+       RX: Persistent Strobe adds 1 overhead bits per channel
+       RX: Persistent Marker adds 2 overhead bits per channel
+       RX: Total overhead bits across 1 channels is 11
+       RX: Total data bits available 149
+
+  MAIN TX needs 105 bits of data and has 149 bits available across 1x Gen2 Half Rate channels so  44 spare bits
+  MAIN RX needs  41 bits of data and has 149 bits available across 1x Gen2 Half Rate channels so 108 spare bits
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to Logic Link Data Mapping
+// This AXI Data FIFO packing
+  assign tx_ar_lite_data      [  0 +: 32] = user_araddr          [  0 +: 32]
+  assign tx_aw_lite_data      [  0 +: 32] = user_awaddr          [  0 +: 32]
+  assign tx_w_lite_data       [  0 +: 32] = user_wdata           [  0 +: 32]
+  assign tx_w_lite_data       [ 32 +:  4] = user_wstrb           [  0 +:  4]
+
+  assign rx_r_lite_data       [  0 +: 32] = user_rdata           [  0 +: 32]
+  assign rx_r_lite_data       [ 32 +:  2] = user_rresp           [  0 +:  2]
+  assign rx_b_lite_data       [  0 +:  2] = user_bresp           [  0 +:  2]
+// AXI to Logic Link Data Mapping
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [  0] = tx_ar_lite_pushbit  
+  Channel 0 TX   [  1] = user_araddr          [  0]
+  Channel 0 TX   [  2] = user_araddr          [  1]
+  Channel 0 TX   [  3] = user_araddr          [  2]
+  Channel 0 TX   [  4] = 1'b0 // MARKER
+  Channel 0 TX   [  5] = user_araddr          [  3]
+  Channel 0 TX   [  6] = user_araddr          [  4]
+  Channel 0 TX   [  7] = user_araddr          [  5]
+  Channel 0 TX   [  8] = user_araddr          [  6]
+  Channel 0 TX   [  9] = user_araddr          [  7]
+  Channel 0 TX   [ 10] = user_araddr          [  8]
+  Channel 0 TX   [ 11] = user_araddr          [  9]
+  Channel 0 TX   [ 12] = user_araddr          [ 10]
+  Channel 0 TX   [ 13] = user_araddr          [ 11]
+  Channel 0 TX   [ 14] = user_araddr          [ 12]
+  Channel 0 TX   [ 15] = user_araddr          [ 13]
+  Channel 0 TX   [ 16] = user_araddr          [ 14]
+  Channel 0 TX   [ 17] = user_araddr          [ 15]
+  Channel 0 TX   [ 18] = user_araddr          [ 16]
+  Channel 0 TX   [ 19] = user_araddr          [ 17]
+  Channel 0 TX   [ 20] = user_araddr          [ 18]
+  Channel 0 TX   [ 21] = user_araddr          [ 19]
+  Channel 0 TX   [ 22] = user_araddr          [ 20]
+  Channel 0 TX   [ 23] = user_araddr          [ 21]
+  Channel 0 TX   [ 24] = user_araddr          [ 22]
+  Channel 0 TX   [ 25] = user_araddr          [ 23]
+  Channel 0 TX   [ 26] = user_araddr          [ 24]
+  Channel 0 TX   [ 27] = user_araddr          [ 25]
+  Channel 0 TX   [ 28] = user_araddr          [ 26]
+  Channel 0 TX   [ 29] = user_araddr          [ 27]
+  Channel 0 TX   [ 30] = user_araddr          [ 28]
+  Channel 0 TX   [ 31] = user_araddr          [ 29]
+  Channel 0 TX   [ 32] = user_araddr          [ 30]
+  Channel 0 TX   [ 33] = user_araddr          [ 31]
+  Channel 0 TX   [ 34] = tx_aw_lite_pushbit  
+  Channel 0 TX   [ 35] = user_awaddr          [  0]
+  Channel 0 TX   [ 36] = user_awaddr          [  1]
+  Channel 0 TX   [ 37] = user_awaddr          [  2]
+  Channel 0 TX   [ 38] = 1'b0 // DBI
+  Channel 0 TX   [ 39] = 1'b0 // DBI
+  Channel 0 TX   [ 40] = user_awaddr          [  3]
+  Channel 0 TX   [ 41] = user_awaddr          [  4]
+  Channel 0 TX   [ 42] = user_awaddr          [  5]
+  Channel 0 TX   [ 43] = user_awaddr          [  6]
+  Channel 0 TX   [ 44] = user_awaddr          [  7]
+  Channel 0 TX   [ 45] = user_awaddr          [  8]
+  Channel 0 TX   [ 46] = user_awaddr          [  9]
+  Channel 0 TX   [ 47] = user_awaddr          [ 10]
+  Channel 0 TX   [ 48] = user_awaddr          [ 11]
+  Channel 0 TX   [ 49] = user_awaddr          [ 12]
+  Channel 0 TX   [ 50] = user_awaddr          [ 13]
+  Channel 0 TX   [ 51] = user_awaddr          [ 14]
+  Channel 0 TX   [ 52] = user_awaddr          [ 15]
+  Channel 0 TX   [ 53] = user_awaddr          [ 16]
+  Channel 0 TX   [ 54] = user_awaddr          [ 17]
+  Channel 0 TX   [ 55] = user_awaddr          [ 18]
+  Channel 0 TX   [ 56] = user_awaddr          [ 19]
+  Channel 0 TX   [ 57] = user_awaddr          [ 20]
+  Channel 0 TX   [ 58] = user_awaddr          [ 21]
+  Channel 0 TX   [ 59] = user_awaddr          [ 22]
+  Channel 0 TX   [ 60] = user_awaddr          [ 23]
+  Channel 0 TX   [ 61] = user_awaddr          [ 24]
+  Channel 0 TX   [ 62] = user_awaddr          [ 25]
+  Channel 0 TX   [ 63] = user_awaddr          [ 26]
+  Channel 0 TX   [ 64] = user_awaddr          [ 27]
+  Channel 0 TX   [ 65] = user_awaddr          [ 28]
+  Channel 0 TX   [ 66] = user_awaddr          [ 29]
+  Channel 0 TX   [ 67] = user_awaddr          [ 30]
+  Channel 0 TX   [ 68] = user_awaddr          [ 31]
+  Channel 0 TX   [ 69] = tx_w_lite_pushbit   
+  Channel 0 TX   [ 70] = user_wdata           [  0]
+  Channel 0 TX   [ 71] = user_wdata           [  1]
+  Channel 0 TX   [ 72] = user_wdata           [  2]
+  Channel 0 TX   [ 73] = user_wdata           [  3]
+  Channel 0 TX   [ 74] = user_wdata           [  4]
+  Channel 0 TX   [ 75] = user_wdata           [  5]
+  Channel 0 TX   [ 76] = 1'b0 // STROBE
+  Channel 0 TX   [ 77] = user_wdata           [  6]
+  Channel 0 TX   [ 78] = 1'b0 // DBI
+  Channel 0 TX   [ 79] = 1'b0 // DBI
+  Channel 0 TX   [ 80] = user_wdata           [  7]
+  Channel 0 TX   [ 81] = user_wdata           [  8]
+  Channel 0 TX   [ 82] = user_wdata           [  9]
+  Channel 0 TX   [ 83] = user_wdata           [ 10]
+  Channel 0 TX   [ 84] = 1'b0 // MARKER
+  Channel 0 TX   [ 85] = user_wdata           [ 11]
+  Channel 0 TX   [ 86] = user_wdata           [ 12]
+  Channel 0 TX   [ 87] = user_wdata           [ 13]
+  Channel 0 TX   [ 88] = user_wdata           [ 14]
+  Channel 0 TX   [ 89] = user_wdata           [ 15]
+  Channel 0 TX   [ 90] = user_wdata           [ 16]
+  Channel 0 TX   [ 91] = user_wdata           [ 17]
+  Channel 0 TX   [ 92] = user_wdata           [ 18]
+  Channel 0 TX   [ 93] = user_wdata           [ 19]
+  Channel 0 TX   [ 94] = user_wdata           [ 20]
+  Channel 0 TX   [ 95] = user_wdata           [ 21]
+  Channel 0 TX   [ 96] = user_wdata           [ 22]
+  Channel 0 TX   [ 97] = user_wdata           [ 23]
+  Channel 0 TX   [ 98] = user_wdata           [ 24]
+  Channel 0 TX   [ 99] = user_wdata           [ 25]
+  Channel 0 TX   [100] = user_wdata           [ 26]
+  Channel 0 TX   [101] = user_wdata           [ 27]
+  Channel 0 TX   [102] = user_wdata           [ 28]
+  Channel 0 TX   [103] = user_wdata           [ 29]
+  Channel 0 TX   [104] = user_wdata           [ 30]
+  Channel 0 TX   [105] = user_wdata           [ 31]
+  Channel 0 TX   [106] = user_wstrb           [  0]
+  Channel 0 TX   [107] = user_wstrb           [  1]
+  Channel 0 TX   [108] = user_wstrb           [  2]
+  Channel 0 TX   [109] = user_wstrb           [  3]
+  Channel 0 TX   [110] = tx_r_lite_credit    
+  Channel 0 TX   [111] = tx_b_lite_credit    
+  Channel 0 TX   [112] = 1'b0                
+  Channel 0 TX   [113] = 1'b0                
+  Channel 0 TX   [114] = 1'b0                
+  Channel 0 TX   [115] = 1'b0                
+  Channel 0 TX   [116] = 1'b0                
+  Channel 0 TX   [117] = 1'b0                
+  Channel 0 TX   [118] = 1'b0 // DBI
+  Channel 0 TX   [119] = 1'b0 // DBI
+  Channel 0 TX   [120] = 1'b0                
+  Channel 0 TX   [121] = 1'b0                
+  Channel 0 TX   [122] = 1'b0                
+  Channel 0 TX   [123] = 1'b0                
+  Channel 0 TX   [124] = 1'b0                
+  Channel 0 TX   [125] = 1'b0                
+  Channel 0 TX   [126] = 1'b0                
+  Channel 0 TX   [127] = 1'b0                
+  Channel 0 TX   [128] = 1'b0                
+  Channel 0 TX   [129] = 1'b0                
+  Channel 0 TX   [130] = 1'b0                
+  Channel 0 TX   [131] = 1'b0                
+  Channel 0 TX   [132] = 1'b0                
+  Channel 0 TX   [133] = 1'b0                
+  Channel 0 TX   [134] = 1'b0                
+  Channel 0 TX   [135] = 1'b0                
+  Channel 0 TX   [136] = 1'b0                
+  Channel 0 TX   [137] = 1'b0                
+  Channel 0 TX   [138] = 1'b0                
+  Channel 0 TX   [139] = 1'b0                
+  Channel 0 TX   [140] = 1'b0                
+  Channel 0 TX   [141] = 1'b0                
+  Channel 0 TX   [142] = 1'b0                
+  Channel 0 TX   [143] = 1'b0                
+  Channel 0 TX   [144] = 1'b0                
+  Channel 0 TX   [145] = 1'b0                
+  Channel 0 TX   [146] = 1'b0                
+  Channel 0 TX   [147] = 1'b0                
+  Channel 0 TX   [148] = 1'b0                
+  Channel 0 TX   [149] = 1'b0                
+  Channel 0 TX   [150] = 1'b0                
+  Channel 0 TX   [151] = 1'b0                
+  Channel 0 TX   [152] = 1'b0                
+  Channel 0 TX   [153] = 1'b0                
+  Channel 0 TX   [154] = 1'b0                
+  Channel 0 TX   [155] = 1'b0                
+  Channel 0 TX   [156] = 1'b0                
+  Channel 0 TX   [157] = 1'b0                
+  Channel 0 TX   [158] = 1'b0 // DBI
+  Channel 0 TX   [159] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [  0] = rx_ar_lite_credit   
+  Channel 0 RX   [  1] = rx_aw_lite_credit   
+  Channel 0 RX   [  2] = rx_w_lite_credit    
+  Channel 0 RX   [  3] = rx_r_lite_pushbit   
+  Channel 0 RX   [  4] = 1'b0 // MARKER
+  Channel 0 RX   [  5] = user_rdata           [  0]
+  Channel 0 RX   [  6] = user_rdata           [  1]
+  Channel 0 RX   [  7] = user_rdata           [  2]
+  Channel 0 RX   [  8] = user_rdata           [  3]
+  Channel 0 RX   [  9] = user_rdata           [  4]
+  Channel 0 RX   [ 10] = user_rdata           [  5]
+  Channel 0 RX   [ 11] = user_rdata           [  6]
+  Channel 0 RX   [ 12] = user_rdata           [  7]
+  Channel 0 RX   [ 13] = user_rdata           [  8]
+  Channel 0 RX   [ 14] = user_rdata           [  9]
+  Channel 0 RX   [ 15] = user_rdata           [ 10]
+  Channel 0 RX   [ 16] = user_rdata           [ 11]
+  Channel 0 RX   [ 17] = user_rdata           [ 12]
+  Channel 0 RX   [ 18] = user_rdata           [ 13]
+  Channel 0 RX   [ 19] = user_rdata           [ 14]
+  Channel 0 RX   [ 20] = user_rdata           [ 15]
+  Channel 0 RX   [ 21] = user_rdata           [ 16]
+  Channel 0 RX   [ 22] = user_rdata           [ 17]
+  Channel 0 RX   [ 23] = user_rdata           [ 18]
+  Channel 0 RX   [ 24] = user_rdata           [ 19]
+  Channel 0 RX   [ 25] = user_rdata           [ 20]
+  Channel 0 RX   [ 26] = user_rdata           [ 21]
+  Channel 0 RX   [ 27] = user_rdata           [ 22]
+  Channel 0 RX   [ 28] = user_rdata           [ 23]
+  Channel 0 RX   [ 29] = user_rdata           [ 24]
+  Channel 0 RX   [ 30] = user_rdata           [ 25]
+  Channel 0 RX   [ 31] = user_rdata           [ 26]
+  Channel 0 RX   [ 32] = user_rdata           [ 27]
+  Channel 0 RX   [ 33] = user_rdata           [ 28]
+  Channel 0 RX   [ 34] = user_rdata           [ 29]
+  Channel 0 RX   [ 35] = user_rdata           [ 30]
+  Channel 0 RX   [ 36] = user_rdata           [ 31]
+  Channel 0 RX   [ 37] = user_rresp           [  0]
+  Channel 0 RX   [ 38] = 1'b0 // DBI
+  Channel 0 RX   [ 39] = 1'b0 // DBI
+  Channel 0 RX   [ 40] = user_rresp           [  1]
+  Channel 0 RX   [ 41] = rx_b_lite_pushbit   
+  Channel 0 RX   [ 42] = user_bresp           [  0]
+  Channel 0 RX   [ 43] = user_bresp           [  1]
+  Channel 0 RX   [ 44] = 1'b0                
+  Channel 0 RX   [ 45] = 1'b0                
+  Channel 0 RX   [ 46] = 1'b0                
+  Channel 0 RX   [ 47] = 1'b0                
+  Channel 0 RX   [ 48] = 1'b0                
+  Channel 0 RX   [ 49] = 1'b0                
+  Channel 0 RX   [ 50] = 1'b0                
+  Channel 0 RX   [ 51] = 1'b0                
+  Channel 0 RX   [ 52] = 1'b0                
+  Channel 0 RX   [ 53] = 1'b0                
+  Channel 0 RX   [ 54] = 1'b0                
+  Channel 0 RX   [ 55] = 1'b0                
+  Channel 0 RX   [ 56] = 1'b0                
+  Channel 0 RX   [ 57] = 1'b0                
+  Channel 0 RX   [ 58] = 1'b0                
+  Channel 0 RX   [ 59] = 1'b0                
+  Channel 0 RX   [ 60] = 1'b0                
+  Channel 0 RX   [ 61] = 1'b0                
+  Channel 0 RX   [ 62] = 1'b0                
+  Channel 0 RX   [ 63] = 1'b0                
+  Channel 0 RX   [ 64] = 1'b0                
+  Channel 0 RX   [ 65] = 1'b0                
+  Channel 0 RX   [ 66] = 1'b0                
+  Channel 0 RX   [ 67] = 1'b0                
+  Channel 0 RX   [ 68] = 1'b0                
+  Channel 0 RX   [ 69] = 1'b0                
+  Channel 0 RX   [ 70] = 1'b0                
+  Channel 0 RX   [ 71] = 1'b0                
+  Channel 0 RX   [ 72] = 1'b0                
+  Channel 0 RX   [ 73] = 1'b0                
+  Channel 0 RX   [ 74] = 1'b0                
+  Channel 0 RX   [ 75] = 1'b0                
+  Channel 0 RX   [ 76] = 1'b0 // STROBE
+  Channel 0 RX   [ 77] = 1'b0                
+  Channel 0 RX   [ 78] = 1'b0 // DBI
+  Channel 0 RX   [ 79] = 1'b0 // DBI
+  Channel 0 RX   [ 80] = 1'b0                
+  Channel 0 RX   [ 81] = 1'b0                
+  Channel 0 RX   [ 82] = 1'b0                
+  Channel 0 RX   [ 83] = 1'b0                
+  Channel 0 RX   [ 84] = 1'b0 // MARKER
+  Channel 0 RX   [ 85] = 1'b0                
+  Channel 0 RX   [ 86] = 1'b0                
+  Channel 0 RX   [ 87] = 1'b0                
+  Channel 0 RX   [ 88] = 1'b0                
+  Channel 0 RX   [ 89] = 1'b0                
+  Channel 0 RX   [ 90] = 1'b0                
+  Channel 0 RX   [ 91] = 1'b0                
+  Channel 0 RX   [ 92] = 1'b0                
+  Channel 0 RX   [ 93] = 1'b0                
+  Channel 0 RX   [ 94] = 1'b0                
+  Channel 0 RX   [ 95] = 1'b0                
+  Channel 0 RX   [ 96] = 1'b0                
+  Channel 0 RX   [ 97] = 1'b0                
+  Channel 0 RX   [ 98] = 1'b0                
+  Channel 0 RX   [ 99] = 1'b0                
+  Channel 0 RX   [100] = 1'b0                
+  Channel 0 RX   [101] = 1'b0                
+  Channel 0 RX   [102] = 1'b0                
+  Channel 0 RX   [103] = 1'b0                
+  Channel 0 RX   [104] = 1'b0                
+  Channel 0 RX   [105] = 1'b0                
+  Channel 0 RX   [106] = 1'b0                
+  Channel 0 RX   [107] = 1'b0                
+  Channel 0 RX   [108] = 1'b0                
+  Channel 0 RX   [109] = 1'b0                
+  Channel 0 RX   [110] = 1'b0                
+  Channel 0 RX   [111] = 1'b0                
+  Channel 0 RX   [112] = 1'b0                
+  Channel 0 RX   [113] = 1'b0                
+  Channel 0 RX   [114] = 1'b0                
+  Channel 0 RX   [115] = 1'b0                
+  Channel 0 RX   [116] = 1'b0                
+  Channel 0 RX   [117] = 1'b0                
+  Channel 0 RX   [118] = 1'b0 // DBI
+  Channel 0 RX   [119] = 1'b0 // DBI
+  Channel 0 RX   [120] = 1'b0                
+  Channel 0 RX   [121] = 1'b0                
+  Channel 0 RX   [122] = 1'b0                
+  Channel 0 RX   [123] = 1'b0                
+  Channel 0 RX   [124] = 1'b0                
+  Channel 0 RX   [125] = 1'b0                
+  Channel 0 RX   [126] = 1'b0                
+  Channel 0 RX   [127] = 1'b0                
+  Channel 0 RX   [128] = 1'b0                
+  Channel 0 RX   [129] = 1'b0                
+  Channel 0 RX   [130] = 1'b0                
+  Channel 0 RX   [131] = 1'b0                
+  Channel 0 RX   [132] = 1'b0                
+  Channel 0 RX   [133] = 1'b0                
+  Channel 0 RX   [134] = 1'b0                
+  Channel 0 RX   [135] = 1'b0                
+  Channel 0 RX   [136] = 1'b0                
+  Channel 0 RX   [137] = 1'b0                
+  Channel 0 RX   [138] = 1'b0                
+  Channel 0 RX   [139] = 1'b0                
+  Channel 0 RX   [140] = 1'b0                
+  Channel 0 RX   [141] = 1'b0                
+  Channel 0 RX   [142] = 1'b0                
+  Channel 0 RX   [143] = 1'b0                
+  Channel 0 RX   [144] = 1'b0                
+  Channel 0 RX   [145] = 1'b0                
+  Channel 0 RX   [146] = 1'b0                
+  Channel 0 RX   [147] = 1'b0                
+  Channel 0 RX   [148] = 1'b0                
+  Channel 0 RX   [149] = 1'b0                
+  Channel 0 RX   [150] = 1'b0                
+  Channel 0 RX   [151] = 1'b0                
+  Channel 0 RX   [152] = 1'b0                
+  Channel 0 RX   [153] = 1'b0                
+  Channel 0 RX   [154] = 1'b0                
+  Channel 0 RX   [155] = 1'b0                
+  Channel 0 RX   [156] = 1'b0                
+  Channel 0 RX   [157] = 1'b0                
+  Channel 0 RX   [158] = 1'b0 // DBI
+  Channel 0 RX   [159] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////

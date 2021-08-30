@@ -1,0 +1,11 @@
+-v ${PROJ_DIR}/llink/rtl/ll_receive.sv
+-v ${PROJ_DIR}/llink/rtl/ll_rx_concat_onechan.sv
+-v ${PROJ_DIR}/llink/rtl/ll_rx_ctrl.sv
+-v ${PROJ_DIR}/llink/rtl/ll_rx_mux.sv
+-v ${PROJ_DIR}/llink/rtl/ll_rx_push.sv
+-v ${PROJ_DIR}/llink/rtl/ll_transmit.sv
+-v ${PROJ_DIR}/llink/rtl/ll_tx_concat_onechan.sv
+-v ${PROJ_DIR}/llink/rtl/ll_tx_cred.sv
+-v ${PROJ_DIR}/llink/rtl/ll_tx_ctrl.sv
+-v ${PROJ_DIR}/llink/rtl/ll_tx_mux.sv
+-v ${PROJ_DIR}/llink/rtl/ll_auto_sync.sv

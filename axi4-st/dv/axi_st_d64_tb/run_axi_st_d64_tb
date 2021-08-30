@@ -1,0 +1,4 @@
+#!/bin/tcsh
+
+#Run Sim
+xmverilog -f axi_st_d64_tb.f $*

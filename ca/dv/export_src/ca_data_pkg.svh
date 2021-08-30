@@ -1,0 +1,13 @@
+`ifndef _CA_DATA_PKG_
+`define _CA_DATA_PKG_
+////////////////////////////////////////////////////////////////////
+package ca_data_pkg;
+
+    import uvm_pkg::*;
+    `include "uvm_macros.svh"
+    
+    `include "./ca_seq_item.sv"
+
+////////////////////////////////////////////////////////////////////
+endpackage : ca_data_pkg
+`endif

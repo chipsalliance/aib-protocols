@@ -1,0 +1,7 @@
+ll_* files are the Logic Link base files.
+
+axi_mm_master* - Are generated files configured for the AXI MM Master side.
+
+axi_mm_slave_* - Are generated files configured for the AXI MM Slave side.
+
+two_axi_mm_chiplet.sv - Is a top level module with both AXI MM Master and Slave.

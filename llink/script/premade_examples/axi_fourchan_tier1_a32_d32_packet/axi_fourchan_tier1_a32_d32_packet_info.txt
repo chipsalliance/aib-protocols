@@ -1,0 +1,258 @@
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink MAIN     ar       TX   65  RX    1
+    LogicLink MAIN     aw       TX   65  RX    1
+    LogicLink MAIN     w        TX   70  RX    1
+    LogicLink MAIN     r        TX    1  RX   72
+    LogicLink MAIN     b        TX    1  RX    7
+                                -------  -------
+    Total     MAIN              TX  202  RX   82
+
+  Channel Info
+    MAIN: Each channel is Tiered Mode with 74 bits
+    MAIN: 1x channels
+    MAIN: Total AIB bits is 74 bits
+
+       TX: No DBI
+       TX: Strobe is Recoverable or non-existent
+       TX: Marker is Recoverable or non-existent
+       TX: Total overhead bits across 1 channels is 0
+       TX: Total data bits available 74
+
+       RX: No DBI
+       RX: Strobe is Recoverable or non-existent
+       RX: Marker is Recoverable or non-existent
+       RX: Total overhead bits across 1 channels is 0
+       RX: Total data bits available 74
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Master to Slave Packetization
+  TX: Total data bits available     74
+    TX: Header Size                  2
+    TX: Packet Data Size            70
+    TX: Common (credit return)       2
+ Packet 0: ar00
+    tx_packet_enc    [   0 +:   2] = 0                                 // Encoding
+    tx_packet_data 0 [   0 +:   4] = user_arid           [   0 +:   4] // Llink Data
+    tx_packet_data 0 [   4 +:   2] = user_arsize         [   0 +:   2] // Llink Data
+    tx_packet_data 0 [   6 +:   8] = user_arlen          [   0 +:   8] // Llink Data
+    tx_packet_data 0 [  14 +:   2] = user_arburst        [   0 +:   2] // Llink Data
+    tx_packet_data 0 [  16 +:  48] = user_araddr         [   0 +:  48] // Llink Data
+    tx_packet_data 0 [  64 +:   1] = rx_ar_pushbit                     // Push Bit
+    tx_packet_data 0 [  65 +:   5] = 0                                 // Spare
+    tx_packet_common [   0 +:   1] = tx_r_credit                       // Return Credit
+    tx_packet_common [   1 +:   1] = tx_b_credit                       // Return Credit
+ Packet 1: aw00
+    tx_packet_enc    [   0 +:   2] = 1                                 // Encoding
+    tx_packet_data 1 [   0 +:   4] = user_awid           [   0 +:   4] // Llink Data
+    tx_packet_data 1 [   4 +:   2] = user_awsize         [   0 +:   2] // Llink Data
+    tx_packet_data 1 [   6 +:   8] = user_awlen          [   0 +:   8] // Llink Data
+    tx_packet_data 1 [  14 +:   2] = user_awburst        [   0 +:   2] // Llink Data
+    tx_packet_data 1 [  16 +:  48] = user_awaddr         [   0 +:  48] // Llink Data
+    tx_packet_data 1 [  64 +:   1] = rx_aw_pushbit                     // Push Bit
+    tx_packet_data 1 [  65 +:   5] = 0                                 // Spare
+    tx_packet_common [   0 +:   1] = tx_r_credit                       // Return Credit
+    tx_packet_common [   1 +:   1] = tx_b_credit                       // Return Credit
+ Packet 2: w00
+    tx_packet_enc    [   0 +:   2] = 2                                 // Encoding
+    tx_packet_data 2 [   0 +:   4] = user_wid            [   0 +:   4] // Llink Data
+    tx_packet_data 2 [   4 +:  64] = user_wdata          [   0 +:  64] // Llink Data
+    tx_packet_data 2 [  68 +:   1] = user_wlast                        // Llink Data
+    tx_packet_data 2 [  69 +:   1] = rx_w_pushbit                      // Push Bit
+    tx_packet_common [   0 +:   1] = tx_r_credit                       // Return Credit
+    tx_packet_common [   1 +:   1] = tx_b_credit                       // Return Credit
+
+// Master to Slave Packetization
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Slave to Master Packetization
+  RX: Total data bits available     74
+    RX: Header Size                  1
+    RX: Packet Data Size            70
+    RX: Common (credit return)       3
+ Packet 0: r00___b00
+    rx_packet_enc    [   0 +:   1] = 0                                 // Encoding
+    rx_packet_data 0 [   0 +:   4] = user_bid            [   0 +:   4] // Llink Data
+    rx_packet_data 0 [   4 +:   2] = user_bresp          [   0 +:   2] // Llink Data
+    rx_packet_data 0 [   6 +:   1] = rx_b_pushbit                      // Push Bit
+    rx_packet_data 0 [   7 +:   1] = user_rresp          [   1 +:   1] // Llink Data
+    rx_packet_data 0 [   8 +:   1] = rx_r_pushbit                      // Push Bit
+    rx_packet_data 0 [   9 +:  61] = 0                                 // Spare
+    rx_packet_common [   0 +:   1] = rx_ar_credit                      // Return Credit
+    rx_packet_common [   1 +:   1] = rx_aw_credit                      // Return Credit
+    rx_packet_common [   2 +:   1] = rx_w_credit                       // Return Credit
+ Packet 1: r01
+    rx_packet_enc    [   0 +:   1] = 1                                 // Encoding
+    rx_packet_data 1 [   0 +:   4] = user_rid            [   0 +:   4] // Llink Data
+    rx_packet_data 1 [   4 +:  64] = user_rdata          [   0 +:  64] // Llink Data
+    rx_packet_data 1 [  68 +:   1] = user_rlast                        // Llink Data
+    rx_packet_data 1 [  69 +:   1] = user_rresp          [   0 +:   1] // Llink Data
+    rx_packet_common [   0 +:   1] = rx_ar_credit                      // Return Credit
+    rx_packet_common [   1 +:   1] = rx_aw_credit                      // Return Credit
+    rx_packet_common [   2 +:   1] = rx_w_credit                       // Return Credit
+
+// Slave to Master Packetization
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [   0] = tx_grant_enc         [   0]
+  Channel 0 TX   [   1] = tx_grant_enc         [   1]
+  Channel 0 TX   [   2] = tx_packet_data       [   0]
+  Channel 0 TX   [   3] = tx_packet_data       [   1]
+  Channel 0 TX   [   4] = tx_packet_data       [   2]
+  Channel 0 TX   [   5] = tx_packet_data       [   3]
+  Channel 0 TX   [   6] = tx_packet_data       [   4]
+  Channel 0 TX   [   7] = tx_packet_data       [   5]
+  Channel 0 TX   [   8] = tx_packet_data       [   6]
+  Channel 0 TX   [   9] = tx_packet_data       [   7]
+  Channel 0 TX   [  10] = tx_packet_data       [   8]
+  Channel 0 TX   [  11] = tx_packet_data       [   9]
+  Channel 0 TX   [  12] = tx_packet_data       [  10]
+  Channel 0 TX   [  13] = tx_packet_data       [  11]
+  Channel 0 TX   [  14] = tx_packet_data       [  12]
+  Channel 0 TX   [  15] = tx_packet_data       [  13]
+  Channel 0 TX   [  16] = tx_packet_data       [  14]
+  Channel 0 TX   [  17] = tx_packet_data       [  15]
+  Channel 0 TX   [  18] = tx_packet_data       [  16]
+  Channel 0 TX   [  19] = tx_packet_data       [  17]
+  Channel 0 TX   [  20] = tx_packet_data       [  18]
+  Channel 0 TX   [  21] = tx_packet_data       [  19]
+  Channel 0 TX   [  22] = tx_packet_data       [  20]
+  Channel 0 TX   [  23] = tx_packet_data       [  21]
+  Channel 0 TX   [  24] = tx_packet_data       [  22]
+  Channel 0 TX   [  25] = tx_packet_data       [  23]
+  Channel 0 TX   [  26] = tx_packet_data       [  24]
+  Channel 0 TX   [  27] = tx_packet_data       [  25]
+  Channel 0 TX   [  28] = tx_packet_data       [  26]
+  Channel 0 TX   [  29] = tx_packet_data       [  27]
+  Channel 0 TX   [  30] = tx_packet_data       [  28]
+  Channel 0 TX   [  31] = tx_packet_data       [  29]
+  Channel 0 TX   [  32] = tx_packet_data       [  30]
+  Channel 0 TX   [  33] = tx_packet_data       [  31]
+  Channel 0 TX   [  34] = tx_packet_data       [  32]
+  Channel 0 TX   [  35] = tx_packet_data       [  33]
+  Channel 0 TX   [  36] = tx_packet_data       [  34]
+  Channel 0 TX   [  37] = tx_packet_data       [  35]
+  Channel 0 TX   [  38] = tx_packet_data       [  36]
+  Channel 0 TX   [  39] = tx_packet_data       [  37]
+  Channel 0 TX   [  40] = tx_packet_data       [  38]
+  Channel 0 TX   [  41] = tx_packet_data       [  39]
+  Channel 0 TX   [  42] = tx_packet_data       [  40]
+  Channel 0 TX   [  43] = tx_packet_data       [  41]
+  Channel 0 TX   [  44] = tx_packet_data       [  42]
+  Channel 0 TX   [  45] = tx_packet_data       [  43]
+  Channel 0 TX   [  46] = tx_packet_data       [  44]
+  Channel 0 TX   [  47] = tx_packet_data       [  45]
+  Channel 0 TX   [  48] = tx_packet_data       [  46]
+  Channel 0 TX   [  49] = tx_packet_data       [  47]
+  Channel 0 TX   [  50] = tx_packet_data       [  48]
+  Channel 0 TX   [  51] = tx_packet_data       [  49]
+  Channel 0 TX   [  52] = tx_packet_data       [  50]
+  Channel 0 TX   [  53] = tx_packet_data       [  51]
+  Channel 0 TX   [  54] = tx_packet_data       [  52]
+  Channel 0 TX   [  55] = tx_packet_data       [  53]
+  Channel 0 TX   [  56] = tx_packet_data       [  54]
+  Channel 0 TX   [  57] = tx_packet_data       [  55]
+  Channel 0 TX   [  58] = tx_packet_data       [  56]
+  Channel 0 TX   [  59] = tx_packet_data       [  57]
+  Channel 0 TX   [  60] = tx_packet_data       [  58]
+  Channel 0 TX   [  61] = tx_packet_data       [  59]
+  Channel 0 TX   [  62] = tx_packet_data       [  60]
+  Channel 0 TX   [  63] = tx_packet_data       [  61]
+  Channel 0 TX   [  64] = tx_packet_data       [  62]
+  Channel 0 TX   [  65] = tx_packet_data       [  63]
+  Channel 0 TX   [  66] = tx_packet_data       [  64]
+  Channel 0 TX   [  67] = tx_packet_data       [  65]
+  Channel 0 TX   [  68] = tx_packet_data       [  66]
+  Channel 0 TX   [  69] = tx_packet_data       [  67]
+  Channel 0 TX   [  70] = tx_packet_data       [  68]
+  Channel 0 TX   [  71] = tx_packet_data       [  69]
+  Channel 0 TX   [  72] = tx_r_credit         
+  Channel 0 TX   [  73] = tx_b_credit         
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [   0] = tx_grant_enc         [   0]
+  Channel 0 RX   [   1] = tx_packet_data       [   0]
+  Channel 0 RX   [   2] = tx_packet_data       [   1]
+  Channel 0 RX   [   3] = tx_packet_data       [   2]
+  Channel 0 RX   [   4] = tx_packet_data       [   3]
+  Channel 0 RX   [   5] = tx_packet_data       [   4]
+  Channel 0 RX   [   6] = tx_packet_data       [   5]
+  Channel 0 RX   [   7] = tx_packet_data       [   6]
+  Channel 0 RX   [   8] = tx_packet_data       [   7]
+  Channel 0 RX   [   9] = tx_packet_data       [   8]
+  Channel 0 RX   [  10] = tx_packet_data       [   9]
+  Channel 0 RX   [  11] = tx_packet_data       [  10]
+  Channel 0 RX   [  12] = tx_packet_data       [  11]
+  Channel 0 RX   [  13] = tx_packet_data       [  12]
+  Channel 0 RX   [  14] = tx_packet_data       [  13]
+  Channel 0 RX   [  15] = tx_packet_data       [  14]
+  Channel 0 RX   [  16] = tx_packet_data       [  15]
+  Channel 0 RX   [  17] = tx_packet_data       [  16]
+  Channel 0 RX   [  18] = tx_packet_data       [  17]
+  Channel 0 RX   [  19] = tx_packet_data       [  18]
+  Channel 0 RX   [  20] = tx_packet_data       [  19]
+  Channel 0 RX   [  21] = tx_packet_data       [  20]
+  Channel 0 RX   [  22] = tx_packet_data       [  21]
+  Channel 0 RX   [  23] = tx_packet_data       [  22]
+  Channel 0 RX   [  24] = tx_packet_data       [  23]
+  Channel 0 RX   [  25] = tx_packet_data       [  24]
+  Channel 0 RX   [  26] = tx_packet_data       [  25]
+  Channel 0 RX   [  27] = tx_packet_data       [  26]
+  Channel 0 RX   [  28] = tx_packet_data       [  27]
+  Channel 0 RX   [  29] = tx_packet_data       [  28]
+  Channel 0 RX   [  30] = tx_packet_data       [  29]
+  Channel 0 RX   [  31] = tx_packet_data       [  30]
+  Channel 0 RX   [  32] = tx_packet_data       [  31]
+  Channel 0 RX   [  33] = tx_packet_data       [  32]
+  Channel 0 RX   [  34] = tx_packet_data       [  33]
+  Channel 0 RX   [  35] = tx_packet_data       [  34]
+  Channel 0 RX   [  36] = tx_packet_data       [  35]
+  Channel 0 RX   [  37] = tx_packet_data       [  36]
+  Channel 0 RX   [  38] = tx_packet_data       [  37]
+  Channel 0 RX   [  39] = tx_packet_data       [  38]
+  Channel 0 RX   [  40] = tx_packet_data       [  39]
+  Channel 0 RX   [  41] = tx_packet_data       [  40]
+  Channel 0 RX   [  42] = tx_packet_data       [  41]
+  Channel 0 RX   [  43] = tx_packet_data       [  42]
+  Channel 0 RX   [  44] = tx_packet_data       [  43]
+  Channel 0 RX   [  45] = tx_packet_data       [  44]
+  Channel 0 RX   [  46] = tx_packet_data       [  45]
+  Channel 0 RX   [  47] = tx_packet_data       [  46]
+  Channel 0 RX   [  48] = tx_packet_data       [  47]
+  Channel 0 RX   [  49] = tx_packet_data       [  48]
+  Channel 0 RX   [  50] = tx_packet_data       [  49]
+  Channel 0 RX   [  51] = tx_packet_data       [  50]
+  Channel 0 RX   [  52] = tx_packet_data       [  51]
+  Channel 0 RX   [  53] = tx_packet_data       [  52]
+  Channel 0 RX   [  54] = tx_packet_data       [  53]
+  Channel 0 RX   [  55] = tx_packet_data       [  54]
+  Channel 0 RX   [  56] = tx_packet_data       [  55]
+  Channel 0 RX   [  57] = tx_packet_data       [  56]
+  Channel 0 RX   [  58] = tx_packet_data       [  57]
+  Channel 0 RX   [  59] = tx_packet_data       [  58]
+  Channel 0 RX   [  60] = tx_packet_data       [  59]
+  Channel 0 RX   [  61] = tx_packet_data       [  60]
+  Channel 0 RX   [  62] = tx_packet_data       [  61]
+  Channel 0 RX   [  63] = tx_packet_data       [  62]
+  Channel 0 RX   [  64] = tx_packet_data       [  63]
+  Channel 0 RX   [  65] = tx_packet_data       [  64]
+  Channel 0 RX   [  66] = tx_packet_data       [  65]
+  Channel 0 RX   [  67] = tx_packet_data       [  66]
+  Channel 0 RX   [  68] = tx_packet_data       [  67]
+  Channel 0 RX   [  69] = tx_packet_data       [  68]
+  Channel 0 RX   [  70] = tx_packet_data       [  69]
+  Channel 0 RX   [  71] = rx_ar_credit        
+  Channel 0 RX   [  72] = rx_aw_credit        
+  Channel 0 RX   [  73] = rx_w_credit         
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////

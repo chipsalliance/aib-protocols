@@ -1,0 +1,20 @@
+cmd to run:
+-------------------------------------
+xrun -f ca_tb.args 
+
+configuration
+-------------------------------------
+
+Backlog:
+-in ca/dv/ convert xrun -f args into run script capable of handle plusargs
+-in tb/ connect chan delay from AIB netowrk chan_delay_die_a/b_if  vif.dout to input of rx_din
+    swap die_a/b_rx_din with chan_delay_die_a/b_if.dout
+-in tests/ add gear changing code for bit/wd sel in ca_cfg.sv in tests/
+-in ca_cfg.sv add code to check for plusarg input AFTER randomiztion and BEFORE bit/wd select config
+-in ca_cfg.sv add random delay to channel delay agents, might have to know fifo_depth define
+-in export_src/ FIXMEs for randomization after basic traffic is flowing
+-in tb/ ca_top_tb.sv FIXMEs for count_x and count_xz 
+-in tb/ ca_GENERATED file should be created for all configs to be tested from matrix
+-in tests/ add plusargs per testplan
+-in export_src/ add error cases expects in scoreboard
+-in export_src/ add perf measurements to scoreboard

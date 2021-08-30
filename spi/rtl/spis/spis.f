@@ -1,0 +1,13 @@
+${PROJ_DIR}/spi/rtl/spis/spi.vh
+${PROJ_DIR}/spi/rtl/spis/spis_intf.sv
+${PROJ_DIR}/spi/rtl/spis/spis_reg_top.sv
+${PROJ_DIR}/spi/rtl/spis/spis_reg.sv
+${PROJ_DIR}/spi/rtl/spis/spisavb.sv
+${PROJ_DIR}/spi/rtl/spis/spis_miso_buf.sv
+${PROJ_DIR}/spi/rtl/spis/spis_top.sv
+//${PROJ_DIR}/spi/rtl/spis/clk_gate_beh.sv
+${PROJ_DIR}/common/rtl/asyncfifo.sv
+${PROJ_DIR}/common/rtl/syncfifo_mem1r1w.sv
+${PROJ_DIR}/common/rtl/levelsync.sv
+${PROJ_DIR}/common/rtl/levelsync_sr.sv
+${PROJ_DIR}/common/rtl/rst_regen_low.sv

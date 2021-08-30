@@ -1,0 +1,6 @@
+dut_rtl/
+output_files/
+qdb/
+stderr.log
+synth_dumps/
+tmp-clearbox/

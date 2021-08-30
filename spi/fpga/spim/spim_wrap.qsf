@@ -1,0 +1,33 @@
+set_global_assignment -name FAMILY "Stratix 10"
+set_global_assignment -name TOP_LEVEL_ENTITY spim_wrap
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 20.4.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "08:47:26  APRIL 02, 2021"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.4.0 Pro Edition"
+
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/fpga/spim/spim_wrap.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/spim_top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/spim_intf.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/spim_reg_top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/spim_reg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/spimavb.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/spi/rtl/spim/clk_gate_beh.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/common/rtl/asyncfifo.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/common/rtl/syncfifo_mem1r1w.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/common/rtl/levelsync.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/common/rtl/levelsync_sr.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../../design/common/rtl/rst_regen_low.sv
+
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name DEVICE 1ST280EY2F55E2VG
+
+set_instance_assignment -name VIRTUAL_PIN ON -to miso -entity spim_wrap
+set_instance_assignment -name VIRTUAL_PIN ON -to mosi -entity spim_wrap
+set_instance_assignment -name VIRTUAL_PIN ON -to m_avmm_wdata* -entity spim_wrap
+set_instance_assignment -name VIRTUAL_PIN ON -to m_avmm_rdata* -entity spim_wrap
+set_global_assignment -name SDC_FILE spim_wrap.sdc
+set_instance_assignment -name PARTITION_COLOUR 4282777599 -to spim -entity spim_wrap
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
+set_global_assignment -name VERILOG_MACRO "FPGA=<None>"

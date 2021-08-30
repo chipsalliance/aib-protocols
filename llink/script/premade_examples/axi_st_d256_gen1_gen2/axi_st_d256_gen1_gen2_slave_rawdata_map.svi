@@ -1,0 +1,7 @@
+
+rx_dbi_bit_f = 0;
+tx_dbi_bit_f = 0;
+rx_strobe_bit_f = 0;
+tx_strobe_bit_f = 0;
+rx_marker_bit_f = 0;
+tx_marker_bit_f = 0;

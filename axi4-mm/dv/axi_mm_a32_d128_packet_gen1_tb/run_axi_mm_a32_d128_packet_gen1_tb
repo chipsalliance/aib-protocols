@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+
+#Run Sim
+xmverilog -f axi_mm_a32_d128_packet_gen1_tb.f $*

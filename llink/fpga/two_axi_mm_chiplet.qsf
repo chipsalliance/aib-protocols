@@ -1,0 +1,53 @@
+set_global_assignment -name FAMILY "Stratix 10"
+set_global_assignment -name TOP_LEVEL_ENTITY top
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 20.4.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "08:47:26  APRIL 02, 2021"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.4.0 Pro Edition"
+
+set_global_assignment -name VERILOG_MACRO "FPGA"
+
+set_global_assignment -name SYSTEMVERILOG_FILE top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE two_axi_mm_chiplet.sv
+set_global_assignment -name SYSTEMVERILOG_FILE fake_phy.sv
+
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_master_concat.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_master_name.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_master_top.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_slave_concat.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_slave_name.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_slave_top.sv
+
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_auto_sync.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_receive.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_concat_onechan.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_ctrl.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_mux.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_push.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_transmit.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_concat_onechan.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_cred.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_ctrl.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_mux.sv
+
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo_reg.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo_ram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo_mem1r1w.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/levelsyncs.v
+set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/level_delay.sv
+
+
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name DEVICE 1ST040EH1F35E1VG
+
+set_instance_assignment -name VIRTUAL_PIN ON -to user1* -entity top
+set_instance_assignment -name VIRTUAL_PIN ON -to user2* -entity top
+set_instance_assignment -name VIRTUAL_PIN ON -to m_gen2_mode* -entity top
+set_global_assignment -name SDC_FILE two_axi_mm_chiplet.sdc
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
+
+
+set_global_assignment -name VERILOG_MACRO "FPGA=<None>"
