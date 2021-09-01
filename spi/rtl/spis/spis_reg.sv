@@ -180,8 +180,7 @@ always_comb begin
        16'h0048  : rdata = rbuf_fifo_status; 
        16'h004c  : rdata = rbuf_fifo_ctrl; 
 
-      
-      default   : rdata = 32'b0; 
+      default   : rdata = 32'hdeadbeef; 
      endcase
     end // if
    end // always

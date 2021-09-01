@@ -1,20 +1,64 @@
-cmd to run:
--------------------------------------
-xrun -f ca_tb.args 
+cmd to run test:
+-----------------------------------------------------------------------------------------
+1. Go to directory '/design/ca/dv'
+2. Use command :   xrun -f ca_tb.args 
+   This will help run the preset test 'ca_basic_test_c' from the script file 'ca_tb.args'
+------------------------------------------------------------------------------------------
 
-configuration
--------------------------------------
-
-Backlog:
--in ca/dv/ convert xrun -f args into run script capable of handle plusargs
--in tb/ connect chan delay from AIB netowrk chan_delay_die_a/b_if  vif.dout to input of rx_din
-    swap die_a/b_rx_din with chan_delay_die_a/b_if.dout
--in tests/ add gear changing code for bit/wd sel in ca_cfg.sv in tests/
--in ca_cfg.sv add code to check for plusarg input AFTER randomiztion and BEFORE bit/wd select config
--in ca_cfg.sv add random delay to channel delay agents, might have to know fifo_depth define
--in export_src/ FIXMEs for randomization after basic traffic is flowing
--in tb/ ca_top_tb.sv FIXMEs for count_x and count_xz 
--in tb/ ca_GENERATED file should be created for all configs to be tested from matrix
--in tests/ add plusargs per testplan
--in export_src/ add error cases expects in scoreboard
--in export_src/ add perf measurements to scoreboard
+--------------------
+Directory Structure 
+--------------------
+design
+|
+├── ca
+│   ├── doc
+│   │   └── ca_ug.pdf
+│   ├── dv
+│   │   ├── aib.f
+│   │   ├── ca_pkg.svh
+│   │   ├── ca_shm.tcl
+│   │   ├── ca_tb.args
+│   │   ├── export_src
+│   │   │   ├── ca_coverage.sv
+│   │   │   ├── ca_data_pkg.svh
+│   │   │   ├── ca_rx_tb_in_agent.sv
+│   │   │   ├── ca_rx_tb_in_cfg.sv
+│   │   │   ├── ca_rx_tb_in_drv.sv
+│   │   │   ├── ca_rx_tb_in_if.sv
+│   │   │   ├── ca_rx_tb_in_mon.sv
+│   │   │   ├── ca_rx_tb_in_pkg.svh
+│   │   │   ├── ca_rx_tb_in_seqr.sv
+│   │   │   ├── ca_scoreboard.sv
+│   │   │   ├── ca_seq_item.sv
+│   │   │   ├── ca_tx_tb_in_agent.sv
+│   │   │   ├── ca_tx_tb_in_cfg.sv
+│   │   │   ├── ca_tx_tb_in_drv.sv
+│   │   │   ├── ca_tx_tb_in_if.sv
+│   │   │   ├── ca_tx_tb_in_mon.sv
+│   │   │   ├── ca_tx_tb_in_pkg.svh
+│   │   │   ├── ca_tx_tb_in_seqr.sv
+│   │   │   ├── ca_tx_tb_out_agent.sv
+│   │   │   ├── ca_tx_tb_out_cfg.sv
+│   │   │   ├── ca_tx_tb_out_drv.sv
+│   │   │   ├── ca_tx_tb_out_if.sv
+│   │   │   ├── ca_tx_tb_out_mon.sv
+│   │   │   ├── ca_tx_tb_out_pkg.svh
+│   │   │   └── ca_tx_tb_out_seqr.sv
+│   │   ├── local_src
+│   │   │   └── ca_gen_if.sv
+│   │   ├── README     <<<<< This file >>>>>
+│   │   ├── seqs
+│   │   │   ├── ca_rx_traffic_seq.sv
+│   │   │   ├── ca_seq_lib.sv
+│   │   │   ├── ca_tx_traffic_seq.sv
+│   │   │   └── virt_seqr.sv
+│   │   ├── tb
+│   │   │   ├── ca_AIB2g2_full_AIB2g2_half.svh
+│   │   │   ├── ca_GENERATED_defines.svh
+│   │   │   ├── ca_top_env.sv
+│   │   │   └── ca_top_tb.sv
+│   │   ├── tests
+│   │   │   ├── base_ca_test.sv
+│   │   │   ├── ca_basic_test.sv
+│   │   │   ├── ca_cfg.sv
+│   │   │   └── ca_knobs.sv

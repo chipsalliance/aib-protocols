@@ -52,6 +52,7 @@ input   logic	[31:0]  dbg_bus1,
 
 input 	logic 		cmd_is_read,
 input	logic		cmd_is_write,
+input   logic           single_read,
 // avmm read/write
 output 	logic	[31:0]	reg2avb_wdata, // write data from spis wr_buf for AVB channel
 input	logic		avb2reg_write, // Write signal for AVB channel data write to s_rbuf
@@ -238,21 +239,20 @@ assign avmm_wbuf_access = ((16'h0200 <= avb2reg_addr) & (avb2reg_addr <= 16'h09F
 assign rd_buf_access = (spi_rbuf_access | avmm_rbuf_access);
 assign wr_buf_access = (spi_wbuf_access | avmm_wbuf_access);
 
-
-assign spi_addr = spi_read_aclk_pulse ? spi_rd_addr : spi_wr_addr;
+assign spi_addr = spi_read ? spi_rd_addr : spi_wr_addr;
 assign addr  = avmm_transvld ? avb2reg_addr : spi_addr; 
 assign write_reg = avmm_transvld ? avb2reg_write: spi_write_aclk_pulse; // spi write is to write buffer (mosi data); 
 // avmm writes (nios) data read from avb  to read buffer 
 // spi read is from read buffer (miso data); 
 // avmm reads (nios) write data to avb from write buffer
-assign read_reg  = (avb2reg_read | spi_read_aclk_pulse);  // spi read is from read buffer (miso data); 
+assign read_reg  = (avb2reg_read | spi_read);  // spi read is from read buffer (miso data); 
 
 assign wdata_reg = avmm_transvld ? avb2reg_rdata : mosi_data;  
 assign rbuf_fifo_wrdata = avb2reg_rdata;
 assign wbuf_fifo_wrdata = mosi_data;
 
-assign miso_data = (spi_read & rd_buf_access) ? rbuf_fifo_rddata : 
-		   (spi_read & ~rd_buf_access) ? rdata_reg : 32'b0;  
+assign miso_data = (spi_read & spi_rbuf_access) ? rbuf_fifo_rddata : 
+		   (spi_read & ~rd_buf_access) ? rdata_reg : 32'hdeadbeef;  
 
 
 
@@ -306,7 +306,7 @@ assign wbuf_rd_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse  :
 assign rbuf_wr_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse :  
 		      (avmm_cmd_rd)  ? ~ssn_off_pulse_aclk  : 1'b1;
 assign rbuf_rd_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse  :
-                      (avmm_cmd_rd)  ? ~ssn_off_pulse_sclk : 1'b1;  
+                      (avmm_cmd_rd & ~single_read )  ? ~ssn_off_pulse_sclk : 1'b1;  
 
 asyncfifo 
  #( // Paramenters

@@ -180,8 +180,39 @@ else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe           ))  // Read cau
   fifo_data_filling <= 1'b0 ;
 
 
-assign full  = (write_addr_reg == read_addr_reg) &  fifo_data_filling;
-assign empty = (write_addr_reg == read_addr_reg) & !fifo_data_filling;
+// The following is implemented two ways, combinatorial and register based.
+// The register based is more timing closure friendly, but both are functional.
+wire full_comb;
+wire empty_comb;
+reg full_reg;
+reg empty_reg;
+
+always @(posedge clk_core or negedge rst_core_n)
+if (~rst_core_n)
+  full_reg <= 1'b0 ;
+else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
+  full_reg <= full_reg ;
+else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write caught up with read... full
+  full_reg <= 1'b1 ;
+else if ((write_addr_nxt != read_addr_nxt) | (rdstrobe           ))
+  full_reg <= 1'b0 ;
+
+always @(posedge clk_core or negedge rst_core_n)
+if (~rst_core_n)
+  empty_reg <= 1'b1 ;
+else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
+  empty_reg <= empty_reg ;
+else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe           ))  // Read caught up with write... empty
+  empty_reg <= 1'b1 ;
+else if ((write_addr_nxt != read_addr_nxt) | (           wrstrobe))
+  empty_reg <= 1'b0 ;
+
+assign full_comb  = (write_addr_reg == read_addr_reg) &  fifo_data_filling;
+assign empty_comb = (write_addr_reg == read_addr_reg) & !fifo_data_filling;
+
+assign full   = full_reg;
+assign empty  = empty_reg;
+
 // Full / Empty status
 ////////////////////////////////////////////////////////////
 
@@ -190,8 +221,8 @@ assign empty = (write_addr_reg == read_addr_reg) & !fifo_data_filling;
 assign overflow_pulse  = write_push & !read_pop & full;
 assign underflow_pulse =               read_pop & empty;
 
-assign wrstrobe = write_push & !overflow_pulse;
-assign rdstrobe = read_pop   & !underflow_pulse;
+assign wrstrobe = write_push ;
+assign rdstrobe = read_pop   ;
 // Overflow / Underflow
 ////////////////////////////////////////////////////////////
 

@@ -33,6 +33,7 @@ input [7:0]     delay_value;
 output          delayed_en;
 
 reg  [7:0]      count_reg;
+reg             count_eq_dlyval_reg;
 
 always @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
@@ -42,7 +43,17 @@ else if (~enable)
 else if (count_reg != delay_value)
   count_reg <= (count_reg + 8'h1);
 
-assign delayed_en = (delay_value == 8'h0) ? enable : (count_reg == delay_value) ;
+always @(posedge clk_core or negedge rst_core_n)
+if (!rst_core_n)
+  count_eq_dlyval_reg <= 1'h0;
+else if (~enable)
+  count_eq_dlyval_reg <= 1'h0;
+else
+  count_eq_dlyval_reg <= (count_reg == delay_value);
+
+// Note: delay_value == 0 in the following should resolve as a constant
+// So the logic below should result in either enable (top level IO) or a register.
+assign delayed_en = (delay_value == 8'h0) ? enable : count_eq_dlyval_reg ;
 
 endmodule // level_delay //
 

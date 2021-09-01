@@ -111,6 +111,7 @@ logic		rst_n_sclk;
 logic	[31:0]	dbg_bus0;
 logic	[31:0]	dbg_bus1;
 logic           ssn_off_pulse;
+logic           single_read;
 
 
 
@@ -124,6 +125,7 @@ spis_intf  i_spis_intf (
 	.tx_rdata		(miso_data),
 	
 	.miso			(miso_int),
+        .single_read            (single_read),
 	.spi_write		(spi_write),  // to spisreg_top for spi write indication
 	.spi_read		(spi_read),   // to spisreg_top for spi read indication
 	.spi_wr_addr_2reg	(spi_wr_addr),   // to spisreg_top for spi read indication
@@ -147,6 +149,7 @@ i_spisreg_top (
 	.s_avmm_clk 		(s_avmm_clk),
 	.rst_n 			(rst_n_sclk),
 	.s_avmm_rst_n 		(rst_n_avmmclk),
+        .single_read            (single_read),
 	.ssn_off_pulse_sclk	(ssn_off_pulse),
 	.miso_data 		(miso_data), // spi_rdata, - read data from slave to master
 	.spi_write 		(spi_write), // from m_cmd - read data from write buf and send to slave

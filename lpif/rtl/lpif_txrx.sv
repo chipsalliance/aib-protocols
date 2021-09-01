@@ -73,8 +73,9 @@ module lpif_txrx
    input logic [3:0]     dstrm_state,
    input logic [1:0]     dstrm_protid,
    input logic [1023:0]  dstrm_data,
-   input logic [6:0]     dstrm_bstart,
-   input logic [127:0]   dstrm_bvalid,
+   input logic [1:0]     dstrm_dvalid,
+   input logic [31:0]    dstrm_crc,
+   input logic [1:0]     dstrm_crc_valid,
    input logic           dstrm_valid,
 
    output logic [319:0]  tx_phy0,
@@ -94,18 +95,32 @@ module lpif_txrx
    output logic [319:0]  tx_phy14,
    output logic [319:0]  tx_phy15,
 
-   output logic [6:0]    ustrm_bstart,
-   output logic [127:0]  ustrm_bvalid,
-   output logic [1023:0] ustrm_data,
-   output logic [1:0]    ustrm_protid,
    output logic [3:0]    ustrm_state,
+   output logic [1:0]    ustrm_protid,
+   output logic [1023:0] ustrm_data,
+   output logic [1:0]    ustrm_dvalid,
+   output logic [31:0]   ustrm_crc,
+   output logic [1:0]    ustrm_crc_valid,
    output logic          ustrm_valid,
+
+   input [3:0]           tx_mrk_userbit,
+   input                 tx_stb_userbit,
 
    output logic [31:0]   rx_upstream_debug_status,
    output logic [31:0]   tx_downstream_debug_status
    );
 
   /*AUTOWIRE*/
+
+  // FIX THIS
+  logic [6:0]            ustrm_bstart;
+  logic [127:0]          ustrm_bvalid;
+  logic [6:0]            dstrm_bstart;
+  logic [127:0]          dstrm_bvalid;
+//  assign ustrm_bstart = 7'b0;
+//  assign ustrm_bvalid = 128'b0;
+  assign ustrm_bstart = 7'b0;
+  assign ustrm_bvalid = 128'b0;
 
   /* TX & RX datapath */
 
@@ -167,8 +182,9 @@ module lpif_txrx
                .ustrm_state             (ustrm_state[3:0]),
                .ustrm_protid            (ustrm_protid[1:0]),
                .ustrm_data              (ustrm_data[1023:0]),
-               .ustrm_bstart            (ustrm_bstart[6:0]),
-               .ustrm_bvalid            (ustrm_bvalid[127:0]),
+               .ustrm_dvalid            (ustrm_dvalid[1:0]),
+               .ustrm_crc               (ustrm_crc[31:0]),
+               .ustrm_crc_valid         (ustrm_crc_valid[1:0]),
                .ustrm_valid             (ustrm_valid),           // Templated
                .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
                .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
@@ -185,14 +201,17 @@ module lpif_txrx
                .dstrm_state             (dstrm_state[3:0]),
                .dstrm_protid            (dstrm_protid[1:0]),
                .dstrm_data              (dstrm_data[1023:0]),
-               .dstrm_bstart            (dstrm_bstart[6:0]),
-               .dstrm_bvalid            (dstrm_bvalid[127:0]),
+               .dstrm_dvalid            (dstrm_dvalid[1:0]),
+               .dstrm_crc               (dstrm_crc[31:0]),
+               .dstrm_crc_valid         (dstrm_crc_valid[1:0]),
                .dstrm_valid             (dstrm_valid),           // Templated
                .m_gen2_mode             (m_gen2_mode),
+               .tx_mrk_userbit          (tx_mrk_userbit[3:0]),
+               .tx_stb_userbit          (tx_stb_userbit),
                .delay_x_value           (delay_x_value[7:0]),
                .delay_xz_value          (delay_xz_value[7:0]),
                .delay_yz_value          (delay_yz_value[7:0]));
-          end
+          end // if (LPIF_CLOCK_RATE == 500)
         else if (LPIF_CLOCK_RATE == 1000) // half rate
           begin
             lpif_txrx_x16_h2_master_top
@@ -207,8 +226,9 @@ module lpif_txrx
                .ustrm_state             (ustrm_state[3:0]),
                .ustrm_protid            (ustrm_protid[1:0]),
                .ustrm_data              (ustrm_data[511:0]),
-               .ustrm_bstart            (ustrm_bstart[5:0]),
-               .ustrm_bvalid            (ustrm_bvalid[63:0]),
+               .ustrm_dvalid            (ustrm_dvalid[0:0]),
+               .ustrm_crc               (ustrm_crc[15:0]),
+               .ustrm_crc_valid         (ustrm_crc_valid[0:0]),
                .ustrm_valid             (ustrm_valid),           // Templated
                .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
                .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
@@ -225,14 +245,17 @@ module lpif_txrx
                .dstrm_state             (dstrm_state[3:0]),
                .dstrm_protid            (dstrm_protid[1:0]),
                .dstrm_data              (dstrm_data[511:0]),
-               .dstrm_bstart            (dstrm_bstart[5:0]),
-               .dstrm_bvalid            (dstrm_bvalid[63:0]),
+               .dstrm_dvalid            (dstrm_dvalid[0:0]),
+               .dstrm_crc               (dstrm_crc[15:0]),
+               .dstrm_crc_valid         (dstrm_crc_valid[0:0]),
                .dstrm_valid             (dstrm_valid),           // Templated
                .m_gen2_mode             (m_gen2_mode),
+               .tx_mrk_userbit          (tx_mrk_userbit[1:0]),
+               .tx_stb_userbit          (tx_stb_userbit),
                .delay_x_value           (delay_x_value[7:0]),
                .delay_xz_value          (delay_xz_value[7:0]),
                .delay_yz_value          (delay_yz_value[7:0]));
-          end
+          end // if (LPIF_CLOCK_RATE == 1000)
         else if (LPIF_CLOCK_RATE == 2000) // full rate
           begin
             lpif_txrx_x16_f2_master_top
@@ -247,8 +270,9 @@ module lpif_txrx
                .ustrm_state             (ustrm_state[3:0]),
                .ustrm_protid            (ustrm_protid[1:0]),
                .ustrm_data              (ustrm_data[255:0]),
-               .ustrm_bstart            (ustrm_bstart[4:0]),
-               .ustrm_bvalid            (ustrm_bvalid[31:0]),
+               .ustrm_dvalid            (ustrm_dvalid[0:0]),
+               .ustrm_crc               (ustrm_crc[15:0]),
+               .ustrm_crc_valid         (ustrm_crc_valid[0:0]),
                .ustrm_valid             (ustrm_valid),           // Templated
                .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
                .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
@@ -265,14 +289,17 @@ module lpif_txrx
                .dstrm_state             (dstrm_state[3:0]),
                .dstrm_protid            (dstrm_protid[1:0]),
                .dstrm_data              (dstrm_data[255:0]),
-               .dstrm_bstart            (dstrm_bstart[4:0]),
-               .dstrm_bvalid            (dstrm_bvalid[31:0]),
+               .dstrm_dvalid            (dstrm_dvalid[0:0]),
+               .dstrm_crc               (dstrm_crc[15:0]),
+               .dstrm_crc_valid         (dstrm_crc_valid[0:0]),
                .dstrm_valid             (dstrm_valid),           // Templated
                .m_gen2_mode             (m_gen2_mode),
+               .tx_mrk_userbit          (tx_mrk_userbit[0:0]),
+               .tx_stb_userbit          (tx_stb_userbit),
                .delay_x_value           (delay_x_value[7:0]),
                .delay_xz_value          (delay_xz_value[7:0]),
                .delay_yz_value          (delay_yz_value[7:0]));
-          end
+          end // if (LPIF_CLOCK_RATE == 2000)
       end // if ((AIB_VERSION == 2) && (AIB_GENERATION == 2))
     else if ((AIB_VERSION == 2) && (AIB_GENERATION == 1))
       begin

@@ -42,6 +42,7 @@ output logic		cmd_is_write,
 output logic		miso,
 output logic		spi_write,  // to spisreg_top for spi write indication
 output logic 		spi_read,   // to spisreg_top for spi read indication
+output logic            single_read,
 output logic	[15:0]	spi_wr_addr_2reg,   // to spisreg_top for spi read indication
 output logic	[15:0]	spi_rd_addr,   // to spisreg_top for spi read indication
 output logic	[31:0]  dbg_bus0,
@@ -81,7 +82,7 @@ logic		ssn_int; // Change for ss_n 8/1
 logic 	[2:0]	cur_st;
 logic	[2:0]	nxt_st;
 logic	[7:0]	burstcount;
-logic           single_read;
+//logic           single_read;
 
 localparam	STATE_IDLE	= 3'h0;
 localparam	STATE_CMD	= 3'h1;
@@ -158,7 +159,7 @@ assign spi_wr_addr = (cmd_is_write) ? reg_addr : wrbuf_addr;
 
 
 assign spi_rd_addr = ((cmd_is_read) & (cmd_addr == 16'h1000)) ? 16'h1000 :
-                     (single_read) ? reg_addr : rdbuf_addr; // to account for tthe firs read 
+                     (single_read) ? reg_addr : 16'h0000; // to account for tthe firs read 
 
 
 

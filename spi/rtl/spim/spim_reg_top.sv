@@ -251,7 +251,7 @@ assign write_reg = (s_transvld_sclk) ? spi_write_aclk_pulse : avbreg_write; // s
 // Read of registers can be from either SPI or AVMM
 // spi read is to wr buffer(avmm); 
 //avb read (nios) is to rd buffer(sclk)
-assign read_reg  = (spi_read_aclk_pulse  | avbreg_read);
+assign read_reg  = (spi_read  | avbreg_read);
 assign read_reg_quald  = (read_reg  & ~rd_buf_access & ~wr_buf_access);
 assign write_reg_quald = (write_reg & ~rd_buf_access & ~wr_buf_access);
 
@@ -272,7 +272,7 @@ assign avbreg_rdata =  (avbreg_read & avmm_rbuf_access)  ? rbuf_fifo_rddata :
 
 
 // Mux register address from spi or avmm 
-assign spi_addr = (spi_read_aclk_pulse) ? spi_rd_addr : spi_wr_addr;
+assign spi_addr = (spi_read) ? spi_rd_addr : spi_wr_addr;
 
 
 assign avmm_access = avbreg_read | avbreg_write;

@@ -7,3 +7,4 @@
 -v ${PROJ_DIR}/common/rtl/level_delay.sv
 -v ${PROJ_DIR}/common/rtl/syncfifo_reg.sv
 -v ${PROJ_DIR}/common/rtl/syncfifo_ram.sv
+-v ${PROJ_DIR}/common/rtl/rst_regen_low.sv
