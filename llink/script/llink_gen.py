@@ -886,6 +886,65 @@ def check_configuration(configuration, mux_mode):
     # Check Strobe // Marker placement
     ############################################################
 
+    ############################################################
+    # Check Strobe // Marker placement / DBI Placement dont' overlap.
+
+    if configuration['TX_ENABLE_MARKER'] and configuration['TX_DBI_PRESENT']:
+        if ((configuration['TX_MARKER_GEN2_LOC'] % 80) == 38 or
+            (configuration['TX_MARKER_GEN2_LOC'] % 80) == 39 or
+            (configuration['TX_MARKER_GEN2_LOC'] % 80) == 78 or
+            (configuration['TX_MARKER_GEN2_LOC'] % 80) == 79):
+            print ("ERROR TX_MARKER_GEN2_LOC = {} overlaps with DBI".format(configuration['TX_MARKER_GEN2_LOC']))
+            sys.exit(1)
+
+    if configuration['RX_ENABLE_MARKER'] and configuration['RX_DBI_PRESENT']:
+        if ((configuration['RX_MARKER_GEN2_LOC'] % 80) == 38 or
+            (configuration['RX_MARKER_GEN2_LOC'] % 80) == 39 or
+            (configuration['RX_MARKER_GEN2_LOC'] % 80) == 78 or
+            (configuration['RX_MARKER_GEN2_LOC'] % 80) == 79):
+            print ("ERROR RX_MARKER_GEN2_LOC = {} overlaps with DBI".format(configuration['RX_MARKER_GEN2_LOC']))
+            sys.exit(1)
+
+    if configuration['TX_ENABLE_STROBE'] and configuration['TX_DBI_PRESENT']:
+        if ((configuration['TX_STROBE_GEN2_LOC'] % 80) == 38 or
+            (configuration['TX_STROBE_GEN2_LOC'] % 80) == 39 or
+            (configuration['TX_STROBE_GEN2_LOC'] % 80) == 78 or
+            (configuration['TX_STROBE_GEN2_LOC'] % 80) == 79):
+            print ("ERROR TX_STROBE_GEN2_LOC = {} overlaps with DBI".format(configuration['TX_STROBE_GEN2_LOC']))
+            sys.exit(1)
+
+    if configuration['RX_ENABLE_STROBE'] and configuration['RX_DBI_PRESENT']:
+        if ((configuration['RX_STROBE_GEN2_LOC'] % 80) == 38 or
+            (configuration['RX_STROBE_GEN2_LOC'] % 80) == 39 or
+            (configuration['RX_STROBE_GEN2_LOC'] % 80) == 78 or
+            (configuration['RX_STROBE_GEN2_LOC'] % 80) == 79):
+            print ("ERROR RX_STROBE_GEN2_LOC = {} overlaps with DBI".format(configuration['RX_STROBE_GEN2_LOC']))
+            sys.exit(1)
+
+
+    if configuration['TX_ENABLE_MARKER'] and configuration['TX_ENABLE_STROBE'] and (configuration['CHAN_TYPE'] == "Gen2Only" or configuration['CHAN_TYPE'] == "Gen2"):
+        if ((configuration['TX_MARKER_GEN2_LOC'] % 80) == (configuration['TX_STROBE_GEN2_LOC'] % 80)):
+            print ("ERROR TX_MARKER_GEN2_LOC = {} overlaps with TX_STROBE_GEN2_LOC = {}".format(configuration['TX_MARKER_GEN2_LOC'], configuration['TX_STROBE_GEN2_LOC']))
+            sys.exit(1)
+
+    if configuration['RX_ENABLE_MARKER'] and configuration['RX_ENABLE_STROBE'] and (configuration['CHAN_TYPE'] == "Gen2Only" or configuration['CHAN_TYPE'] == "Gen2"):
+        if ((configuration['RX_MARKER_GEN2_LOC'] % 80) == (configuration['RX_STROBE_GEN2_LOC'] % 80)):
+            print ("ERROR RX_MARKER_GEN2_LOC = {} overlaps with RX_STROBE_GEN2_LOC = {}".format(configuration['RX_MARKER_GEN2_LOC'], configuration['RX_STROBE_GEN2_LOC']))
+            sys.exit(1)
+
+    if configuration['TX_ENABLE_MARKER'] and configuration['TX_ENABLE_STROBE'] and (configuration['CHAN_TYPE'] == "Gen1Only" or configuration['CHAN_TYPE'] == "Gen1"):
+        if ((configuration['TX_MARKER_GEN1_LOC'] % 80) == (configuration['TX_STROBE_GEN1_LOC'] % 80)):
+            print ("ERROR TX_MARKER_GEN1_LOC = {} overlaps with TX_STROBE_GEN1_LOC = {}".format(configuration['TX_MARKER_GEN1_LOC'], configuration['TX_STROBE_GEN1_LOC']))
+            sys.exit(1)
+
+    if configuration['RX_ENABLE_MARKER'] and configuration['RX_ENABLE_STROBE'] and (configuration['CHAN_TYPE'] == "Gen1Only" or configuration['CHAN_TYPE'] == "Gen1"):
+        if ((configuration['RX_MARKER_GEN1_LOC'] % 80) == (configuration['RX_STROBE_GEN1_LOC'] % 80)):
+            print ("ERROR RX_MARKER_GEN1_LOC = {} overlaps with RX_STROBE_GEN1_LOC = {}".format(configuration['RX_MARKER_GEN1_LOC'], configuration['RX_STROBE_GEN1_LOC']))
+            sys.exit(1)
+
+    # Check Strobe // Marker placement
+    ############################################################
+
 ## check_configuration
 ##########################################################################################
 
@@ -894,6 +953,11 @@ def check_configuration(configuration, mux_mode):
 ## This is the branching point for Packetization, GALT, RSTRUCT or "normal" Logic Link
 
 def calculate_bit_locations(configuration):
+
+    if global_struct.g_SIGNAL_DEBUG:
+        print ("SIGNAL_DEBUG: Before calculate_bit_loc")
+        pprint.pprint (configuration)
+
     if configuration['TX_ENABLE_PACKETIZATION']:
         configuration = packetization.calculate_bit_loc_packet(True, configuration)
     elif configuration['GEN2_AS_GEN1_EN']:

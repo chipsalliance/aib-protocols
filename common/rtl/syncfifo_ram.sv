@@ -30,7 +30,7 @@ module syncfifo_ram
    //Outputs
    empty, full, numempty, numfilled, overflow_pulse, rddata, underflow_pulse,
    //Inputs
-   clk_core, read_pop, rst_core_n, wrdata, write_push
+   clk_core, read_pop, rst_core_n, wrdata, write_push, soft_reset
    );
 
 ////////////////////////////////////////////////////////////
@@ -58,6 +58,7 @@ localparam FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
 
 input                           clk_core;
 input                           rst_core_n;
+input                           soft_reset;
 
 input                           write_push;          // Read data.
 input [FIFO_WIDTH_MSB:0]        wrdata;              // Write Data.
@@ -101,6 +102,8 @@ else
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   write_addr_reg <= {FIFO_ADDR_WID{1'b0}};
+else if (soft_reset)
+  write_addr_reg <= {FIFO_ADDR_WID{1'b0}};
 else
   write_addr_reg <= write_addr_nxt;
 // Write FIFO Address
@@ -118,6 +121,8 @@ else
 
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
+  read_addr_reg <= {FIFO_ADDR_WID{1'b0}};
+else if (soft_reset)
   read_addr_reg <= {FIFO_ADDR_WID{1'b0}};
 else
   read_addr_reg <= read_addr_nxt;
@@ -152,6 +157,11 @@ begin
   numfilled_reg <= {FIFO_COUNT_WID{1'b0}};
   numempty_reg  <= FIFO_DEPTH_WID;
 end
+else if (soft_reset)
+begin
+  numfilled_reg <= {FIFO_COUNT_WID{1'b0}};
+  numempty_reg  <= FIFO_DEPTH_WID;
+end
 else
 begin
   numfilled_reg <= numfilled_nxt;
@@ -172,6 +182,8 @@ reg             fifo_data_filling;
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   fifo_data_filling <= 1'b0 ;
+else if (soft_reset)
+  fifo_data_filling <= 1'b0 ;
 else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
   fifo_data_filling <= fifo_data_filling ;
 else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write caught up with read... full
@@ -190,6 +202,8 @@ reg empty_reg;
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   full_reg <= 1'b0 ;
+else if (soft_reset)
+  full_reg <= 1'b0 ;
 else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
   full_reg <= full_reg ;
 else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write caught up with read... full
@@ -199,6 +213,8 @@ else if ((write_addr_nxt != read_addr_nxt) | (rdstrobe           ))
 
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
+  empty_reg <= 1'b1 ;
+else if (soft_reset)
   empty_reg <= 1'b1 ;
 else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
   empty_reg <= empty_reg ;

@@ -82,6 +82,7 @@ logic 		ss_n_int;
 logic 		ss_n_dlyn;
 logic 		ss_n_dly1;
 logic 		ss_n_early;
+logic 		ss_n_early_cmb;
 logic		cg_off;
 logic		sclk_inv;
 
@@ -148,7 +149,8 @@ always_ff @ (posedge sclk_inv or negedge rst_n)
 	   ss_n_2 <= ss_n_2_int;
 	   ss_n_3 <= ss_n_3_int;
         end
-assign ss_n_cmb = (ss_n_0 & ss_n_1 & ss_n_2 & ss_n_3);
+
+assign ss_n_cmb = (ss_n_0_int & ss_n_1_int & ss_n_2_int & ss_n_3_int);
 
 // Receive logic 
 assign rx_load = flag_word_q ^ flag_word_q1;
@@ -175,16 +177,16 @@ always_ff @ (posedge sclk_inv or negedge rst_n)
 	 ss_n_dlyn <= ss_n_int;
          end
 
+assign ss_n_early_cmb = (((nxt_st == ST_INI_FWR) | (nxt_st == ST_INI_END_RD)) & (burstcount == {14{1'b0}})); 
 always_ff @ (posedge sclk_inv or negedge rst_n)
         if (~rst_n) begin
 	 ss_n_early <= 1'b0;
          end
-	else if ((nxt_st == ST_INI_END_WR) | (nxt_st == ST_INI_END_RD)) begin 
-	 ss_n_early <= 1'b1;
+	else begin 
+	 ss_n_early <= ss_n_early_cmb;
          end
-        else 
-         ss_n_early <= 1'b0;
-assign ss_n =  (ss_n_int | ss_n_dlyn | ss_n_early);
+
+assign ss_n =  (ss_n_int | ss_n_dlyn | ss_n_early_cmb | ss_n_early);
 
 assign cg_en = ~ss_n_dlyn & ~cg_off;
 
@@ -207,8 +209,6 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	if (~rst_n)
 	 begin
 	   flag_word    <= 'b0;
-	   flag_word_q  <= 'b0;
-	   flag_word_q1  <= 'b0;
            rx_shift_reg <= 'b0;
 	   rx_count	<= 'b0;
            
@@ -216,8 +216,6 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	else if (ss_n_dly1)
 	 begin
 	   flag_word    <= 'b0;
-	   flag_word_q  <= 'b0;
-	   flag_word_q1  <= 'b0;
            rx_shift_reg <= 'b0;
            rx_count	<= 'b0;
            
@@ -228,13 +226,24 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	   if (rx_count == 5'b11111) begin
             flag_word   <= ~flag_word;
             end
-            flag_word_q <= flag_word;
-            flag_word_q1 <= flag_word_q;
 //MSB is received first on miso           
  	   rx_shift_reg <= {rx_shift_reg[30:0],miso};
            rx_count     <= rx_count + 1'b1;  
          end //ss_N
 	end // else
+
+always_ff @ (posedge sclk_in or negedge rst_n) 
+	if (~rst_n)
+	 begin
+	   flag_word_q  <= 'b0;
+	   flag_word_q1  <= 'b0;
+         end
+	else 
+	 begin
+	   flag_word_q  <= flag_word;
+	   flag_word_q1  <= flag_word_q;
+         end
+
 
 always_ff @ (posedge sclk_in or negedge rst_n) 
 	if (~rst_n) begin
@@ -252,7 +261,7 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	if (~rst_n) begin
 	   rx_data	<= 'b0;
          end
-        else if (rx_load) begin 
+        else if (rx_count == 5'b0) begin 
  	   rx_data <= rx_shift_reg;	
          end
 
@@ -347,8 +356,10 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	if (~rst_n) begin
 	 burstcount <= 14'b00_0000_0000_0000;     
         end
+        else if (ss_n_int == 1) 
+        burstcount <= 14'b00_0000_0000_0000;
 	else if (cur_st == ST_INI_CMD) 
-	 burstcount <= (spim_brstlen-1'b1); // Burstlen is # of DWORDS on SPI
+	 burstcount <= (cmd_is_read) ? (spim_brstlen - 1'b1) : spim_brstlen; // Burstlen is # of DWORDS on SPI
 				             // Count tracks from N to 0 
 	else if ((cmd_is_write  & (cur_st == ST_INI_FWR)) & inc_spi_addr)   begin 
           burstcount <= (burstcount - 1'b1); 
@@ -393,7 +404,7 @@ always_comb begin
 			
 
 	ST_INI_WR     	: begin 
-			   if (tx_load) begin 
+			   if (tx_load) begin  // tx count = 31
 			    rx_wdata = rx_data;
 			    nxt_st = ST_INI_FWR;
                            end
@@ -407,14 +418,15 @@ always_comb begin
 	                     inc_spi_addr = 1'b1;
 			     nxt_st = ST_INI_WR; 
                             end
-                            else begin
-		              if (rx_load) begin
+                            else begin  // burst count not 0
                                inc_spi_addr = 1'b1; // last write increase - matters for spi write
-                               nxt_st = ST_INI_END_WR;
+                               nxt_st = ST_IDLE;
+		               ss_n_int = 1'b1; 
+			       cmd_is_write = 1'b0; 
 			       cg_off = 1'b1;
-                             end
+			       stransvld_up = 1'b1; 
                            end
-		           ss_n_int = 1'b0;
+		           ss_n_int = 1'b0;   // tx load is true
 			   cmd_is_write = 1'b1;
 			  end
 			 end
@@ -432,7 +444,7 @@ always_comb begin
 			   if (tx_count == 5'b11001 ) begin  // 'd25
                            nxt_st = ST_INI_FRD;
 	                    end
-                           if (tx_load & rx_data_update) begin
+                           if (rx_data_update) begin
 			    rx_wdata = rx_data;
 			   end
 		           ss_n_int = 1'b0;

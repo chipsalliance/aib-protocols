@@ -132,6 +132,7 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
    /* syncfifo_ram AUTO_TEMPLATE ".*_i\(.+\)"  (
       .clk_core				(clk_wr),
       .rst_core_n			(rst_wr_n),
+      .soft_reset			(1'b0),
       .write_push			(rxfifo_@_push),
       .rddata				(rxfifo_@_data[WIDTH-1:0]),
       .wrdata				(rx_@_data[WIDTH-1:0]),
@@ -157,6 +158,7 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
       // Inputs
       .clk_core				(clk_wr),		 // Templated
       .rst_core_n			(rst_wr_n),		 // Templated
+      .soft_reset			(1'b0),		         // Templated
       .write_push			(rxfifo_i_push),	 // Templated
       .wrdata				(rx_i_data[WIDTH-1:0]),	 // Templated
       .read_pop				(rxfifo_i_pop));		 // Templated

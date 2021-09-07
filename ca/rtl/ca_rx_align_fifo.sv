@@ -76,6 +76,7 @@ module ca_rx_align_fifo
   /* syncfifo AUTO_TEMPLATE (
    .clk_core        (com_clk),
    .rst_core_n      (rst_com_n),
+   .soft_reset      (1'b0),
    .rddata          (rx_dout[]),
    .numfilled       (rd_numfilled[]),
    .numempty        (wr_numempty[]),
@@ -125,6 +126,7 @@ module ca_rx_align_fifo
              // Inputs
              .clk_core                  (com_clk),               // Templated
              .rst_core_n                (rst_com_n),             // Templated
+             .soft_reset                (1'b0),                  // Templated
              .write_push                (fifo_push),             // Templated
              .wrdata                    (rx_din[FIFO_WIDTH_MSB:0]), // Templated
              .read_pop                  (fifo_pop));              // Templated

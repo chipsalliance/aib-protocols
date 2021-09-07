@@ -30,7 +30,7 @@ module syncfifo
    //Outputs
    empty, full, numempty, numfilled, overflow_pulse, rddata, underflow_pulse,
    //Inputs
-   clk_core, read_pop, rst_core_n, wrdata, write_push
+   clk_core, read_pop, rst_core_n, wrdata, write_push, soft_reset
    );
 
 ////////////////////////////////////////////////////////////
@@ -62,6 +62,7 @@ localparam FIFO_COUNT_RAM_MSB = FIFO_COUNT_RAM_WID - 1 ;
 
 input                           clk_core;
 input                           rst_core_n;
+input                           soft_reset;
 
 input                           write_push;          // Read data.
 input [FIFO_WIDTH_MSB:0]        wrdata;              // Write Data.
@@ -119,6 +120,7 @@ reg                             ram_read_cornercase_reg;
         .clk_core        (clk_core),
         .read_pop        (read_pop_reg),
         .rst_core_n      (rst_core_n),
+        .soft_reset      (soft_reset),
         .wrdata          (wrdata_reg),
         .write_push      (write_push_reg) );
 
@@ -140,6 +142,7 @@ generate
           .clk_core        (clk_core),
           .read_pop        (read_pop_ram),
           .rst_core_n      (rst_core_n),
+          .soft_reset      (soft_reset),
           .wrdata          (wrdata_ram),
           .write_push      (write_push_ram) );
    end
@@ -278,17 +281,23 @@ assign wrdata_ram     = wrdata;
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   read_popram_dly_reg <= 1'b0;
+else if (soft_reset)
+  read_popram_dly_reg <= 1'b0;
 else
   read_popram_dly_reg <= read_pop_ram;
 
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   write_empty_ram_dly1_reg <= 1'b0;
+else if (soft_reset)
+  write_empty_ram_dly1_reg <= 1'b0;
 else
   write_empty_ram_dly1_reg <= (write_push_ram & (empty_ram | ((numempty_ram == 1) & read_pop_ram)));
 
 always @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
+  ram_read_cornercase_reg <= 1'b0;
+else if (soft_reset)
   ram_read_cornercase_reg <= 1'b0;
 else
   ram_read_cornercase_reg <= ((read_pop & write_empty_ram_dly1_reg) | (fifo_rampop_due2_reg_not_head & ram_read_cornercase_reg)) & (empty_reg) ;

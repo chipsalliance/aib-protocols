@@ -123,16 +123,16 @@ always_ff @ (posedge sclk or negedge rst_n)
 
 assign ssn_off_pulse = ss_n & ~ssn_d1;
 
-assign ssn_int = ssn_neg & ssn_d1; // Change for ss_n 8/1
+assign ssn_int = ss_n; // Trying this quick change to check impact
 
+logic rx_data_update_cmb; 
+assign rx_data_update_cmb = cmd_recvd ? rx_load : 1'b0; 
 
 always_ff @ (posedge sclk or negedge rst_n) 
 	if (~rst_n) 
 	   rx_data_update	<= 'b0;
-	else if (ssn_int) 
-	   rx_data_update	<= 'b0;
-	else if (cmd_recvd)
-	   rx_data_update	<= rx_load;
+	else 
+	   rx_data_update	<= rx_data_update_cmb;
 
 logic [15:0] spi_wr_addr; 		// to capture the wr address to register
 
@@ -153,7 +153,7 @@ logic [15:0] spi_wr_addr; 		// to capture the wr address to register
 
 
 assign spi_read  = (tx_count == 'd28) ? 1'b1 : 1'b0;
-assign spi_write = rx_data_update & cmd_recvd; 
+assign spi_write = rx_data_update;
 
 assign spi_wr_addr = (cmd_is_write) ? reg_addr : wrbuf_addr;
 

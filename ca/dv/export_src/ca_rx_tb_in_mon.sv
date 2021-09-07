@@ -154,7 +154,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
                      end
                      default: begin
                          ca_item.dprint();
-                         `uvm_fatal("mon_rx_tb_in", $sformatf("BAD case in is_stb_beat for above beat"));
+                         //`uvm_fatal("mon_rx_tb_in", $sformatf("BAD case in is_stb_beat for above beat"));
                      end
                  endcase
             end // if        
