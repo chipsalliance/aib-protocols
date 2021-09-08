@@ -83,13 +83,13 @@ module lpif_ctl
    output logic [2:0]                                    pl_tmstmp_stream,
 
    input logic                                           lp_stallack,
+   output logic                                          pl_stallreq,
    input logic                                           lp_tmstmp,
    input logic                                           lp_linkerror,
    output logic                                          pl_quiesce,
    input logic                                           lp_flushed_all,
    input logic                                           lp_rcvd_crc_err,
    output logic [2:0]                                    pl_lnk_cfg,
-   output logic                                          pl_lnk_up,
    output logic                                          pl_rxframe_errmask,
    output logic                                          pl_portmode,
    output logic                                          pl_portmode_val,
@@ -107,8 +107,6 @@ module lpif_ctl
    input logic                                           lp_wake_req,
    output logic                                          pl_wake_ack,
    input logic                                           lp_force_detect,
-   output logic                                          pl_exit_cg_req,
-   input logic                                           lp_exit_cg_ack,
    output logic [7:0]                                    pl_cfg,
    output logic                                          pl_cfg_vld,
 
@@ -158,6 +156,8 @@ module lpif_ctl
    input logic [3:0]                                     lsm_dstrm_state,
    input logic [2:0]                                     lsm_lnk_cfg,
    input logic [2:0]                                     lsm_speedmode,
+   input logic                                           lsm_stallreq,
+   output logic                                          lsm_stallack,
 
    // misc
 
@@ -197,11 +197,11 @@ module lpif_ctl
   // lpif to ca
 
   assign align_fly = 1'b1;
-  assign tx_stb_wd_sel = 8'h1;
-  assign tx_stb_bit_sel = 40'h1;
+  assign tx_stb_wd_sel = 8'h1;    // these must match the value in the config file
+  assign tx_stb_bit_sel = 40'h2;
   assign tx_stb_intv = 8'h4;
-  assign rx_stb_wd_sel = 8'h1;
-  assign rx_stb_bit_sel = 40'h1;
+  assign rx_stb_wd_sel = 8'h1;    // these must match the value in the config file
+  assign rx_stb_bit_sel = 40'h2;
   assign rx_stb_intv = 8'h4;
   assign fifo_full_val = 5'h1F;
   assign fifo_pfull_val = 5'h10;
@@ -214,8 +214,7 @@ module lpif_ctl
   logic                                 d_ns_mac_rdy;
   logic [AIB_LANES-1:0]                 d_ns_adapter_rstn;
 
-  logic                                 d_pl_exit_cg_req;
-  logic                                 d_pl_lnk_up;
+  logic                                 d_pl_stallreq;
 
   logic                                 d_dstrm_valid;
   logic [3:0]                           d_dstrm_state;
@@ -303,8 +302,11 @@ module lpif_ctl
     CTL_EXIT_CG_REQ2	= 4'h8,
     CTL_EXIT_CG_ACK2	= 4'h9,
     CTL_WAIT_CA_ALIGN	= 4'hA,
-    CTL_LINK_UP		= 4'hB,
-    CTL_HALT		= 4'hC;
+    CTL_CA_ALIGNED	= 4'hB,
+    CTL_LINK_UP		= 4'hC,
+    CTL_STALL_REQ	= 4'hD,
+    CTL_STALL_ACK	= 4'hE,
+    CTL_HALT		= 4'hF;
 
   logic [3:0] /* auto enum ctl_state_info */
               ctl_state, d_ctl_state;
@@ -325,7 +327,10 @@ module lpif_ctl
       CTL_EXIT_CG_REQ2:  ctl_state_ascii = "ctl_exit_cg_req2 ";
       CTL_EXIT_CG_ACK2:  ctl_state_ascii = "ctl_exit_cg_ack2 ";
       CTL_WAIT_CA_ALIGN: ctl_state_ascii = "ctl_wait_ca_align";
+      CTL_CA_ALIGNED:    ctl_state_ascii = "ctl_ca_aligned   ";
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
+      CTL_STALL_REQ:     ctl_state_ascii = "ctl_stall_req    ";
+      CTL_STALL_ACK:     ctl_state_ascii = "ctl_stall_ack    ";
       CTL_HALT:          ctl_state_ascii = "ctl_halt         ";
       default:           ctl_state_ascii = "%Error           ";
     endcase
@@ -345,12 +350,12 @@ module lpif_ctl
       d_ctl_state = ctl_state;
       d_ns_mac_rdy = ns_mac_rdy;
       d_ns_adapter_rstn = ns_adapter_rstn;
-      d_pl_exit_cg_req = pl_exit_cg_req;
+      d_pl_stallreq = pl_stallreq;
       d_dstrm_state = dstrm_state;
       d_dstrm_valid = dstrm_valid;
-      d_pl_lnk_up = pl_lnk_up;
       d_tx_online = tx_online;
       d_rx_online = rx_online;
+      lsm_stallack = 1'b0;
       case (ctl_state)
         CTL_IDLE: begin
           d_ctl_state = CTL_PHY_INIT;
@@ -374,6 +379,7 @@ module lpif_ctl
               d_ctl_state = CTL_WAIT_CA_ALIGN;
             end
         end
+/* -----\/----- EXCLUDED -----\/-----
         CTL_EXIT_CG_REQ1: begin
           if (~lp_exit_cg_ack)
             begin
@@ -388,6 +394,7 @@ module lpif_ctl
               d_ctl_state = CTL_SB_ACTIVE_REQ;
             end
         end
+ -----/\----- EXCLUDED -----/\----- */
         CTL_SB_ACTIVE_REQ: begin
           d_dstrm_valid = 1'b1;
           d_dstrm_state = 4'h3; // FIX THIS - should be ACTIVE
@@ -400,6 +407,7 @@ module lpif_ctl
               d_ctl_state = CTL_EXIT_CG_REQ2;
             end
         end
+/* -----\/----- EXCLUDED -----\/-----
         CTL_EXIT_CG_REQ2: begin
           if (~lp_exit_cg_ack)
             begin
@@ -414,13 +422,36 @@ module lpif_ctl
               d_ctl_state = CTL_LINK_UP;
             end
         end
+ -----/\----- EXCLUDED -----/\----- */
         CTL_WAIT_CA_ALIGN: begin
           if (align_done)
-            d_ctl_state = CTL_EXIT_CG_REQ1;
+            d_ctl_state = CTL_LINK_UP;
+        end
+        CTL_CA_ALIGNED: begin
+          d_ctl_state = CTL_CA_ALIGNED;
         end
         CTL_LINK_UP: begin
+/* -----\/----- EXCLUDED -----\/-----
           d_pl_lnk_up = 1'b1;
+          if (lsm_stallreq)
+            d_ctl_state = CTL_STALL_REQ;
+ -----/\----- EXCLUDED -----/\----- */
           d_ctl_state = CTL_LINK_UP;
+        end
+        CTL_STALL_REQ: begin
+          if (~lp_stallack)
+            begin
+              d_pl_stallreq = 1'b1;
+              d_ctl_state = CTL_EXIT_CG_ACK2;
+            end
+        end
+        CTL_STALL_ACK: begin
+          if (lp_stallack)
+            begin
+              d_pl_stallreq = 1'b0;
+              lsm_stallack = 1'b1;
+              d_ctl_state = CTL_LINK_UP;
+            end
         end
         default: d_ctl_state = CTL_IDLE;
       endcase // case (ctl_state)
@@ -441,8 +472,7 @@ module lpif_ctl
           ns_mac_rdy <= 1'b0;
           ns_adapter_rstn <= {AIB_LANES{1'b0}};
 
-          pl_exit_cg_req <= 1'b0;
-          pl_lnk_up <= 1'b0;
+          pl_stallreq <= 1'b0;
           pl_lnk_cfg <= 3'b0;
           pl_speedmode <= 3'b0;
 
@@ -468,8 +498,7 @@ module lpif_ctl
           ns_mac_rdy <= d_ns_mac_rdy;
           ns_adapter_rstn <= d_ns_adapter_rstn;
 
-          pl_exit_cg_req <= d_pl_exit_cg_req;
-          pl_lnk_up <= d_pl_lnk_up;
+          pl_stallreq <= d_pl_stallreq;
           pl_lnk_cfg <= lsm_lnk_cfg;
           pl_speedmode <= lsm_speedmode;
 

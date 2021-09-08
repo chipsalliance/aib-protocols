@@ -988,6 +988,28 @@ def calculate_bit_locations(configuration):
 def calculate_channel_parameters(configuration):
 
     ############################################################
+    # Reduce No Ready case to data only
+    for llink in configuration['LL_LIST']:
+        if llink['HASVALID'] and not llink['HASREADY']:
+            llink['HASVALID'] = False
+
+            ## First, lets find the LLINDEX of the last data bit
+            ll_sig_lsb = 0
+            for sig in llink['SIGNALLIST_MAIN']:
+                if sig['LLINDEX_MAIN_LSB'] > ll_sig_lsb:
+                    ll_sig_lsb = sig['LLINDEX_MAIN_LSB']
+
+            ## Then lets turn the Valid into data
+            for sig in llink['SIGNALLIST_MAIN']:
+                if sig['TYPE'] == 'valid':
+                   sig['TYPE'] = 'signal'
+                   llink['WIDTH_MAIN'] += 1
+                   sig['LLINDEX_MAIN_LSB'] = ll_sig_lsb+1
+
+    # Reduce No Ready case to data only
+    ############################################################
+
+    ############################################################
     # Calculate Channel Parameters
 
     global_struct.g_info_print.append ("  Logic Link Data Info\n")
@@ -3112,10 +3134,10 @@ def main():
 
             configuration['OUTPUT_DIR'] = args.odir
 
+            configuration = calculate_channel_parameters(configuration)
+
             if global_struct.g_SIGNAL_DEBUG:
                 print_logic_links(configuration)
-
-            configuration = calculate_channel_parameters(configuration)
 
             configuration = calculate_bit_locations(configuration)
 
@@ -3143,10 +3165,10 @@ def main():
 
         configuration['OUTPUT_DIR'] = args.odir
 
+        configuration = calculate_channel_parameters(configuration)
+
         if global_struct.g_SIGNAL_DEBUG:
             print_logic_links(configuration)
-
-        configuration = calculate_channel_parameters(configuration)
 
         configuration = calculate_bit_locations(configuration)
 

@@ -1,0 +1,210 @@
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink MAIN     st       TX   74  RX    0
+                                -------  -------
+    Total     MAIN              TX   74  RX    0
+
+  Channel Info
+    MAIN: Each channel is Gen2Only PHY running at Full Rate with 80 bits
+    MAIN: 1x channels
+    MAIN: Total AIB bits is 80 bits
+
+       TX: DBI enabled adds 4 overhead bits per channel
+       TX: Strobe is Recoverable or non-existent
+       TX: Marker is Recoverable or non-existent
+       TX: Total overhead bits across 1 channels is 4
+       TX: Total data bits available 76
+
+       RX: DBI enabled adds 4 overhead bits per channel
+       RX: Strobe is Recoverable or non-existent
+       RX: Marker is Recoverable or non-existent
+       RX: Total overhead bits across 1 channels is 4
+       RX: Total data bits available 76
+
+  MAIN TX needs   74 bits of data and has   76 bits available across 1x Gen2Only Full Rate channels so    2 spare bits
+  MAIN RX needs    0 bits of data and has   76 bits available across 1x Gen2Only Full Rate channels so   76 spare bits
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to Logic Link Data Mapping
+// This AXI Data FIFO packing
+  assign tx_st_data           [   0 +:   8] = user_tkeep           [   0 +:   8]
+  assign tx_st_data           [   8 +:  64] = user_tdata           [   0 +:  64]
+  assign tx_st_data           [  72 +:   1] = user_tlast                        
+  assign tx_st_data           [  73 +:   1] = user_tvalid                       
+
+// AXI to Logic Link Data Mapping
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [   0] = user_tkeep           [   0]
+  Channel 0 TX   [   1] = user_tkeep           [   1]
+  Channel 0 TX   [   2] = user_tkeep           [   2]
+  Channel 0 TX   [   3] = user_tkeep           [   3]
+  Channel 0 TX   [   4] = user_tkeep           [   4] // RECOVERED_MARKER [0]
+  Channel 0 TX   [   5] = user_tkeep           [   5]
+  Channel 0 TX   [   6] = user_tkeep           [   6]
+  Channel 0 TX   [   7] = user_tkeep           [   7]
+  Channel 0 TX   [   8] = user_tdata           [   0]
+  Channel 0 TX   [   9] = user_tdata           [   1]
+  Channel 0 TX   [  10] = user_tdata           [   2]
+  Channel 0 TX   [  11] = user_tdata           [   3]
+  Channel 0 TX   [  12] = user_tdata           [   4]
+  Channel 0 TX   [  13] = user_tdata           [   5]
+  Channel 0 TX   [  14] = user_tdata           [   6]
+  Channel 0 TX   [  15] = user_tdata           [   7]
+  Channel 0 TX   [  16] = user_tdata           [   8]
+  Channel 0 TX   [  17] = user_tdata           [   9]
+  Channel 0 TX   [  18] = user_tdata           [  10]
+  Channel 0 TX   [  19] = user_tdata           [  11]
+  Channel 0 TX   [  20] = user_tdata           [  12]
+  Channel 0 TX   [  21] = user_tdata           [  13]
+  Channel 0 TX   [  22] = user_tdata           [  14]
+  Channel 0 TX   [  23] = user_tdata           [  15]
+  Channel 0 TX   [  24] = user_tdata           [  16]
+  Channel 0 TX   [  25] = user_tdata           [  17]
+  Channel 0 TX   [  26] = user_tdata           [  18]
+  Channel 0 TX   [  27] = user_tdata           [  19]
+  Channel 0 TX   [  28] = user_tdata           [  20]
+  Channel 0 TX   [  29] = user_tdata           [  21]
+  Channel 0 TX   [  30] = user_tdata           [  22]
+  Channel 0 TX   [  31] = user_tdata           [  23]
+  Channel 0 TX   [  32] = user_tdata           [  24]
+  Channel 0 TX   [  33] = user_tdata           [  25]
+  Channel 0 TX   [  34] = user_tdata           [  26]
+  Channel 0 TX   [  35] = user_tdata           [  27]
+  Channel 0 TX   [  36] = user_tdata           [  28]
+  Channel 0 TX   [  37] = user_tdata           [  29]
+  Channel 0 TX   [  38] = 1'b0 // DBI
+  Channel 0 TX   [  39] = 1'b0 // DBI
+  Channel 0 TX   [  40] = user_tdata           [  30]
+  Channel 0 TX   [  41] = user_tdata           [  31]
+  Channel 0 TX   [  42] = user_tdata           [  32]
+  Channel 0 TX   [  43] = user_tdata           [  33]
+  Channel 0 TX   [  44] = user_tdata           [  34]
+  Channel 0 TX   [  45] = user_tdata           [  35]
+  Channel 0 TX   [  46] = user_tdata           [  36]
+  Channel 0 TX   [  47] = user_tdata           [  37]
+  Channel 0 TX   [  48] = user_tdata           [  38]
+  Channel 0 TX   [  49] = user_tdata           [  39]
+  Channel 0 TX   [  50] = user_tdata           [  40]
+  Channel 0 TX   [  51] = user_tdata           [  41]
+  Channel 0 TX   [  52] = user_tdata           [  42]
+  Channel 0 TX   [  53] = user_tdata           [  43]
+  Channel 0 TX   [  54] = user_tdata           [  44]
+  Channel 0 TX   [  55] = user_tdata           [  45]
+  Channel 0 TX   [  56] = user_tdata           [  46]
+  Channel 0 TX   [  57] = user_tdata           [  47]
+  Channel 0 TX   [  58] = user_tdata           [  48]
+  Channel 0 TX   [  59] = user_tdata           [  49]
+  Channel 0 TX   [  60] = user_tdata           [  50]
+  Channel 0 TX   [  61] = user_tdata           [  51]
+  Channel 0 TX   [  62] = user_tdata           [  52]
+  Channel 0 TX   [  63] = user_tdata           [  53]
+  Channel 0 TX   [  64] = user_tdata           [  54]
+  Channel 0 TX   [  65] = user_tdata           [  55]
+  Channel 0 TX   [  66] = user_tdata           [  56]
+  Channel 0 TX   [  67] = user_tdata           [  57]
+  Channel 0 TX   [  68] = user_tdata           [  58]
+  Channel 0 TX   [  69] = user_tdata           [  59]
+  Channel 0 TX   [  70] = user_tdata           [  60]
+  Channel 0 TX   [  71] = user_tdata           [  61]
+  Channel 0 TX   [  72] = user_tdata           [  62]
+  Channel 0 TX   [  73] = user_tdata           [  63]
+  Channel 0 TX   [  74] = user_tlast          
+  Channel 0 TX   [  75] = user_tvalid         
+  Channel 0 TX   [  76] = 1'b0                 // RECOVERED_STROBE
+  Channel 0 TX   [  77] = 1'b0                
+  Channel 0 TX   [  78] = 1'b0 // DBI
+  Channel 0 TX   [  79] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [   0] = 1'b0                
+  Channel 0 RX   [   1] = 1'b0                
+  Channel 0 RX   [   2] = 1'b0                
+  Channel 0 RX   [   3] = 1'b0                
+  Channel 0 RX   [   4] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 0 RX   [   5] = 1'b0                
+  Channel 0 RX   [   6] = 1'b0                
+  Channel 0 RX   [   7] = 1'b0                
+  Channel 0 RX   [   8] = 1'b0                
+  Channel 0 RX   [   9] = 1'b0                
+  Channel 0 RX   [  10] = 1'b0                
+  Channel 0 RX   [  11] = 1'b0                
+  Channel 0 RX   [  12] = 1'b0                
+  Channel 0 RX   [  13] = 1'b0                
+  Channel 0 RX   [  14] = 1'b0                
+  Channel 0 RX   [  15] = 1'b0                
+  Channel 0 RX   [  16] = 1'b0                
+  Channel 0 RX   [  17] = 1'b0                
+  Channel 0 RX   [  18] = 1'b0                
+  Channel 0 RX   [  19] = 1'b0                
+  Channel 0 RX   [  20] = 1'b0                
+  Channel 0 RX   [  21] = 1'b0                
+  Channel 0 RX   [  22] = 1'b0                
+  Channel 0 RX   [  23] = 1'b0                
+  Channel 0 RX   [  24] = 1'b0                
+  Channel 0 RX   [  25] = 1'b0                
+  Channel 0 RX   [  26] = 1'b0                
+  Channel 0 RX   [  27] = 1'b0                
+  Channel 0 RX   [  28] = 1'b0                
+  Channel 0 RX   [  29] = 1'b0                
+  Channel 0 RX   [  30] = 1'b0                
+  Channel 0 RX   [  31] = 1'b0                
+  Channel 0 RX   [  32] = 1'b0                
+  Channel 0 RX   [  33] = 1'b0                
+  Channel 0 RX   [  34] = 1'b0                
+  Channel 0 RX   [  35] = 1'b0                
+  Channel 0 RX   [  36] = 1'b0                
+  Channel 0 RX   [  37] = 1'b0                
+  Channel 0 RX   [  38] = 1'b0 // DBI
+  Channel 0 RX   [  39] = 1'b0 // DBI
+  Channel 0 RX   [  40] = 1'b0                
+  Channel 0 RX   [  41] = 1'b0                
+  Channel 0 RX   [  42] = 1'b0                
+  Channel 0 RX   [  43] = 1'b0                
+  Channel 0 RX   [  44] = 1'b0                
+  Channel 0 RX   [  45] = 1'b0                
+  Channel 0 RX   [  46] = 1'b0                
+  Channel 0 RX   [  47] = 1'b0                
+  Channel 0 RX   [  48] = 1'b0                
+  Channel 0 RX   [  49] = 1'b0                
+  Channel 0 RX   [  50] = 1'b0                
+  Channel 0 RX   [  51] = 1'b0                
+  Channel 0 RX   [  52] = 1'b0                
+  Channel 0 RX   [  53] = 1'b0                
+  Channel 0 RX   [  54] = 1'b0                
+  Channel 0 RX   [  55] = 1'b0                
+  Channel 0 RX   [  56] = 1'b0                
+  Channel 0 RX   [  57] = 1'b0                
+  Channel 0 RX   [  58] = 1'b0                
+  Channel 0 RX   [  59] = 1'b0                
+  Channel 0 RX   [  60] = 1'b0                
+  Channel 0 RX   [  61] = 1'b0                
+  Channel 0 RX   [  62] = 1'b0                
+  Channel 0 RX   [  63] = 1'b0                
+  Channel 0 RX   [  64] = 1'b0                
+  Channel 0 RX   [  65] = 1'b0                
+  Channel 0 RX   [  66] = 1'b0                
+  Channel 0 RX   [  67] = 1'b0                
+  Channel 0 RX   [  68] = 1'b0                
+  Channel 0 RX   [  69] = 1'b0                
+  Channel 0 RX   [  70] = 1'b0                
+  Channel 0 RX   [  71] = 1'b0                
+  Channel 0 RX   [  72] = 1'b0                
+  Channel 0 RX   [  73] = 1'b0                
+  Channel 0 RX   [  74] = 1'b0                
+  Channel 0 RX   [  75] = 1'b0                
+  Channel 0 RX   [  76] = 1'b0                 // RECOVERED_STROBE
+  Channel 0 RX   [  77] = 1'b0                
+  Channel 0 RX   [  78] = 1'b0 // DBI
+  Channel 0 RX   [  79] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////

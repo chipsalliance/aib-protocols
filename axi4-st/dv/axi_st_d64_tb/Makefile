@@ -24,5 +24,7 @@ test_xcellium:
 
 clean:
 	@rm -Rf xcelium.d/
-	@rm -Rf axi_mm_a32_d128_tb.history axi_mm_a32_d128_tb.log
+	@rm -Rf waves.shm/
+	@rm -Rf .simvision/
+	@rm -Rf *.history *.log
 	@rm -Rf vcs.log

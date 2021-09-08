@@ -171,6 +171,8 @@ module lpif
   logic [3:0]           lsm_dstrm_state;        // From lpif_lsm_i of lpif_lsm.v
   logic [2:0]           lsm_lnk_cfg;            // From lpif_lsm_i of lpif_lsm.v
   logic [2:0]           lsm_speedmode;          // From lpif_lsm_i of lpif_lsm.v
+  logic                 lsm_stallack;           // From lpif_ctl_i of lpif_ctl.v
+  logic                 lsm_stallreq;           // From lpif_lsm_i of lpif_lsm.v
   logic [31:0]          rx_upstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [31:0]          tx_downstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [31:0]          ustrm_crc;              // From lpif_txrx_i of lpif_txrx.v
@@ -431,9 +433,9 @@ module lpif
      .pl_cerror                         (pl_cerror),
      .pl_tmstmp                         (pl_tmstmp),
      .pl_tmstmp_stream                  (pl_tmstmp_stream[2:0]),
+     .pl_stallreq                       (pl_stallreq),
      .pl_quiesce                        (pl_quiesce),
      .pl_lnk_cfg                        (pl_lnk_cfg[2:0]),
-     .pl_lnk_up                         (pl_lnk_up),
      .pl_rxframe_errmask                (pl_rxframe_errmask),
      .pl_portmode                       (pl_portmode),
      .pl_portmode_val                   (pl_portmode_val),
@@ -449,7 +451,6 @@ module lpif
      .pl_protocol_vld                   (pl_protocol_vld),
      .pl_err_pipestg                    (pl_err_pipestg),
      .pl_wake_ack                       (pl_wake_ack),
-     .pl_exit_cg_req                    (pl_exit_cg_req),
      .pl_cfg                            (pl_cfg[7:0]),
      .pl_cfg_vld                        (pl_cfg_vld),
      .ns_mac_rdy                        (ns_mac_rdy),
@@ -468,6 +469,7 @@ module lpif
      .rden_dly                          (rden_dly[2:0]),
      .tx_online                         (tx_online),
      .rx_online                         (rx_online),
+     .lsm_stallack                      (lsm_stallack),
      .ctl_link_up                       (ctl_link_up),
      // Inputs
      .lclk                              (lclk),
@@ -492,7 +494,6 @@ module lpif
      .lp_rcvd_crc_err                   (lp_rcvd_crc_err),
      .lp_wake_req                       (lp_wake_req),
      .lp_force_detect                   (lp_force_detect),
-     .lp_exit_cg_ack                    (lp_exit_cg_ack),
      .com_clk                           (com_clk),
      .rst_n                             (rst_n),
      .fs_mac_rdy                        (fs_mac_rdy),
@@ -515,7 +516,8 @@ module lpif
      .fifo_pempty                       (fifo_pempty),
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
      .lsm_lnk_cfg                       (lsm_lnk_cfg[2:0]),
-     .lsm_speedmode                     (lsm_speedmode[2:0]));
+     .lsm_speedmode                     (lsm_speedmode[2:0]),
+     .lsm_stallreq                      (lsm_stallreq));
 
   /* Link State Machine */
 
@@ -528,19 +530,23 @@ module lpif
     (/*AUTOINST*/
      // Outputs
      .pl_state_sts                      (pl_state_sts[3:0]),
+     .pl_exit_cg_req                    (pl_exit_cg_req),
      .pl_phyinl1                        (pl_phyinl1),
      .pl_phyinl2                        (pl_phyinl2),
      .pl_phyinrecenter                  (pl_phyinrecenter),
-     .pl_stallreq                       (pl_stallreq),
+     .pl_lnk_up                         (pl_lnk_up),
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
      .lsm_lnk_cfg                       (lsm_lnk_cfg[2:0]),
      .lsm_speedmode                     (lsm_speedmode[2:0]),
+     .lsm_stallreq                      (lsm_stallreq),
      // Inputs
      .lclk                              (lclk),
      .rst_n                             (rst_n),
      .lp_state_req                      (lp_state_req[3:0]),
      .ustrm_state                       (ustrm_state[3:0]),
-     .ctl_link_up                       (ctl_link_up));
+     .ctl_link_up                       (ctl_link_up),
+     .lp_exit_cg_ack                    (lp_exit_cg_ack),
+     .lsm_stallack                      (lsm_stallack));
 
 endmodule // lpif
 
