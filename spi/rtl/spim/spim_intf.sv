@@ -40,8 +40,6 @@ input logic		s_transvld,
 input logic		spim_rdnwr,
 input logic	[1:0]	spim_sselect,
 
-output logic 		cg_en, 	// for clock gating of sclk. Removed
-					// as clock gating is not required
 output	logic   	ss_n_0,  	// slave select 0
 output	logic   	ss_n_1, 	// slave select 1
 output	logic   	ss_n_2,  	// slave select 2
@@ -83,7 +81,6 @@ logic 		ss_n_dlyn;
 logic 		ss_n_dly1;
 logic 		ss_n_early;
 logic 		ss_n_early_cmb;
-logic		cg_off;
 logic		sclk_inv;
 
 
@@ -188,7 +185,6 @@ always_ff @ (posedge sclk_inv or negedge rst_n)
 
 assign ss_n =  (ss_n_int | ss_n_dlyn | ss_n_early_cmb | ss_n_early);
 
-assign cg_en = ~ss_n_dlyn & ~cg_off;
 
 
 always_ff @ (posedge sclk_in or negedge rst_n)
@@ -377,7 +373,6 @@ always_comb begin
 	stransvld_up    = 1'b0;
 	ss_n_int	= 1'b1;
 	inc_spi_addr 	= 1'b0;
-	cg_off 		= 1'b0;
         rx_wdata	= rx_data;
 	nxt_st  	= cur_st; 
 	case (cur_st)
@@ -423,7 +418,6 @@ always_comb begin
                                nxt_st = ST_IDLE;
 		               ss_n_int = 1'b1; 
 			       cmd_is_write = 1'b0; 
-			       cg_off = 1'b1;
 			       stransvld_up = 1'b1; 
                            end
 		           ss_n_int = 1'b0;   // tx load is true
@@ -461,7 +455,6 @@ always_comb begin
  			     if (rx_load) begin 
 	                      inc_spi_addr = 1'b1;  // last write increase - matters for spi write
                               nxt_st = ST_INI_END_RD;
-			       cg_off = 1'b1;
                              end
                            end
 		           ss_n_int = 1'b0;

@@ -21,7 +21,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript:
+// Functional Descript:
 //
 // MUX functionality to either mux in a Strobe or Marker (PERSISTENT == 0)
 // or to route the data around the inserted Strobe or Marker (PERSISTENT == 1)

@@ -103,8 +103,8 @@ logic				wbuf_rd_underflow_sticky;
 logic				rbuf_wr_overflow_sticky;
 logic				rbuf_rd_underflow_sticky;
 
-logic				wbuf_soft_reset;
-logic				rbuf_soft_reset;
+logic				wbuf_rd_soft_reset;
+logic				rbuf_rd_soft_reset;
 logic				rbuf_rd_empty_d1;
 logic				rbuf_rd_empty_pulse;
 
@@ -148,6 +148,11 @@ logic 	spi_wbuf_access;
 logic 	avmm_wbuf_access;
 
 logic   load_dbg_bus0;
+
+logic wbuf_sfrst_ctrl;
+logic rbuf_sfrst_ctrl;
+logic wbuf_rd_sfrst_cmb;
+logic rbuf_rd_sfrst_cmb;
 
 levelsync sync_transvld (
    	.dest_data (s_transvld_sclk),
@@ -244,15 +249,17 @@ always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
            
 assign spi_write_aclk_pulse = spi_write_aclk & ~spi_write_aclk_d1;
 
-assign avbreg_waitreq = (avmm_rbuf_access | avmm_wbuf_access) ? waitreq_buf : waitreq_reg_aclk_pulse; 
+assign avbreg_waitreq = (avmm_rbuf_access | avmm_wbuf_access) ? waitreq_buf : waitreq_reg_aclk; 
+
 assign write_reg = (s_transvld_sclk) ? spi_write_aclk_pulse : avbreg_write; // spi write is to rd buffer(sclk); 
 							           //avb write (nios) is to wr buffer(avmm) 
 
 // Read of registers can be from either SPI or AVMM
 // spi read is to wr buffer(avmm); 
 //avb read (nios) is to rd buffer(sclk)
-assign read_reg  = (spi_read  | avbreg_read);
-assign read_reg_quald  = (read_reg  & ~rd_buf_access & ~wr_buf_access);
+assign read_reg  = (spi_read_aclk_pulse  | avbreg_read);
+
+assign read_reg_quald  = (read_reg); 
 assign write_reg_quald = (write_reg & ~rd_buf_access & ~wr_buf_access);
 
 assign wdata_reg = avbreg_wdata; 
@@ -285,7 +292,7 @@ assign wbuf_read_pop =  ~wbuf_rd_empty & (spi_read & spi_wbuf_access) ;
 
 
 
-assign rbuf_write_push = (~rbuf_wr_full & (spi_write & spi_rbuf_access) & ~cmd_is_write & ~cmd_is_write_d1);
+assign rbuf_write_push = (~rbuf_wr_full & (spi_write & spi_rbuf_access));
 assign rbuf_read_pop = ~rbuf_rd_empty & (avbreg_read & avmm_rbuf_access);
 
 assign m_status_in	= 'b0;
@@ -354,7 +361,41 @@ always_ff @ (posedge sclk_in or negedge rst_n)
           cmd_is_write_d1 <= 1'b0;	
 	else 
           cmd_is_write_d1 <= cmd_is_write;	
-           
+
+//FIFO SOFT RESET LOGIC 
+//Required when command is write (transferring both write data and write cmd to slave)
+//to reset write and read buffers
+//Use wbuf/rbuf sfrst ctrl to disable this feature and depend on FW to reset
+
+logic wbuf_sfrst_ctrl_sclk;
+logic cmd_is_wr_d1_aclk;
+logic wbuf_rdsfrst_sclk;
+
+
+levelsync sync_wbuf_srst_ctrl (
+   	.dest_data (wbuf_sfrst_ctrl_sclk),
+   	.clk_dest (sclk_in), 
+   	.rst_dest_n (rst_n), 
+   	.src_data (wbuf_sfrst_ctrl)
+   );
+
+levelsync sync_cmdwr_d1_aclk (
+   	.dest_data (cmd_is_wr_d1_aclk),
+   	.clk_dest (m_avmm_clk), 
+   	.rst_dest_n (m_avmm_rst_n), 
+   	.src_data (cmd_is_write_d1)
+   );
+
+levelsync sync_wbuf_rdsrst (
+   	.dest_data (wbuf_rdsfrst_sclk),
+   	.clk_dest (sclk_in), 
+   	.rst_dest_n (rst_n), 
+   	.src_data (wbuf_rd_soft_reset)
+   );
+
+assign wbuf_rd_sfrst_cmb = wbuf_sfrst_ctrl_sclk ? wbuf_rdsfrst_sclk : (cmd_is_write_d1 & ssn_off_pulse_sclk);
+assign rbuf_rd_sfrst_cmb = rbuf_sfrst_ctrl ? rbuf_rd_soft_reset : (cmd_is_wr_d1_aclk & ssn_off_aclk);
+
 
  
 //instantiation of asynchronous fifo 
@@ -382,8 +423,8 @@ i_spim_wrbuf_fifo (
 	.wrdata			(wbuf_fifo_wrdata), 
 	.write_push		(wbuf_write_push),
 	.read_pop		(wbuf_read_pop), 
-	.rd_soft_reset		(wbuf_soft_reset),  // from CSR 
-	.wr_soft_reset		(1'b0)   // from CSR
+	.rd_soft_reset		(wbuf_rd_sfrst_cmb),   // logic
+	.wr_soft_reset		(1'b0)  
    );
 
 always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
@@ -421,8 +462,8 @@ i_spim_rdbuf_fifo (
 	.wrdata			(rbuf_fifo_wrdata), 
 	.write_push		(rbuf_write_push),
 	.read_pop		(rbuf_read_pop), 
-	.rd_soft_reset		(rbuf_soft_reset),  // from CSR 
-	.wr_soft_reset		(1'b0)   // from CSR
+	.rd_soft_reset		(rbuf_rd_sfrst_cmb),    // from logic  
+	.wr_soft_reset		(1'b0)  
    );
 
 always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
@@ -465,8 +506,10 @@ spim_reg
 	.rbuf_rd_underflow_sticky (rbuf_rd_underflow_sticky),
 	.avmm_rb_data (avmm_rb_data),
         
-	.wbuf_soft_reset (wbuf_soft_reset),
-	.rbuf_soft_reset (rbuf_soft_reset),
+	.wbuf_rd_soft_reset (wbuf_rd_soft_reset),
+	.rbuf_rd_soft_reset (rbuf_rd_soft_reset),
+	.wbuf_sfrst_ctrl (wbuf_sfrst_ctrl),
+	.rbuf_sfrst_ctrl (rbuf_sfrst_ctrl),
         
 	.m_cmd (m_cmd)
 );

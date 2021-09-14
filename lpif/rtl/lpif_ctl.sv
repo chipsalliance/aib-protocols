@@ -50,7 +50,7 @@ module lpif_ctl
    input logic [LPIF_DATA_WIDTH*8-1:0]                   lp_data,
    input logic [((LPIF_DATA_WIDTH == 128) ? 31 : 15):0]  lp_crc,
    input logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]    lp_crc_valid,
-   input logic [LPIF_DATA_WIDTH-1:0]                     lp_valid,
+   input logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]    lp_valid,
    input logic [2:0]                                     lp_stream,
    output logic                                          pl_trdy,
 
@@ -73,7 +73,7 @@ module lpif_ctl
    output logic [LPIF_DATA_WIDTH*8-1:0]                  pl_data,
    output logic [((LPIF_DATA_WIDTH == 128) ? 31 : 15):0] pl_crc,
    output logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]   pl_crc_valid,
-   output logic [LPIF_DATA_WIDTH-1:0]                    pl_valid,
+   output logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]   pl_valid,
    output logic [2:0]                                    pl_stream,
 
    output logic                                          pl_error,
@@ -161,7 +161,8 @@ module lpif_ctl
 
    // misc
 
-   output logic                                          ctl_link_up
+   output logic                                          ctl_link_up,
+   input logic                                           lsm_state_active
    );
 
   // phy to link layer
@@ -224,7 +225,7 @@ module lpif_ctl
 
   always_comb
     begin
-      pl_trdy = lp_irdy & |lp_valid & ctl_link_up;
+      pl_trdy = lsm_state_active;
     end
 
   localparam [1:0] /* auto enum protid_info */
@@ -477,7 +478,7 @@ module lpif_ctl
           pl_speedmode <= 3'b0;
 
           pl_data <= {LPIF_DATA_WIDTH*8{1'b0}};
-          pl_valid <= {LPIF_DATA_WIDTH{1'b0}};
+          pl_valid <= {((LPIF_DATA_WIDTH == 128) ? 2 : 1){1'b0}};
           pl_crc <= {((LPIF_DATA_WIDTH == 128) ? 32 : 16){1'b0}};
           pl_crc_valid <= {((LPIF_DATA_WIDTH == 128) ? 2 : 1){1'b0}};
           pl_stream <= 3'b0;

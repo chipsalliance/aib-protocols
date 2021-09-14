@@ -1,6 +1,7 @@
 -uvmhome CDNS-1.2
 -SV
 -64bit
++define+CH0_DELAY2
 ${PROJ_DIR}/ca/dv/tb/ca_GENERATED_defines.svh
 +incdir+${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/interface/
 +incdir+${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/tb/

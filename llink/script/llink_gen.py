@@ -1,3 +1,26 @@
+############################################################
+## Proprietary Information of Eximius Design
+##
+##        (C) Copyright 2021 Eximius Design
+##                All Rights Reserved
+##
+## This entire notice must be reproduced on all copies of this file
+## and copies of this file may only be made by a person if such person is
+## permitted to do so under the terms of a subsisting license agreement
+## from Eximius Design
+##
+## Licensed under the Apache License, Version 2.0 (the "License");
+## you may not use this file except in compliance with the License.
+## You may obtain a copy of the License at
+##
+##     http:##www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+############################################################
 from argparse import ArgumentParser
 import os
 import re
@@ -1374,6 +1397,7 @@ def make_name_file(configuration):
     for direction in ['master', 'slave']:
         name_file_name   = "{}_{}_name".format(configuration['MODULE'], direction)
         file_name       = open("{}/{}.sv".format(configuration['OUTPUT_DIR'], name_file_name), "w+")
+        print_verilog_header(file_name)
         file_name.write("module {}  (\n".format(name_file_name))
 
         first_line = True;
@@ -1535,6 +1559,7 @@ def make_concat_file(configuration):
     for direction in ['master', 'slave']:
         name_file_name   = "{}_{}_concat".format(configuration['MODULE'], direction)
         file_name       = open("{}/{}.sv".format(configuration['OUTPUT_DIR'], name_file_name), "w+")
+        print_verilog_header(file_name)
         file_name.write("module {}  (\n".format(name_file_name))
 
         # Logic Link Signaling
@@ -2235,6 +2260,7 @@ def make_top_file(configuration):
     for direction in ['master', 'slave']:
         name_file_name   = "{}_{}_top".format(configuration['MODULE'], direction)
         file_name       = open("{}/{}.sv".format(configuration['OUTPUT_DIR'], name_file_name), "w+")
+        print_verilog_header(file_name)
         file_name.write("module {}  (\n".format(name_file_name))
 
         print_verilog_io_line(file_name, "input", "clk_wr")
@@ -2638,6 +2664,7 @@ def make_info_file(configuration):
 
     name_file_name   = "{}_info".format(configuration['MODULE'])
     file_name        = open("{}/{}.txt".format(configuration['OUTPUT_DIR'], name_file_name), "w+")
+    print_verilog_header(file_name)
 
     file_name.write ("//////////////////////////////////////////////////////////////////////\n")
     file_name.write ("// Data and Channel Size\n")
@@ -2971,6 +2998,7 @@ def make_dv_file(configuration):
 
         name_file_name   = "{}_{}_rawdata_map".format(configuration['MODULE'], direction)
         file_name        = open("{}/{}.svi".format(configuration['OUTPUT_DIR'], name_file_name), "w+")
+        print_verilog_header(file_name)
 
         for string in global_struct.g_dv_vector_print:
             string = re.sub('^tx_tx_', 'tx_', string)
@@ -3084,6 +3112,38 @@ def print_logic_links(configuration):
     return
 
 ## print_logic_links
+##########################################################################################
+
+##########################################################################################
+## print_verilog_header
+
+def print_verilog_header(file_name):
+    file_name.write ("////////////////////////////////////////////////////////////\n")
+    file_name.write ("// Proprietary Information of Eximius Design\n")
+    file_name.write ("//\n")
+    file_name.write ("//        (C) Copyright 2021 Eximius Design\n")
+    file_name.write ("//                All Rights Reserved\n")
+    file_name.write ("//\n")
+    file_name.write ("// This entire notice must be reproduced on all copies of this file\n")
+    file_name.write ("// and copies of this file may only be made by a person if such person is\n")
+    file_name.write ("// permitted to do so under the terms of a subsisting license agreement\n")
+    file_name.write ("// from Eximius Design\n")
+    file_name.write ("//\n")
+    file_name.write ("// Licensed under the Apache License, Version 2.0 (the \"License\");\n")
+    file_name.write ("// you may not use this file except in compliance with the License.\n")
+    file_name.write ("// You may obtain a copy of the License at\n")
+    file_name.write ("//\n")
+    file_name.write ("//     http://www.apache.org/licenses/LICENSE-2.0\n")
+    file_name.write ("//\n")
+    file_name.write ("// Unless required by applicable law or agreed to in writing, software\n")
+    file_name.write ("// distributed under the License is distributed on an \"AS IS\" BASIS,\n")
+    file_name.write ("// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n")
+    file_name.write ("// See the License for the specific language governing permissions and\n")
+    file_name.write ("// limitations under the License.\n")
+    file_name.write ("////////////////////////////////////////////////////////////\n")
+    file_name.write ("\n")
+
+## print_verilog_header
 ##########################################################################################
 
 

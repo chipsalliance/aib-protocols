@@ -89,7 +89,6 @@ logic	[31:0]	avbreg_wdata;
 logic	[15:0]	avbreg_addr;
 logic	[31:0]	avbreg_rdata;
 logic	[3:0]	avbbyte_en;
-logic		cg_en;
 logic	[1:0]	spim_sselect;
 logic		rst_n_avmmclk;
 logic		rst_n_sclk;
@@ -104,7 +103,6 @@ spim_intf  i_spim_intf (
 	.ss_n_2		(ss_n_2),
 	.ss_n_3		(ss_n_3),
 	.ssn_off_pulse	(ssn_off_pulse),
-	.cg_en		(cg_en),
 	.miso		(miso),
 	
 	.tx_rdata	(mosi_data),   // mosi data to slave
@@ -188,15 +186,6 @@ spimavb i_spimavb (
 	.avbreg_read (avbreg_read) 
 );
 
-//Behavioural clk gating cell 
-// Clock gating removed as per HAS
-//logic sclk_gated;
-//clk_gate i_spim_clk_gate (
-//	.clkin		(sclk_in),
-//	//.clken		(~ss_n_int),
-//	.clken		(cg_en),
-//	.gatedclk	(sclkg)
-//);
 
 rst_regen_low i_rstsync_rstn
 (

@@ -48,7 +48,7 @@ module lpif
 
    output logic                                          pl_trdy,
    output logic [LPIF_DATA_WIDTH*8-1:0]                  pl_data,
-   output logic [LPIF_DATA_WIDTH-1:0]                    pl_valid,
+   output logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]   pl_valid,
    output logic [2:0]                                    pl_stream,
    output logic                                          pl_error,
    output logic                                          pl_trainerror,
@@ -61,7 +61,7 @@ module lpif
 
    input logic                                           lp_irdy,
    input logic [LPIF_DATA_WIDTH*8-1:0]                   lp_data,
-   input logic [LPIF_DATA_WIDTH-1:0]                     lp_valid,
+   input logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]    lp_valid,
    input logic [2:0]                                     lp_stream,
    input logic                                           lp_stallack,
    input logic [3:0]                                     lp_state_req,
@@ -173,6 +173,7 @@ module lpif
   logic [2:0]           lsm_speedmode;          // From lpif_lsm_i of lpif_lsm.v
   logic                 lsm_stallack;           // From lpif_ctl_i of lpif_ctl.v
   logic                 lsm_stallreq;           // From lpif_lsm_i of lpif_lsm.v
+  logic                 lsm_state_active;       // From lpif_lsm_i of lpif_lsm.v
   logic [31:0]          rx_upstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [31:0]          tx_downstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [31:0]          ustrm_crc;              // From lpif_txrx_i of lpif_txrx.v
@@ -426,7 +427,7 @@ module lpif
      .pl_data                           (pl_data[LPIF_DATA_WIDTH*8-1:0]),
      .pl_crc                            (pl_crc[(((LPIF_DATA_WIDTH)==128)?31:15):0]),
      .pl_crc_valid                      (pl_crc_valid[(((LPIF_DATA_WIDTH)==128)?1:0):0]),
-     .pl_valid                          (pl_valid[LPIF_DATA_WIDTH-1:0]),
+     .pl_valid                          (pl_valid[(((LPIF_DATA_WIDTH)==128)?1:0):0]),
      .pl_stream                         (pl_stream[2:0]),
      .pl_error                          (pl_error),
      .pl_trainerror                     (pl_trainerror),
@@ -478,7 +479,7 @@ module lpif
      .lp_data                           (lp_data[LPIF_DATA_WIDTH*8-1:0]),
      .lp_crc                            (lp_crc[(((LPIF_DATA_WIDTH)==128)?31:15):0]),
      .lp_crc_valid                      (lp_crc_valid[(((LPIF_DATA_WIDTH)==128)?1:0):0]),
-     .lp_valid                          (lp_valid[LPIF_DATA_WIDTH-1:0]),
+     .lp_valid                          (lp_valid[(((LPIF_DATA_WIDTH)==128)?1:0):0]),
      .lp_stream                         (lp_stream[2:0]),
      .ustrm_state                       (ustrm_state[3:0]),
      .ustrm_protid                      (ustrm_protid[1:0]),
@@ -517,7 +518,8 @@ module lpif
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
      .lsm_lnk_cfg                       (lsm_lnk_cfg[2:0]),
      .lsm_speedmode                     (lsm_speedmode[2:0]),
-     .lsm_stallreq                      (lsm_stallreq));
+     .lsm_stallreq                      (lsm_stallreq),
+     .lsm_state_active                  (lsm_state_active));
 
   /* Link State Machine */
 
@@ -530,6 +532,7 @@ module lpif
     (/*AUTOINST*/
      // Outputs
      .pl_state_sts                      (pl_state_sts[3:0]),
+     .lsm_state_active                  (lsm_state_active),
      .pl_exit_cg_req                    (pl_exit_cg_req),
      .pl_phyinl1                        (pl_phyinl1),
      .pl_phyinl2                        (pl_phyinl2),

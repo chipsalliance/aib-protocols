@@ -1,3 +1,27 @@
+////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
+//
+//        (C) Copyright 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////////////////////////////////////////////////////////////
+
 //////////////////////////////////////////////////////////////////////
 // Data and Channel Size
   Logic Link Data Info
@@ -88,7 +112,7 @@
   Channel 0 TX   [  35] = dstrm_data           [  29]
   Channel 0 TX   [  36] = dstrm_data           [  30]
   Channel 0 TX   [  37] = dstrm_data           [  31]
-  Channel 0 TX   [  38] = 1'b0 // STROBE
+  Channel 0 TX   [  38] = 1'b1 // STROBE
   Channel 0 TX   [  39] = 1'b0 // MARKER
   Channel 0 TX   [  40] = dstrm_data           [  32]
   Channel 0 TX   [  41] = dstrm_data           [  33]
@@ -168,7 +192,7 @@
   Channel 1 TX   [  35] = dstrm_data           [ 106]
   Channel 1 TX   [  36] = dstrm_data           [ 107]
   Channel 1 TX   [  37] = dstrm_data           [ 108]
-  Channel 1 TX   [  38] = 1'b0 // STROBE
+  Channel 1 TX   [  38] = 1'b1 // STROBE
   Channel 1 TX   [  39] = 1'b0 // MARKER
   Channel 1 TX   [  40] = dstrm_data           [ 109]
   Channel 1 TX   [  41] = dstrm_data           [ 110]
@@ -248,7 +272,7 @@
   Channel 2 TX   [  35] = dstrm_data           [ 183]
   Channel 2 TX   [  36] = dstrm_data           [ 184]
   Channel 2 TX   [  37] = dstrm_data           [ 185]
-  Channel 2 TX   [  38] = 1'b0 // STROBE
+  Channel 2 TX   [  38] = 1'b1 // STROBE
   Channel 2 TX   [  39] = 1'b0 // MARKER
   Channel 2 TX   [  40] = dstrm_data           [ 186]
   Channel 2 TX   [  41] = dstrm_data           [ 187]
@@ -328,7 +352,7 @@
   Channel 3 TX   [  35] = dstrm_data           [ 260]
   Channel 3 TX   [  36] = dstrm_data           [ 261]
   Channel 3 TX   [  37] = dstrm_data           [ 262]
-  Channel 3 TX   [  38] = 1'b0 // STROBE
+  Channel 3 TX   [  38] = 1'b1 // STROBE
   Channel 3 TX   [  39] = 1'b0 // MARKER
   Channel 3 TX   [  40] = dstrm_data           [ 263]
   Channel 3 TX   [  41] = dstrm_data           [ 264]
@@ -408,7 +432,7 @@
   Channel 4 TX   [  35] = dstrm_data           [ 337]
   Channel 4 TX   [  36] = dstrm_data           [ 338]
   Channel 4 TX   [  37] = dstrm_data           [ 339]
-  Channel 4 TX   [  38] = 1'b0 // STROBE
+  Channel 4 TX   [  38] = 1'b1 // STROBE
   Channel 4 TX   [  39] = 1'b0 // MARKER
   Channel 4 TX   [  40] = dstrm_data           [ 340]
   Channel 4 TX   [  41] = dstrm_data           [ 341]
@@ -488,7 +512,7 @@
   Channel 5 TX   [  35] = dstrm_data           [ 414]
   Channel 5 TX   [  36] = dstrm_data           [ 415]
   Channel 5 TX   [  37] = dstrm_data           [ 416]
-  Channel 5 TX   [  38] = 1'b0 // STROBE
+  Channel 5 TX   [  38] = 1'b1 // STROBE
   Channel 5 TX   [  39] = 1'b0 // MARKER
   Channel 5 TX   [  40] = dstrm_data           [ 417]
   Channel 5 TX   [  41] = dstrm_data           [ 418]
@@ -568,7 +592,7 @@
   Channel 6 TX   [  35] = dstrm_data           [ 491]
   Channel 6 TX   [  36] = dstrm_data           [ 492]
   Channel 6 TX   [  37] = dstrm_data           [ 493]
-  Channel 6 TX   [  38] = 1'b0 // STROBE
+  Channel 6 TX   [  38] = 1'b1 // STROBE
   Channel 6 TX   [  39] = 1'b0 // MARKER
   Channel 6 TX   [  40] = dstrm_data           [ 494]
   Channel 6 TX   [  41] = dstrm_data           [ 495]
@@ -648,7 +672,7 @@
   Channel 7 TX   [  35] = dstrm_data           [ 568]
   Channel 7 TX   [  36] = dstrm_data           [ 569]
   Channel 7 TX   [  37] = dstrm_data           [ 570]
-  Channel 7 TX   [  38] = 1'b0 // STROBE
+  Channel 7 TX   [  38] = 1'b1 // STROBE
   Channel 7 TX   [  39] = 1'b0 // MARKER
   Channel 7 TX   [  40] = dstrm_data           [ 571]
   Channel 7 TX   [  41] = dstrm_data           [ 572]
@@ -728,7 +752,7 @@
   Channel 8 TX   [  35] = dstrm_data           [ 645]
   Channel 8 TX   [  36] = dstrm_data           [ 646]
   Channel 8 TX   [  37] = dstrm_data           [ 647]
-  Channel 8 TX   [  38] = 1'b0 // STROBE
+  Channel 8 TX   [  38] = 1'b1 // STROBE
   Channel 8 TX   [  39] = 1'b0 // MARKER
   Channel 8 TX   [  40] = dstrm_data           [ 648]
   Channel 8 TX   [  41] = dstrm_data           [ 649]
@@ -808,7 +832,7 @@
   Channel 9 TX   [  35] = dstrm_data           [ 722]
   Channel 9 TX   [  36] = dstrm_data           [ 723]
   Channel 9 TX   [  37] = dstrm_data           [ 724]
-  Channel 9 TX   [  38] = 1'b0 // STROBE
+  Channel 9 TX   [  38] = 1'b1 // STROBE
   Channel 9 TX   [  39] = 1'b0 // MARKER
   Channel 9 TX   [  40] = dstrm_data           [ 725]
   Channel 9 TX   [  41] = dstrm_data           [ 726]
@@ -888,7 +912,7 @@
   Channel 10 TX   [  35] = dstrm_data           [ 799]
   Channel 10 TX   [  36] = dstrm_data           [ 800]
   Channel 10 TX   [  37] = dstrm_data           [ 801]
-  Channel 10 TX   [  38] = 1'b0 // STROBE
+  Channel 10 TX   [  38] = 1'b1 // STROBE
   Channel 10 TX   [  39] = 1'b0 // MARKER
   Channel 10 TX   [  40] = dstrm_data           [ 802]
   Channel 10 TX   [  41] = dstrm_data           [ 803]
@@ -968,7 +992,7 @@
   Channel 11 TX   [  35] = dstrm_data           [ 876]
   Channel 11 TX   [  36] = dstrm_data           [ 877]
   Channel 11 TX   [  37] = dstrm_data           [ 878]
-  Channel 11 TX   [  38] = 1'b0 // STROBE
+  Channel 11 TX   [  38] = 1'b1 // STROBE
   Channel 11 TX   [  39] = 1'b0 // MARKER
   Channel 11 TX   [  40] = dstrm_data           [ 879]
   Channel 11 TX   [  41] = dstrm_data           [ 880]
@@ -1048,7 +1072,7 @@
   Channel 12 TX   [  35] = dstrm_data           [ 953]
   Channel 12 TX   [  36] = dstrm_data           [ 954]
   Channel 12 TX   [  37] = dstrm_data           [ 955]
-  Channel 12 TX   [  38] = 1'b0 // STROBE
+  Channel 12 TX   [  38] = 1'b1 // STROBE
   Channel 12 TX   [  39] = 1'b0 // MARKER
   Channel 12 TX   [  40] = dstrm_data           [ 956]
   Channel 12 TX   [  41] = dstrm_data           [ 957]
@@ -1128,7 +1152,7 @@
   Channel 13 TX   [  35] = dstrm_bstart         [   6]
   Channel 13 TX   [  36] = dstrm_bvalid         [   0]
   Channel 13 TX   [  37] = dstrm_bvalid         [   1]
-  Channel 13 TX   [  38] = 1'b0 // STROBE
+  Channel 13 TX   [  38] = 1'b1 // STROBE
   Channel 13 TX   [  39] = 1'b0 // MARKER
   Channel 13 TX   [  40] = dstrm_bvalid         [   2]
   Channel 13 TX   [  41] = dstrm_bvalid         [   3]
@@ -1208,7 +1232,7 @@
   Channel 14 TX   [  35] = dstrm_bvalid         [  76]
   Channel 14 TX   [  36] = dstrm_bvalid         [  77]
   Channel 14 TX   [  37] = dstrm_bvalid         [  78]
-  Channel 14 TX   [  38] = 1'b0 // STROBE
+  Channel 14 TX   [  38] = 1'b1 // STROBE
   Channel 14 TX   [  39] = 1'b0 // MARKER
   Channel 14 TX   [  40] = dstrm_bvalid         [  79]
   Channel 14 TX   [  41] = dstrm_bvalid         [  80]
@@ -1288,7 +1312,7 @@
   Channel 15 TX   [  35] = 1'b0                
   Channel 15 TX   [  36] = 1'b0                
   Channel 15 TX   [  37] = 1'b0                
-  Channel 15 TX   [  38] = 1'b0 // STROBE
+  Channel 15 TX   [  38] = 1'b1 // STROBE
   Channel 15 TX   [  39] = 1'b0 // MARKER
   Channel 15 TX   [  40] = 1'b0                
   Channel 15 TX   [  41] = 1'b0                
@@ -1373,7 +1397,7 @@
   Channel 0 RX   [  35] = ustrm_data           [  29]
   Channel 0 RX   [  36] = ustrm_data           [  30]
   Channel 0 RX   [  37] = ustrm_data           [  31]
-  Channel 0 RX   [  38] = 1'b0 // STROBE
+  Channel 0 RX   [  38] = 1'b1 // STROBE
   Channel 0 RX   [  39] = 1'b0 // MARKER
   Channel 0 RX   [  40] = ustrm_data           [  32]
   Channel 0 RX   [  41] = ustrm_data           [  33]
@@ -1453,7 +1477,7 @@
   Channel 1 RX   [  35] = ustrm_data           [ 106]
   Channel 1 RX   [  36] = ustrm_data           [ 107]
   Channel 1 RX   [  37] = ustrm_data           [ 108]
-  Channel 1 RX   [  38] = 1'b0 // STROBE
+  Channel 1 RX   [  38] = 1'b1 // STROBE
   Channel 1 RX   [  39] = 1'b0 // MARKER
   Channel 1 RX   [  40] = ustrm_data           [ 109]
   Channel 1 RX   [  41] = ustrm_data           [ 110]
@@ -1533,7 +1557,7 @@
   Channel 2 RX   [  35] = ustrm_data           [ 183]
   Channel 2 RX   [  36] = ustrm_data           [ 184]
   Channel 2 RX   [  37] = ustrm_data           [ 185]
-  Channel 2 RX   [  38] = 1'b0 // STROBE
+  Channel 2 RX   [  38] = 1'b1 // STROBE
   Channel 2 RX   [  39] = 1'b0 // MARKER
   Channel 2 RX   [  40] = ustrm_data           [ 186]
   Channel 2 RX   [  41] = ustrm_data           [ 187]
@@ -1613,7 +1637,7 @@
   Channel 3 RX   [  35] = ustrm_data           [ 260]
   Channel 3 RX   [  36] = ustrm_data           [ 261]
   Channel 3 RX   [  37] = ustrm_data           [ 262]
-  Channel 3 RX   [  38] = 1'b0 // STROBE
+  Channel 3 RX   [  38] = 1'b1 // STROBE
   Channel 3 RX   [  39] = 1'b0 // MARKER
   Channel 3 RX   [  40] = ustrm_data           [ 263]
   Channel 3 RX   [  41] = ustrm_data           [ 264]
@@ -1693,7 +1717,7 @@
   Channel 4 RX   [  35] = ustrm_data           [ 337]
   Channel 4 RX   [  36] = ustrm_data           [ 338]
   Channel 4 RX   [  37] = ustrm_data           [ 339]
-  Channel 4 RX   [  38] = 1'b0 // STROBE
+  Channel 4 RX   [  38] = 1'b1 // STROBE
   Channel 4 RX   [  39] = 1'b0 // MARKER
   Channel 4 RX   [  40] = ustrm_data           [ 340]
   Channel 4 RX   [  41] = ustrm_data           [ 341]
@@ -1773,7 +1797,7 @@
   Channel 5 RX   [  35] = ustrm_data           [ 414]
   Channel 5 RX   [  36] = ustrm_data           [ 415]
   Channel 5 RX   [  37] = ustrm_data           [ 416]
-  Channel 5 RX   [  38] = 1'b0 // STROBE
+  Channel 5 RX   [  38] = 1'b1 // STROBE
   Channel 5 RX   [  39] = 1'b0 // MARKER
   Channel 5 RX   [  40] = ustrm_data           [ 417]
   Channel 5 RX   [  41] = ustrm_data           [ 418]
@@ -1853,7 +1877,7 @@
   Channel 6 RX   [  35] = ustrm_data           [ 491]
   Channel 6 RX   [  36] = ustrm_data           [ 492]
   Channel 6 RX   [  37] = ustrm_data           [ 493]
-  Channel 6 RX   [  38] = 1'b0 // STROBE
+  Channel 6 RX   [  38] = 1'b1 // STROBE
   Channel 6 RX   [  39] = 1'b0 // MARKER
   Channel 6 RX   [  40] = ustrm_data           [ 494]
   Channel 6 RX   [  41] = ustrm_data           [ 495]
@@ -1933,7 +1957,7 @@
   Channel 7 RX   [  35] = ustrm_data           [ 568]
   Channel 7 RX   [  36] = ustrm_data           [ 569]
   Channel 7 RX   [  37] = ustrm_data           [ 570]
-  Channel 7 RX   [  38] = 1'b0 // STROBE
+  Channel 7 RX   [  38] = 1'b1 // STROBE
   Channel 7 RX   [  39] = 1'b0 // MARKER
   Channel 7 RX   [  40] = ustrm_data           [ 571]
   Channel 7 RX   [  41] = ustrm_data           [ 572]
@@ -2013,7 +2037,7 @@
   Channel 8 RX   [  35] = ustrm_data           [ 645]
   Channel 8 RX   [  36] = ustrm_data           [ 646]
   Channel 8 RX   [  37] = ustrm_data           [ 647]
-  Channel 8 RX   [  38] = 1'b0 // STROBE
+  Channel 8 RX   [  38] = 1'b1 // STROBE
   Channel 8 RX   [  39] = 1'b0 // MARKER
   Channel 8 RX   [  40] = ustrm_data           [ 648]
   Channel 8 RX   [  41] = ustrm_data           [ 649]
@@ -2093,7 +2117,7 @@
   Channel 9 RX   [  35] = ustrm_data           [ 722]
   Channel 9 RX   [  36] = ustrm_data           [ 723]
   Channel 9 RX   [  37] = ustrm_data           [ 724]
-  Channel 9 RX   [  38] = 1'b0 // STROBE
+  Channel 9 RX   [  38] = 1'b1 // STROBE
   Channel 9 RX   [  39] = 1'b0 // MARKER
   Channel 9 RX   [  40] = ustrm_data           [ 725]
   Channel 9 RX   [  41] = ustrm_data           [ 726]
@@ -2173,7 +2197,7 @@
   Channel 10 RX   [  35] = ustrm_data           [ 799]
   Channel 10 RX   [  36] = ustrm_data           [ 800]
   Channel 10 RX   [  37] = ustrm_data           [ 801]
-  Channel 10 RX   [  38] = 1'b0 // STROBE
+  Channel 10 RX   [  38] = 1'b1 // STROBE
   Channel 10 RX   [  39] = 1'b0 // MARKER
   Channel 10 RX   [  40] = ustrm_data           [ 802]
   Channel 10 RX   [  41] = ustrm_data           [ 803]
@@ -2253,7 +2277,7 @@
   Channel 11 RX   [  35] = ustrm_data           [ 876]
   Channel 11 RX   [  36] = ustrm_data           [ 877]
   Channel 11 RX   [  37] = ustrm_data           [ 878]
-  Channel 11 RX   [  38] = 1'b0 // STROBE
+  Channel 11 RX   [  38] = 1'b1 // STROBE
   Channel 11 RX   [  39] = 1'b0 // MARKER
   Channel 11 RX   [  40] = ustrm_data           [ 879]
   Channel 11 RX   [  41] = ustrm_data           [ 880]
@@ -2333,7 +2357,7 @@
   Channel 12 RX   [  35] = ustrm_data           [ 953]
   Channel 12 RX   [  36] = ustrm_data           [ 954]
   Channel 12 RX   [  37] = ustrm_data           [ 955]
-  Channel 12 RX   [  38] = 1'b0 // STROBE
+  Channel 12 RX   [  38] = 1'b1 // STROBE
   Channel 12 RX   [  39] = 1'b0 // MARKER
   Channel 12 RX   [  40] = ustrm_data           [ 956]
   Channel 12 RX   [  41] = ustrm_data           [ 957]
@@ -2413,7 +2437,7 @@
   Channel 13 RX   [  35] = ustrm_bstart         [   6]
   Channel 13 RX   [  36] = ustrm_bvalid         [   0]
   Channel 13 RX   [  37] = ustrm_bvalid         [   1]
-  Channel 13 RX   [  38] = 1'b0 // STROBE
+  Channel 13 RX   [  38] = 1'b1 // STROBE
   Channel 13 RX   [  39] = 1'b0 // MARKER
   Channel 13 RX   [  40] = ustrm_bvalid         [   2]
   Channel 13 RX   [  41] = ustrm_bvalid         [   3]
@@ -2493,7 +2517,7 @@
   Channel 14 RX   [  35] = ustrm_bvalid         [  76]
   Channel 14 RX   [  36] = ustrm_bvalid         [  77]
   Channel 14 RX   [  37] = ustrm_bvalid         [  78]
-  Channel 14 RX   [  38] = 1'b0 // STROBE
+  Channel 14 RX   [  38] = 1'b1 // STROBE
   Channel 14 RX   [  39] = 1'b0 // MARKER
   Channel 14 RX   [  40] = ustrm_bvalid         [  79]
   Channel 14 RX   [  41] = ustrm_bvalid         [  80]
@@ -2573,7 +2597,7 @@
   Channel 15 RX   [  35] = 1'b0                
   Channel 15 RX   [  36] = 1'b0                
   Channel 15 RX   [  37] = 1'b0                
-  Channel 15 RX   [  38] = 1'b0 // STROBE
+  Channel 15 RX   [  38] = 1'b1 // STROBE
   Channel 15 RX   [  39] = 1'b0 // MARKER
   Channel 15 RX   [  40] = 1'b0                
   Channel 15 RX   [  41] = 1'b0                

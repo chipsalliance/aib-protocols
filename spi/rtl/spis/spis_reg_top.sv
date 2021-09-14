@@ -106,8 +106,8 @@ logic				wbuf_rd_underflow_sticky;
 logic				rbuf_wr_overflow_sticky;
 logic				rbuf_rd_underflow_sticky;
 
-logic				wbuf_soft_reset;
-logic				rbuf_soft_reset;
+logic				wbuf_rd_soft_reset;
+logic				rbuf_rd_soft_reset;
 
 logic                           wbuf_wr_full;
 logic                           wbuf_rd_empty;
@@ -240,20 +240,23 @@ assign rd_buf_access = (spi_rbuf_access | avmm_rbuf_access);
 assign wr_buf_access = (spi_wbuf_access | avmm_wbuf_access);
 
 assign spi_addr = spi_read ? spi_rd_addr : spi_wr_addr;
-assign addr  = avmm_transvld ? avb2reg_addr : spi_addr; 
-assign write_reg = avmm_transvld ? avb2reg_write: spi_write_aclk_pulse; // spi write is to write buffer (mosi data); 
+assign addr  = spi_addr; 
+
+assign write_reg = spi_write_aclk_pulse; // spi write is to write buffer (mosi data); 
 // avmm writes (nios) data read from avb  to read buffer 
 // spi read is from read buffer (miso data); 
 // avmm reads (nios) write data to avb from write buffer
-assign read_reg  = (avb2reg_read | spi_read);  // spi read is from read buffer (miso data); 
 
-assign wdata_reg = avmm_transvld ? avb2reg_rdata : mosi_data;  
+assign read_reg  = spi_read;  // spi read is from read buffer (miso data); 
+
+
+assign wdata_reg = mosi_data;  
 assign rbuf_fifo_wrdata = avb2reg_rdata;
 assign wbuf_fifo_wrdata = mosi_data;
 
-assign miso_data = (spi_read & spi_rbuf_access) ? rbuf_fifo_rddata : 
-		   (spi_read & ~rd_buf_access) ? rdata_reg : 32'hdeadbeef;  
 
+assign miso_data = (spi_read & spi_rbuf_access) ? rbuf_fifo_rddata : 
+		   (spi_read & ~spi_rbuf_access) ? rdata_reg : 32'hdeadbeef;  
 
 
 assign reg2avb_wdata = wbuf_read_pop ? wbuf_fifo_rddata : 32'b0; 
@@ -298,16 +301,6 @@ always_ff @ (posedge sclk or negedge rst_n)
 
            
 
-assign wbuf_wr_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse :  
-		      (avmm_cmd_rd)  ? ~ssn_off_pulse_sclk  : 1'b1;
-assign wbuf_rd_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse  :
-                      (avmm_cmd_rd)  ? ~ssn_off_pulse_aclk : 1'b1;  
-
-assign rbuf_wr_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse :  
-		      (avmm_cmd_rd)  ? ~ssn_off_pulse_aclk  : 1'b1;
-assign rbuf_rd_rstn = (avmm_cmd_wr) ? ~wbuf_rd_empty_pulse  :
-                      (avmm_cmd_rd & ~single_read )  ? ~ssn_off_pulse_sclk : 1'b1;  
-
 asyncfifo 
  #( // Paramenters
 	.FIFO_WIDTH_WID		(FIFO_WIDTH), 	// Data width of the FIFO
@@ -330,8 +323,8 @@ i_spis_wrbuf_fifo (
 	.wrdata			(wbuf_fifo_wrdata), 
 	.write_push		(wbuf_write_push),
 	.read_pop		(wbuf_read_pop), 
-	.rd_soft_reset		(~wbuf_rd_rstn),  // from CSR 
-	.wr_soft_reset		(1'b0)   // from CSR
+	.rd_soft_reset		(wbuf_rd_soft_reset),  // from CSR 
+	.wr_soft_reset		(1'b0) 
    );
 
 always_ff @(posedge sclk or negedge rst_n)
@@ -346,7 +339,13 @@ always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n)
        else if (wbuf_rd_underflow_pulse)
           wbuf_rd_underflow_sticky <= 1'b1;
 
-
+logic rbuf_rdsfrst_sclk;
+levelsync sync_wbuf_rdsrst (
+   	.dest_data (rbuf_rdsfrst_sclk),
+   	.clk_dest (sclk_in), 
+   	.rst_dest_n (rst_n), 
+   	.src_data (rbuf_rd_soft_reset)
+   );
 
 // Rdbuf is read with spi clk and written with avmm clk 
 asyncfifo 
@@ -371,8 +370,8 @@ i_spis_rdbuf_fifo (
 	.wrdata			(rbuf_fifo_wrdata), 
 	.write_push		(rbuf_write_push),
 	.read_pop		(rbuf_read_pop), 
-	.rd_soft_reset		(~rbuf_rd_rstn),  // from CSR 
-	.wr_soft_reset		(1'b0)   // from CSR
+	.rd_soft_reset		(rbuf_rdsfrst_sclk),  // from CSR 
+	.wr_soft_reset		(1'b0)
    );
 
 always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n)
@@ -410,8 +409,8 @@ spis_reg
 	.rbuf_wr_overflow_sticky (rbuf_wr_overflow_sticky),
 	.rbuf_rd_underflow_sticky (rbuf_rd_underflow_sticky),
         
-	.wbuf_soft_reset (wbuf_soft_reset),
-	.rbuf_soft_reset (rbuf_soft_reset),
+	.wbuf_rd_soft_reset (wbuf_rd_soft_reset),
+	.rbuf_rd_soft_reset (rbuf_rd_soft_reset),
 
 	.s_cmd (s_cmd),
 	.s_status (s_status),

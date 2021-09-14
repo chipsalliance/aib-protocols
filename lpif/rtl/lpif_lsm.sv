@@ -38,6 +38,7 @@ module lpif_lsm
    input logic [3:0]  ustrm_state,
 
    input logic        ctl_link_up,
+   output logic       lsm_state_active,
 
    output logic       pl_exit_cg_req,
    input logic        lp_exit_cg_ack,
@@ -287,6 +288,9 @@ module lpif_lsm
     endcase
   end
   // End of automatics
+
+  // lsm state
+  assign lsm_state_active = (lsm_state == LSM_ACTIVE);
 
   always_ff @(posedge lclk or negedge rst_n)
     if (~rst_n)

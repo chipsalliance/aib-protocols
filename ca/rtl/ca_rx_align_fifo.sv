@@ -21,7 +21,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: Channel Alignment IP, RX channel alignment FIFO
+// Functional Descript: Channel Alignment IP, RX channel alignment FIFO
 //
 //
 //
@@ -39,8 +39,9 @@ module ca_rx_align_fifo
    input logic                         com_clk,
    input logic                         rst_com_n,
 
-   input                               fifo_push,
-   input                               fifo_pop,
+   input logic                         fifo_push,
+   input logic                         fifo_pop,
+   input logic                         soft_reset,
 
    input logic [BITS_PER_CHANNEL-1:0]  rx_din,
    output logic [BITS_PER_CHANNEL-1:0] rx_dout,
@@ -70,13 +71,14 @@ module ca_rx_align_fifo
 
   logic                                wr_full;
   logic                                wr_overflow_pulse, rd_underflow_pulse;
+  logic                                soft_reset_lane_n;
 
   /* RX alignment FIFO */
 
   /* syncfifo AUTO_TEMPLATE (
    .clk_core        (com_clk),
    .rst_core_n      (rst_com_n),
-   .soft_reset      (1'b0),
+   .soft_reset      (soft_reset),
    .rddata          (rx_dout[]),
    .numfilled       (rd_numfilled[]),
    .numempty        (wr_numempty[]),
@@ -100,8 +102,16 @@ module ca_rx_align_fifo
    .wrdata        (rx_din[]),
    .write_push    (fifo_push),
    .read_pop      (fifo_pop),
-   .wr_soft_reset (1'b0),
-   .rd_soft_reset (1'b0),
+   .wr_soft_reset (soft_reset_lane_n),
+   .rd_soft_reset (soft_reset),
+   ); */
+
+  /* levelsync AUTO_TEMPLATE (
+   .RESET_VALUE (1'b0),
+   .clk_dest    (lane_clk),
+   .rst_dest_n  (rst_lane_n),
+   .src_data    (soft_reset),
+   .dest_data   (soft_reset_lane_n),
    ); */
 
   generate
@@ -126,13 +136,26 @@ module ca_rx_align_fifo
              // Inputs
              .clk_core                  (com_clk),               // Templated
              .rst_core_n                (rst_com_n),             // Templated
-             .soft_reset                (1'b0),                  // Templated
+             .soft_reset                (soft_reset),            // Templated
              .write_push                (fifo_push),             // Templated
              .wrdata                    (rx_din[FIFO_WIDTH_MSB:0]), // Templated
              .read_pop                  (fifo_pop));              // Templated
         end
       else
         begin
+          levelsync
+            #(/*AUTOINSTPARAM*/
+              // Parameters
+              .RESET_VALUE              (1'b0))                  // Templated
+          level_sync_i
+            (/*AUTOINST*/
+             // Outputs
+             .dest_data                 (soft_reset_lane_n),     // Templated
+             // Inputs
+             .rst_dest_n                (rst_lane_n),            // Templated
+             .clk_dest                  (lane_clk),              // Templated
+             .src_data                  (soft_reset));            // Templated
+
           asyncfifo
             #(/*AUTOINSTPARAM*/
               // Parameters
@@ -156,8 +179,8 @@ module ca_rx_align_fifo
              .wrdata                    (rx_din[FIFO_WIDTH_WID-1:0]), // Templated
              .write_push                (fifo_push),             // Templated
              .read_pop                  (fifo_pop),              // Templated
-             .rd_soft_reset             (1'b0),                  // Templated
-             .wr_soft_reset             (1'b0));                  // Templated
+             .rd_soft_reset             (soft_reset),            // Templated
+             .wr_soft_reset             (soft_reset_lane_n));     // Templated
         end // else: !if(SYNC_FIFO)
 //    end // block: align_fifo
   endgenerate

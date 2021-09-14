@@ -21,7 +21,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: Channel Alignment IP, TX alignment strobe generator
+// Functional Descript: Channel Alignment IP, TX alignment strobe generator
 //
 //
 //
@@ -125,7 +125,7 @@ module ca_tx_strb
         tx_online_del <= tx_online;
         if (tx_online & ~tx_online_del)
           timer_xz <= count_xz;
-        if (|timer_xz)
+        else if (|timer_xz)
           timer_xz <= timer_xz - 1'b1;
       end
 
@@ -155,10 +155,10 @@ module ca_tx_strb
   // TX state machine, in com_clk domain
 
   localparam [2:0] /* auto enum state_info */
-    TX_IDLE = 3'h0,
-    TX_ONLINE = 3'h1,
-    TX_GEN_STB = 3'h2,
-    TX_DONE = 3'h3;
+    TX_IDLE	= 3'h0,
+    TX_ONLINE	= 3'h1,
+    TX_GEN_STB	= 3'h2,
+    TX_DONE	= 3'h3;
 
   logic [2:0]                                       /* auto enum state_info */
                                                     tx_state, d_tx_state;
@@ -202,6 +202,7 @@ module ca_tx_strb
             d_tx_state = TX_DONE;
         end
         TX_DONE: begin
+          d_tx_state = TX_DONE;
         end
         default: d_tx_state = TX_IDLE;
       endcase // case (tx_state)

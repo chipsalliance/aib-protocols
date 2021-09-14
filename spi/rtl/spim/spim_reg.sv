@@ -58,8 +58,10 @@ input  logic   		wbuf_rd_underflow_sticky,
 input  logic   		rbuf_wr_overflow_sticky,
 input  logic   		rbuf_rd_underflow_sticky,
 
-output  logic   	wbuf_soft_reset,
-output  logic   	rbuf_soft_reset,
+output  logic   	wbuf_rd_soft_reset,
+output  logic   	rbuf_rd_soft_reset,
+output  logic   	wbuf_sfrst_ctrl,
+output  logic   	rbuf_sfrst_ctrl,
 
 output	logic	[31:0]	m_cmd
 );
@@ -84,8 +86,10 @@ logic		[31:0]  rsvd32;
 assign avbreg_rdatavld = 1'b1;
 
 
-assign wbuf_soft_reset = wbuf_fifo_ctrl[0];
-assign rbuf_soft_reset = rbuf_fifo_ctrl[0];
+assign wbuf_rd_soft_reset = wbuf_fifo_ctrl[0];
+assign wbuf_sfrst_ctrl    = wbuf_fifo_ctrl[1];
+assign rbuf_rd_soft_reset = rbuf_fifo_ctrl[0];
+assign rbuf_sfrst_ctrl    = rbuf_fifo_ctrl[1];
 // write  
 // generate write enables for the registers
 assign we_cmd    = 	((addr == 16'h0000) & write) ? 1'b1 : 1'b0;
@@ -174,9 +178,9 @@ always_comb begin
      case (addr) 
 
        16'h0000  : rdata = {m_cmd[31:30],rsvd14,m_cmd[15:0]}; 
-       16'h0004  : rdata = m_status; 
-       16'h0008  : rdata = m_diag0; 
-       16'h000c  : rdata = m_diag1; 
+       16'h000c  : rdata = m_status;  // addr 0x4 -> 0xC 
+       16'h0010  : rdata = m_diag0;   // addr 0x8 -> 0x10
+       16'h0014  : rdata = m_diag1;   // addr 0xC -> 0x14
 
        16'h0020  : rdata = wbuf_rdback; 
        16'h0030  : rdata = rsvd32; 

@@ -57,8 +57,8 @@ input  logic   		wbuf_rd_underflow_sticky,
 input  logic   		rbuf_wr_overflow_sticky,
 input  logic   		rbuf_rd_underflow_sticky,
 
-output  logic   	wbuf_soft_reset,
-output  logic   	rbuf_soft_reset,
+output  logic   	wbuf_rd_soft_reset,
+output  logic   	rbuf_rd_soft_reset,
 
 
 output	logic	[31:0]	s_cmd,
@@ -81,8 +81,8 @@ logic                    we_rbuf_fifo_ctrl;
 logic           [2:0] rsvd3;
 logic          [31:0] rsvd32;
 
-assign wbuf_soft_reset = wbuf_fifo_ctrl[0];
-assign rbuf_soft_reset = rbuf_fifo_ctrl[0];
+assign wbuf_rd_soft_reset = wbuf_fifo_ctrl[0];
+assign rbuf_rd_soft_reset = rbuf_fifo_ctrl[0];
 
 //
 // write  
@@ -166,9 +166,9 @@ always_comb begin
 
        //16'h0000  : rdata = s_cmd; 
        16'h0000  : rdata = {s_cmd[31:24],rsvd3,s_cmd[20:0]}; 
-       16'h0004  : rdata = s_status; 
-       16'h0008  : rdata = s_diag0; 
-       16'h000c  : rdata = s_diag1; 
+       16'h000c  : rdata = s_status;   // addr 0x4 to 0xC
+       16'h0010  : rdata = s_diag0;    // addr 0x8 to 0x10
+       16'h0014  : rdata = s_diag1;    // addr 0xC to 0x14
 
        16'h0030  : rdata = rsvd32; 
        16'h0034  : rdata = rsvd32; 

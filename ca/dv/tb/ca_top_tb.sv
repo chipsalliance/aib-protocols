@@ -60,6 +60,8 @@ module ca_top_tb;
     logic  tb_do_aib_prog  = 1;
 
     logic  aib_ready = 0;
+   reg  [39:0] die_b_rx_din_d1, die_b_rx_din_d2, die_b_rx_din_d;
+   wire [39:0] die_b_rx_din_w;
 
     // wires
     //--------------------------------------------------------------
@@ -180,7 +182,11 @@ module ca_top_tb;
              .rx_stb_intv      (ca_die_b_rx_tb_in_if.rx_stb_intv),
              .tx_din           (ca_die_b_tx_tb_out_if.tx_din),
              .tx_dout          (die_b_tx_dout),
+`ifdef CH0_DELAY2 
+             .rx_din           ({die_b_rx_din[159:39],die_b_rx_din_w[39:0]}), // channel delay here
+`else
              .rx_din           (die_b_rx_din), // channel delay here
+`endif
              .rx_dout          (ca_die_b_rx_tb_in_if.rx_dout),
              .align_done       (die_b_align_done),
              .align_err        (ca_die_b_rx_tb_in_if.align_err),
@@ -397,6 +403,21 @@ module ca_top_tb;
             end
         end 
     end
+
+   /////Delay arrangement for  CH#0
+    always @(posedge clk_lane_b[0]) begin
+      if(tb_reset_l === 1'b0) begin
+          die_b_rx_din_d1[39:0] <=  'h0;
+          die_b_rx_din_d2[39:0] <=  'h0;
+          die_b_rx_din_d[39:0]  <=  'h0;
+      end else begin
+          die_b_rx_din_d1[39:0] <=  die_b_rx_din[39:0];
+          die_b_rx_din_d2[39:0] <=  die_b_rx_din_d1[39:0]; 
+          die_b_rx_din_d[39:0]  <=  die_b_rx_din_d2[39:0];
+      end
+    end
+    assign die_b_rx_din_w[39:0] = die_b_rx_din_d[39:0];
+
 
     // WAVES
     //--------------------------------------------------------------

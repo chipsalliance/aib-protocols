@@ -21,7 +21,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: Channel Alignment IP, RX channel alignment
+// Functional Descript: Channel Alignment IP, RX channel alignment
 //
 //
 //
@@ -73,6 +73,7 @@ module ca_rx_align
   logic                                             rx_online_del;
   logic                                             d_align_done;
   logic                                             d_align_err;
+  logic                                             fifo_soft_reset;
 
   logic [BITS_PER_CHANNEL-1:0]                      rx_din_ch [NUM_CHANNELS-1:0];
   logic [BITS_PER_CHANNEL-1:0]                      rx_dout_ch [NUM_CHANNELS-1:0];
@@ -81,7 +82,7 @@ module ca_rx_align
   logic [NUM_CHANNELS-1:0]                          first_stb_det;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv_com;
-  logic [NUM_CHANNELS-1:0]                          fifo_wr_tmp, fifo_wr;
+  logic [NUM_CHANNELS-1:0]                          fifo_wr;
   logic [7:0]                                       timer_x [NUM_CHANNELS-1:0];
 
   logic [39:0]                                      word [NUM_CHANNELS-1:0];
@@ -103,12 +104,12 @@ module ca_rx_align
   logic                                             align_err_intv;
   assign align_err_intv = |align_err_stb_intv_com;
 
-  logic [8:0] rx_word_start;
-  logic [5:0] rx_bit;
-  logic [8:0] rx_stb_loc;
-  logic [4:0] rx_stb_wd_sel_ones;
-  logic [5:0] rx_stb_bit_sel_ones;
-  logic [5:0] rx_stb_bit_sel_pos;
+  logic [8:0]                                       rx_word_start;
+  logic [5:0]                                       rx_bit;
+  logic [8:0]                                       rx_stb_loc;
+  logic [4:0]                                       rx_stb_wd_sel_ones;
+  logic [5:0]                                       rx_stb_bit_sel_ones;
+  logic [5:0]                                       rx_stb_bit_sel_pos;
 
   /* levelsync AUTO_TEMPLATE (
    .RESET_VALUE (1'b0),
@@ -157,14 +158,13 @@ module ca_rx_align
    .fifo_pfull        (fifo_pfull[i]),
    .fifo_empty        (fifo_empty[i]),
    .fifo_pempty       (fifo_pempty[i]),
+   .soft_reset        (fifo_soft_reset),
    ); */
 
   generate
     for (i = 0; i < NUM_CHANNELS; i++)
       begin : rx_align_fifos
         assign rx_din_ch[i] = (rx_din[(i+1)*BITS_PER_CHANNEL-1:i*BITS_PER_CHANNEL]);
-//        assign fifo_wr[i] = fifo_wr_tmp[i] & ~fifo_full[i];
-        assign fifo_wr[i] = fifo_wr_tmp[i];
 
         ca_rx_align_fifo
           #(/*AUTOINSTPARAM*/
@@ -188,6 +188,7 @@ module ca_rx_align
            .rst_com_n                   (rst_com_n),
            .fifo_push                   (fifo_wr[i]),            // Templated
            .fifo_pop                    (fifo_pop),
+           .soft_reset                  (fifo_soft_reset),       // Templated
            .rx_din                      (rx_din_ch[i]),          // Templated
            .fifo_full_val               (fifo_full_val[4:0]),
            .fifo_pfull_val              (fifo_pfull_val[4:0]),
@@ -237,7 +238,7 @@ module ca_rx_align
               timer_x[i] <= 8'b0;
               stb_det[i] <= 1'b0;
               first_stb_det[i] <= 1'b0;
-              fifo_wr_tmp[i] <= 1'b0;
+              fifo_wr[i] <= 1'b0;
               rx_online_sync_del[i] <= 1'b0;
             end
           else
@@ -245,14 +246,23 @@ module ca_rx_align
               rx_online_sync_del[i] <= rx_online_sync[i];
               if (rx_online_sync[i])
                 begin
-                  stb_det[i] <= d_stb_det[i];
-                  if (~|timer_x[i])
-                    first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
-                  fifo_wr_tmp[i] <= fifo_wr_tmp[i] ? 1'b1 : d_stb_det[i];
+                  if (fifo_soft_reset)
+                    begin
+                      stb_det[i] <= 1'b0;
+                      first_stb_det[i] <= 1'b0;
+                      fifo_wr[i] <= 1'b0;
+                    end
+                  else
+                    begin
+                      stb_det[i] <= d_stb_det[i];
+                      if (~|timer_x[i])
+                        first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
+                      fifo_wr[i] <= fifo_wr[i] ? 1'b1 : d_stb_det[i];
+                    end
                 end
               if (rx_online_sync[i] & ~rx_online_sync_del[i])
                 timer_x[i] <= count_x;
-              if (|timer_x[i])
+              else if (|timer_x[i])
                 timer_x[i] <= timer_x[i] - 1'b1;
             end
       end // block: stb_dets
@@ -273,7 +283,7 @@ module ca_rx_align
         rx_online_del <= rx_online;
         if (rx_online & ~rx_online_del)
           rd_dly <= rden_dly;
-        if (all_fifos_not_empty & |rd_dly)
+        else if (all_fifos_not_empty & |rd_dly)
           rd_dly <= rd_dly - 1'b1;
         align_err <= d_align_err | align_err_intv;
         align_done <= d_align_done;
@@ -281,36 +291,36 @@ module ca_rx_align
 
   /* FIFO reads */
 
-//  assign all_fifos_not_empty = ~|rd_empty;
   assign all_fifos_not_empty = &first_stb_det;
-//  assign fifo_pop = (rx_next_state_aligned | rx_state_aligned | rx_state_done) & ~|rd_dly;
   assign fifo_pop = all_fifos_not_empty & ~|rd_dly;
 
   // RX state machine, in com_clk domain
 
   localparam [2:0] /* auto enum state_info */
-    RX_IDLE = 3'h0,
-    RX_ONLINE = 3'h1,
-    RX_ALIGNED = 3'h2,
-    RX_MON = 3'h3,
-    RX_ERR = 3'h4,
-    RX_DONE = 3'h5;
+    RX_IDLE		= 3'h0,
+    RX_ONLINE		= 3'h1,
+    RX_ALIGNED		= 3'h2,
+    RX_MON		= 3'h3,
+    RX_ERR		= 3'h4,
+    RX_DONE		= 3'h5,
+    RX_SOFT_RESET	= 3'h6;
 
   logic [2:0] /* auto enum state_info */
               rx_state, d_rx_state;
 
   /*AUTOASCIIENUM("rx_state", "rx_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [79:0]            rx_state_ascii;         // Decode of rx_state
+  reg [103:0]           rx_state_ascii;         // Decode of rx_state
   always @(rx_state) begin
     case ({rx_state})
-      RX_IDLE:    rx_state_ascii = "rx_idle   ";
-      RX_ONLINE:  rx_state_ascii = "rx_online ";
-      RX_ALIGNED: rx_state_ascii = "rx_aligned";
-      RX_MON:     rx_state_ascii = "rx_mon    ";
-      RX_ERR:     rx_state_ascii = "rx_err    ";
-      RX_DONE:    rx_state_ascii = "rx_done   ";
-      default:    rx_state_ascii = "%Error    ";
+      RX_IDLE:       rx_state_ascii = "rx_idle      ";
+      RX_ONLINE:     rx_state_ascii = "rx_online    ";
+      RX_ALIGNED:    rx_state_ascii = "rx_aligned   ";
+      RX_MON:        rx_state_ascii = "rx_mon       ";
+      RX_ERR:        rx_state_ascii = "rx_err       ";
+      RX_DONE:       rx_state_ascii = "rx_done      ";
+      RX_SOFT_RESET: rx_state_ascii = "rx_soft_reset";
+      default:       rx_state_ascii = "%Error       ";
     endcase
   end
   // End of automatics
@@ -331,6 +341,7 @@ module ca_rx_align
       d_rx_state = rx_state;
       d_align_done = 1'b0;
       d_align_err = 1'b0;
+      fifo_soft_reset = 1'b0;
       case (rx_state)
         RX_IDLE: begin
           if (rx_online)
@@ -338,13 +349,13 @@ module ca_rx_align
         end
         RX_ONLINE: begin
           if (|fifo_full)
-            d_rx_state = RX_ERR;
+            d_rx_state = align_fly ? RX_SOFT_RESET : RX_ERR;
           else if (all_fifos_not_empty)
             d_rx_state = RX_ALIGNED;
         end
         RX_ALIGNED: begin
           if (~|rd_dly)
-            d_rx_state = align_fly ? RX_MON : RX_DONE;
+            d_rx_state = RX_DONE;
         end
         RX_MON: begin
           d_align_done = 1'b1;
@@ -356,6 +367,10 @@ module ca_rx_align
         end
         RX_DONE: begin
           d_align_done = 1'b1;
+        end
+        RX_SOFT_RESET: begin
+          fifo_soft_reset = 1'b1;
+          d_rx_state = RX_ONLINE;
         end
         default: d_rx_state = RX_IDLE;
       endcase // case (rx_state)

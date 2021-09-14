@@ -21,7 +21,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: Channel Alignment IP
+// Functional Descript: Channel Alignment IP
 //
 //
 //
