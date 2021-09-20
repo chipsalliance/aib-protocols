@@ -1,7 +1,7 @@
 +access+rwc
 axi_st_d256_multichannel_f2h_tb.sv
-${PROJ_DIR}/llink/dv_simple/phy_to_phy_lite.sv
-${PROJ_DIR}/llink/dv_simple/marker_gen.sv
+${PROJ_DIR}/common/dv/p2p_lite.sv
+${PROJ_DIR}/common/dv/marker_gen.sv
 +libverbose
 +libext+.v
 +define+FOR_SIM_ONLY

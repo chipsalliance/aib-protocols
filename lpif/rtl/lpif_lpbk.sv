@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -21,7 +20,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: LPIF Adapter IP Loopback
+// Functional Descript: LPIF Adapter IP Loopback
 //
 //
 //
@@ -29,17 +28,8 @@
 
 module lpif_lpbk
   #(
-    parameter AIB_VERSION = 2,
-    parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
-    parameter AIB_BITS_PER_LANE = 80,
-    parameter AIB_CLOCK_RATE = 1000,
-    parameter LPIF_CLOCK_RATE = 1000,
-    parameter LPIF_DATA_WIDTH = 64,
-    parameter LPIF_PIPELINE_STAGES = 1,
-    parameter MEM_CACHE_STREAM_ID = 3'b001,
-    parameter IO_STREAM_ID = 3'b010,
-    parameter ARB_MUX_STREAM_ID = 3'b100
+    parameter AIB_BITS_PER_LANE = 80
     )
   (
    // AIB Interface

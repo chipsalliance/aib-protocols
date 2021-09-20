@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -21,7 +20,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//Functional Descript: LPIF Adapter IP Control
+// Functional Descript: LPIF Adapter IP Control
 //
 //
 //
@@ -29,140 +28,133 @@
 
 module lpif_ctl
   #(
-    parameter AIB_VERSION = 2,
-    parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
-    parameter AIB_BITS_PER_LANE = 80,
-    parameter AIB_CLOCK_RATE = 1000,
-    parameter LPIF_CLOCK_RATE = 1000,
     parameter LPIF_DATA_WIDTH = 64,
     parameter LPIF_PIPELINE_STAGES = 1,
     parameter MEM_CACHE_STREAM_ID = 3'b001,
     parameter IO_STREAM_ID = 3'b010,
-    parameter ARB_MUX_STREAM_ID = 3'b100
+    parameter ARB_MUX_STREAM_ID = 3'b100,
+    localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
+    localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
   (
    // LPIF Interface
-   input logic                                           lclk,
-   input logic                                           reset,
+   input logic                          lclk,
+   input logic                          reset,
 
-   input logic                                           lp_irdy,
-   input logic [LPIF_DATA_WIDTH*8-1:0]                   lp_data,
-   input logic [((LPIF_DATA_WIDTH == 128) ? 31 : 15):0]  lp_crc,
-   input logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]    lp_crc_valid,
-   input logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]    lp_valid,
-   input logic [2:0]                                     lp_stream,
-   output logic                                          pl_trdy,
+   input logic                          lp_irdy,
+   input logic [LPIF_DATA_WIDTH*8-1:0]  lp_data,
+   input logic [LPIF_CRC_WIDTH-1:0]     lp_crc,
+   input logic [LPIF_VALID_WIDTH-1:0]   lp_crc_valid,
+   input logic [LPIF_VALID_WIDTH-1:0]   lp_valid,
+   input logic [2:0]                    lp_stream,
+   output logic                         pl_trdy,
 
-   output logic [3:0]                                    dstrm_state,
-   output logic [1:0]                                    dstrm_protid,
-   output logic [1023:0]                                 dstrm_data,
-   output logic [1:0]                                    dstrm_dvalid,
-   output logic [31:0]                                   dstrm_crc,
-   output logic [1:0]                                    dstrm_crc_valid,
-   output logic                                          dstrm_valid,
+   output logic [3:0]                   dstrm_state,
+   output logic [1:0]                   dstrm_protid,
+   output logic [1023:0]                dstrm_data,
+   output logic [1:0]                   dstrm_dvalid,
+   output logic [31:0]                  dstrm_crc,
+   output logic [1:0]                   dstrm_crc_valid,
+   output logic                         dstrm_valid,
 
-   input logic [3:0]                                     ustrm_state,
-   input logic [1:0]                                     ustrm_protid,
-   input logic [LPIF_DATA_WIDTH*8-1:0]                   ustrm_data,
-   input logic [1:0]                                     ustrm_dvalid,
-   input logic [31:0]                                    ustrm_crc,
-   input logic [1:0]                                     ustrm_crc_valid,
-   input logic                                           ustrm_valid,
+   input logic [3:0]                    ustrm_state,
+   input logic [1:0]                    ustrm_protid,
+   input logic [LPIF_DATA_WIDTH*8-1:0]  ustrm_data,
+   input logic [1:0]                    ustrm_dvalid,
+   input logic [31:0]                   ustrm_crc,
+   input logic [1:0]                    ustrm_crc_valid,
+   input logic                          ustrm_valid,
 
-   output logic [LPIF_DATA_WIDTH*8-1:0]                  pl_data,
-   output logic [((LPIF_DATA_WIDTH == 128) ? 31 : 15):0] pl_crc,
-   output logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]   pl_crc_valid,
-   output logic [((LPIF_DATA_WIDTH == 128) ? 1 : 0):0]   pl_valid,
-   output logic [2:0]                                    pl_stream,
+   output logic [LPIF_DATA_WIDTH*8-1:0] pl_data,
+   output logic [LPIF_CRC_WIDTH-1:0]    pl_crc,
+   output logic [LPIF_VALID_WIDTH-1:0]  pl_crc_valid,
+   output logic [LPIF_VALID_WIDTH-1:0]  pl_valid,
+   output logic [2:0]                   pl_stream,
 
-   output logic                                          pl_error,
-   output logic                                          pl_trainerror,
-   output logic                                          pl_cerror,
-   output logic                                          pl_tmstmp,
-   output logic [2:0]                                    pl_tmstmp_stream,
+   output logic                         pl_error,
+   output logic                         pl_trainerror,
+   output logic                         pl_cerror,
+   output logic                         pl_tmstmp,
+   output logic [2:0]                   pl_tmstmp_stream,
 
-   input logic                                           lp_stallack,
-   output logic                                          pl_stallreq,
-   input logic                                           lp_tmstmp,
-   input logic                                           lp_linkerror,
-   output logic                                          pl_quiesce,
-   input logic                                           lp_flushed_all,
-   input logic                                           lp_rcvd_crc_err,
-   output logic [2:0]                                    pl_lnk_cfg,
-   output logic                                          pl_rxframe_errmask,
-   output logic                                          pl_portmode,
-   output logic                                          pl_portmode_val,
-   output logic [2:0]                                    pl_speedmode,
-   output logic [2:0]                                    pl_clr_lnkeqreq,
-   output logic [2:0]                                    pl_set_lnkeqreq,
-   output logic                                          pl_inband_pres,
-   output logic [7:0]                                    pl_ptm_rx_delay,
-   output logic                                          pl_setlabs,
-   output logic                                          pl_setlbms,
-   output logic                                          pl_surprise_lnk_down,
-   output logic [2:0]                                    pl_protocol,
-   output logic                                          pl_protocol_vld,
-   output logic                                          pl_err_pipestg,
-   input logic                                           lp_wake_req,
-   output logic                                          pl_wake_ack,
-   input logic                                           lp_force_detect,
-   output logic [7:0]                                    pl_cfg,
-   output logic                                          pl_cfg_vld,
+   input logic                          lp_tmstmp,
+   input logic                          lp_linkerror,
+   output logic                         pl_quiesce,
+   input logic                          lp_flushed_all,
+   input logic                          lp_rcvd_crc_err,
+   output logic [2:0]                   pl_lnk_cfg,
+   output logic                         pl_rxframe_errmask,
+   output logic                         pl_portmode,
+   output logic                         pl_portmode_val,
+   output logic [2:0]                   pl_speedmode,
+   output logic [2:0]                   pl_clr_lnkeqreq,
+   output logic [2:0]                   pl_set_lnkeqreq,
+   output logic                         pl_inband_pres,
+   output logic [7:0]                   pl_ptm_rx_delay,
+   output logic                         pl_setlabs,
+   output logic                         pl_setlbms,
+   output logic                         pl_surprise_lnk_down,
+   output logic [2:0]                   pl_protocol,
+   output logic                         pl_protocol_vld,
+   output logic                         pl_err_pipestg,
+   input logic                          lp_wake_req,
+   output logic                         pl_wake_ack,
+   input logic                          lp_force_detect,
+   output logic [7:0]                   pl_cfg,
+   output logic                         pl_cfg_vld,
 
    // AIB Interface
-   input logic                                           com_clk,
-   input logic                                           rst_n,
+   input logic                          com_clk,
+   input logic                          rst_n,
 
-   output logic                                          ns_mac_rdy,
-   input logic                                           fs_mac_rdy,
-   output logic [AIB_LANES-1:0]                          ns_adapter_rstn,
-   input logic [AIB_LANES-1:0]                           sl_rx_transfer_en,
-   input logic [AIB_LANES-1:0]                           ms_tx_transfer_en,
-   input logic [AIB_LANES-1:0]                           ms_rx_transfer_en,
-   input logic [AIB_LANES-1:0]                           sl_tx_transfer_en,
-   input logic [AIB_LANES-1:0]                           m_rxfifo_align_done,
-   input logic [AIB_LANES-1:0]                           wa_error,
-   input logic [AIB_LANES-1:0]                           wa_error_cnt,
-   input logic                                           dual_mode_select,
-   input logic                                           m_gen2_mode,
-   input logic                                           i_conf_done,
-   input logic [AIB_LANES-1:0]                           power_on_reset,
+   output logic                         ns_mac_rdy,
+   input logic                          fs_mac_rdy,
+   output logic [AIB_LANES-1:0]         ns_adapter_rstn,
+   input logic [AIB_LANES-1:0]          sl_rx_transfer_en,
+   input logic [AIB_LANES-1:0]          ms_tx_transfer_en,
+   input logic [AIB_LANES-1:0]          ms_rx_transfer_en,
+   input logic [AIB_LANES-1:0]          sl_tx_transfer_en,
+   input logic [AIB_LANES-1:0]          m_rxfifo_align_done,
+   input logic [AIB_LANES-1:0]          wa_error,
+   input logic [AIB_LANES-1:0]          wa_error_cnt,
+   input logic                          dual_mode_select,
+   input logic                          m_gen2_mode,
+   input logic                          i_conf_done,
+   input logic [AIB_LANES-1:0]          power_on_reset,
 
    // Channel Alignment
-   input logic                                           align_done,
-   input logic                                           align_err,
-   input logic                                           fifo_full,
-   input logic                                           fifo_pfull,
-   input logic                                           fifo_empty,
-   input logic                                           fifo_pempty,
-   output logic                                          align_fly,
-   output logic [7:0]                                    tx_stb_wd_sel,
-   output logic [39:0]                                   tx_stb_bit_sel,
-   output logic [7:0]                                    tx_stb_intv,
-   output logic [7:0]                                    rx_stb_wd_sel,
-   output logic [39:0]                                   rx_stb_bit_sel,
-   output logic [7:0]                                    rx_stb_intv,
-   output logic [4:0]                                    fifo_full_val,
-   output logic [4:0]                                    fifo_pfull_val,
-   output logic [2:0]                                    fifo_empty_val,
-   output logic [2:0]                                    fifo_pempty_val,
-   output logic [2:0]                                    rden_dly,
-   output logic                                          tx_online,
-   output logic                                          rx_online,
+   input logic                          align_done,
+   input logic                          align_err,
+   input logic                          fifo_full,
+   input logic                          fifo_pfull,
+   input logic                          fifo_empty,
+   input logic                          fifo_pempty,
+   output logic                         align_fly,
+   output logic [7:0]                   tx_stb_wd_sel,
+   output logic [39:0]                  tx_stb_bit_sel,
+   output logic [7:0]                   tx_stb_intv,
+   output logic [7:0]                   rx_stb_wd_sel,
+   output logic [39:0]                  rx_stb_bit_sel,
+   output logic [7:0]                   rx_stb_intv,
+   output logic [4:0]                   fifo_full_val,
+   output logic [4:0]                   fifo_pfull_val,
+   output logic [2:0]                   fifo_empty_val,
+   output logic [2:0]                   fifo_pempty_val,
+   output logic [2:0]                   rden_dly,
+   output logic                         tx_online,
+   output logic                         rx_online,
 
    // lsm
 
-   input logic [3:0]                                     lsm_dstrm_state,
-   input logic [2:0]                                     lsm_lnk_cfg,
-   input logic [2:0]                                     lsm_speedmode,
-   input logic                                           lsm_stallreq,
-   output logic                                          lsm_stallack,
+   input logic [3:0]                    lsm_dstrm_state,
+   input logic [2:0]                    lsm_lnk_cfg,
+   input logic [2:0]                    lsm_speedmode,
 
    // misc
 
-   output logic                                          ctl_link_up,
-   input logic                                           lsm_state_active
+   output logic                         ctl_link_up,
+   input logic                          lsm_state_active
    );
 
   // phy to link layer
@@ -214,8 +206,6 @@ module lpif_ctl
 
   logic                                 d_ns_mac_rdy;
   logic [AIB_LANES-1:0]                 d_ns_adapter_rstn;
-
-  logic                                 d_pl_stallreq;
 
   logic                                 d_dstrm_valid;
   logic [3:0]                           d_dstrm_state;
@@ -296,18 +286,14 @@ module lpif_ctl
     CTL_PHY_INIT	= 4'h1,
     CTL_CFG		= 4'h2,
     CTL_CALIB		= 4'h3,
-    CTL_EXIT_CG_REQ1	= 4'h4,
-    CTL_EXIT_CG_ACK1	= 4'h5,
-    CTL_SB_ACTIVE_REQ	= 4'h6,
-    CTL_SB_ACTIVE_STS	= 4'h7,
-    CTL_EXIT_CG_REQ2	= 4'h8,
-    CTL_EXIT_CG_ACK2	= 4'h9,
-    CTL_WAIT_CA_ALIGN	= 4'hA,
-    CTL_CA_ALIGNED	= 4'hB,
-    CTL_LINK_UP		= 4'hC,
-    CTL_STALL_REQ	= 4'hD,
-    CTL_STALL_ACK	= 4'hE,
-    CTL_HALT		= 4'hF;
+    CTL_SB_ACTIVE_REQ	= 4'h4,
+    CTL_SB_ACTIVE_STS	= 4'h5,
+    CTL_EXIT_CG_REQ2	= 4'h6,
+    CTL_EXIT_CG_ACK2	= 4'h7,
+    CTL_WAIT_CA_ALIGN	= 4'h8,
+    CTL_CA_ALIGNED	= 4'hA,
+    CTL_LINK_UP		= 4'h9,
+    CTL_HALT		= 4'hB;
 
   logic [3:0] /* auto enum ctl_state_info */
               ctl_state, d_ctl_state;
@@ -321,8 +307,6 @@ module lpif_ctl
       CTL_PHY_INIT:      ctl_state_ascii = "ctl_phy_init     ";
       CTL_CFG:           ctl_state_ascii = "ctl_cfg          ";
       CTL_CALIB:         ctl_state_ascii = "ctl_calib        ";
-      CTL_EXIT_CG_REQ1:  ctl_state_ascii = "ctl_exit_cg_req1 ";
-      CTL_EXIT_CG_ACK1:  ctl_state_ascii = "ctl_exit_cg_ack1 ";
       CTL_SB_ACTIVE_REQ: ctl_state_ascii = "ctl_sb_active_req";
       CTL_SB_ACTIVE_STS: ctl_state_ascii = "ctl_sb_active_sts";
       CTL_EXIT_CG_REQ2:  ctl_state_ascii = "ctl_exit_cg_req2 ";
@@ -330,8 +314,6 @@ module lpif_ctl
       CTL_WAIT_CA_ALIGN: ctl_state_ascii = "ctl_wait_ca_align";
       CTL_CA_ALIGNED:    ctl_state_ascii = "ctl_ca_aligned   ";
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
-      CTL_STALL_REQ:     ctl_state_ascii = "ctl_stall_req    ";
-      CTL_STALL_ACK:     ctl_state_ascii = "ctl_stall_ack    ";
       CTL_HALT:          ctl_state_ascii = "ctl_halt         ";
       default:           ctl_state_ascii = "%Error           ";
     endcase
@@ -351,12 +333,10 @@ module lpif_ctl
       d_ctl_state = ctl_state;
       d_ns_mac_rdy = ns_mac_rdy;
       d_ns_adapter_rstn = ns_adapter_rstn;
-      d_pl_stallreq = pl_stallreq;
       d_dstrm_state = dstrm_state;
       d_dstrm_valid = dstrm_valid;
       d_tx_online = tx_online;
       d_rx_online = rx_online;
-      lsm_stallack = 1'b0;
       case (ctl_state)
         CTL_IDLE: begin
           d_ctl_state = CTL_PHY_INIT;
@@ -380,22 +360,6 @@ module lpif_ctl
               d_ctl_state = CTL_WAIT_CA_ALIGN;
             end
         end
-/* -----\/----- EXCLUDED -----\/-----
-        CTL_EXIT_CG_REQ1: begin
-          if (~lp_exit_cg_ack)
-            begin
-              d_pl_exit_cg_req = 1'b1;
-              d_ctl_state = CTL_EXIT_CG_ACK1;
-            end
-        end
-        CTL_EXIT_CG_ACK1: begin
-          if (lp_exit_cg_ack)
-            begin
-              d_pl_exit_cg_req = 1'b0;
-              d_ctl_state = CTL_SB_ACTIVE_REQ;
-            end
-        end
- -----/\----- EXCLUDED -----/\----- */
         CTL_SB_ACTIVE_REQ: begin
           d_dstrm_valid = 1'b1;
           d_dstrm_state = 4'h3; // FIX THIS - should be ACTIVE
@@ -408,22 +372,6 @@ module lpif_ctl
               d_ctl_state = CTL_EXIT_CG_REQ2;
             end
         end
-/* -----\/----- EXCLUDED -----\/-----
-        CTL_EXIT_CG_REQ2: begin
-          if (~lp_exit_cg_ack)
-            begin
-              d_pl_exit_cg_req = 1'b1;
-              d_ctl_state = CTL_EXIT_CG_ACK2;
-            end
-        end
-        CTL_EXIT_CG_ACK2: begin
-          if (lp_exit_cg_ack)
-            begin
-              d_pl_exit_cg_req = 1'b0;
-              d_ctl_state = CTL_LINK_UP;
-            end
-        end
- -----/\----- EXCLUDED -----/\----- */
         CTL_WAIT_CA_ALIGN: begin
           if (align_done)
             d_ctl_state = CTL_LINK_UP;
@@ -432,27 +380,7 @@ module lpif_ctl
           d_ctl_state = CTL_CA_ALIGNED;
         end
         CTL_LINK_UP: begin
-/* -----\/----- EXCLUDED -----\/-----
-          d_pl_lnk_up = 1'b1;
-          if (lsm_stallreq)
-            d_ctl_state = CTL_STALL_REQ;
- -----/\----- EXCLUDED -----/\----- */
           d_ctl_state = CTL_LINK_UP;
-        end
-        CTL_STALL_REQ: begin
-          if (~lp_stallack)
-            begin
-              d_pl_stallreq = 1'b1;
-              d_ctl_state = CTL_EXIT_CG_ACK2;
-            end
-        end
-        CTL_STALL_ACK: begin
-          if (lp_stallack)
-            begin
-              d_pl_stallreq = 1'b0;
-              lsm_stallack = 1'b1;
-              d_ctl_state = CTL_LINK_UP;
-            end
         end
         default: d_ctl_state = CTL_IDLE;
       endcase // case (ctl_state)
@@ -473,14 +401,13 @@ module lpif_ctl
           ns_mac_rdy <= 1'b0;
           ns_adapter_rstn <= {AIB_LANES{1'b0}};
 
-          pl_stallreq <= 1'b0;
           pl_lnk_cfg <= 3'b0;
           pl_speedmode <= 3'b0;
 
           pl_data <= {LPIF_DATA_WIDTH*8{1'b0}};
-          pl_valid <= {((LPIF_DATA_WIDTH == 128) ? 2 : 1){1'b0}};
-          pl_crc <= {((LPIF_DATA_WIDTH == 128) ? 32 : 16){1'b0}};
-          pl_crc_valid <= {((LPIF_DATA_WIDTH == 128) ? 2 : 1){1'b0}};
+          pl_valid <= {LPIF_VALID_WIDTH{1'b0}};
+          pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
+          pl_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
           pl_stream <= 3'b0;
 
           tx_online <= 1'b0;
@@ -499,7 +426,6 @@ module lpif_ctl
           ns_mac_rdy <= d_ns_mac_rdy;
           ns_adapter_rstn <= d_ns_adapter_rstn;
 
-          pl_stallreq <= d_pl_stallreq;
           pl_lnk_cfg <= lsm_lnk_cfg;
           pl_speedmode <= lsm_speedmode;
 

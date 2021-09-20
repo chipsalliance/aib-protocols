@@ -1,3 +1,26 @@
+////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////
 
 `timescale 1ns/1ps
 
@@ -182,10 +205,10 @@ end
    logic [79:0]		ll2ca_slave_1;		// From axi_mm_slave_top_i of axi_mm_a32_d128_packet_gen1_slave_top.v
    logic		master_align_done;	// From ca_master_i of ca.v
    logic		master_align_err;	// From ca_master_i of ca.v
-   logic [1:0]		master_ms_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [1:0]		master_ms_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		master_rx_stb_pos_coding_err;// From ca_master_i of ca.v
    logic		master_rx_stb_pos_err;	// From ca_master_i of ca.v
-   logic [1:0]		master_sl_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [1:0]		master_sl_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		master_tx_stb_pos_coding_err;// From ca_master_i of ca.v
    logic		master_tx_stb_pos_err;	// From ca_master_i of ca.v
    logic [31:0]		rx_ar_debug_status;	// From axi_mm_slave_top_i of axi_mm_a32_d128_packet_gen1_slave_top.v
@@ -195,10 +218,10 @@ end
    logic [31:0]		rx_w_debug_status;	// From axi_mm_slave_top_i of axi_mm_a32_d128_packet_gen1_slave_top.v
    logic		slave_align_done;	// From ca_slave_i of ca.v
    logic		slave_align_err;	// From ca_slave_i of ca.v
-   logic [1:0]		slave_ms_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [1:0]		slave_ms_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		slave_rx_stb_pos_coding_err;// From ca_slave_i of ca.v
    logic		slave_rx_stb_pos_err;	// From ca_slave_i of ca.v
-   logic [1:0]		slave_sl_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [1:0]		slave_sl_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		slave_tx_stb_pos_coding_err;// From ca_slave_i of ca.v
    logic		slave_tx_stb_pos_err;	// From ca_slave_i of ca.v
    logic [31:0]		tx_ar_debug_status;	// From axi_mm_master_top_i of axi_mm_a32_d128_packet_gen1_master_top.v
@@ -391,10 +414,10 @@ end
       .count_xz				(DELAY_XZ_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .tx_stb_intv			(8'd20),                // Strobe repeats every 20 cycles
       .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din				({ll2ca_master_1[79:0], ll2ca_master_0[79:0]}),
       .rx_din				({phy2ca_master_1[79:0], phy2ca_master_0[79:0]}),
@@ -446,10 +469,10 @@ end
       .count_xz				(DELAY_XZ_VALUE),	 // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'h4),			 // Templated
+      .tx_stb_intv			(8'd20),			 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'h4),			 // Templated
+      .rx_stb_intv			(8'd20),			 // Templated
       .tx_din				({ll2ca_master_1[79:0], ll2ca_master_0[79:0]}), // Templated
       .rx_din				({phy2ca_master_1[79:0], phy2ca_master_0[79:0]}), // Templated
       .fifo_full_val			(5'd16),		 // Templated
@@ -461,7 +484,7 @@ end
 
 
 
-   /* phy_to_phy_lite AUTO_TEMPLATE ".*_i\(.+\)" (
+   /* p2p_lite AUTO_TEMPLATE ".*_i\(.+\)" (
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[@]),
       .master_ms_tx_transfer_en		(master_ms_tx_transfer_en[@]),
       .slave_sl_tx_transfer_en		(slave_sl_tx_transfer_en[@]),
@@ -488,7 +511,7 @@ end
       .ns_adapter_rstn		        (rst_phy_n),
     );
     */
-   phy_to_phy_lite phy_to_phy_lite_i0
+   p2p_lite p2p_lite_i0
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[0]), // Templated
@@ -516,7 +539,7 @@ end
       .tb_en_asymmetric			(1'b0));			 // Templated
 
 
-   phy_to_phy_lite phy_to_phy_lite_i1
+   p2p_lite p2p_lite_i1
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[1]), // Templated
@@ -586,10 +609,10 @@ end
       .count_xz				(DELAY_XZ_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
       .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din				({ll2ca_slave_1[79:0], ll2ca_slave_0[79:0]}),
       .rx_din				({phy2ca_slave_1[79:0], phy2ca_slave_0[79:0]}),
@@ -640,10 +663,10 @@ end
       .count_xz				(DELAY_XZ_VALUE),	 // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'h4),			 // Templated
+      .tx_stb_intv			(8'd20),			 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'h4),			 // Templated
+      .rx_stb_intv			(8'd20),			 // Templated
       .tx_din				({ll2ca_slave_1[79:0], ll2ca_slave_0[79:0]}), // Templated
       .rx_din				({phy2ca_slave_1[79:0], phy2ca_slave_0[79:0]}), // Templated
       .fifo_full_val			(5'd16),		 // Templated

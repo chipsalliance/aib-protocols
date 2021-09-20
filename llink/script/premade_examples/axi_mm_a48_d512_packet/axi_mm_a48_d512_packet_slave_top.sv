@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -152,7 +151,7 @@ module axi_mm_a48_d512_packet_slave_top  (
 // Auto Sync
 
    ll_auto_sync #(.MARKER_WIDTH(4),
-                  .PERSISTENT_MARKER(1'b1),
+                  .PERSISTENT_MARKER(1'b0),
                   .PERSISTENT_STROBE(1'b1)) ll_auto_sync_i
      (// Outputs
       .tx_online_delay                  (tx_online_delay),

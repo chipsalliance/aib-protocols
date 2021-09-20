@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -47,6 +46,7 @@ module ca_rx_align_fifo
    output logic [BITS_PER_CHANNEL-1:0] rx_dout,
 
    output logic                        rd_empty,
+   output logic                        wr_overflow_pulse,
 
    input logic [4:0]                   fifo_full_val,
    input logic [4:0]                   fifo_pfull_val,
@@ -70,7 +70,7 @@ module ca_rx_align_fifo
   logic [FIFO_ADDR_WID-1:0]            wr_numempty;
 
   logic                                wr_full;
-  logic                                wr_overflow_pulse, rd_underflow_pulse;
+  logic                                rd_underflow_pulse;
   logic                                soft_reset_lane_n;
 
   /* RX alignment FIFO */
@@ -115,74 +115,72 @@ module ca_rx_align_fifo
    ); */
 
   generate
-//    begin : align_fifo
-      if (SYNC_FIFO)
-        begin
-          syncfifo
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .FIFO_WIDTH_WID           (FIFO_WIDTH_WID),
-              .FIFO_DEPTH_WID           (FIFO_DEPTH_WID))
-          syncfifo_i
-            (/*AUTOINST*/
-             // Outputs
-             .rddata                    (rx_dout[FIFO_WIDTH_MSB:0]), // Templated
-             .numfilled                 (rd_numfilled[FIFO_COUNT_MSB:0]), // Templated
-             .numempty                  (wr_numempty[FIFO_COUNT_MSB:0]), // Templated
-             .full                      (wr_full),               // Templated
-             .empty                     (rd_empty),              // Templated
-             .overflow_pulse            (wr_overflow_pulse),     // Templated
-             .underflow_pulse           (rd_underflow_pulse),    // Templated
-             // Inputs
-             .clk_core                  (com_clk),               // Templated
-             .rst_core_n                (rst_com_n),             // Templated
-             .soft_reset                (soft_reset),            // Templated
-             .write_push                (fifo_push),             // Templated
-             .wrdata                    (rx_din[FIFO_WIDTH_MSB:0]), // Templated
-             .read_pop                  (fifo_pop));              // Templated
-        end
-      else
-        begin
-          levelsync
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .RESET_VALUE              (1'b0))                  // Templated
-          level_sync_i
-            (/*AUTOINST*/
-             // Outputs
-             .dest_data                 (soft_reset_lane_n),     // Templated
-             // Inputs
-             .rst_dest_n                (rst_lane_n),            // Templated
-             .clk_dest                  (lane_clk),              // Templated
-             .src_data                  (soft_reset));            // Templated
+    if (SYNC_FIFO)
+      begin
+        syncfifo
+          #(/*AUTOINSTPARAM*/
+            // Parameters
+            .FIFO_WIDTH_WID             (FIFO_WIDTH_WID),
+            .FIFO_DEPTH_WID             (FIFO_DEPTH_WID))
+        syncfifo_i
+          (/*AUTOINST*/
+           // Outputs
+           .rddata                      (rx_dout[FIFO_WIDTH_MSB:0]), // Templated
+           .numfilled                   (rd_numfilled[FIFO_COUNT_MSB:0]), // Templated
+           .numempty                    (wr_numempty[FIFO_COUNT_MSB:0]), // Templated
+           .full                        (wr_full),               // Templated
+           .empty                       (rd_empty),              // Templated
+           .overflow_pulse              (wr_overflow_pulse),     // Templated
+           .underflow_pulse             (rd_underflow_pulse),    // Templated
+           // Inputs
+           .clk_core                    (com_clk),               // Templated
+           .rst_core_n                  (rst_com_n),             // Templated
+           .soft_reset                  (soft_reset),            // Templated
+           .write_push                  (fifo_push),             // Templated
+           .wrdata                      (rx_din[FIFO_WIDTH_MSB:0]), // Templated
+           .read_pop                    (fifo_pop));              // Templated
+      end
+    else
+      begin
+        levelsync
+          #(/*AUTOINSTPARAM*/
+            // Parameters
+            .RESET_VALUE                (1'b0))                  // Templated
+        level_sync_i
+          (/*AUTOINST*/
+           // Outputs
+           .dest_data                   (soft_reset_lane_n),     // Templated
+           // Inputs
+           .rst_dest_n                  (rst_lane_n),            // Templated
+           .clk_dest                    (lane_clk),              // Templated
+           .src_data                    (soft_reset));            // Templated
 
-          asyncfifo
-            #(/*AUTOINSTPARAM*/
-              // Parameters
-              .FIFO_WIDTH_WID           (FIFO_WIDTH_WID),
-              .FIFO_DEPTH_WID           (FIFO_DEPTH_WID))
-          asyncfifo_i
-            (/*AUTOINST*/
-             // Outputs
-             .rddata                    (rx_dout[FIFO_WIDTH_WID-1:0]), // Templated
-             .rd_numfilled              (rd_numfilled[FIFO_ADDR_WID-1:0]), // Templated
-             .wr_numempty               (wr_numempty[FIFO_ADDR_WID-1:0]), // Templated
-             .wr_full                   (wr_full),
-             .rd_empty                  (rd_empty),
-             .wr_overflow_pulse         (wr_overflow_pulse),
-             .rd_underflow_pulse        (rd_underflow_pulse),
-             // Inputs
-             .clk_write                 (lane_clk),              // Templated
-             .rst_write_n               (rst_lane_n),            // Templated
-             .clk_read                  (com_clk),               // Templated
-             .rst_read_n                (rst_com_n),             // Templated
-             .wrdata                    (rx_din[FIFO_WIDTH_WID-1:0]), // Templated
-             .write_push                (fifo_push),             // Templated
-             .read_pop                  (fifo_pop),              // Templated
-             .rd_soft_reset             (soft_reset),            // Templated
-             .wr_soft_reset             (soft_reset_lane_n));     // Templated
-        end // else: !if(SYNC_FIFO)
-//    end // block: align_fifo
+        asyncfifo
+          #(/*AUTOINSTPARAM*/
+            // Parameters
+            .FIFO_WIDTH_WID             (FIFO_WIDTH_WID),
+            .FIFO_DEPTH_WID             (FIFO_DEPTH_WID))
+        asyncfifo_i
+          (/*AUTOINST*/
+           // Outputs
+           .rddata                      (rx_dout[FIFO_WIDTH_WID-1:0]), // Templated
+           .rd_numfilled                (rd_numfilled[FIFO_ADDR_WID-1:0]), // Templated
+           .wr_numempty                 (wr_numempty[FIFO_ADDR_WID-1:0]), // Templated
+           .wr_full                     (wr_full),
+           .rd_empty                    (rd_empty),
+           .wr_overflow_pulse           (wr_overflow_pulse),
+           .rd_underflow_pulse          (rd_underflow_pulse),
+           // Inputs
+           .clk_write                   (lane_clk),              // Templated
+           .rst_write_n                 (rst_lane_n),            // Templated
+           .clk_read                    (com_clk),               // Templated
+           .rst_read_n                  (rst_com_n),             // Templated
+           .wrdata                      (rx_din[FIFO_WIDTH_WID-1:0]), // Templated
+           .write_push                  (fifo_push),             // Templated
+           .read_pop                    (fifo_pop),              // Templated
+           .rd_soft_reset               (soft_reset),            // Templated
+           .wr_soft_reset               (soft_reset_lane_n));     // Templated
+      end // else: !if(SYNC_FIFO)
   endgenerate
 
   /* FIFO flags */

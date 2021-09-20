@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -42,6 +41,10 @@ module lpif_lsm
 
    output logic       pl_exit_cg_req,
    input logic        lp_exit_cg_ack,
+
+   output logic       pl_stallreq,
+   input logic        lp_stallack,
+
    output logic       pl_phyinl1,
    output logic       pl_phyinl2,
    output logic       pl_phyinrecenter,
@@ -50,13 +53,12 @@ module lpif_lsm
 
    output logic [3:0] lsm_dstrm_state,
    output logic [2:0] lsm_lnk_cfg,
-   output logic [2:0] lsm_speedmode,
-
-   output logic       lsm_stallreq,
-   input logic        lsm_stallack
+   output logic [2:0] lsm_speedmode
    );
 
   logic               d_pl_exit_cg_req;
+
+  logic               d_pl_stallreq;
 
   logic               d_pl_phyinl1;
   logic               d_pl_phyinl2;
@@ -72,6 +74,8 @@ module lpif_lsm
 
   logic               lsm_cg_req, d_lsm_cg_req;
   logic               lsm_cg_ack, d_lsm_cg_ack;
+  logic               lsm_stall_req, d_lsm_stall_req;
+  logic               lsm_stall_ack, d_lsm_stall_ack;
 
   localparam [3:0] /* auto enum sb_info */
     SB_NULL		= 4'h0,
@@ -238,10 +242,10 @@ module lpif_lsm
     LSM_RESET		= 5'h0,
     LSM_RESET_a		= 5'h1,
     LSM_RESET_b		= 5'h2,
-    LSM_RESET_c		= 5'h3,
-    LSM_RESET_d		= 5'h4,
-    LSM_ACTIVE_a	= 5'h5,
-    LSM_ACTIVE		= 5'h6,
+    LSM_ACTIVE_a	= 5'h3,
+    LSM_ACTIVE		= 5'h4,
+    LSM_ACTIVE_b	= 5'h5,
+    LSM_ACTIVE_c	= 5'h6,
     LSM_ACTIVE_L0S	= 5'h7,
     LSM_DAPM		= 5'h8,
     LSM_IDLE_L1_1	= 5'h9,
@@ -267,10 +271,10 @@ module lpif_lsm
       LSM_RESET:       lsm_state_ascii = "lsm_reset      ";
       LSM_RESET_a:     lsm_state_ascii = "lsm_reset_a    ";
       LSM_RESET_b:     lsm_state_ascii = "lsm_reset_b    ";
-      LSM_RESET_c:     lsm_state_ascii = "lsm_reset_c    ";
-      LSM_RESET_d:     lsm_state_ascii = "lsm_reset_d    ";
       LSM_ACTIVE_a:    lsm_state_ascii = "lsm_active_a   ";
       LSM_ACTIVE:      lsm_state_ascii = "lsm_active     ";
+      LSM_ACTIVE_b:    lsm_state_ascii = "lsm_active_b   ";
+      LSM_ACTIVE_c:    lsm_state_ascii = "lsm_active_c   ";
       LSM_ACTIVE_L0S:  lsm_state_ascii = "lsm_active_l0s ";
       LSM_DAPM:        lsm_state_ascii = "lsm_dapm       ";
       LSM_IDLE_L1_1:   lsm_state_ascii = "lsm_idle_l1_1  ";
@@ -310,7 +314,7 @@ module lpif_lsm
       d_lsm_lnk_cfg = lsm_lnk_cfg;
       d_lsm_speedmode = lsm_speedmode;
       d_lsm_cg_req = lsm_cg_req;
-      lsm_stallreq = 1'b0;
+      d_lsm_stall_req = lsm_stall_req;
       d_pl_lnk_up = pl_lnk_up;
       case (lsm_state)
         LSM_RESET: begin
@@ -324,21 +328,10 @@ module lpif_lsm
           if (lsm_cg_ack)
             begin
               d_lsm_cg_req = 1'b0;
-              d_lsm_state = LSM_RESET_d;
+              d_lsm_state = LSM_RESET_b;
             end
         end
         LSM_RESET_b: begin
-          d_lsm_cg_req = 1'b1;
-          d_lsm_state = LSM_RESET_c;
-        end
-        LSM_RESET_c: begin
-          if (lsm_cg_ack)
-            begin
-              d_lsm_cg_req = 1'b0;
-              d_lsm_state = LSM_RESET_d;
-            end
-        end
-        LSM_RESET_d: begin
           begin
             d_pl_lnk_up = 1'b1;
             if (state_req_active)
@@ -356,6 +349,22 @@ module lpif_lsm
             d_lsm_state = LSM_ACTIVE;
         end
         LSM_ACTIVE: begin
+          if (state_req_retrain | state_req_idle_l1_1 | sb_l1_req | state_req_sleep_l2 | sb_l2_req |
+              state_req_linkreset | sb_link_reset_req | sb_link_retrain_req | state_req_disable |
+              sb_link_error)
+            begin
+              d_lsm_stall_req = 1'b1;
+              d_lsm_state = LSM_ACTIVE_b;
+            end
+        end
+        LSM_ACTIVE_b: begin
+          if (lsm_stall_ack)
+            begin
+              d_lsm_stall_req = 1'b0;
+              d_lsm_state = LSM_ACTIVE_c;
+            end
+        end
+        LSM_ACTIVE_c: begin
           d_lsm_dstrm_state = SB_ACTIVE_STS;
           if (state_req_retrain)
             begin
@@ -509,6 +518,7 @@ module lpif_lsm
     if (~rst_n)
       begin
         pl_exit_cg_req <= 1'b0;
+        pl_stallreq <= 1'b0;
         pl_phyinl1 <= 1'b0;
         pl_phyinl2 <= 1'b0;
         pl_phyinrecenter <= 1'b0;
@@ -518,11 +528,14 @@ module lpif_lsm
         lsm_speedmode <= 3'b0;
         lsm_cg_req <= 1'b0;
         lsm_cg_ack <= 1'b0;
+        lsm_stall_req <= 1'b0;
+        lsm_stall_ack <= 1'b0;
         pl_lnk_up <= 1'b0;
       end
     else
       begin
         pl_exit_cg_req <= d_pl_exit_cg_req;
+        pl_stallreq <= d_pl_stallreq;
         pl_phyinl1 <= d_pl_phyinl1;
         pl_phyinl2 <= d_pl_phyinl2;
         pl_phyinrecenter <= d_pl_phyinrecenter;
@@ -532,6 +545,8 @@ module lpif_lsm
         lsm_speedmode <= d_lsm_speedmode;
         lsm_cg_req <= d_lsm_cg_req;
         lsm_cg_ack <= d_lsm_cg_ack;
+        lsm_stall_req <= d_lsm_stall_req;
+        lsm_stall_ack <= d_lsm_stall_ack;
         pl_lnk_up <= d_pl_lnk_up;
       end
 
@@ -544,24 +559,26 @@ module lpif_lsm
     HS_CG_REQ		= 3'h1,
     HS_CG_ACK1		= 3'h2,
     HS_CG_ACK2		= 3'h3,
-    HS_ST_REQ		= 3'h4,
-    HS_ST_ACK		= 3'h5;
+    HS_STALL_REQ	= 3'h4,
+    HS_STALL_ACK1	= 3'h5,
+    HS_STALL_ACK2	= 3'h6;
 
   logic [2:0]         /* auto enum hs_state_info */
                       hs_state, d_hs_state;
 
   /*AUTOASCIIENUM("hs_state", "hs_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [79:0]            hs_state_ascii;         // Decode of hs_state
+  reg [103:0]           hs_state_ascii;         // Decode of hs_state
   always @(hs_state) begin
     case ({hs_state})
-      HS_IDLE:    hs_state_ascii = "hs_idle   ";
-      HS_CG_REQ:  hs_state_ascii = "hs_cg_req ";
-      HS_CG_ACK1: hs_state_ascii = "hs_cg_ack1";
-      HS_CG_ACK2: hs_state_ascii = "hs_cg_ack2";
-      HS_ST_REQ:  hs_state_ascii = "hs_st_req ";
-      HS_ST_ACK:  hs_state_ascii = "hs_st_ack ";
-      default:    hs_state_ascii = "%Error    ";
+      HS_IDLE:       hs_state_ascii = "hs_idle      ";
+      HS_CG_REQ:     hs_state_ascii = "hs_cg_req    ";
+      HS_CG_ACK1:    hs_state_ascii = "hs_cg_ack1   ";
+      HS_CG_ACK2:    hs_state_ascii = "hs_cg_ack2   ";
+      HS_STALL_REQ:  hs_state_ascii = "hs_stall_req ";
+      HS_STALL_ACK1: hs_state_ascii = "hs_stall_ack1";
+      HS_STALL_ACK2: hs_state_ascii = "hs_stall_ack2";
+      default:       hs_state_ascii = "%Error       ";
     endcase
   end
   // End of automatics
@@ -576,13 +593,15 @@ module lpif_lsm
     begin : hs_state_next
       d_hs_state = hs_state;
       d_pl_exit_cg_req = pl_exit_cg_req;
+      d_pl_stallreq = pl_stallreq;
       d_lsm_cg_ack = lsm_cg_ack;
+      d_lsm_stall_ack = lsm_stall_ack;
       case (hs_state)
         HS_IDLE: begin
           if (lsm_cg_req & ~lp_exit_cg_ack)
-            begin
               d_hs_state = HS_CG_REQ;
-            end
+          else if (lsm_stall_req & ~lp_stallack)
+              d_hs_state = HS_STALL_REQ;
         end
         HS_CG_REQ: begin
           d_pl_exit_cg_req = 1'b1;
@@ -601,9 +620,26 @@ module lpif_lsm
           if (~lp_exit_cg_ack)
             d_hs_state = HS_IDLE;
         end
+        HS_STALL_REQ: begin
+          d_pl_stallreq = 1'b1;
+          d_hs_state = HS_STALL_ACK1;
+        end
+        HS_STALL_ACK1: begin
+          if (lp_stallack)
+            begin
+              d_lsm_stall_ack = 1'b1;
+              d_hs_state = HS_STALL_ACK2;
+            end
+        end
+        HS_STALL_ACK2: begin
+          d_pl_stallreq = 1'b0;
+          d_lsm_stall_ack = 1'b0;
+          if (~lp_stallack)
+            d_hs_state = HS_IDLE;
+        end
         default: d_hs_state = HS_IDLE;
       endcase // case (hs_state)
-    end
+    end // block: hs_state_next
 
 endmodule // lpif_lsm
 

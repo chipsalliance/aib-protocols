@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -97,35 +96,6 @@ localparam STATE_RD_WAITRDVLD		= 4'h7;
 localparam STATE_RD_SETNEXT		= 4'h8;
 localparam STATE_RD_ENDRD		= 4'h9;
 
-logic  	[16:0]	s_avmm0_addr_int;  
-logic 	[3:0]	s_avmm0_byte_en_int; 
-logic		s_avmm0_write_int;   
-logic		s_avmm0_read_int;   
-logic 	[31:0]	s_avmm0_wdata_int;  
-
-logic	[31:0]	s_avmm0_rdata_d1;   
-logic		s_avmm0_rdatavld_d1;
-logic		s_avmm0_waitreq_d1; 
-
-logic  	[16:0]	s_avmm1_addr_int;  
-logic 	[3:0]	s_avmm1_byte_en_int;
-logic		s_avmm1_write_int; 
-logic		s_avmm1_read_int; 
-logic 	[31:0]	s_avmm1_wdata_int; 
-
-logic	[31:0]	s_avmm1_rdata_d1; 
-logic		s_avmm1_rdatavld_d1;
-logic		s_avmm1_waitreq_d1; 
-
-logic  	[16:0]	s_avmm2_addr_int;  
-logic 	[3:0]	s_avmm2_byte_en_int;
-logic		s_avmm2_write_int;
-logic		s_avmm2_read_int;
-logic 	[31:0]	s_avmm2_wdata_int;
-
-logic	[31:0]	s_avmm2_rdata_d1;
-logic		s_avmm2_rdatavld_d1;
-logic		s_avmm2_waitreq_d1;
 
 logic  	[16:0]	s_avmm_addr;   	
 logic 	[3:0]	s_avmm_byte_en; 
@@ -158,71 +128,7 @@ logic		avmmtransvld_up_int;
 logic		avmm_transvld_d1;
 logic		avmm_transvld_pulse;
 
-always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) 
-	if (~s_avmm_rst_n) begin
-           s_avmm0_addr        <= 17'b0;   
-           s_avmm0_byte_en     <= 4'b0;
-           s_avmm0_write       <= 1'b0; 
-           s_avmm0_read        <= 1'b0; 
-           s_avmm0_wdata       <= 32'b0;
-           
-           s_avmm0_rdata_d1    <= 32'b0;
-           s_avmm0_rdatavld_d1 <= 1'b0;
-           s_avmm0_waitreq_d1  <= 1'b1;
 
-           s_avmm1_addr        <= 17'b0;   
-           s_avmm1_byte_en     <= 4'b0;
-           s_avmm1_write       <= 1'b0; 
-           s_avmm1_read        <= 1'b0; 
-           s_avmm1_wdata       <= 32'b0;
-           
-           s_avmm1_rdata_d1    <= 32'b0;
-           s_avmm1_rdatavld_d1 <= 1'b0;
-           s_avmm1_waitreq_d1  <= 1'b1;
-
-           s_avmm2_addr        <= 17'b0;   
-           s_avmm2_byte_en     <= 4'b0;
-           s_avmm2_write       <= 1'b0; 
-           s_avmm2_read        <= 1'b0; 
-           s_avmm2_wdata       <= 32'b0;
-           
-           s_avmm2_rdata_d1    <= 32'b0;
-           s_avmm2_rdatavld_d1 <= 1'b0;
-           s_avmm2_waitreq_d1  <= 1'b1;
-           end
-        else begin
-
-           s_avmm0_addr        <= s_avmm0_addr_int;   
-           s_avmm0_byte_en     <= s_avmm0_byte_en_int;
-           s_avmm0_write       <= s_avmm0_write_int; 
-           s_avmm0_read        <= s_avmm0_read_int; 
-           s_avmm0_wdata       <= s_avmm0_wdata_int;
-           
-           s_avmm0_rdata_d1    <= s_avmm0_rdata;
-           s_avmm0_rdatavld_d1 <= s_avmm0_rdatavld;
-           s_avmm0_waitreq_d1  <= s_avmm0_waitreq;
-
-           s_avmm1_addr        <= s_avmm1_addr_int;   
-           s_avmm1_byte_en     <= s_avmm1_byte_en_int;
-           s_avmm1_write       <= s_avmm1_write_int; 
-           s_avmm1_read        <= s_avmm1_read_int; 
-           s_avmm1_wdata       <= s_avmm1_wdata_int;
-           
-           s_avmm1_rdata_d1    <= s_avmm1_rdata;
-           s_avmm1_rdatavld_d1 <= s_avmm1_rdatavld;
-           s_avmm1_waitreq_d1  <= s_avmm1_waitreq;
-
-           s_avmm2_addr        <= s_avmm2_addr_int;   
-           s_avmm2_byte_en     <= s_avmm2_byte_en_int;
-           s_avmm2_write       <= s_avmm2_write_int; 
-           s_avmm2_read        <= s_avmm2_read_int; 
-           s_avmm2_wdata       <= s_avmm2_wdata_int;
-           
-           s_avmm2_rdata_d1    <= s_avmm2_rdata;
-           s_avmm2_rdatavld_d1 <= s_avmm2_rdatavld;
-           s_avmm2_waitreq_d1  <= s_avmm2_waitreq;
-
-           end
 
 assign dbg_bus1[31:0] = ({{12{1'b0}},cur_st,burstcount,avmm_brstlen}); 
 
@@ -254,82 +160,80 @@ assign avb2reg_rdata_q	= s_avmm_rdata;
 assign avb2reg_read	= ((cur_st == STATE_WR_RDSPIREG) | 
                            (cur_st == STATE_WR_WAITREQ)) ? 1'b1 : 1'b0; //m_avmm_read from wr_buf;
 
-assign avmm_write	= ((cur_st == STATE_WR_RDSPIREG) | 
-                           (cur_st == STATE_WR_WAITREQ)) ? 1'b1 : 1'b0; //m_avmm_read from wr_buf;
-assign avmm_read 	= ((cur_st == STATE_RD_AVBCHNL) | 
-                           (cur_st == STATE_RD_WAITRDVLD)) ? 1'b1 : 1'b0; //m_avmm_read from wr_buf;
+assign avmm_write	= ((cur_st == STATE_WR_WAITREQ)) ? 1'b1 : 1'b0; //m_avmm_read from wr_buf;
+assign avmm_read 	= ((cur_st == STATE_RD_WAITRDVLD)) ? 1'b1 : 1'b0; //m_avmm_read from wr_buf;
 
 always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) begin
 	if (~s_avmm_rst_n) begin           
 	   avmm_addr_d1  <= 16'b0;
-	   avmm_write_d1 <= 1'b0;
-	   avmm_read_d1 <= 1'b0;
 	end
-	else begin
-	   avmm_addr_d1  <= avmm_addr;
-	   avmm_write_d1 <= avmm_write;
-	   avmm_read_d1 <= avmm_read;
- 	end
-end
+ 	else begin
+ 	   avmm_addr_d1  <= avmm_addr;
+  	end
+ end
 	
+assign s_avmm_addr	= avmm_addr_d1;
+
 assign s_avmm_wdata	= avmm_wdata;
 assign s_avmm_byte_en	= 4'b1111;
-assign s_avmm_addr	= avmm_addr_d1;
-assign s_avmm_write	= avmm_write & avmm_write_d1;
-assign s_avmm_read	= avmm_read & avmm_read_d1;
+assign s_avmm_write	= avmm_write; 
+assign s_avmm_read	= avmm_read;
+
 
 
 //select avmm interface based on avmm_sel
+
 always_comb begin
-s_avmm0_addr_int 	= 'b0;
-s_avmm0_byte_en_int	= 'b0;
-s_avmm0_write_int 	= 1'b0;
-s_avmm0_read_int 	= 1'b0;
-s_avmm0_wdata_int 	= 'b0;
-s_avmm1_addr_int 	= 'b0;
-s_avmm1_byte_en_int	= 'b0;
-s_avmm1_write_int 	= 1'b0;
-s_avmm1_read_int 	= 1'b0;
-s_avmm1_wdata_int 	= 'b0;
-s_avmm2_addr_int 	= 'b0;
-s_avmm2_byte_en_int	= 'b0;
-s_avmm2_write_int 	= 1'b0;
-s_avmm2_read_int 	= 1'b0;
-s_avmm2_wdata_int 	= 'b0;
+s_avmm0_addr 	= 'b0;
+s_avmm0_byte_en	= 'b0;
+s_avmm0_write 	= 1'b0;
+s_avmm0_read 	= 1'b0;
+s_avmm0_wdata 	= 'b0;
+s_avmm1_addr 	= 'b0;
+s_avmm1_byte_en	= 'b0;
+s_avmm1_write 	= 1'b0;
+s_avmm1_read 	= 1'b0;
+s_avmm1_wdata 	= 'b0;
+s_avmm2_addr 	= 'b0;
+s_avmm2_byte_en	= 'b0;
+s_avmm2_write 	= 1'b0;
+s_avmm2_read 	= 1'b0;
+s_avmm2_wdata   = 'b0;
 case(avmm_sel)
  2'b00: begin
-	s_avmm0_addr_int 	= s_avmm_addr;
-	s_avmm0_byte_en_int	= s_avmm_byte_en;
-	s_avmm0_write_int 	= s_avmm_write;
-	s_avmm0_read_int 	= s_avmm_read;
-	s_avmm0_wdata_int 	= s_avmm_wdata;
+	s_avmm0_addr 	= s_avmm_addr;
+	s_avmm0_byte_en	= s_avmm_byte_en;
+	s_avmm0_write 	= s_avmm_write;
+	s_avmm0_read 	= s_avmm_read;
+	s_avmm0_wdata 	= s_avmm_wdata;
  end
 
  2'b01: begin
-	s_avmm1_addr_int 	= s_avmm_addr;
-	s_avmm1_byte_en_int	= s_avmm_byte_en;
-	s_avmm1_write_int 	= s_avmm_write;
-	s_avmm1_read_int 	= s_avmm_read;
-	s_avmm1_wdata_int 	= s_avmm_wdata;
+	s_avmm1_addr 	= s_avmm_addr;
+	s_avmm1_byte_en	= s_avmm_byte_en;
+	s_avmm1_write 	= s_avmm_write;
+	s_avmm1_read 	= s_avmm_read;
+	s_avmm1_wdata 	= s_avmm_wdata;
  end
 	
  2'b10: begin
-	s_avmm2_addr_int 	= s_avmm_addr;
-	s_avmm2_byte_en_int	= s_avmm_byte_en;
-	s_avmm2_write_int 	= s_avmm_write;
-	s_avmm2_read_int 	= s_avmm_read;
-	s_avmm2_wdata_int 	= s_avmm_wdata;
+	s_avmm2_addr 	= s_avmm_addr;
+	s_avmm2_byte_en	= s_avmm_byte_en;
+	s_avmm2_write 	= s_avmm_write;
+	s_avmm2_read 	= s_avmm_read;
+	s_avmm2_wdata 	= s_avmm_wdata;
  end
 
  default: begin
-	s_avmm0_addr_int 	= s_avmm_addr;
-	s_avmm0_byte_en_int	= s_avmm_byte_en;
-	s_avmm0_write_int 	= s_avmm_write;
-	s_avmm0_read_int 	= s_avmm_read;
-	s_avmm0_wdata_int 	= s_avmm_wdata;
+	s_avmm0_addr 	= s_avmm_addr;
+	s_avmm0_byte_en	= s_avmm_byte_en;
+	s_avmm0_write 	= s_avmm_write;
+	s_avmm0_read 	= s_avmm_read;
+	s_avmm0_wdata 	= s_avmm_wdata;
  end
 endcase
 end
+
 
 //select avmm interface based on avmm_sel
 always_comb begin
@@ -338,21 +242,21 @@ s_avmm_rdatavld =  1'b0;
 s_avmm_waitreq 	=  1'b1;
 case(avmm_sel)
  2'b00: begin
-	s_avmm_rdata 	= s_avmm0_rdata_d1;
-	s_avmm_rdatavld = s_avmm0_rdatavld_d1;
-	s_avmm_waitreq 	= s_avmm0_waitreq_d1;
+	s_avmm_rdata 	= s_avmm0_rdata;
+	s_avmm_rdatavld = s_avmm0_rdatavld;
+	s_avmm_waitreq 	= s_avmm0_waitreq;
  end
 
  2'b01: begin
-	s_avmm_rdata 	= s_avmm1_rdata_d1;
-	s_avmm_rdatavld = s_avmm1_rdatavld_d1;
-	s_avmm_waitreq 	= s_avmm1_waitreq_d1;
+	s_avmm_rdata 	= s_avmm1_rdata;
+	s_avmm_rdatavld = s_avmm1_rdatavld;
+	s_avmm_waitreq 	= s_avmm1_waitreq;
  end
 	
  2'b10: begin
-	s_avmm_rdata 	= s_avmm2_rdata_d1;
-	s_avmm_rdatavld = s_avmm2_rdatavld_d1;
-	s_avmm_waitreq 	= s_avmm2_waitreq_d1;
+	s_avmm_rdata 	= s_avmm2_rdata;
+	s_avmm_rdatavld = s_avmm2_rdatavld;
+	s_avmm_waitreq 	= s_avmm2_waitreq;
  end
 
  default: begin
@@ -362,7 +266,6 @@ case(avmm_sel)
  end
 endcase
 end
-
 
 always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) begin
 	if (~s_avmm_rst_n)           
@@ -421,7 +324,6 @@ assign avmmtransvld_up = avmmtransvld_up_int;
 	
 
 always_comb begin
-        nxt_st = cur_st;
 	case (cur_st)
 	STATE_IDLE	: nxt_st = (avmm_transvld_pulse) ?  STATE_CMD : STATE_IDLE ; 
 
@@ -448,7 +350,7 @@ always_comb begin
 									STATE_RD_SETNEXT   ;
 
 	STATE_RD_SETNEXT	: nxt_st =  (burstcount == 8'h0) ? STATE_RD_ENDRD :
-								   STATE_RD_AVBCHNL ;
+ 								   STATE_RD_AVBCHNL ;
 
 	STATE_RD_ENDRD	: nxt_st = STATE_IDLE;
 

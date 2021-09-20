@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -371,7 +370,6 @@ always_comb begin
 	cmd_is_read 	= 1'b0; 	
 	cmd_is_write	= 1'b0;
 	stransvld_up    = 1'b0;
-	ss_n_int	= 1'b1;
 	inc_spi_addr 	= 1'b0;
         rx_wdata	= rx_data;
 	nxt_st  	= cur_st; 
@@ -383,6 +381,7 @@ always_comb begin
 		           else begin
 			    nxt_st = cur_st;
                            end
+ 	                   ss_n_int	= 1'b1;
 			   end
 
 	ST_INI_CMD	: begin
@@ -414,7 +413,7 @@ always_comb begin
 			     nxt_st = ST_INI_WR; 
                             end
                             else begin  // burst count not 0
-                               inc_spi_addr = 1'b1; // last write increase - matters for spi write
+                               inc_spi_addr = 1'b0; // last write increase - matters for spi write
                                nxt_st = ST_IDLE;
 		               ss_n_int = 1'b1; 
 			       cmd_is_write = 1'b0; 
@@ -447,20 +446,24 @@ always_comb begin
 
 	ST_INI_FRD	: begin
 			   if (~tx_load) begin 
- 	                    if (~(burstcount == {14{1'b0}})) begin
-	                     inc_spi_addr = 1'b1;
-			     nxt_st = ST_INI_RD; 
-                            end
-                            else begin
- 			     if (rx_load) begin 
-	                      inc_spi_addr = 1'b1;  // last write increase - matters for spi write
-                              nxt_st = ST_INI_END_RD;
-                             end
-                           end
+ 	                      if (~(burstcount == {14{1'b0}})) begin
+	                         inc_spi_addr = 1'b1;
+			         nxt_st = ST_INI_RD; 
+                              end
+                              else 
+                               if (rx_load) begin
+	                         inc_spi_addr = 1'b0; 
+                                 nxt_st = ST_INI_END_RD;
+		                 ss_n_int = 1'b0;
+			         cmd_is_read = 1'b1;
+			         stransvld_up = 1'b0; 
+                              end
 		           ss_n_int = 1'b0;
 			   cmd_is_read = 1'b1;
 			  end
                          end
+
+
 
       	ST_INI_END_RD	: begin
 			   stransvld_up = 1'b1; 

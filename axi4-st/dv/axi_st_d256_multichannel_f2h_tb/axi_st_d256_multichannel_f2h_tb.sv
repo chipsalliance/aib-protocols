@@ -1,3 +1,26 @@
+////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////
 
 // Very simple AXI MM touch test.
 // Uses unmodified version of ../script/cfg/axi_mm_a32_d256.cfg configuration.
@@ -11,7 +34,7 @@
 
 `timescale 1ns/1ps
 
-module axi_st_d256_multichannel_tb ();
+module axi_st_d256_multichannel_f2h_tb ();
 
 `define ENABLE_PHASE_01 1               // Simple, non overlapping minimum sized transfers
 `define ENABLE_PHASE_02 1               // Overlapping minimum sized transfers
@@ -177,7 +200,7 @@ begin
     $display ("INFORMATION:  SHM Override in effect.  No Waveform.");
   `else
     $shm_open( , 0, , );
-    $shm_probe( axi_st_d256_multichannel_tb, "AMCTF");
+    $shm_probe( axi_st_d256_multichannel_f2h_tb, "AMCTF");
   `endif
 end
 // Waveform
@@ -221,17 +244,17 @@ end
    logic [39:0]		master_ll2ca_4;		// From axi_st_master_top_i of axi_st_d256_multichannel_full_master_top.v
    logic [39:0]		master_ll2ca_5;		// From axi_st_master_top_i of axi_st_d256_multichannel_full_master_top.v
    logic [39:0]		master_ll2ca_6;		// From axi_st_master_top_i of axi_st_d256_multichannel_full_master_top.v
-   logic [6:0]		master_ms_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
-   logic [319:0]	master_phy2ca_0;	// From phy_to_phy_lite_i0 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_1;	// From phy_to_phy_lite_i1 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_2;	// From phy_to_phy_lite_i2 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_3;	// From phy_to_phy_lite_i3 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_4;	// From phy_to_phy_lite_i4 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_5;	// From phy_to_phy_lite_i5 of phy_to_phy_lite.v
-   logic [319:0]	master_phy2ca_6;	// From phy_to_phy_lite_i6 of phy_to_phy_lite.v
+   logic [6:0]		master_ms_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
+   logic [319:0]	master_phy2ca_0;	// From p2p_lite_i0 of p2p_lite.v
+   logic [319:0]	master_phy2ca_1;	// From p2p_lite_i1 of p2p_lite.v
+   logic [319:0]	master_phy2ca_2;	// From p2p_lite_i2 of p2p_lite.v
+   logic [319:0]	master_phy2ca_3;	// From p2p_lite_i3 of p2p_lite.v
+   logic [319:0]	master_phy2ca_4;	// From p2p_lite_i4 of p2p_lite.v
+   logic [319:0]	master_phy2ca_5;	// From p2p_lite_i5 of p2p_lite.v
+   logic [319:0]	master_phy2ca_6;	// From p2p_lite_i6 of p2p_lite.v
    logic		master_rx_stb_pos_coding_err;// From ca_master_i of ca.v
    logic		master_rx_stb_pos_err;	// From ca_master_i of ca.v
-   logic [6:0]		master_sl_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [6:0]		master_sl_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		master_tx_stb_pos_coding_err;// From ca_master_i of ca.v
    logic		master_tx_stb_pos_err;	// From ca_master_i of ca.v
    logic [31:0]		rx_st_debug_status;	// From axi_st_slave_top_i of axi_st_d256_multichannel_half_slave_top.v
@@ -251,17 +274,17 @@ end
    logic [79:0]		slave_ll2ca_4;		// From axi_st_slave_top_i of axi_st_d256_multichannel_half_slave_top.v
    logic [79:0]		slave_ll2ca_5;		// From axi_st_slave_top_i of axi_st_d256_multichannel_half_slave_top.v
    logic [79:0]		slave_ll2ca_6;		// From axi_st_slave_top_i of axi_st_d256_multichannel_half_slave_top.v
-   logic [6:0]		slave_ms_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
-   logic [319:0]	slave_phy2ca_0;		// From phy_to_phy_lite_i0 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_1;		// From phy_to_phy_lite_i1 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_2;		// From phy_to_phy_lite_i2 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_3;		// From phy_to_phy_lite_i3 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_4;		// From phy_to_phy_lite_i4 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_5;		// From phy_to_phy_lite_i5 of phy_to_phy_lite.v
-   logic [319:0]	slave_phy2ca_6;		// From phy_to_phy_lite_i6 of phy_to_phy_lite.v
+   logic [6:0]		slave_ms_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
+   logic [319:0]	slave_phy2ca_0;		// From p2p_lite_i0 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_1;		// From p2p_lite_i1 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_2;		// From p2p_lite_i2 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_3;		// From p2p_lite_i3 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_4;		// From p2p_lite_i4 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_5;		// From p2p_lite_i5 of p2p_lite.v
+   logic [319:0]	slave_phy2ca_6;		// From p2p_lite_i6 of p2p_lite.v
    logic		slave_rx_stb_pos_coding_err;// From ca_slave_i of ca.v
    logic		slave_rx_stb_pos_err;	// From ca_slave_i of ca.v
-   logic [6:0]		slave_sl_tx_transfer_en;// From phy_to_phy_lite_i0 of phy_to_phy_lite.v, ...
+   logic [6:0]		slave_sl_tx_transfer_en;// From p2p_lite_i0 of p2p_lite.v, ...
    logic		slave_tx_stb_pos_coding_err;// From ca_slave_i of ca.v
    logic		slave_tx_stb_pos_err;	// From ca_slave_i of ca.v
    logic [3:0]		tx_mrk_userbit_master;	// From marker_gen_im of marker_gen.v
@@ -574,15 +597,12 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rden_dly				('0),                   // No delay before outputting data
       .count_x				(DELAY_X_VALUE_MASTER),
       .count_xz				(DELAY_XZ_VALUE_MASTER),
-//      .tx_stb_wd_sel                    (8'h00),                // Strobe is at LOC 1
-//      .tx_stb_bit_sel                   (40'h0000000000),
-//      .tx_stb_intv                      (8'h0),                 // Strobe repeats every 4 cycles
-       .tx_stb_wd_sel                    (8'h01),                // Strobe is at LOC 1       FIXME_ART
-       .tx_stb_bit_sel                   (40'h0000000002),
-       .tx_stb_intv                      (8'h4),                 // Strobe repeats every 4 cycles
-      .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
+      .tx_stb_wd_sel                    (8'h01),                 // Strobe is at LOC [1]
+      .tx_stb_bit_sel                   (40'h0000000002),
+      .tx_stb_intv                      (8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_wd_sel			(8'h01),                 // Strobe is at LOC [1]
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din				 ({master_ll2ca_6[39:0]  , master_ll2ca_5[39:0]  , master_ll2ca_4[39:0]  , master_ll2ca_3[39:0]  , master_ll2ca_2[39:0]  , master_ll2ca_1[39:0]  , master_ll2ca_0[39:0]})  ,
       .rx_din				 ({master_phy2ca_6[39:0] , master_phy2ca_5[39:0] , master_phy2ca_4[39:0] , master_phy2ca_3[39:0] , master_phy2ca_2[39:0] , master_phy2ca_1[39:0] , master_phy2ca_0[39:0]})  ,
@@ -633,10 +653,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .count_xz				(DELAY_XZ_VALUE_MASTER), // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'h4),			 // Templated
+      .tx_stb_intv			(8'd20),		 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'h4),			 // Templated
+      .rx_stb_intv			(8'd20),		 // Templated
       .tx_din				({master_ll2ca_6[39:0]  , master_ll2ca_5[39:0]  , master_ll2ca_4[39:0]  , master_ll2ca_3[39:0]  , master_ll2ca_2[39:0]  , master_ll2ca_1[39:0]  , master_ll2ca_0[39:0]}), // Templated
       .rx_din				({master_phy2ca_6[39:0] , master_phy2ca_5[39:0] , master_phy2ca_4[39:0] , master_phy2ca_3[39:0] , master_phy2ca_2[39:0] , master_phy2ca_1[39:0] , master_phy2ca_0[39:0]}), // Templated
       .fifo_full_val			(5'd16),		 // Templated
@@ -665,12 +685,12 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rden_dly				('0),                   // No delay before outputting data
       .count_x				(DELAY_X_VALUE_SLAVE),
       .count_xz				(DELAY_XZ_VALUE_SLAVE),
-      .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
+      .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC [1]
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
-      .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
+      .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC [1]
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'h4),                 // Strobe repeats every 4 cycles
+      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din			        ({slave_ll2ca_6[79:0]  , slave_ll2ca_5[79:0]  , slave_ll2ca_4[79:0]  , slave_ll2ca_3[79:0]  , slave_ll2ca_2[79:0]  , slave_ll2ca_1[79:0]  , slave_ll2ca_0[79:0]})  ,
       .rx_din			        ({slave_phy2ca_6[79:0] , slave_phy2ca_5[79:0] , slave_phy2ca_4[79:0] , slave_phy2ca_3[79:0] , slave_phy2ca_2[79:0] , slave_phy2ca_1[79:0] , slave_phy2ca_0[79:0]})  ,
@@ -721,10 +741,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .count_xz				(DELAY_XZ_VALUE_SLAVE),	 // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'h4),			 // Templated
+      .tx_stb_intv			(8'd20),		 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'h4),			 // Templated
+      .rx_stb_intv			(8'd20),		 // Templated
       .tx_din				({slave_ll2ca_6[79:0]  , slave_ll2ca_5[79:0]  , slave_ll2ca_4[79:0]  , slave_ll2ca_3[79:0]  , slave_ll2ca_2[79:0]  , slave_ll2ca_1[79:0]  , slave_ll2ca_0[79:0]}), // Templated
       .rx_din				({slave_phy2ca_6[79:0] , slave_phy2ca_5[79:0] , slave_phy2ca_4[79:0] , slave_phy2ca_3[79:0] , slave_phy2ca_2[79:0] , slave_phy2ca_1[79:0] , slave_phy2ca_0[79:0]}), // Templated
       .fifo_full_val			(5'd16),		 // Templated
@@ -736,7 +756,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
 
 
 
-   /* phy_to_phy_lite AUTO_TEMPLATE ".*_i\(.+\)" (
+   /* p2p_lite AUTO_TEMPLATE ".*_i\(.+\)" (
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[@]),
       .master_ms_tx_transfer_en		(master_ms_tx_transfer_en[@]),
       .slave_sl_tx_transfer_en		(slave_sl_tx_transfer_en[@]),
@@ -763,7 +783,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .ns_adapter_rstn		        (rst_phy_n),
     );
     */
-   phy_to_phy_lite phy_to_phy_lite_i0
+   p2p_lite p2p_lite_i0
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[0]), // Templated
@@ -790,7 +810,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_0_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i1
+   p2p_lite p2p_lite_i1
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[1]), // Templated
@@ -817,7 +837,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_1_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i2
+   p2p_lite p2p_lite_i2
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[2]), // Templated
@@ -844,7 +864,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_2_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i3
+   p2p_lite p2p_lite_i3
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[3]), // Templated
@@ -871,7 +891,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_3_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i4
+   p2p_lite p2p_lite_i4
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[4]), // Templated
@@ -898,7 +918,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_4_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i5
+   p2p_lite p2p_lite_i5
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[5]), // Templated
@@ -925,7 +945,7 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tb_slave_rx_dll_time		(CHAN_5_M2S_DLL_TIME),	 // Templated
       .tb_en_asymmetric			(1'b1));			 // Templated
 
-   phy_to_phy_lite phy_to_phy_lite_i6
+   p2p_lite p2p_lite_i6
      (/*AUTOINST*/
       // Outputs
       .master_sl_tx_transfer_en		(master_sl_tx_transfer_en[6]), // Templated

@@ -1,7 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
-//        (C) Copyright 2021 Eximius Design
+//        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -97,6 +96,7 @@ module ca_rx_align
   logic [7:0]                                       stb_intv_count [NUM_CHANNELS-1:0];
 
   logic [NUM_CHANNELS-1:0]                          rd_empty;
+  logic [NUM_CHANNELS-1:0]                          wr_overflow_pulse;
 
   logic [NUM_CHANNELS-1:0]                          rx_online_sync;
   logic [NUM_CHANNELS-1:0]                          rx_online_sync_del;
@@ -154,6 +154,7 @@ module ca_rx_align
    .rx_dout           (rx_dout_ch[i]),
    .fifo_push         (fifo_wr[i]),
    .rd_empty          (rd_empty[i]),
+   .wr_overflow_pulse (wr_overflow_pulse[i]),
    .fifo_full         (fifo_full[i]),
    .fifo_pfull        (fifo_pfull[i]),
    .fifo_empty        (fifo_empty[i]),
@@ -177,6 +178,7 @@ module ca_rx_align
            // Outputs
            .rx_dout                     (rx_dout_ch[i]),         // Templated
            .rd_empty                    (rd_empty[i]),           // Templated
+           .wr_overflow_pulse           (wr_overflow_pulse[i]),  // Templated
            .fifo_full                   (fifo_full[i]),          // Templated
            .fifo_pfull                  (fifo_pfull[i]),         // Templated
            .fifo_empty                  (fifo_empty[i]),         // Templated
@@ -348,7 +350,7 @@ module ca_rx_align
             d_rx_state = RX_ONLINE;
         end
         RX_ONLINE: begin
-          if (|fifo_full)
+          if (|wr_overflow_pulse)
             d_rx_state = align_fly ? RX_SOFT_RESET : RX_ERR;
           else if (all_fifos_not_empty)
             d_rx_state = RX_ALIGNED;
@@ -364,6 +366,11 @@ module ca_rx_align
         end
         RX_ERR: begin
           d_align_err = 1'b1;
+          if (align_fly)
+            begin
+              d_align_err = 1'b0;
+              d_rx_state = RX_SOFT_RESET;
+            end
         end
         RX_DONE: begin
           d_align_done = 1'b1;
@@ -374,7 +381,7 @@ module ca_rx_align
         end
         default: d_rx_state = RX_IDLE;
       endcase // case (rx_state)
-    end
+    end // block: rx_state_next
 
   /* errors */
 

@@ -1,6 +1,6 @@
 +access+rwc
 axi_mm_a32_d128_packet_gen1_tb.sv
-${PROJ_DIR}/llink/dv_simple/phy_to_phy_lite.sv
+${PROJ_DIR}/common/dv/p2p_lite.sv
 +libverbose
 +libext+.v
 +define+FOR_SIM_ONLY
