@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -62,7 +63,7 @@ module axi_st_d128_asym_half_master_concat  (
 //   TX_PERSISTENT_MARKER  = 1'b1;
 //   TX_STROBE_GEN2_LOC    = 'd1;
 //   TX_MARKER_GEN2_LOC    = 'd0;
-//   TX_STROBE_GEN1_LOC    = 'd1;
+//   TX_STROBE_GEN1_LOC    = 'd38;
 //   TX_MARKER_GEN1_LOC    = 'd39;
 //   TX_ENABLE_STROBE      = 1'b1;
 //   TX_ENABLE_MARKER      = 1'b1;
@@ -258,7 +259,7 @@ module axi_st_d128_asym_half_master_concat  (
   assign tx_phy_preflop_1 [  78] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [  79] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [  80] = tx_mrk_userbit[1]          ; // MARKER
-  assign tx_phy_preflop_0 [  81] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_0 [  81] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_0 [  82] = tx_st_pushbit_r1           ;
   assign tx_phy_preflop_0 [  83] = tx_st_data          [ 145] ;
   assign tx_phy_preflop_0 [  84] = tx_st_data          [ 146] ;
@@ -338,7 +339,7 @@ module axi_st_d128_asym_half_master_concat  (
   assign tx_phy_preflop_0 [ 158] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 159] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [  80] = tx_mrk_userbit[1]          ; // MARKER
-  assign tx_phy_preflop_1 [  81] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_1 [  81] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_1 [  82] = tx_st_data          [ 218] ;
   assign tx_phy_preflop_1 [  83] = tx_st_data          [ 219] ;
   assign tx_phy_preflop_1 [  84] = tx_st_data          [ 220] ;
@@ -429,7 +430,7 @@ module axi_st_d128_asym_half_master_concat  (
 //   RX_PERSISTENT_MARKER  = 1'b1;
 //   RX_STROBE_GEN2_LOC    = 'd1;
 //   RX_MARKER_GEN2_LOC    = 'd0;
-//   RX_STROBE_GEN1_LOC    = 'd1;
+//   RX_STROBE_GEN1_LOC    = 'd38;
 //   RX_MARKER_GEN1_LOC    = 'd39;
 //   RX_ENABLE_STROBE      = 1'b1;
 //   RX_ENABLE_MARKER      = 1'b1;

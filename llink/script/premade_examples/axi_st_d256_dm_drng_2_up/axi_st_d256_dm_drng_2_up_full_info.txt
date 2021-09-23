@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -43,27 +44,27 @@
     MAIN: Total AIB bits is 280 bits
 
        TX: No DBI
-       TX: Strobe is Recoverable or non-existent
-       TX: Marker is Recoverable or non-existent
-       TX: Total RSTRUCT overhead bits across 7 Full Rate channels is 0
-       TX: Total RSTRUCT data bits available 280
-       TX: Total MAIN overhead bits across 7 Full channels is 0
-       TX: Total MAIN data bits available 280
+       TX: Persistent Strobe adds 1 overhead bits per channel
+       TX: Persistent Marker adds 1 overhead bits per channel
+       TX: Total RSTRUCT overhead bits across 7 Full Rate channels is 14
+       TX: Total RSTRUCT data bits available 266
+       TX: Total MAIN overhead bits across 7 Full channels is 14
+       TX: Total MAIN data bits available 266
 
        RX: No DBI
-       RX: Strobe is Recoverable or non-existent
-       RX: Marker is Recoverable or non-existent
-       RX: Total RSTRUCT overhead bits across 7 Full Rate channels is 0
-       RX: Total RSTRUCT data bits available 280
-       RX: Total MAIN overhead bits across 7 Full channels is 0
-       RX: Total MAIN data bits available 280
+       RX: Persistent Strobe adds 1 overhead bits per channel
+       RX: Persistent Marker adds 1 overhead bits per channel
+       RX: Total RSTRUCT overhead bits across 7 Full Rate channels is 14
+       RX: Total RSTRUCT data bits available 266
+       RX: Total MAIN overhead bits across 7 Full channels is 14
+       RX: Total MAIN data bits available 266
 
-  RSTRUCT TX needs  257 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   23 spare bits
-  RSTRUCT RX needs    1 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so  279 spare bits
+  RSTRUCT TX needs  257 bits of data and has  266 bits available across 7x Gen1Only Full Rate channels so    9 spare bits
+  RSTRUCT RX needs    1 bits of data and has  266 bits available across 7x Gen1Only Full Rate channels so  265 spare bits
   INFORMATION: At least one full channel unused for RX
 
-  MAIN TX needs  257 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   23 spare bits
-  MAIN RX needs    1 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so  279 spare bits
+  MAIN TX needs  257 bits of data and has  266 bits available across 7x Gen1Only Full Rate channels so    9 spare bits
+  MAIN RX needs    1 bits of data and has  266 bits available across 7x Gen1Only Full Rate channels so  265 spare bits
 
 // Data and Channel Size
 //////////////////////////////////////////////////////////////////////
@@ -80,275 +81,275 @@
 //////////////////////////////////////////////////////////////////////
 // AXI to PHY IF Mapping AXI Manager Transmit
   Channel 0 TX   [   0] = tx_st_pushbit_r0    
-  Channel 0 TX   [   1] = user_tdata           [   0] // RECOVERED_STROBE
-  Channel 0 TX   [   2] = user_tdata           [   1]
-  Channel 0 TX   [   3] = user_tdata           [   2]
-  Channel 0 TX   [   4] = user_tdata           [   3]
-  Channel 0 TX   [   5] = user_tdata           [   4]
-  Channel 0 TX   [   6] = user_tdata           [   5]
-  Channel 0 TX   [   7] = user_tdata           [   6]
-  Channel 0 TX   [   8] = user_tdata           [   7]
-  Channel 0 TX   [   9] = user_tdata           [   8]
-  Channel 0 TX   [  10] = user_tdata           [   9]
-  Channel 0 TX   [  11] = user_tdata           [  10]
-  Channel 0 TX   [  12] = user_tdata           [  11]
-  Channel 0 TX   [  13] = user_tdata           [  12]
-  Channel 0 TX   [  14] = user_tdata           [  13]
-  Channel 0 TX   [  15] = user_tdata           [  14]
-  Channel 0 TX   [  16] = user_tdata           [  15]
-  Channel 0 TX   [  17] = user_tdata           [  16]
-  Channel 0 TX   [  18] = user_tdata           [  17]
-  Channel 0 TX   [  19] = user_tdata           [  18]
-  Channel 0 TX   [  20] = user_tdata           [  19]
-  Channel 0 TX   [  21] = user_tdata           [  20]
-  Channel 0 TX   [  22] = user_tdata           [  21]
-  Channel 0 TX   [  23] = user_tdata           [  22]
-  Channel 0 TX   [  24] = user_tdata           [  23]
-  Channel 0 TX   [  25] = user_tdata           [  24]
-  Channel 0 TX   [  26] = user_tdata           [  25]
-  Channel 0 TX   [  27] = user_tdata           [  26]
-  Channel 0 TX   [  28] = user_tdata           [  27]
-  Channel 0 TX   [  29] = user_tdata           [  28]
-  Channel 0 TX   [  30] = user_tdata           [  29]
-  Channel 0 TX   [  31] = user_tdata           [  30]
-  Channel 0 TX   [  32] = user_tdata           [  31]
-  Channel 0 TX   [  33] = user_tdata           [  32]
-  Channel 0 TX   [  34] = user_tdata           [  33]
-  Channel 0 TX   [  35] = user_tdata           [  34]
-  Channel 0 TX   [  36] = user_tdata           [  35]
-  Channel 0 TX   [  37] = user_tdata           [  36]
-  Channel 0 TX   [  38] = user_tdata           [  37]
-  Channel 0 TX   [  39] = user_tdata           [  38] // RECOVERED_MARKER [0]
-  Channel 1 TX   [   0] = user_tdata           [  39]
-  Channel 1 TX   [   1] = user_tdata           [  40] // RECOVERED_STROBE
-  Channel 1 TX   [   2] = user_tdata           [  41]
-  Channel 1 TX   [   3] = user_tdata           [  42]
-  Channel 1 TX   [   4] = user_tdata           [  43]
-  Channel 1 TX   [   5] = user_tdata           [  44]
-  Channel 1 TX   [   6] = user_tdata           [  45]
-  Channel 1 TX   [   7] = user_tdata           [  46]
-  Channel 1 TX   [   8] = user_tdata           [  47]
-  Channel 1 TX   [   9] = user_tdata           [  48]
-  Channel 1 TX   [  10] = user_tdata           [  49]
-  Channel 1 TX   [  11] = user_tdata           [  50]
-  Channel 1 TX   [  12] = user_tdata           [  51]
-  Channel 1 TX   [  13] = user_tdata           [  52]
-  Channel 1 TX   [  14] = user_tdata           [  53]
-  Channel 1 TX   [  15] = user_tdata           [  54]
-  Channel 1 TX   [  16] = user_tdata           [  55]
-  Channel 1 TX   [  17] = user_tdata           [  56]
-  Channel 1 TX   [  18] = user_tdata           [  57]
-  Channel 1 TX   [  19] = user_tdata           [  58]
-  Channel 1 TX   [  20] = user_tdata           [  59]
-  Channel 1 TX   [  21] = user_tdata           [  60]
-  Channel 1 TX   [  22] = user_tdata           [  61]
-  Channel 1 TX   [  23] = user_tdata           [  62]
-  Channel 1 TX   [  24] = user_tdata           [  63]
-  Channel 1 TX   [  25] = user_tdata           [  64]
-  Channel 1 TX   [  26] = user_tdata           [  65]
-  Channel 1 TX   [  27] = user_tdata           [  66]
-  Channel 1 TX   [  28] = user_tdata           [  67]
-  Channel 1 TX   [  29] = user_tdata           [  68]
-  Channel 1 TX   [  30] = user_tdata           [  69]
-  Channel 1 TX   [  31] = user_tdata           [  70]
-  Channel 1 TX   [  32] = user_tdata           [  71]
-  Channel 1 TX   [  33] = user_tdata           [  72]
-  Channel 1 TX   [  34] = user_tdata           [  73]
-  Channel 1 TX   [  35] = user_tdata           [  74]
-  Channel 1 TX   [  36] = user_tdata           [  75]
-  Channel 1 TX   [  37] = user_tdata           [  76]
-  Channel 1 TX   [  38] = user_tdata           [  77]
-  Channel 1 TX   [  39] = user_tdata           [  78] // RECOVERED_MARKER [0]
-  Channel 2 TX   [   0] = user_tdata           [  79]
-  Channel 2 TX   [   1] = user_tdata           [  80] // RECOVERED_STROBE
-  Channel 2 TX   [   2] = user_tdata           [  81]
-  Channel 2 TX   [   3] = user_tdata           [  82]
-  Channel 2 TX   [   4] = user_tdata           [  83]
-  Channel 2 TX   [   5] = user_tdata           [  84]
-  Channel 2 TX   [   6] = user_tdata           [  85]
-  Channel 2 TX   [   7] = user_tdata           [  86]
-  Channel 2 TX   [   8] = user_tdata           [  87]
-  Channel 2 TX   [   9] = user_tdata           [  88]
-  Channel 2 TX   [  10] = user_tdata           [  89]
-  Channel 2 TX   [  11] = user_tdata           [  90]
-  Channel 2 TX   [  12] = user_tdata           [  91]
-  Channel 2 TX   [  13] = user_tdata           [  92]
-  Channel 2 TX   [  14] = user_tdata           [  93]
-  Channel 2 TX   [  15] = user_tdata           [  94]
-  Channel 2 TX   [  16] = user_tdata           [  95]
-  Channel 2 TX   [  17] = user_tdata           [  96]
-  Channel 2 TX   [  18] = user_tdata           [  97]
-  Channel 2 TX   [  19] = user_tdata           [  98]
-  Channel 2 TX   [  20] = user_tdata           [  99]
-  Channel 2 TX   [  21] = user_tdata           [ 100]
-  Channel 2 TX   [  22] = user_tdata           [ 101]
-  Channel 2 TX   [  23] = user_tdata           [ 102]
-  Channel 2 TX   [  24] = user_tdata           [ 103]
-  Channel 2 TX   [  25] = user_tdata           [ 104]
-  Channel 2 TX   [  26] = user_tdata           [ 105]
-  Channel 2 TX   [  27] = user_tdata           [ 106]
-  Channel 2 TX   [  28] = user_tdata           [ 107]
-  Channel 2 TX   [  29] = user_tdata           [ 108]
-  Channel 2 TX   [  30] = user_tdata           [ 109]
-  Channel 2 TX   [  31] = user_tdata           [ 110]
-  Channel 2 TX   [  32] = user_tdata           [ 111]
-  Channel 2 TX   [  33] = user_tdata           [ 112]
-  Channel 2 TX   [  34] = user_tdata           [ 113]
-  Channel 2 TX   [  35] = user_tdata           [ 114]
-  Channel 2 TX   [  36] = user_tdata           [ 115]
-  Channel 2 TX   [  37] = user_tdata           [ 116]
-  Channel 2 TX   [  38] = user_tdata           [ 117]
-  Channel 2 TX   [  39] = user_tdata           [ 118] // RECOVERED_MARKER [0]
-  Channel 3 TX   [   0] = user_tdata           [ 119]
-  Channel 3 TX   [   1] = user_tdata           [ 120] // RECOVERED_STROBE
-  Channel 3 TX   [   2] = user_tdata           [ 121]
-  Channel 3 TX   [   3] = user_tdata           [ 122]
-  Channel 3 TX   [   4] = user_tdata           [ 123]
-  Channel 3 TX   [   5] = user_tdata           [ 124]
-  Channel 3 TX   [   6] = user_tdata           [ 125]
-  Channel 3 TX   [   7] = user_tdata           [ 126]
-  Channel 3 TX   [   8] = user_tdata           [ 127]
-  Channel 3 TX   [   9] = user_tdata           [ 128]
-  Channel 3 TX   [  10] = user_tdata           [ 129]
-  Channel 3 TX   [  11] = user_tdata           [ 130]
-  Channel 3 TX   [  12] = user_tdata           [ 131]
-  Channel 3 TX   [  13] = user_tdata           [ 132]
-  Channel 3 TX   [  14] = user_tdata           [ 133]
-  Channel 3 TX   [  15] = user_tdata           [ 134]
-  Channel 3 TX   [  16] = user_tdata           [ 135]
-  Channel 3 TX   [  17] = user_tdata           [ 136]
-  Channel 3 TX   [  18] = user_tdata           [ 137]
-  Channel 3 TX   [  19] = user_tdata           [ 138]
-  Channel 3 TX   [  20] = user_tdata           [ 139]
-  Channel 3 TX   [  21] = user_tdata           [ 140]
-  Channel 3 TX   [  22] = user_tdata           [ 141]
-  Channel 3 TX   [  23] = user_tdata           [ 142]
-  Channel 3 TX   [  24] = user_tdata           [ 143]
-  Channel 3 TX   [  25] = user_tdata           [ 144]
-  Channel 3 TX   [  26] = user_tdata           [ 145]
-  Channel 3 TX   [  27] = user_tdata           [ 146]
-  Channel 3 TX   [  28] = user_tdata           [ 147]
-  Channel 3 TX   [  29] = user_tdata           [ 148]
-  Channel 3 TX   [  30] = user_tdata           [ 149]
-  Channel 3 TX   [  31] = user_tdata           [ 150]
-  Channel 3 TX   [  32] = user_tdata           [ 151]
-  Channel 3 TX   [  33] = user_tdata           [ 152]
-  Channel 3 TX   [  34] = user_tdata           [ 153]
-  Channel 3 TX   [  35] = user_tdata           [ 154]
-  Channel 3 TX   [  36] = user_tdata           [ 155]
-  Channel 3 TX   [  37] = user_tdata           [ 156]
-  Channel 3 TX   [  38] = user_tdata           [ 157]
-  Channel 3 TX   [  39] = user_tdata           [ 158] // RECOVERED_MARKER [0]
-  Channel 4 TX   [   0] = user_tdata           [ 159]
-  Channel 4 TX   [   1] = user_tdata           [ 160] // RECOVERED_STROBE
-  Channel 4 TX   [   2] = user_tdata           [ 161]
-  Channel 4 TX   [   3] = user_tdata           [ 162]
-  Channel 4 TX   [   4] = user_tdata           [ 163]
-  Channel 4 TX   [   5] = user_tdata           [ 164]
-  Channel 4 TX   [   6] = user_tdata           [ 165]
-  Channel 4 TX   [   7] = user_tdata           [ 166]
-  Channel 4 TX   [   8] = user_tdata           [ 167]
-  Channel 4 TX   [   9] = user_tdata           [ 168]
-  Channel 4 TX   [  10] = user_tdata           [ 169]
-  Channel 4 TX   [  11] = user_tdata           [ 170]
-  Channel 4 TX   [  12] = user_tdata           [ 171]
-  Channel 4 TX   [  13] = user_tdata           [ 172]
-  Channel 4 TX   [  14] = user_tdata           [ 173]
-  Channel 4 TX   [  15] = user_tdata           [ 174]
-  Channel 4 TX   [  16] = user_tdata           [ 175]
-  Channel 4 TX   [  17] = user_tdata           [ 176]
-  Channel 4 TX   [  18] = user_tdata           [ 177]
-  Channel 4 TX   [  19] = user_tdata           [ 178]
-  Channel 4 TX   [  20] = user_tdata           [ 179]
-  Channel 4 TX   [  21] = user_tdata           [ 180]
-  Channel 4 TX   [  22] = user_tdata           [ 181]
-  Channel 4 TX   [  23] = user_tdata           [ 182]
-  Channel 4 TX   [  24] = user_tdata           [ 183]
-  Channel 4 TX   [  25] = user_tdata           [ 184]
-  Channel 4 TX   [  26] = user_tdata           [ 185]
-  Channel 4 TX   [  27] = user_tdata           [ 186]
-  Channel 4 TX   [  28] = user_tdata           [ 187]
-  Channel 4 TX   [  29] = user_tdata           [ 188]
-  Channel 4 TX   [  30] = user_tdata           [ 189]
-  Channel 4 TX   [  31] = user_tdata           [ 190]
-  Channel 4 TX   [  32] = user_tdata           [ 191]
-  Channel 4 TX   [  33] = user_tdata           [ 192]
-  Channel 4 TX   [  34] = user_tdata           [ 193]
-  Channel 4 TX   [  35] = user_tdata           [ 194]
-  Channel 4 TX   [  36] = user_tdata           [ 195]
-  Channel 4 TX   [  37] = user_tdata           [ 196]
-  Channel 4 TX   [  38] = user_tdata           [ 197]
-  Channel 4 TX   [  39] = user_tdata           [ 198] // RECOVERED_MARKER [0]
-  Channel 5 TX   [   0] = user_tdata           [ 199]
-  Channel 5 TX   [   1] = user_tdata           [ 200] // RECOVERED_STROBE
-  Channel 5 TX   [   2] = user_tdata           [ 201]
-  Channel 5 TX   [   3] = user_tdata           [ 202]
-  Channel 5 TX   [   4] = user_tdata           [ 203]
-  Channel 5 TX   [   5] = user_tdata           [ 204]
-  Channel 5 TX   [   6] = user_tdata           [ 205]
-  Channel 5 TX   [   7] = user_tdata           [ 206]
-  Channel 5 TX   [   8] = user_tdata           [ 207]
-  Channel 5 TX   [   9] = user_tdata           [ 208]
-  Channel 5 TX   [  10] = user_tdata           [ 209]
-  Channel 5 TX   [  11] = user_tdata           [ 210]
-  Channel 5 TX   [  12] = user_tdata           [ 211]
-  Channel 5 TX   [  13] = user_tdata           [ 212]
-  Channel 5 TX   [  14] = user_tdata           [ 213]
-  Channel 5 TX   [  15] = user_tdata           [ 214]
-  Channel 5 TX   [  16] = user_tdata           [ 215]
-  Channel 5 TX   [  17] = user_tdata           [ 216]
-  Channel 5 TX   [  18] = user_tdata           [ 217]
-  Channel 5 TX   [  19] = user_tdata           [ 218]
-  Channel 5 TX   [  20] = user_tdata           [ 219]
-  Channel 5 TX   [  21] = user_tdata           [ 220]
-  Channel 5 TX   [  22] = user_tdata           [ 221]
-  Channel 5 TX   [  23] = user_tdata           [ 222]
-  Channel 5 TX   [  24] = user_tdata           [ 223]
-  Channel 5 TX   [  25] = user_tdata           [ 224]
-  Channel 5 TX   [  26] = user_tdata           [ 225]
-  Channel 5 TX   [  27] = user_tdata           [ 226]
-  Channel 5 TX   [  28] = user_tdata           [ 227]
-  Channel 5 TX   [  29] = user_tdata           [ 228]
-  Channel 5 TX   [  30] = user_tdata           [ 229]
-  Channel 5 TX   [  31] = user_tdata           [ 230]
-  Channel 5 TX   [  32] = user_tdata           [ 231]
-  Channel 5 TX   [  33] = user_tdata           [ 232]
-  Channel 5 TX   [  34] = user_tdata           [ 233]
-  Channel 5 TX   [  35] = user_tdata           [ 234]
-  Channel 5 TX   [  36] = user_tdata           [ 235]
-  Channel 5 TX   [  37] = user_tdata           [ 236]
-  Channel 5 TX   [  38] = user_tdata           [ 237]
-  Channel 5 TX   [  39] = user_tdata           [ 238] // RECOVERED_MARKER [0]
-  Channel 6 TX   [   0] = user_tdata           [ 239]
-  Channel 6 TX   [   1] = user_tdata           [ 240] // RECOVERED_STROBE
-  Channel 6 TX   [   2] = user_tdata           [ 241]
-  Channel 6 TX   [   3] = user_tdata           [ 242]
-  Channel 6 TX   [   4] = user_tdata           [ 243]
-  Channel 6 TX   [   5] = user_tdata           [ 244]
-  Channel 6 TX   [   6] = user_tdata           [ 245]
-  Channel 6 TX   [   7] = user_tdata           [ 246]
-  Channel 6 TX   [   8] = user_tdata           [ 247]
-  Channel 6 TX   [   9] = user_tdata           [ 248]
-  Channel 6 TX   [  10] = user_tdata           [ 249]
-  Channel 6 TX   [  11] = user_tdata           [ 250]
-  Channel 6 TX   [  12] = user_tdata           [ 251]
-  Channel 6 TX   [  13] = user_tdata           [ 252]
-  Channel 6 TX   [  14] = user_tdata           [ 253]
-  Channel 6 TX   [  15] = user_tdata           [ 254]
-  Channel 6 TX   [  16] = user_tdata           [ 255]
-  Channel 6 TX   [  17] = 1'b0                
-  Channel 6 TX   [  18] = 1'b0                
-  Channel 6 TX   [  19] = 1'b0                
-  Channel 6 TX   [  20] = 1'b0                
-  Channel 6 TX   [  21] = 1'b0                
-  Channel 6 TX   [  22] = 1'b0                
-  Channel 6 TX   [  23] = 1'b0                
-  Channel 6 TX   [  24] = 1'b0                
-  Channel 6 TX   [  25] = 1'b0                
-  Channel 6 TX   [  26] = 1'b0                
-  Channel 6 TX   [  27] = 1'b0                
-  Channel 6 TX   [  28] = 1'b0                
-  Channel 6 TX   [  29] = 1'b0                
+  Channel 0 TX   [   1] = 1'b1 // STROBE
+  Channel 0 TX   [   2] = user_tdata           [   0]
+  Channel 0 TX   [   3] = user_tdata           [   1]
+  Channel 0 TX   [   4] = user_tdata           [   2]
+  Channel 0 TX   [   5] = user_tdata           [   3]
+  Channel 0 TX   [   6] = user_tdata           [   4]
+  Channel 0 TX   [   7] = user_tdata           [   5]
+  Channel 0 TX   [   8] = user_tdata           [   6]
+  Channel 0 TX   [   9] = user_tdata           [   7]
+  Channel 0 TX   [  10] = user_tdata           [   8]
+  Channel 0 TX   [  11] = user_tdata           [   9]
+  Channel 0 TX   [  12] = user_tdata           [  10]
+  Channel 0 TX   [  13] = user_tdata           [  11]
+  Channel 0 TX   [  14] = user_tdata           [  12]
+  Channel 0 TX   [  15] = user_tdata           [  13]
+  Channel 0 TX   [  16] = user_tdata           [  14]
+  Channel 0 TX   [  17] = user_tdata           [  15]
+  Channel 0 TX   [  18] = user_tdata           [  16]
+  Channel 0 TX   [  19] = user_tdata           [  17]
+  Channel 0 TX   [  20] = user_tdata           [  18]
+  Channel 0 TX   [  21] = user_tdata           [  19]
+  Channel 0 TX   [  22] = user_tdata           [  20]
+  Channel 0 TX   [  23] = user_tdata           [  21]
+  Channel 0 TX   [  24] = user_tdata           [  22]
+  Channel 0 TX   [  25] = user_tdata           [  23]
+  Channel 0 TX   [  26] = user_tdata           [  24]
+  Channel 0 TX   [  27] = user_tdata           [  25]
+  Channel 0 TX   [  28] = user_tdata           [  26]
+  Channel 0 TX   [  29] = user_tdata           [  27]
+  Channel 0 TX   [  30] = user_tdata           [  28]
+  Channel 0 TX   [  31] = user_tdata           [  29]
+  Channel 0 TX   [  32] = user_tdata           [  30]
+  Channel 0 TX   [  33] = user_tdata           [  31]
+  Channel 0 TX   [  34] = user_tdata           [  32]
+  Channel 0 TX   [  35] = user_tdata           [  33]
+  Channel 0 TX   [  36] = user_tdata           [  34]
+  Channel 0 TX   [  37] = user_tdata           [  35]
+  Channel 0 TX   [  38] = user_tdata           [  36]
+  Channel 0 TX   [  39] = 1'b0 // MARKER
+  Channel 1 TX   [   0] = user_tdata           [  37]
+  Channel 1 TX   [   1] = 1'b1 // STROBE
+  Channel 1 TX   [   2] = user_tdata           [  38]
+  Channel 1 TX   [   3] = user_tdata           [  39]
+  Channel 1 TX   [   4] = user_tdata           [  40]
+  Channel 1 TX   [   5] = user_tdata           [  41]
+  Channel 1 TX   [   6] = user_tdata           [  42]
+  Channel 1 TX   [   7] = user_tdata           [  43]
+  Channel 1 TX   [   8] = user_tdata           [  44]
+  Channel 1 TX   [   9] = user_tdata           [  45]
+  Channel 1 TX   [  10] = user_tdata           [  46]
+  Channel 1 TX   [  11] = user_tdata           [  47]
+  Channel 1 TX   [  12] = user_tdata           [  48]
+  Channel 1 TX   [  13] = user_tdata           [  49]
+  Channel 1 TX   [  14] = user_tdata           [  50]
+  Channel 1 TX   [  15] = user_tdata           [  51]
+  Channel 1 TX   [  16] = user_tdata           [  52]
+  Channel 1 TX   [  17] = user_tdata           [  53]
+  Channel 1 TX   [  18] = user_tdata           [  54]
+  Channel 1 TX   [  19] = user_tdata           [  55]
+  Channel 1 TX   [  20] = user_tdata           [  56]
+  Channel 1 TX   [  21] = user_tdata           [  57]
+  Channel 1 TX   [  22] = user_tdata           [  58]
+  Channel 1 TX   [  23] = user_tdata           [  59]
+  Channel 1 TX   [  24] = user_tdata           [  60]
+  Channel 1 TX   [  25] = user_tdata           [  61]
+  Channel 1 TX   [  26] = user_tdata           [  62]
+  Channel 1 TX   [  27] = user_tdata           [  63]
+  Channel 1 TX   [  28] = user_tdata           [  64]
+  Channel 1 TX   [  29] = user_tdata           [  65]
+  Channel 1 TX   [  30] = user_tdata           [  66]
+  Channel 1 TX   [  31] = user_tdata           [  67]
+  Channel 1 TX   [  32] = user_tdata           [  68]
+  Channel 1 TX   [  33] = user_tdata           [  69]
+  Channel 1 TX   [  34] = user_tdata           [  70]
+  Channel 1 TX   [  35] = user_tdata           [  71]
+  Channel 1 TX   [  36] = user_tdata           [  72]
+  Channel 1 TX   [  37] = user_tdata           [  73]
+  Channel 1 TX   [  38] = user_tdata           [  74]
+  Channel 1 TX   [  39] = 1'b0 // MARKER
+  Channel 2 TX   [   0] = user_tdata           [  75]
+  Channel 2 TX   [   1] = 1'b1 // STROBE
+  Channel 2 TX   [   2] = user_tdata           [  76]
+  Channel 2 TX   [   3] = user_tdata           [  77]
+  Channel 2 TX   [   4] = user_tdata           [  78]
+  Channel 2 TX   [   5] = user_tdata           [  79]
+  Channel 2 TX   [   6] = user_tdata           [  80]
+  Channel 2 TX   [   7] = user_tdata           [  81]
+  Channel 2 TX   [   8] = user_tdata           [  82]
+  Channel 2 TX   [   9] = user_tdata           [  83]
+  Channel 2 TX   [  10] = user_tdata           [  84]
+  Channel 2 TX   [  11] = user_tdata           [  85]
+  Channel 2 TX   [  12] = user_tdata           [  86]
+  Channel 2 TX   [  13] = user_tdata           [  87]
+  Channel 2 TX   [  14] = user_tdata           [  88]
+  Channel 2 TX   [  15] = user_tdata           [  89]
+  Channel 2 TX   [  16] = user_tdata           [  90]
+  Channel 2 TX   [  17] = user_tdata           [  91]
+  Channel 2 TX   [  18] = user_tdata           [  92]
+  Channel 2 TX   [  19] = user_tdata           [  93]
+  Channel 2 TX   [  20] = user_tdata           [  94]
+  Channel 2 TX   [  21] = user_tdata           [  95]
+  Channel 2 TX   [  22] = user_tdata           [  96]
+  Channel 2 TX   [  23] = user_tdata           [  97]
+  Channel 2 TX   [  24] = user_tdata           [  98]
+  Channel 2 TX   [  25] = user_tdata           [  99]
+  Channel 2 TX   [  26] = user_tdata           [ 100]
+  Channel 2 TX   [  27] = user_tdata           [ 101]
+  Channel 2 TX   [  28] = user_tdata           [ 102]
+  Channel 2 TX   [  29] = user_tdata           [ 103]
+  Channel 2 TX   [  30] = user_tdata           [ 104]
+  Channel 2 TX   [  31] = user_tdata           [ 105]
+  Channel 2 TX   [  32] = user_tdata           [ 106]
+  Channel 2 TX   [  33] = user_tdata           [ 107]
+  Channel 2 TX   [  34] = user_tdata           [ 108]
+  Channel 2 TX   [  35] = user_tdata           [ 109]
+  Channel 2 TX   [  36] = user_tdata           [ 110]
+  Channel 2 TX   [  37] = user_tdata           [ 111]
+  Channel 2 TX   [  38] = user_tdata           [ 112]
+  Channel 2 TX   [  39] = 1'b0 // MARKER
+  Channel 3 TX   [   0] = user_tdata           [ 113]
+  Channel 3 TX   [   1] = 1'b1 // STROBE
+  Channel 3 TX   [   2] = user_tdata           [ 114]
+  Channel 3 TX   [   3] = user_tdata           [ 115]
+  Channel 3 TX   [   4] = user_tdata           [ 116]
+  Channel 3 TX   [   5] = user_tdata           [ 117]
+  Channel 3 TX   [   6] = user_tdata           [ 118]
+  Channel 3 TX   [   7] = user_tdata           [ 119]
+  Channel 3 TX   [   8] = user_tdata           [ 120]
+  Channel 3 TX   [   9] = user_tdata           [ 121]
+  Channel 3 TX   [  10] = user_tdata           [ 122]
+  Channel 3 TX   [  11] = user_tdata           [ 123]
+  Channel 3 TX   [  12] = user_tdata           [ 124]
+  Channel 3 TX   [  13] = user_tdata           [ 125]
+  Channel 3 TX   [  14] = user_tdata           [ 126]
+  Channel 3 TX   [  15] = user_tdata           [ 127]
+  Channel 3 TX   [  16] = user_tdata           [ 128]
+  Channel 3 TX   [  17] = user_tdata           [ 129]
+  Channel 3 TX   [  18] = user_tdata           [ 130]
+  Channel 3 TX   [  19] = user_tdata           [ 131]
+  Channel 3 TX   [  20] = user_tdata           [ 132]
+  Channel 3 TX   [  21] = user_tdata           [ 133]
+  Channel 3 TX   [  22] = user_tdata           [ 134]
+  Channel 3 TX   [  23] = user_tdata           [ 135]
+  Channel 3 TX   [  24] = user_tdata           [ 136]
+  Channel 3 TX   [  25] = user_tdata           [ 137]
+  Channel 3 TX   [  26] = user_tdata           [ 138]
+  Channel 3 TX   [  27] = user_tdata           [ 139]
+  Channel 3 TX   [  28] = user_tdata           [ 140]
+  Channel 3 TX   [  29] = user_tdata           [ 141]
+  Channel 3 TX   [  30] = user_tdata           [ 142]
+  Channel 3 TX   [  31] = user_tdata           [ 143]
+  Channel 3 TX   [  32] = user_tdata           [ 144]
+  Channel 3 TX   [  33] = user_tdata           [ 145]
+  Channel 3 TX   [  34] = user_tdata           [ 146]
+  Channel 3 TX   [  35] = user_tdata           [ 147]
+  Channel 3 TX   [  36] = user_tdata           [ 148]
+  Channel 3 TX   [  37] = user_tdata           [ 149]
+  Channel 3 TX   [  38] = user_tdata           [ 150]
+  Channel 3 TX   [  39] = 1'b0 // MARKER
+  Channel 4 TX   [   0] = user_tdata           [ 151]
+  Channel 4 TX   [   1] = 1'b1 // STROBE
+  Channel 4 TX   [   2] = user_tdata           [ 152]
+  Channel 4 TX   [   3] = user_tdata           [ 153]
+  Channel 4 TX   [   4] = user_tdata           [ 154]
+  Channel 4 TX   [   5] = user_tdata           [ 155]
+  Channel 4 TX   [   6] = user_tdata           [ 156]
+  Channel 4 TX   [   7] = user_tdata           [ 157]
+  Channel 4 TX   [   8] = user_tdata           [ 158]
+  Channel 4 TX   [   9] = user_tdata           [ 159]
+  Channel 4 TX   [  10] = user_tdata           [ 160]
+  Channel 4 TX   [  11] = user_tdata           [ 161]
+  Channel 4 TX   [  12] = user_tdata           [ 162]
+  Channel 4 TX   [  13] = user_tdata           [ 163]
+  Channel 4 TX   [  14] = user_tdata           [ 164]
+  Channel 4 TX   [  15] = user_tdata           [ 165]
+  Channel 4 TX   [  16] = user_tdata           [ 166]
+  Channel 4 TX   [  17] = user_tdata           [ 167]
+  Channel 4 TX   [  18] = user_tdata           [ 168]
+  Channel 4 TX   [  19] = user_tdata           [ 169]
+  Channel 4 TX   [  20] = user_tdata           [ 170]
+  Channel 4 TX   [  21] = user_tdata           [ 171]
+  Channel 4 TX   [  22] = user_tdata           [ 172]
+  Channel 4 TX   [  23] = user_tdata           [ 173]
+  Channel 4 TX   [  24] = user_tdata           [ 174]
+  Channel 4 TX   [  25] = user_tdata           [ 175]
+  Channel 4 TX   [  26] = user_tdata           [ 176]
+  Channel 4 TX   [  27] = user_tdata           [ 177]
+  Channel 4 TX   [  28] = user_tdata           [ 178]
+  Channel 4 TX   [  29] = user_tdata           [ 179]
+  Channel 4 TX   [  30] = user_tdata           [ 180]
+  Channel 4 TX   [  31] = user_tdata           [ 181]
+  Channel 4 TX   [  32] = user_tdata           [ 182]
+  Channel 4 TX   [  33] = user_tdata           [ 183]
+  Channel 4 TX   [  34] = user_tdata           [ 184]
+  Channel 4 TX   [  35] = user_tdata           [ 185]
+  Channel 4 TX   [  36] = user_tdata           [ 186]
+  Channel 4 TX   [  37] = user_tdata           [ 187]
+  Channel 4 TX   [  38] = user_tdata           [ 188]
+  Channel 4 TX   [  39] = 1'b0 // MARKER
+  Channel 5 TX   [   0] = user_tdata           [ 189]
+  Channel 5 TX   [   1] = 1'b1 // STROBE
+  Channel 5 TX   [   2] = user_tdata           [ 190]
+  Channel 5 TX   [   3] = user_tdata           [ 191]
+  Channel 5 TX   [   4] = user_tdata           [ 192]
+  Channel 5 TX   [   5] = user_tdata           [ 193]
+  Channel 5 TX   [   6] = user_tdata           [ 194]
+  Channel 5 TX   [   7] = user_tdata           [ 195]
+  Channel 5 TX   [   8] = user_tdata           [ 196]
+  Channel 5 TX   [   9] = user_tdata           [ 197]
+  Channel 5 TX   [  10] = user_tdata           [ 198]
+  Channel 5 TX   [  11] = user_tdata           [ 199]
+  Channel 5 TX   [  12] = user_tdata           [ 200]
+  Channel 5 TX   [  13] = user_tdata           [ 201]
+  Channel 5 TX   [  14] = user_tdata           [ 202]
+  Channel 5 TX   [  15] = user_tdata           [ 203]
+  Channel 5 TX   [  16] = user_tdata           [ 204]
+  Channel 5 TX   [  17] = user_tdata           [ 205]
+  Channel 5 TX   [  18] = user_tdata           [ 206]
+  Channel 5 TX   [  19] = user_tdata           [ 207]
+  Channel 5 TX   [  20] = user_tdata           [ 208]
+  Channel 5 TX   [  21] = user_tdata           [ 209]
+  Channel 5 TX   [  22] = user_tdata           [ 210]
+  Channel 5 TX   [  23] = user_tdata           [ 211]
+  Channel 5 TX   [  24] = user_tdata           [ 212]
+  Channel 5 TX   [  25] = user_tdata           [ 213]
+  Channel 5 TX   [  26] = user_tdata           [ 214]
+  Channel 5 TX   [  27] = user_tdata           [ 215]
+  Channel 5 TX   [  28] = user_tdata           [ 216]
+  Channel 5 TX   [  29] = user_tdata           [ 217]
+  Channel 5 TX   [  30] = user_tdata           [ 218]
+  Channel 5 TX   [  31] = user_tdata           [ 219]
+  Channel 5 TX   [  32] = user_tdata           [ 220]
+  Channel 5 TX   [  33] = user_tdata           [ 221]
+  Channel 5 TX   [  34] = user_tdata           [ 222]
+  Channel 5 TX   [  35] = user_tdata           [ 223]
+  Channel 5 TX   [  36] = user_tdata           [ 224]
+  Channel 5 TX   [  37] = user_tdata           [ 225]
+  Channel 5 TX   [  38] = user_tdata           [ 226]
+  Channel 5 TX   [  39] = 1'b0 // MARKER
+  Channel 6 TX   [   0] = user_tdata           [ 227]
+  Channel 6 TX   [   1] = 1'b1 // STROBE
+  Channel 6 TX   [   2] = user_tdata           [ 228]
+  Channel 6 TX   [   3] = user_tdata           [ 229]
+  Channel 6 TX   [   4] = user_tdata           [ 230]
+  Channel 6 TX   [   5] = user_tdata           [ 231]
+  Channel 6 TX   [   6] = user_tdata           [ 232]
+  Channel 6 TX   [   7] = user_tdata           [ 233]
+  Channel 6 TX   [   8] = user_tdata           [ 234]
+  Channel 6 TX   [   9] = user_tdata           [ 235]
+  Channel 6 TX   [  10] = user_tdata           [ 236]
+  Channel 6 TX   [  11] = user_tdata           [ 237]
+  Channel 6 TX   [  12] = user_tdata           [ 238]
+  Channel 6 TX   [  13] = user_tdata           [ 239]
+  Channel 6 TX   [  14] = user_tdata           [ 240]
+  Channel 6 TX   [  15] = user_tdata           [ 241]
+  Channel 6 TX   [  16] = user_tdata           [ 242]
+  Channel 6 TX   [  17] = user_tdata           [ 243]
+  Channel 6 TX   [  18] = user_tdata           [ 244]
+  Channel 6 TX   [  19] = user_tdata           [ 245]
+  Channel 6 TX   [  20] = user_tdata           [ 246]
+  Channel 6 TX   [  21] = user_tdata           [ 247]
+  Channel 6 TX   [  22] = user_tdata           [ 248]
+  Channel 6 TX   [  23] = user_tdata           [ 249]
+  Channel 6 TX   [  24] = user_tdata           [ 250]
+  Channel 6 TX   [  25] = user_tdata           [ 251]
+  Channel 6 TX   [  26] = user_tdata           [ 252]
+  Channel 6 TX   [  27] = user_tdata           [ 253]
+  Channel 6 TX   [  28] = user_tdata           [ 254]
+  Channel 6 TX   [  29] = user_tdata           [ 255]
   Channel 6 TX   [  30] = 1'b0                
   Channel 6 TX   [  31] = 1'b0                
   Channel 6 TX   [  32] = 1'b0                
@@ -358,14 +359,14 @@
   Channel 6 TX   [  36] = 1'b0                
   Channel 6 TX   [  37] = 1'b0                
   Channel 6 TX   [  38] = 1'b0                
-  Channel 6 TX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 6 TX   [  39] = 1'b0 // MARKER
 // AXI to PHY IF Mapping AXI Manager Transmit
 //////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////
 // AXI to PHY IF Mapping AXI Manager Receive
   Channel 0 RX   [   0] = rx_st_credit_r0     
-  Channel 0 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 0 RX   [   1] = 1'b1 // STROBE
   Channel 0 RX   [   2] = 1'b0                
   Channel 0 RX   [   3] = 1'b0                
   Channel 0 RX   [   4] = 1'b0                
@@ -403,9 +404,9 @@
   Channel 0 RX   [  36] = 1'b0                
   Channel 0 RX   [  37] = 1'b0                
   Channel 0 RX   [  38] = 1'b0                
-  Channel 0 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 0 RX   [  39] = 1'b0 // MARKER
   Channel 1 RX   [   0] = 1'b0                
-  Channel 1 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 1 RX   [   1] = 1'b1 // STROBE
   Channel 1 RX   [   2] = 1'b0                
   Channel 1 RX   [   3] = 1'b0                
   Channel 1 RX   [   4] = 1'b0                
@@ -443,9 +444,9 @@
   Channel 1 RX   [  36] = 1'b0                
   Channel 1 RX   [  37] = 1'b0                
   Channel 1 RX   [  38] = 1'b0                
-  Channel 1 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 1 RX   [  39] = 1'b0 // MARKER
   Channel 2 RX   [   0] = 1'b0                
-  Channel 2 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 2 RX   [   1] = 1'b1 // STROBE
   Channel 2 RX   [   2] = 1'b0                
   Channel 2 RX   [   3] = 1'b0                
   Channel 2 RX   [   4] = 1'b0                
@@ -483,9 +484,9 @@
   Channel 2 RX   [  36] = 1'b0                
   Channel 2 RX   [  37] = 1'b0                
   Channel 2 RX   [  38] = 1'b0                
-  Channel 2 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 2 RX   [  39] = 1'b0 // MARKER
   Channel 3 RX   [   0] = 1'b0                
-  Channel 3 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 3 RX   [   1] = 1'b1 // STROBE
   Channel 3 RX   [   2] = 1'b0                
   Channel 3 RX   [   3] = 1'b0                
   Channel 3 RX   [   4] = 1'b0                
@@ -523,9 +524,9 @@
   Channel 3 RX   [  36] = 1'b0                
   Channel 3 RX   [  37] = 1'b0                
   Channel 3 RX   [  38] = 1'b0                
-  Channel 3 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 3 RX   [  39] = 1'b0 // MARKER
   Channel 4 RX   [   0] = 1'b0                
-  Channel 4 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 4 RX   [   1] = 1'b1 // STROBE
   Channel 4 RX   [   2] = 1'b0                
   Channel 4 RX   [   3] = 1'b0                
   Channel 4 RX   [   4] = 1'b0                
@@ -563,9 +564,9 @@
   Channel 4 RX   [  36] = 1'b0                
   Channel 4 RX   [  37] = 1'b0                
   Channel 4 RX   [  38] = 1'b0                
-  Channel 4 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 4 RX   [  39] = 1'b0 // MARKER
   Channel 5 RX   [   0] = 1'b0                
-  Channel 5 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 5 RX   [   1] = 1'b1 // STROBE
   Channel 5 RX   [   2] = 1'b0                
   Channel 5 RX   [   3] = 1'b0                
   Channel 5 RX   [   4] = 1'b0                
@@ -603,9 +604,9 @@
   Channel 5 RX   [  36] = 1'b0                
   Channel 5 RX   [  37] = 1'b0                
   Channel 5 RX   [  38] = 1'b0                
-  Channel 5 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 5 RX   [  39] = 1'b0 // MARKER
   Channel 6 RX   [   0] = 1'b0                
-  Channel 6 RX   [   1] = 1'b0                 // RECOVERED_STROBE
+  Channel 6 RX   [   1] = 1'b1 // STROBE
   Channel 6 RX   [   2] = 1'b0                
   Channel 6 RX   [   3] = 1'b0                
   Channel 6 RX   [   4] = 1'b0                
@@ -643,6 +644,6 @@
   Channel 6 RX   [  36] = 1'b0                
   Channel 6 RX   [  37] = 1'b0                
   Channel 6 RX   [  38] = 1'b0                
-  Channel 6 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+  Channel 6 RX   [  39] = 1'b0 // MARKER
 // AXI to PHY IF Mapping AXI Manager Receive
 //////////////////////////////////////////////////////////////////////

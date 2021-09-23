@@ -1,0 +1,196 @@
+
+    //**************************************************************
+    // Intel tasks for AIB bring up 
+    //--------------------------------------------------------------
+    task reset_dut ();
+        begin
+         $display("\n////////////////////////////////////////////////////////////////////////////");
+         $display("%0t: Into task reset_dut", $time);
+         $display("////////////////////////////////////////////////////////////////////////////\n");
+
+         avmm_if_m1.rst_n   = 1'b0;
+         avmm_if_m1.address = '0;
+         avmm_if_m1.write   = 1'b0;
+         avmm_if_m1.read    = 1'b0;
+         avmm_if_m1.writedata = '0;
+         avmm_if_m1.byteenable = '0;
+         avmm_if_s1.rst_n = 1'b0;
+         avmm_if_s1.address = '0;
+         avmm_if_s1.write = 1'b0;
+         avmm_if_s1.read  = 1'b0;
+         avmm_if_s1.writedata = '0;
+         avmm_if_s1.byteenable = '0;
+
+         intf_s1.i_conf_done     = 1'b0;
+         intf_s1.ns_mac_rdy      = '0;
+         intf_s1.ns_adapter_rstn = '0;
+         intf_s1.sl_rx_dcc_dll_lock_req = '0;
+         intf_s1.sl_tx_dcc_dll_lock_req = '0;
+
+         intf_m1.i_conf_done = 1'b0;
+         intf_m1.ns_mac_rdy      = '0;
+         intf_m1.ns_adapter_rstn = '0;
+         intf_m1.ms_rx_dcc_dll_lock_req = '0;
+         intf_m1.ms_tx_dcc_dll_lock_req = '0;
+         #100ns;
+
+         intf_m1.m_por_ovrd = 1'b1;
+         intf_s1.m_device_detect_ovrd = 1'b0;
+         intf_s1.i_m_power_on_reset = 1'b0;
+         //intf_m1.data_in = {`MAX_NUM_CHANNELS{80'b0}};
+         //intf_s1.data_in = {`MAX_NUM_CHANNELS{80'b0}};
+
+         //intf_m1.data_in_f = {`MAX_NUM_CHANNELS{320'b0}};
+         //intf_s1.data_in_f = {`MAX_NUM_CHANNELS{320'b0}};
+
+         //intf_m1.gen1_data_in = {`MAX_NUM_CHANNELS{40'b0}};
+
+         //intf_m1.gen1_data_in_f = {`MAX_NUM_CHANNELS{320'b0}};
+         //intf_s1.gen1_data_in_f = {`MAX_NUM_CHANNELS{80'b0}};
+
+         #100ns;
+         intf_s1.i_m_power_on_reset = 1'b1;
+         $display("\n////////////////////////////////////////////////////////////////////////////");
+         $display("%0t: Follower (Slave) power_on_reset asserted", $time);
+         $display("////////////////////////////////////////////////////////////////////////////\n");
+
+         #200ns;
+         intf_s1.i_m_power_on_reset = 1'b0;
+         $display("\n////////////////////////////////////////////////////////////////////////////");
+         $display("%0t: Follower (Slave)  power_on_reset de-asserted", $time);
+         $display("////////////////////////////////////////////////////////////////////////////\n");
+
+         #200ns;
+         avmm_if_m1.rst_n = 1'b1;
+         avmm_if_s1.rst_n = 1'b1;
+
+         #100ns;
+         $display("%0t: %m: de-asserting configuration reset and start configuration setup", $time);
+        end
+    endtask : reset_dut
+
+    //--------------------------------------------------------------
+    task prog_aib_via_avm_1x ();
+        begin
+            $display("\n////////////////////////////////////////////////////////////////////////////");
+            $display("\n////////////////////////////////////////////////////////////////////////////");
+            $display("\n//                                                                       ///");
+            $display("%0t: set to 1xFIFO mode for ms -> sl and sl -> ms 24 channel testing", $time);
+            $display("\n//                                                                       ///");
+            $display("%0t: No dbi enabled", $time);
+            $display("////////////////////////////////////////////////////////////////////////////\n");
+
+      fork
+
+        for (int i_m1=0; i_m1<24; i_m1++) begin
+            avmm_if_m1.cfg_write({i_m1,11'h208}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h20a}, 2'h3, 16'h0200);
+            avmm_if_m1.cfg_write({i_m1,11'h210}, 2'h3, 16'h0001);
+            avmm_if_m1.cfg_write({i_m1,11'h212}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h218}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h21a}, 2'h3, 16'h2080);
+            avmm_if_m1.cfg_write({i_m1,11'h21c}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h21e}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h31c}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h31e}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h320}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h322}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h324}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h326}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h328}, 2'h3, 16'h0000);
+            avmm_if_m1.cfg_write({i_m1,11'h32a}, 2'h3, 16'h0000);
+        end
+        for (int i_s1=0; i_s1<24; i_s1++) begin
+            avmm_if_s1.cfg_write({i_s1,11'h208}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h20a}, 2'h3, 16'h0200);
+            avmm_if_s1.cfg_write({i_s1,11'h210}, 2'h3, 16'h0001);
+            avmm_if_s1.cfg_write({i_s1,11'h212}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h218}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h21a}, 2'h3, 16'h2080);
+            avmm_if_s1.cfg_write({i_s1,11'h21c}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h21e}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h31c}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h31e}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h320}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h322}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h324}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h326}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h328}, 2'h3, 16'h0000);
+            avmm_if_s1.cfg_write({i_s1,11'h32a}, 2'h3, 16'h0000);
+
+        end
+      join
+
+
+            ms1_tx_fifo_mode = 2'b00;
+            sl1_tx_fifo_mode = 2'b00;
+            ms1_rx_fifo_mode = 2'b00;
+            sl1_rx_fifo_mode = 2'b00;
+            ms1_gen1 = 1'b0;
+            sl1_gen1 = 1'b0;
+            ms1_lpbk = 1'b0;
+            sl1_lpbk = 1'b0;
+            ms1_dbi_en = 1'b0;
+            sl1_dbi_en = 1'b0;
+
+        end
+    endtask : prog_aib_via_avm_1x
+
+    //--------------------------------------------------------------
+    task prog_aib_via_avm_4x ();
+        begin
+            $display("////////////////////////////////////////////////////////////////////////////");
+            $display("////////////////////////////////////////////////////////////////////////////");
+            $display("//                                                                       ///");
+            $display("%0t: set to 4xFIFO mode for ms -> sl and sl -> ms, 24 channel testing", $time);
+            $display("//                                                                       ///");
+            $display("%0t: No dbi enabled", $time);
+            $display("////////////////////////////////////////////////////////////////////////////\n");
+        end
+    endtask : prog_aib_via_avm_4x
+    
+    //--------------------------------------------------------------
+    task wakeup_aib ();
+        begin
+            $display("////////////////////////////////////////////////////////////////////////////");
+            $display("%0t: wakeup_aib", $time);
+            $display("////////////////////////////////////////////////////////////////////////////\n");
+            intf_m1.i_conf_done = 1'b1;
+            intf_s1.i_conf_done = 1'b1;
+
+            intf_m1.ns_mac_rdy = {`MAX_NUM_CHANNELS{1'b1}};
+            intf_s1.ns_mac_rdy = {`MAX_NUM_CHANNELS{1'b1}};
+
+            #1000ns;
+            intf_m1.ns_adapter_rstn = {`MAX_NUM_CHANNELS{1'b1}};
+            intf_s1.ns_adapter_rstn = {`MAX_NUM_CHANNELS{1'b1}};
+            #1000ns;
+            intf_s1.sl_rx_dcc_dll_lock_req = {`MAX_NUM_CHANNELS{1'b1}};
+            intf_s1.sl_tx_dcc_dll_lock_req = {`MAX_NUM_CHANNELS{1'b1}};
+
+            intf_m1.ms_rx_dcc_dll_lock_req = {`MAX_NUM_CHANNELS{1'b1}};
+            intf_m1.ms_tx_dcc_dll_lock_req = {`MAX_NUM_CHANNELS{1'b1}};
+
+            intf_m1.data_in = {`MAX_NUM_CHANNELS{80'b0}};
+            intf_s1.data_in = {`MAX_NUM_CHANNELS{80'b0}};
+
+            intf_m1.data_in_f[319:0] = {`MAX_NUM_CHANNELS{320'b0}};
+            intf_s1.data_in_f[319:0] = {`MAX_NUM_CHANNELS{320'b0}};
+
+        end
+    endtask : wakeup_aib
+
+    //--------------------------------------------------------------
+    task wait_for_link_up ();
+        begin
+            $display("////////////////////////////////////////////////////////////////////////////");
+            $display("%0t: Waiting for link up", $time);
+            $display("////////////////////////////////////////////////////////////////////////////\n");
+            begin
+                wait (intf_s1.ms_tx_transfer_en == {`MAX_NUM_CHANNELS{1'b1}});
+                wait (intf_s1.sl_tx_transfer_en == {`MAX_NUM_CHANNELS{1'b1}});
+            end
+            #100ns;
+        end
+    endtask : wait_for_link_up 
+

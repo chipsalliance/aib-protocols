@@ -69,7 +69,7 @@ function ca_cfg_c::new(string name = "ca_cfg");
         if(!(ca_die_b_delay_cfg[i].randomize())) `uvm_fatal("CA_CFG", $sformatf("ca_die_b_delay_cfg: %0d randomize FAILED !!",i));
         ca_die_b_delay_cfg[i].my_name = "DIE_B";
         ca_die_b_delay_cfg[i].chan_num = i;
-        ca_die_b_delay_cfg[i].chan_delay_clk = i % 4; // FIXME to random
+        ca_die_b_delay_cfg[i].chan_delay_clk = $urandom_range(1,7);//i % 4; // FIXME to random
         ca_die_b_delay_cfg[i].print(); 
     end
 
@@ -78,7 +78,8 @@ function ca_cfg_c::new(string name = "ca_cfg");
         if(!(ca_die_a_delay_cfg[i].randomize())) `uvm_fatal("CA_CFG", $sformatf("ca_die_a_delay_cfg: %0d randomize FAILED !!",i));
         ca_die_a_delay_cfg[i].my_name = "DIE_A";
         ca_die_a_delay_cfg[i].chan_num = i;
-        ca_die_a_delay_cfg[i].chan_delay_clk = i % 4; // FIXME to random
+        //ca_die_a_delay_cfg[i].chan_delay_clk = $urandom_range(1,7);//i % 4; // FIXME to random
+        ca_die_a_delay_cfg[i].chan_delay_clk = i*4 + 2 ; // FIXME to random
         ca_die_a_delay_cfg[i].print(); 
     end
 

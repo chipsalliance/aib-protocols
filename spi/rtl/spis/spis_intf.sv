@@ -25,6 +25,9 @@
 //
 //
 ////////////////////////////////////////////////////////////
+
+
+
 module spis_intf (
 // SPI Interface
 input logic 		rst_n,
@@ -201,9 +204,6 @@ always_ff @ (posedge sclk or negedge rst_n)
 	end
 	else if (rx_load & flag_word) begin 
 	   cmd_recvd	<= 'b1;
-	end
-	else if ((cur_st == STATE_END_WR) | (cur_st == STATE_END_RD)) begin
-	   cmd_recvd	<= 'b0;
 	end
 
 

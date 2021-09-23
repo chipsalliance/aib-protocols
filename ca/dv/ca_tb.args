@@ -1,7 +1,6 @@
 -uvmhome CDNS-1.2
 -SV
 -64bit
-+define+CH0_DELAY2
 ${PROJ_DIR}/ca/dv/tb/ca_GENERATED_defines.svh
 +incdir+${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/interface/
 +incdir+${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/tb/
@@ -13,13 +12,14 @@ ${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/emib/emib_ch_m2s2.sv
 ${PROJ_DIR}/../aib-phy-hardware/v2.0/rev1/dv/emib/emib_m2s2.sv
 -f ${PROJ_DIR}/ca/rtl/ca.f
 ${PROJ_DIR}/ca/rtl/ca.sv
+${PROJ_DIR}/common/dv/p2p_lite.sv
 +incdir+${PROJ_DIR}/ca/dv/tb/
 +incdir+${PROJ_DIR}/common/dv/reset_agent/
-+incdir+${PROJ_DIR}/common/dv/chan_delay_agent/
++incdir+${PROJ_DIR}/ca/dv/export_src/chan_delay_agent/
 ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh
 ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv
-${PROJ_DIR}/common/dv/chan_delay_agent/chan_delay_pkg.svh
-${PROJ_DIR}/common/dv/chan_delay_agent/chan_delay_if.sv
+${PROJ_DIR}/ca/dv/export_src/chan_delay_agent/chan_delay_pkg.svh
+${PROJ_DIR}/ca/dv/export_src/chan_delay_agent/chan_delay_if.sv
 +incdir+${PROJ_DIR}/ca/dv/export_src/
 ${PROJ_DIR}/ca/dv/local_src/ca_gen_if.sv
 ${PROJ_DIR}/ca/dv/export_src/ca_data_pkg.svh
@@ -33,6 +33,8 @@ ${PROJ_DIR}/ca/dv/ca_pkg.svh
 ${PROJ_DIR}/ca/dv/tb/ca_top_tb.sv
 -top ca_top_tb
 +access+r
++define+P2P_LITE
++define+CHAN_DELAY_ENB
 +xmtimescale+1ns/10ps
 +UVM_TESTNAME=ca_basic_test_c
 -input ca_shm.tcl

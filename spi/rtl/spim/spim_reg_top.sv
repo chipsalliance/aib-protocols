@@ -27,6 +27,7 @@
 ////////////////////////////////////////////////////////////
 
 
+
 module spimreg_top 
 #( 
 parameter FIFO_WIDTH = 32, 
@@ -39,6 +40,7 @@ input	logic		rst_n,
 input	logic		m_avmm_rst_n,
 // spi read/write
 input 	logic		ssn_off_pulse_sclk,
+input 	logic		ssn_on_pulse_sclk,
 input 	logic	[31:0]	dbg_bus0,
 input 	logic	[31:0]	dbg_bus1,
 input 	logic	[31:0]	miso_data, // spi_wdata, - read data from slave for rd_buf
@@ -102,7 +104,9 @@ logic				wbuf_rd_underflow_sticky;
 logic				rbuf_wr_overflow_sticky;
 logic				rbuf_rd_underflow_sticky;
 
+logic				wbuf_wr_soft_reset;
 logic				wbuf_rd_soft_reset;
+logic				rbuf_wr_soft_reset;
 logic				rbuf_rd_soft_reset;
 logic				rbuf_rd_empty_d1;
 logic				rbuf_rd_empty_pulse;
@@ -134,12 +138,16 @@ logic	stransvld_up_aclk_pulse; // syc'd to aclk
 logic	ssn_off_aclk;
 logic	ssn_off_aclk_d1;
 logic	ssn_off_pulse_aclk;
+logic	ssn_on_aclk;
+logic	ssn_on_aclk_d1;
+logic	ssn_on_pulse_aclk;
 logic 	write_reg;
 logic 	read_reg;
 logic	s_transvld_sclk;
 logic 	rd_buf_access;
 logic	wr_buf_access;
 logic 	cmd_is_write_d1;
+logic 	cmd_is_read_d1;
 logic 	avmm_access;
 logic 	spi_rbuf_access;
 logic 	avmm_rbuf_access;
@@ -172,6 +180,13 @@ levelsync sync_ssn_off_pulse (
    	.clk_dest (m_avmm_clk), 
    	.rst_dest_n (m_avmm_rst_n), 
    	.src_data (ssn_off_pulse_sclk)
+   );
+
+levelsync sync_ssn_on_pulse (
+   	.dest_data (ssn_on_aclk),
+   	.clk_dest (m_avmm_clk), 
+   	.rst_dest_n (m_avmm_rst_n), 
+   	.src_data (ssn_on_pulse_sclk)
    );
 
 assign spi_rbuf_access =  ((16'h1000 <= spi_wr_addr) & (spi_wr_addr <= 16'h17FF));
@@ -336,7 +351,15 @@ always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
 	else 
           ssn_off_aclk_d1 <= ssn_off_aclk;
            
- assign ssn_off_pulse_aclk  = ssn_off_aclk & ~ssn_off_aclk_d1; 
+assign ssn_off_pulse_aclk  = ssn_off_aclk & ~ssn_off_aclk_d1; 
+
+always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
+        if (~m_avmm_rst_n) 
+          ssn_on_aclk_d1 <= 1'b0;	
+	else 
+          ssn_on_aclk_d1 <= ssn_on_aclk;
+           
+assign ssn_on_pulse_aclk  = ~ssn_on_aclk & ssn_on_aclk_d1; 
 
 assign load_dbg_bus0 =  ~stransvld_up_aclk_pulse & ssn_off_pulse_aclk;
 
@@ -361,6 +384,12 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	else 
           cmd_is_write_d1 <= cmd_is_write;	
 
+always_ff @ (posedge sclk_in or negedge rst_n)
+        if (~rst_n) 
+          cmd_is_read_d1 <= 1'b0;	
+	else 
+          cmd_is_read_d1 <= cmd_is_read;	
+
 //FIFO SOFT RESET LOGIC 
 //Required when command is write (transferring both write data and write cmd to slave)
 //to reset write and read buffers
@@ -368,7 +397,9 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 
 logic wbuf_sfrst_ctrl_sclk;
 logic cmd_is_wr_d1_aclk;
+logic cmd_is_rd_d1_aclk;
 logic wbuf_rdsfrst_sclk;
+logic rbuf_wrsfrst_sclk;
 
 
 levelsync sync_wbuf_srst_ctrl (
@@ -385,6 +416,13 @@ levelsync sync_cmdwr_d1_aclk (
    	.src_data (cmd_is_write_d1)
    );
 
+levelsync sync_cmdrd_d1_aclk (
+   	.dest_data (cmd_is_rd_d1_aclk),
+   	.clk_dest (m_avmm_clk), 
+   	.rst_dest_n (m_avmm_rst_n), 
+   	.src_data (cmd_is_read_d1)
+   );
+
 levelsync sync_wbuf_rdsrst (
    	.dest_data (wbuf_rdsfrst_sclk),
    	.clk_dest (sclk_in), 
@@ -392,8 +430,23 @@ levelsync sync_wbuf_rdsrst (
    	.src_data (wbuf_rd_soft_reset)
    );
 
-assign wbuf_rd_sfrst_cmb = wbuf_sfrst_ctrl_sclk ? wbuf_rdsfrst_sclk : (cmd_is_write_d1 & ssn_off_pulse_sclk);
-assign rbuf_rd_sfrst_cmb = rbuf_sfrst_ctrl ? rbuf_rd_soft_reset : (cmd_is_wr_d1_aclk & ssn_off_aclk);
+levelsync sync_rbuf_wrsrst (
+   	.dest_data (rbuf_wrsfrst_sclk),
+   	.clk_dest (sclk_in), 
+   	.rst_dest_n (rst_n), 
+   	.src_data (rbuf_wr_soft_reset)
+   );
+
+
+// Changing the auto reset of fifo to happen at the start of the tansaction instead of the end
+// Write buffer is read by spi clock
+// Read buffer is read by avmm clock
+// ONLY READ BUFFER RD IS AUTO RESET AT THE BEGINING OF A READ CMD TO SLAVE 
+// WRITE BUFFER RD IS NOT AUTO RESET AT THE BEGINING OF CMD
+// TO PREVENT MESSING UP READ COMMAND TO SLAVE FOR POLLING PURPOSES
+
+//Changing to reset read buffer at the beginning of each transaction
+assign rbuf_rd_sfrst_cmb = rbuf_sfrst_ctrl ? rbuf_rd_soft_reset :  ssn_on_pulse_aclk;
 
 
  
@@ -422,21 +475,25 @@ i_spim_wrbuf_fifo (
 	.wrdata			(wbuf_fifo_wrdata), 
 	.write_push		(wbuf_write_push),
 	.read_pop		(wbuf_read_pop), 
-	.rd_soft_reset		(wbuf_rd_sfrst_cmb),   // logic
+	.rd_soft_reset		(wbuf_rdsfrst_sclk),   // from CSR
 	.wr_soft_reset		(1'b0)  
    );
 
 always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
        if (~m_avmm_rst_n) 
           wbuf_wr_overflow_sticky <= 1'b0;
-       else if (wbuf_wr_overflow_pulse)
+       else if (wbuf_wr_overflow_pulse)                   // wrt clk (avmm)
           wbuf_wr_overflow_sticky <= 1'b1;
+       else if (wbuf_wr_soft_reset)                   // wrt clk (avmm)
+          wbuf_wr_overflow_sticky <= 1'b0;
 
 always_ff @(posedge sclk_in or negedge rst_n)
        if (~rst_n) 
           wbuf_rd_underflow_sticky <= 1'b0;
-       else if (wbuf_rd_underflow_pulse)
+       else if (wbuf_rd_underflow_pulse)                  // read clk (spi)
           wbuf_rd_underflow_sticky <= 1'b1;
+       else if (wbuf_rdsfrst_sclk)                  // read clk (spi)
+          wbuf_rd_underflow_sticky <= 1'b0;
 
 // Rdbuf is written with spi clk and read with avmm clk 
 asyncfifo 
@@ -468,14 +525,18 @@ i_spim_rdbuf_fifo (
 always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
        if (~m_avmm_rst_n) 
           rbuf_rd_underflow_sticky <= 1'b0;
-       else if (rbuf_rd_underflow_pulse)
+       else if (rbuf_rd_underflow_pulse)                // read clk (avmm)
           rbuf_rd_underflow_sticky <= 1'b1;
+       else if (rbuf_rd_soft_reset)                // read clk (avmm)
+          rbuf_rd_underflow_sticky <= 1'b0;
 
 always_ff @(posedge sclk_in or negedge rst_n)
        if (~rst_n)
           rbuf_wr_overflow_sticky <= 1'b0;
-       else if (rbuf_wr_overflow_pulse)
+       else if (rbuf_wr_overflow_pulse)                // write clk (spi)
           rbuf_wr_overflow_sticky <= 1'b1;
+       else if (rbuf_wrsfrst_sclk)                // write clk (spi)
+          rbuf_wr_overflow_sticky <= 1'b0;
 
 
 //instanstiation of spim_reg 
@@ -505,7 +566,9 @@ spim_reg
 	.rbuf_rd_underflow_sticky (rbuf_rd_underflow_sticky),
 	.avmm_rb_data (avmm_rb_data),
         
+	.wbuf_wr_soft_reset (wbuf_wr_soft_reset),
 	.wbuf_rd_soft_reset (wbuf_rd_soft_reset),
+	.rbuf_wr_soft_reset (rbuf_wr_soft_reset),
 	.rbuf_rd_soft_reset (rbuf_rd_soft_reset),
 	.wbuf_sfrst_ctrl (wbuf_sfrst_ctrl),
 	.rbuf_sfrst_ctrl (rbuf_sfrst_ctrl),

@@ -40,7 +40,7 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     //------------------------------------------
     // constraints 
     //------------------------------------------
-    constraint c_bit_shift      { bit_shift  inside {[0:39]}; }
+    constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
     constraint c_tx_stb_intv    { tx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
 
     //------------------------------------------
@@ -85,7 +85,7 @@ function void ca_tx_tb_out_cfg_c::configure( );
 
     tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
     tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
-    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0d", 
+    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0b", 
         my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_MEDIUM);
 
 endfunction: configure 

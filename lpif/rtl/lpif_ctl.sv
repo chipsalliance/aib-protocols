@@ -47,36 +47,36 @@ module lpif_ctl
    input logic [LPIF_CRC_WIDTH-1:0]     lp_crc,
    input logic [LPIF_VALID_WIDTH-1:0]   lp_crc_valid,
    input logic [LPIF_VALID_WIDTH-1:0]   lp_valid,
-   input logic [2:0]                    lp_stream,
+   input logic [7:0]                    lp_stream,
    output logic                         pl_trdy,
 
    output logic [3:0]                   dstrm_state,
    output logic [1:0]                   dstrm_protid,
    output logic [1023:0]                dstrm_data,
-   output logic [1:0]                   dstrm_dvalid,
-   output logic [31:0]                  dstrm_crc,
-   output logic [1:0]                   dstrm_crc_valid,
+   output logic [LPIF_VALID_WIDTH-1:0]  dstrm_dvalid,
+   output logic [LPIF_CRC_WIDTH-1:0]    dstrm_crc,
+   output logic [LPIF_VALID_WIDTH-1:0]  dstrm_crc_valid,
    output logic                         dstrm_valid,
 
    input logic [3:0]                    ustrm_state,
    input logic [1:0]                    ustrm_protid,
    input logic [LPIF_DATA_WIDTH*8-1:0]  ustrm_data,
-   input logic [1:0]                    ustrm_dvalid,
-   input logic [31:0]                   ustrm_crc,
-   input logic [1:0]                    ustrm_crc_valid,
+   input logic [LPIF_VALID_WIDTH-1:0]   ustrm_dvalid,
+   input logic [LPIF_CRC_WIDTH-1:0]     ustrm_crc,
+   input logic [LPIF_VALID_WIDTH-1:0]   ustrm_crc_valid,
    input logic                          ustrm_valid,
 
    output logic [LPIF_DATA_WIDTH*8-1:0] pl_data,
    output logic [LPIF_CRC_WIDTH-1:0]    pl_crc,
    output logic [LPIF_VALID_WIDTH-1:0]  pl_crc_valid,
    output logic [LPIF_VALID_WIDTH-1:0]  pl_valid,
-   output logic [2:0]                   pl_stream,
+   output logic [7:0]                   pl_stream,
 
    output logic                         pl_error,
    output logic                         pl_trainerror,
    output logic                         pl_cerror,
    output logic                         pl_tmstmp,
-   output logic [2:0]                   pl_tmstmp_stream,
+   output logic [7:0]                   pl_tmstmp_stream,
 
    input logic                          lp_tmstmp,
    input logic                          lp_linkerror,
@@ -177,7 +177,7 @@ module lpif_ctl
   assign pl_setlabs = 1'b0;
   assign pl_surprise_lnk_down = 1'b0;
   assign pl_tmstmp = 1'b0;
-  assign pl_tmstmp_stream = 3'b0;
+  assign pl_tmstmp_stream = 8'b0;
 
   // tied-off for now
   assign pl_trainerror = 1'b0;
@@ -208,7 +208,6 @@ module lpif_ctl
   logic [AIB_LANES-1:0]                 d_ns_adapter_rstn;
 
   logic                                 d_dstrm_valid;
-  logic [3:0]                           d_dstrm_state;
 
   logic                                 d_tx_online;
   logic                                 d_rx_online;
@@ -252,9 +251,9 @@ module lpif_ctl
       endcase // case (lp_stream)
     end
 
-  logic [2:0] /* auto enum protid_info */
+  logic [7:0] /* auto enum protid_info */
               pl_stream_int;
-  logic [2:0] d_pl_stream;
+  logic [7:0] d_pl_stream;
   assign d_pl_stream = pl_stream_int;
 
   /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
@@ -262,10 +261,10 @@ module lpif_ctl
   reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
   always @(pl_stream_int) begin
     case ({pl_stream_int})
-      (3'b1<<PROTID_CACHE):   pl_stream_int_ascii = "protid_cache  ";
-      (3'b1<<PROTID_IO):      pl_stream_int_ascii = "protid_io     ";
-      (3'b1<<PROTID_ARB_MUX): pl_stream_int_ascii = "protid_arb_mux";
-      default:                pl_stream_int_ascii = "%Error        ";
+      PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
+      PROTID_IO:      pl_stream_int_ascii = "protid_io     ";
+      PROTID_ARB_MUX: pl_stream_int_ascii = "protid_arb_mux";
+      default:        pl_stream_int_ascii = "%Error        ";
     endcase
   end
   // End of automatics
@@ -281,21 +280,17 @@ module lpif_ctl
 
   // Control State Machine
 
-  localparam [3:0] /* auto enum ctl_state_info */
-    CTL_IDLE		= 4'h0,
-    CTL_PHY_INIT	= 4'h1,
-    CTL_CFG		= 4'h2,
-    CTL_CALIB		= 4'h3,
-    CTL_SB_ACTIVE_REQ	= 4'h4,
-    CTL_SB_ACTIVE_STS	= 4'h5,
-    CTL_EXIT_CG_REQ2	= 4'h6,
-    CTL_EXIT_CG_ACK2	= 4'h7,
-    CTL_WAIT_CA_ALIGN	= 4'h8,
-    CTL_CA_ALIGNED	= 4'hA,
-    CTL_LINK_UP		= 4'h9,
-    CTL_HALT		= 4'hB;
+  localparam [2:0] /* auto enum ctl_state_info */
+    CTL_IDLE		= 3'h0,
+    CTL_PHY_INIT	= 3'h1,
+    CTL_CFG		= 3'h2,
+    CTL_CALIB		= 3'h3,
+    CTL_WAIT_CA_ALIGN	= 3'h4,
+    CTL_CA_ALIGNED	= 3'h5,
+    CTL_LINK_UP		= 3'h6,
+    CTL_HALT		= 3'h7;
 
-  logic [3:0] /* auto enum ctl_state_info */
+  logic [2:0] /* auto enum ctl_state_info */
               ctl_state, d_ctl_state;
 
   /*AUTOASCIIENUM("ctl_state", "ctl_state_ascii", "")*/
@@ -307,10 +302,6 @@ module lpif_ctl
       CTL_PHY_INIT:      ctl_state_ascii = "ctl_phy_init     ";
       CTL_CFG:           ctl_state_ascii = "ctl_cfg          ";
       CTL_CALIB:         ctl_state_ascii = "ctl_calib        ";
-      CTL_SB_ACTIVE_REQ: ctl_state_ascii = "ctl_sb_active_req";
-      CTL_SB_ACTIVE_STS: ctl_state_ascii = "ctl_sb_active_sts";
-      CTL_EXIT_CG_REQ2:  ctl_state_ascii = "ctl_exit_cg_req2 ";
-      CTL_EXIT_CG_ACK2:  ctl_state_ascii = "ctl_exit_cg_ack2 ";
       CTL_WAIT_CA_ALIGN: ctl_state_ascii = "ctl_wait_ca_align";
       CTL_CA_ALIGNED:    ctl_state_ascii = "ctl_ca_aligned   ";
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
@@ -333,7 +324,6 @@ module lpif_ctl
       d_ctl_state = ctl_state;
       d_ns_mac_rdy = ns_mac_rdy;
       d_ns_adapter_rstn = ns_adapter_rstn;
-      d_dstrm_state = dstrm_state;
       d_dstrm_valid = dstrm_valid;
       d_tx_online = tx_online;
       d_rx_online = rx_online;
@@ -353,23 +343,11 @@ module lpif_ctl
           d_ctl_state = CTL_CALIB;
         end
         CTL_CALIB: begin
-          if ((&ms_tx_transfer_en) & (&ms_rx_transfer_en) & (&sl_tx_transfer_en) & (&sl_rx_transfer_en))
+          if (&{ms_tx_transfer_en, sl_tx_transfer_en})
             begin
               d_tx_online = 1'b1;
               d_rx_online = 1'b1;
               d_ctl_state = CTL_WAIT_CA_ALIGN;
-            end
-        end
-        CTL_SB_ACTIVE_REQ: begin
-          d_dstrm_valid = 1'b1;
-          d_dstrm_state = 4'h3; // FIX THIS - should be ACTIVE
-          d_ctl_state = CTL_SB_ACTIVE_STS;
-        end
-        CTL_SB_ACTIVE_STS: begin
-          if (ustrm_state == 4'h3) // FIX THIS
-            begin
-              d_dstrm_state = 4'h0; // FIX THIS - should be NOP
-              d_ctl_state = CTL_EXIT_CG_REQ2;
             end
         end
         CTL_WAIT_CA_ALIGN: begin
@@ -393,7 +371,7 @@ module lpif_ctl
           dstrm_state <= 4'b0;
           dstrm_protid <= 2'b0;
           dstrm_data <= 1024'b0;
-          dstrm_dvalid <= 2'b0;
+          dstrm_dvalid <= {LPIF_VALID_WIDTH{1'b0}};
           dstrm_crc <= 32'b0;
           dstrm_crc_valid <= 1'b0;
           dstrm_valid <= 1'b0;
@@ -408,14 +386,14 @@ module lpif_ctl
           pl_valid <= {LPIF_VALID_WIDTH{1'b0}};
           pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
           pl_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
-          pl_stream <= 3'b0;
+          pl_stream <= 8'b0;
 
           tx_online <= 1'b0;
           rx_online <= 1'b0;
         end
       else
         begin
-          dstrm_state <= |lsm_dstrm_state ? lsm_dstrm_state : d_dstrm_state;
+          dstrm_state <= lsm_dstrm_state;
           dstrm_protid <= d_dstrm_protid;
           dstrm_data <= lp_data;
           dstrm_dvalid <= lp_valid;

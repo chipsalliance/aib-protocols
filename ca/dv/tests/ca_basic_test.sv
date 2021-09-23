@@ -63,6 +63,7 @@ task ca_basic_test_c::run_test(uvm_phase phase);
 
     `uvm_info("ca_basic_test_c::run_phase", "START test...", UVM_LOW);
      ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     //ca_top_env.ca_scoreboard.do_compare_rx_dout = 1'b0; ///Don't compare RxDout with expected rx_dout (tx-dout)
      ca_vseq.start(ca_top_env.virt_seqr);
     `uvm_info("ca_basic_test_c::run_phase", "END test...\n", UVM_LOW);
 

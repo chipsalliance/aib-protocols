@@ -23,6 +23,9 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     ca_cfg_c         ca_cfg;
 
+
+    bit  do_compare_rx_dout = 1'b1;
+
     int  tx_xfer_cnt  = 0; // number of xfers from TB into RTL on the TX side
 
     int  tx_out_cnt_die_a   = 0;
@@ -349,6 +352,7 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_A": begin // came from die_B
             if(die_a_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
+                this.do_compare_rx_dout = 1'b0; //SK
                 `uvm_error("verify_rx_dout", $sformatf("DIE_A NO expect src pkt: %0d from rx_dout",rx_out_cnt_die_a));
             end  
             else begin
@@ -359,6 +363,7 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_B": begin // came from die_A
             if(die_b_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
+                this.do_compare_rx_dout = 1'b0; //SK
                 `uvm_error("verify_rx_dout", $sformatf("DIE_B NO expect src pkt: %0d from rx_dout",rx_out_cnt_die_b));
             end  
             else begin
@@ -372,6 +377,7 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
     endcase
     
     if(do_compare == 1) begin
+    //if (this.do_compare_rx_dout == 1'b1) begin  //SK
         if(src_item.compare_beat(act_item) == 1) begin
             `uvm_info("verify_rx_dout", $sformatf("xfer_cnt: %0d %s tx_din -- > AIB --> %s rx_dout Pass",
                 xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);

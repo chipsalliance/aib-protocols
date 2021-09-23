@@ -96,6 +96,7 @@ task ca_rx_tb_in_drv_c::drv_rx_online();
             rx_online = 0;
         end // reset
         else begin // non reset state
+          `ifndef P2P_LITE
             if((vif.ld_ms_rx_transfer_en === 24'hff_ffff) &&
                (vif.ld_sl_rx_transfer_en === 24'hff_ffff) &&
                (vif.fl_ms_rx_transfer_en === 24'hff_ffff) && 
@@ -104,6 +105,10 @@ task ca_rx_tb_in_drv_c::drv_rx_online();
                if(rx_online == 0) `uvm_info("drv_rx_online", $sformatf("===>>> %s rx_online == %0d <<<===", my_name, cfg.rx_online), UVM_NONE);
                rx_online = 1;
             end
+         `else
+               //vif.rx_online <=  cfg.rx_online; ////already driven at tb_top directly
+               rx_online = vif.rx_online;
+         `endif
         end // non reset
     end // forever clk
 

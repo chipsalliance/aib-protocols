@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -62,7 +63,7 @@ module axi_st_d128_asym_full_master_concat  (
 //   TX_PERSISTENT_MARKER  = 1'b1;
 //   TX_STROBE_GEN2_LOC    = 'd1;
 //   TX_MARKER_GEN2_LOC    = 'd0;
-//   TX_STROBE_GEN1_LOC    = 'd1;
+//   TX_STROBE_GEN1_LOC    = 'd38;
 //   TX_MARKER_GEN1_LOC    = 'd39;
 //   TX_ENABLE_STROBE      = 1'b1;
 //   TX_ENABLE_MARKER      = 1'b1;
@@ -267,7 +268,7 @@ module axi_st_d128_asym_full_master_concat  (
 //   RX_PERSISTENT_MARKER  = 1'b1;
 //   RX_STROBE_GEN2_LOC    = 'd1;
 //   RX_MARKER_GEN2_LOC    = 'd0;
-//   RX_STROBE_GEN1_LOC    = 'd1;
+//   RX_STROBE_GEN1_LOC    = 'd38;
 //   RX_MARKER_GEN1_LOC    = 'd39;
 //   RX_ENABLE_STROBE      = 1'b1;
 //   RX_ENABLE_MARKER      = 1'b1;

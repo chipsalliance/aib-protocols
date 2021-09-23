@@ -25,6 +25,7 @@
 //
 //
 ////////////////////////////////////////////////////////////
+
 // spim_top - top level module for SPI Master
 // 
 
@@ -92,6 +93,7 @@ logic	[1:0]	spim_sselect;
 logic		rst_n_avmmclk;
 logic		rst_n_sclk;
 logic 		ssn_off_pulse;
+logic 		ssn_on_pulse;
 
 // spim_intf 
 spim_intf  i_spim_intf ( 
@@ -102,6 +104,7 @@ spim_intf  i_spim_intf (
 	.ss_n_2		(ss_n_2),
 	.ss_n_3		(ss_n_3),
 	.ssn_off_pulse	(ssn_off_pulse),
+	.ssn_on_pulse	(ssn_on_pulse),
 	.miso		(miso),
 	
 	.tx_rdata	(mosi_data),   // mosi data to slave
@@ -157,6 +160,7 @@ i_spimreg_top (
 	.s_transvld 	(spi_active),
 	.spim_sselect 	(spim_sselect),
 	.ssn_off_pulse_sclk	(ssn_off_pulse),
+	.ssn_on_pulse_sclk	(ssn_on_pulse),
 	.spim_rdnwr 	(spim_rdnwr)
 
 );

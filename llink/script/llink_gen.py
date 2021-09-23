@@ -176,8 +176,10 @@ def parse_config_file(cfgfile):
     for line_no, line in enumerate(cf):
         ## Remove spaces, empty lines, etc.
         line = line.strip("\n")
+        line = re.sub('\t', ' ', line)
         line = re.sub('\s+', ' ', line)
-        line = re.sub('//.*', ' ', line)
+        line = re.sub(' *$', '', line)
+        line = re.sub('//.*', '', line)
         line = line.lstrip()
         if re.search("^\s*//", line):
             continue
@@ -2779,9 +2781,17 @@ def print_aib_assign_text_check_for_aib_bit(configuration, local_lsb1, use_tx,  
 
             if configuration['TX_ENABLE_STROBE'] and configuration['TX_PERSISTENT_STROBE'] :
                 if ((                                        local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] == configuration['TX_STROBE_GEN2_LOC']) or
-                    (configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] == configuration['TX_STROBE_GEN2_LOC']) ):
+                    (configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] == configuration['TX_STROBE_GEN2_LOC']) ):
                     global_struct.g_debug_raw_data_vector_print_tx.append("{0:15} [{1:4}] = 1'b1 // STROBE\n".format("  Channel {} TX  ".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_concat_code_vector_master_tx.append("{0:20} [{1:4}] = tx_stb_userbit             ; // STROBE\n".format("  assign tx_phy_preflop_{}".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN'], int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_concat_code_vector_slave_rx.append("//       STROBE                     = {0:17} [{1:4}]\n".format("rx_phy_postflop_{}".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_dv_tx_strobe_vector_print.append ("(1<<{}) | ".format(local_lsb1))
+                    local_lsb1 += 1
+                    check_for_more_bit = True
+                    continue
+                elif ((configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] == configuration['TX_STROBE_GEN2_LOC']) ):
+                    global_struct.g_debug_raw_data_vector_print_tx.append("{0:15} [{1:4}] = 1'b1 // STROBE\n".format("  Channel {} TX  ".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_concat_code_vector_master_tx.append("{0:20} [{1:4}] = 1'b0                       ; // STROBE (unused)\n".format("  assign tx_phy_preflop_{}".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN'], int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_concat_code_vector_slave_rx.append("//       STROBE                     = {0:17} [{1:4}]\n".format("rx_phy_postflop_{}".format(int(local_lsb1) // configuration['CHAN_TX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_dv_tx_strobe_vector_print.append ("(1<<{}) | ".format(local_lsb1))
                     local_lsb1 += 1
@@ -2810,10 +2820,18 @@ def print_aib_assign_text_check_for_aib_bit(configuration, local_lsb1, use_tx,  
 
             if configuration['RX_ENABLE_STROBE'] and configuration['RX_PERSISTENT_STROBE'] :
                 if ((                                        local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN'] == configuration['RX_STROBE_GEN2_LOC']) or
-                    (configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_RX_RAW1PHY_BEAT_MAIN'] == configuration['RX_STROBE_GEN2_LOC']) ):
+                    (configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN'] == configuration['RX_STROBE_GEN2_LOC']) ):
                     global_struct.g_debug_raw_data_vector_print_rx.append("{0:15} [{1:4}] = 1'b1 // STROBE\n".format("  Channel {} RX  ".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_concat_code_vector_master_rx.append("//       STROBE                     = {0:17} [{1:4}]\n".format("rx_phy_postflop_{}".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_concat_code_vector_slave_tx.append("{0:20} [{1:4}] = tx_stb_userbit             ; // STROBE\n".format("  assign tx_phy_preflop_{}".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN'], int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_dv_rx_strobe_vector_print.append ("(1<<{}) | ".format(local_lsb1))
+                    local_lsb1 += 1
+                    check_for_more_bit = True
+                    continue
+                elif ((configuration ['REPLICATED_STRUCT'] and local_lsb1 % configuration['CHAN_RX_RAW1PHY_BEAT_MAIN'] == configuration['RX_STROBE_GEN2_LOC']) ):
+                    global_struct.g_debug_raw_data_vector_print_rx.append("{0:15} [{1:4}] = 1'b1 // STROBE\n".format("  Channel {} RX  ".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_concat_code_vector_master_rx.append("//       STROBE                     = {0:17} [{1:4}]\n".format("rx_phy_postflop_{}".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
+                    global_struct.g_concat_code_vector_slave_tx.append("{0:20} [{1:4}] = 1'b0                       ; // STROBE (unused)\n".format("  assign tx_phy_preflop_{}".format(int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), local_lsb1 % configuration['CHAN_RX_RAW1PHY_DATA_MAIN'], int(local_lsb1) // configuration['CHAN_RX_RAW1PHY_DATA_MAIN']))
                     global_struct.g_dv_rx_strobe_vector_print.append ("(1<<{}) | ".format(local_lsb1))
                     local_lsb1 += 1
                     check_for_more_bit = True

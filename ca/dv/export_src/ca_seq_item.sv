@@ -204,24 +204,26 @@ function void ca_seq_item_c::calc_stb_beat();
     int                           index    = 0;
 
     // set up exp strobe beat/data
+
+    index    = 0;
     check_input();
 
     init_xfer((bus_bit_width*num_channels) / 8);
-
     for(int k = 0; k < num_channels; k++) begin
         for(int i = 1; i <= bus_bit_width/`MIN_BUS_BIT_WIDTH; i++) begin
-            if(i == stb_wd_sel) begin
+            if(stb_wd_sel[i-1]) begin
                 stb_wd = stb_bit_sel ;
             end
             else begin
                 stb_wd = 0;
             end
-            `uvm_info("calc_stb_beat", $sformatf("%s %s exp i: %0d stb_wd: 0x%h",
-                my_name, is_tx ? "TX":"RX", i, stb_wd), UVM_NONE);
+            `uvm_info("calc_stb_beat", $sformatf("%s %s exp i: %0d stb_wd: 0x%h", my_name, is_tx ? "TX":"RX", i, stb_wd), UVM_NONE);
 
             for(int j = 0; j < (`MIN_BUS_BIT_WIDTH/8); j++) begin
-                databytes[index++] = stb_wd[7:0];
-                stb_wd = stb_wd >> 8; 
+                databytes[index] = stb_wd[7:0];
+                stb_wd = stb_wd >> 8;
+                //`uvm_info("calc_stb_beat", $sformatf("calc_stb_beat, stb_beat[%0d] = %h", index,databytes[index]), UVM_MEDIUM);
+                index +=1; 
             end // for j
         end // for i
     end // for k

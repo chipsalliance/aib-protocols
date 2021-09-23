@@ -26,6 +26,7 @@
 //
 ////////////////////////////////////////////////////////////
 
+
 module spim_intf (
 // SPI Interface
 input logic 		rst_n,
@@ -44,6 +45,7 @@ output	logic   	ss_n_1, 	// slave select 1
 output	logic   	ss_n_2,  	// slave select 2
 output	logic   	ss_n_3, 	// slave select 3
 output	logic 		ssn_off_pulse,
+output	logic 		ssn_on_pulse,
 output logic		sclk,
 output logic		mosi,
 output logic		spi_write,
@@ -103,8 +105,7 @@ localparam	ST_INI_RD	= 3'h2;
 localparam	ST_INI_FRD	= 3'h3;
 localparam	ST_INI_WR	= 3'h4;
 localparam	ST_INI_FWR	= 3'h5;
-localparam	ST_INI_END_WR	= 3'h6;
-localparam	ST_INI_END_RD	= 3'h7;
+localparam	ST_INI_END_RD	= 3'h6;
 
 
 // CPOL = 0, CPHA = 0
@@ -173,7 +174,7 @@ always_ff @ (posedge sclk_inv or negedge rst_n)
 	 ss_n_dlyn <= ss_n_int;
          end
 
-assign ss_n_early_cmb = (((nxt_st == ST_INI_FWR) | (nxt_st == ST_INI_END_RD)) & (burstcount == {14{1'b0}})); 
+assign ss_n_early_cmb = (((nxt_st == ST_INI_FWR) | ((nxt_st == ST_INI_FRD) & (rx_count == 5'b00000))) & (burstcount == {14{1'b0}})); 
 always_ff @ (posedge sclk_inv or negedge rst_n)
         if (~rst_n) begin
 	 ss_n_early <= 1'b0;
@@ -195,6 +196,7 @@ always_ff @ (posedge sclk_in or negedge rst_n)
          end
 
 assign ssn_off_pulse = ss_n_int & ~ss_n_dly1;
+assign ssn_on_pulse = ~ss_n_int & ss_n_dly1;
 
 
 assign dbg_bus0 = ({1'b0,cur_st,burstcount,spim_brstlen});
@@ -371,6 +373,7 @@ always_comb begin
 	cmd_is_write	= 1'b0;
 	stransvld_up    = 1'b0;
 	inc_spi_addr 	= 1'b0;
+        ss_n_int	= 1'b1;
         rx_wdata	= rx_data;
 	nxt_st  	= cur_st; 
 	case (cur_st)
@@ -413,7 +416,7 @@ always_comb begin
 			     nxt_st = ST_INI_WR; 
                             end
                             else begin  // burst count not 0
-                               inc_spi_addr = 1'b0; // last write increase - matters for spi write
+                               inc_spi_addr = 1'b0; 
                                nxt_st = ST_IDLE;
 		               ss_n_int = 1'b1; 
 			       cmd_is_write = 1'b0; 
@@ -424,13 +427,6 @@ always_comb begin
 			  end
 			 end
  
-      	ST_INI_END_WR	: begin
-			   stransvld_up = 1'b1; 
-		           ss_n_int = 1'b1;
-
-                           nxt_st = ST_IDLE;
-			   rx_wdata = rx_data;
- 			  end	
 			    
 	ST_INI_RD     	: begin 
 // changed this from spi read to tx count so spi incr happens earlier 
@@ -449,18 +445,19 @@ always_comb begin
  	                      if (~(burstcount == {14{1'b0}})) begin
 	                         inc_spi_addr = 1'b1;
 			         nxt_st = ST_INI_RD; 
+		                 ss_n_int = 1'b0;     
                               end
-                              else 
+                              else  // bc = 0 tx_load=0
                                if (rx_load) begin
-	                         inc_spi_addr = 1'b0; 
-                                 nxt_st = ST_INI_END_RD;
-		                 ss_n_int = 1'b0;
-			         cmd_is_read = 1'b1;
-			         stransvld_up = 1'b0; 
-                              end
-		           ss_n_int = 1'b0;
-			   cmd_is_read = 1'b1;
+	                              inc_spi_addr = 1'b0;  //last write increase - matters for spi write
+                                      nxt_st = ST_INI_END_RD;
+		                      ss_n_int = 1'b0;
+			              cmd_is_read = 1'b1;
+			              stransvld_up = 1'b0; 
+                               end 
 			  end
+		           ss_n_int = 1'b0;                            
+			   cmd_is_read = 1'b1;                        
                          end
 
 

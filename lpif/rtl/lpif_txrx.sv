@@ -30,86 +30,89 @@ module lpif_txrx
   #(
     parameter AIB_VERSION = 2,
     parameter AIB_GENERATION = 2,
-    parameter LPIF_CLOCK_RATE = 2000
+    parameter LPIF_DATA_WIDTH = 128,
+    parameter LPIF_CLOCK_RATE = 2000,
+    localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
+    localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
   (
-   input logic           com_clk,
-   input logic           rst_n,
+   input logic                         com_clk,
+   input logic                         rst_n,
 
-   input logic           tx_online,
-   input logic           rx_online,
-   input logic           m_gen2_mode,
+   input logic                         tx_online,
+   input logic                         rx_online,
+   input logic                         m_gen2_mode,
 
-   input logic [7:0]     delay_x_value,
-   input logic [7:0]     delay_xz_value,
-   input logic [7:0]     delay_yz_value,
+   input logic [7:0]                   delay_x_value,
+   input logic [7:0]                   delay_xz_value,
+   input logic [7:0]                   delay_yz_value,
 
-   input logic [319:0]   rx_phy0,
-   input logic [319:0]   rx_phy1,
-   input logic [319:0]   rx_phy2,
-   input logic [319:0]   rx_phy3,
-   input logic [319:0]   rx_phy4,
-   input logic [319:0]   rx_phy5,
-   input logic [319:0]   rx_phy6,
-   input logic [319:0]   rx_phy7,
-   input logic [319:0]   rx_phy8,
-   input logic [319:0]   rx_phy9,
-   input logic [319:0]   rx_phy10,
-   input logic [319:0]   rx_phy11,
-   input logic [319:0]   rx_phy12,
-   input logic [319:0]   rx_phy13,
-   input logic [319:0]   rx_phy14,
-   input logic [319:0]   rx_phy15,
+   input logic [319:0]                 rx_phy0,
+   input logic [319:0]                 rx_phy1,
+   input logic [319:0]                 rx_phy2,
+   input logic [319:0]                 rx_phy3,
+   input logic [319:0]                 rx_phy4,
+   input logic [319:0]                 rx_phy5,
+   input logic [319:0]                 rx_phy6,
+   input logic [319:0]                 rx_phy7,
+   input logic [319:0]                 rx_phy8,
+   input logic [319:0]                 rx_phy9,
+   input logic [319:0]                 rx_phy10,
+   input logic [319:0]                 rx_phy11,
+   input logic [319:0]                 rx_phy12,
+   input logic [319:0]                 rx_phy13,
+   input logic [319:0]                 rx_phy14,
+   input logic [319:0]                 rx_phy15,
 
-   input logic [3:0]     dstrm_state,
-   input logic [1:0]     dstrm_protid,
-   input logic [1023:0]  dstrm_data,
-   input logic [1:0]     dstrm_dvalid,
-   input logic [31:0]    dstrm_crc,
-   input logic [1:0]     dstrm_crc_valid,
-   input logic           dstrm_valid,
+   input logic [3:0]                   dstrm_state,
+   input logic [1:0]                   dstrm_protid,
+   input logic [1023:0]                dstrm_data,
+   input logic [LPIF_VALID_WIDTH-1:0]  dstrm_dvalid,
+   input logic [LPIF_CRC_WIDTH-1:0]    dstrm_crc,
+   input logic [LPIF_VALID_WIDTH-1:0]  dstrm_crc_valid,
+   input logic                         dstrm_valid,
 
-   output logic [319:0]  tx_phy0,
-   output logic [319:0]  tx_phy1,
-   output logic [319:0]  tx_phy2,
-   output logic [319:0]  tx_phy3,
-   output logic [319:0]  tx_phy4,
-   output logic [319:0]  tx_phy5,
-   output logic [319:0]  tx_phy6,
-   output logic [319:0]  tx_phy7,
-   output logic [319:0]  tx_phy8,
-   output logic [319:0]  tx_phy9,
-   output logic [319:0]  tx_phy10,
-   output logic [319:0]  tx_phy11,
-   output logic [319:0]  tx_phy12,
-   output logic [319:0]  tx_phy13,
-   output logic [319:0]  tx_phy14,
-   output logic [319:0]  tx_phy15,
+   output logic [319:0]                tx_phy0,
+   output logic [319:0]                tx_phy1,
+   output logic [319:0]                tx_phy2,
+   output logic [319:0]                tx_phy3,
+   output logic [319:0]                tx_phy4,
+   output logic [319:0]                tx_phy5,
+   output logic [319:0]                tx_phy6,
+   output logic [319:0]                tx_phy7,
+   output logic [319:0]                tx_phy8,
+   output logic [319:0]                tx_phy9,
+   output logic [319:0]                tx_phy10,
+   output logic [319:0]                tx_phy11,
+   output logic [319:0]                tx_phy12,
+   output logic [319:0]                tx_phy13,
+   output logic [319:0]                tx_phy14,
+   output logic [319:0]                tx_phy15,
 
-   output logic [3:0]    ustrm_state,
-   output logic [1:0]    ustrm_protid,
-   output logic [1023:0] ustrm_data,
-   output logic [1:0]    ustrm_dvalid,
-   output logic [31:0]   ustrm_crc,
-   output logic [1:0]    ustrm_crc_valid,
-   output logic          ustrm_valid,
+   output logic [3:0]                  ustrm_state,
+   output logic [1:0]                  ustrm_protid,
+   output logic [1023:0]               ustrm_data,
+   output logic [LPIF_VALID_WIDTH-1:0] ustrm_dvalid,
+   output logic [LPIF_CRC_WIDTH-1:0]   ustrm_crc,
+   output logic [LPIF_VALID_WIDTH-1:0] ustrm_crc_valid,
+   output logic                        ustrm_valid,
 
-   input [3:0]           tx_mrk_userbit,
-   input                 tx_stb_userbit,
+   input [3:0]                         tx_mrk_userbit,
+   input                               tx_stb_userbit,
 
-   output logic [31:0]   rx_upstream_debug_status,
-   output logic [31:0]   tx_downstream_debug_status
+   output logic [31:0]                 rx_upstream_debug_status,
+   output logic [31:0]                 tx_downstream_debug_status
    );
 
   /*AUTOWIRE*/
 
   // FIX THIS
-  logic [6:0]            ustrm_bstart;
-  logic [127:0]          ustrm_bvalid;
-  logic [6:0]            dstrm_bstart;
-  logic [127:0]          dstrm_bvalid;
-//  assign ustrm_bstart = 7'b0;
-//  assign ustrm_bvalid = 128'b0;
+  logic [6:0]                         ustrm_bstart;
+  logic [127:0]                       ustrm_bvalid;
+  logic [6:0]                         dstrm_bstart;
+  logic [127:0]                       dstrm_bvalid;
+  //  assign ustrm_bstart = 7'b0;
+  //  assign ustrm_bvalid = 128'b0;
   assign ustrm_bstart = 7'b0;
   assign ustrm_bvalid = 128'b0;
 
@@ -155,7 +158,7 @@ module lpif_txrx
    .dstrm_valid            (dstrm_valid),
    ); */
 
-  genvar                 i;
+  genvar                              i;
   generate
     if ((AIB_VERSION == 2) && (AIB_GENERATION == 2))
       begin

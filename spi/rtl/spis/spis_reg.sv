@@ -27,6 +27,7 @@
 ////////////////////////////////////////////////////////////
 
 
+
 module spis_reg 
 #( 
 parameter FIFO_ADDR_WIDTH = 4'b1100
@@ -56,8 +57,11 @@ input  logic   		wbuf_rd_underflow_sticky,
 input  logic   		rbuf_wr_overflow_sticky,
 input  logic   		rbuf_rd_underflow_sticky,
 
+output  logic   	wbuf_wr_soft_reset,
 output  logic   	wbuf_rd_soft_reset,
+output  logic   	rbuf_wr_soft_reset,
 output  logic   	rbuf_rd_soft_reset,
+output  logic           sft_rst_ctrl, 
 
 
 output	logic	[31:0]	s_cmd,
@@ -67,21 +71,30 @@ output	logic	[31:0]	s_diag1
 
 );
 
-logic		[31:0]	wbuf_fifo_status; 
-logic		[31:0]	wbuf_fifo_ctrl; 
-logic		[31:0]	rbuf_fifo_status; 
-logic		[31:0]	rbuf_fifo_ctrl; 
+logic		[31:0]	buffer_fifo_status; 
+//ES; 9/8 logic		[31:0]	buffer_fifo_ctrl; 
+logic		[4:0]	buffer_fifo_ctrl; 
+//ES; 9/8 logic		[31:0]	sft_rst_ctrl_reg; 
 
 
 logic                    we_cmd;
-logic                    we_wbuf_fifo_ctrl;
-logic                    we_rbuf_fifo_ctrl;
+logic                    we_buffer_fifo_ctrl;
+logic                    we_buffer_fifo_ctrl_d1;
 
 logic           [2:0] rsvd3;
-logic          [31:0] rsvd32;
+logic          [26:0] rsvd27;
+logic           [3:0] sft_reset_d1;
+logic           [3:0] sft_reset_d2;
+logic           [3:0] sft_reset_d3;
+logic           [3:0] sft_reset_d4;
+logic                 wrt_srst_ctrl_d1;
 
-assign wbuf_rd_soft_reset = wbuf_fifo_ctrl[0];
-assign rbuf_rd_soft_reset = rbuf_fifo_ctrl[0];
+assign wbuf_wr_soft_reset = buffer_fifo_ctrl[0];
+assign wbuf_rd_soft_reset = buffer_fifo_ctrl[1];
+assign rbuf_wr_soft_reset = buffer_fifo_ctrl[2];
+assign rbuf_rd_soft_reset = buffer_fifo_ctrl[3];
+assign sft_rst_ctrl       = buffer_fifo_ctrl[4];
+//ES: 9/8 assign sft_rst_ctrl = sft_rst_ctrl_reg[0];
 
 //
 // write  
@@ -89,12 +102,38 @@ assign rbuf_rd_soft_reset = rbuf_fifo_ctrl[0];
 assign we_cmd    = 	((addr == 16'h0000) & write) ? 1'b1 : 1'b0;
 
 
-assign we_wbuf_fifo_ctrl = 	((addr == 16'h0044) & write) ? 1'b1 : 1'b0;	
-assign we_rbuf_fifo_ctrl = 	((addr == 16'h004C) & write) ? 1'b1 : 1'b0;	
+assign we_buffer_fifo_ctrl = 	((addr == 16'h0044) & write) ? 1'b1 : 1'b0;	
+//ES: 9/8 assign we_sft_rst_ctrl = 	((addr == 16'h0048) & write) ? 1'b1 : 1'b0;	
 
 assign  rsvd3 = 3'b0;
-assign  rsvd32 = 32'b0;
+assign  rsvd27 = 27'b0;
 
+always_ff @(posedge aclk or negedge arst_n)
+	if (~arst_n) 
+	  	we_buffer_fifo_ctrl_d1 <= 'b0;
+ 	else 
+		we_buffer_fifo_ctrl_d1 <= we_buffer_fifo_ctrl;
+			
+always_ff @(posedge aclk or negedge arst_n)
+	if (~arst_n) 
+	  	wrt_srst_ctrl_d1 <= 'b0;
+ 	else if (we_buffer_fifo_ctrl)
+		wrt_srst_ctrl_d1  <= wdata[4];
+			
+always_ff @(posedge aclk or negedge arst_n)
+	if (~arst_n) begin 
+	  	sft_reset_d1 <= 4'b0;
+	  	sft_reset_d2 <= 4'b0;
+	  	sft_reset_d3 <= 4'b0;
+	  	sft_reset_d4 <= 4'b0;
+               end
+ 	else begin
+		sft_reset_d1 <= {rbuf_rd_soft_reset,rbuf_wr_soft_reset, wbuf_rd_soft_reset,wbuf_wr_soft_reset};
+		sft_reset_d2 <= sft_reset_d1;
+		sft_reset_d3 <= sft_reset_d2;
+		sft_reset_d4 <= sft_reset_d4;
+               end
+			
 
 // s_status offset 0x0 
 always_ff @(posedge aclk or negedge arst_n)
@@ -131,31 +170,27 @@ always_ff @(posedge aclk or negedge arst_n)
 // wbuf numfilled offset 0x40 
 always_ff @(posedge aclk or negedge arst_n)
 	if (~arst_n) 
-	  	wbuf_fifo_status <= 'b0;
+	  	buffer_fifo_status <= 'b0;
  	else 
-		wbuf_fifo_status <= {30'b0,wbuf_wr_overflow_sticky,wbuf_rd_underflow_sticky};
+		buffer_fifo_status <= {28'b0,rbuf_rd_underflow_sticky,rbuf_wr_overflow_sticky,wbuf_rd_underflow_sticky,wbuf_wr_overflow_sticky};
 
 // wbuf numfilled offset 0x44 
 always_ff @(posedge aclk or negedge arst_n)
 	if (~arst_n) 
-	  	wbuf_fifo_ctrl <= 'b0;
- 	else if (we_wbuf_fifo_ctrl) 
-		wbuf_fifo_ctrl <=  wdata;
+	  	buffer_fifo_ctrl <= 5'b0;
+ 	else if (we_buffer_fifo_ctrl) 
+		buffer_fifo_ctrl[3:0] <= wdata[3:0];
+ 	else if (we_buffer_fifo_ctrl_d1)
+                buffer_fifo_ctrl[4]   <= wrt_srst_ctrl_d1; 
+        else if (|sft_reset_d4)
+                buffer_fifo_ctrl[3:0] <= 4'b0;
 
-// wbuf numfilled offset 0x48 
-always_ff @(posedge aclk or negedge arst_n)
-	if (~arst_n) 
-	  	rbuf_fifo_status <= 'b0;
- 	else 
-		rbuf_fifo_status <= {30'b0,rbuf_wr_overflow_sticky,rbuf_rd_underflow_sticky};
-
-// wbuf numfilled offset 0x4C 
-always_ff @(posedge aclk or negedge arst_n)
-	if (~arst_n) 
-	  	rbuf_fifo_ctrl <= 'b0;
- 	else if (we_rbuf_fifo_ctrl) 
-		rbuf_fifo_ctrl <= wdata;
-
+ // wbuf numfilled offset 0x48 
+//ES: 9/8 always_ff @(posedge aclk or negedge arst_n)
+//ES: 9/8 	if (~arst_n) 
+//ES: 9/8 	  	sft_rst_ctrl_reg <= 'b0;
+//ES: 9/8  	else if (we_sft_rst_ctrl) 
+//ES: 9/8 		sft_rst_ctrl_reg <= wdata;
 
 // Read
 always_comb begin
@@ -163,21 +198,15 @@ always_comb begin
     if (read) begin
      case (addr) 
 
-       //16'h0000  : rdata = s_cmd; 
        16'h0000  : rdata = {s_cmd[31:24],rsvd3,s_cmd[20:0]}; 
        16'h000c  : rdata = s_status;   // addr 0x4 to 0xC
        16'h0010  : rdata = s_diag0;    // addr 0x8 to 0x10
        16'h0014  : rdata = s_diag1;    // addr 0xC to 0x14
 
-       16'h0030  : rdata = rsvd32; 
-       16'h0034  : rdata = rsvd32; 
-       16'h0038  : rdata = rsvd32; 
-       16'h003c  : rdata = rsvd32; 
 
-       16'h0040  : rdata = wbuf_fifo_status; 
-       16'h0044  : rdata = wbuf_fifo_ctrl; 
-       16'h0048  : rdata = rbuf_fifo_status; 
-       16'h004c  : rdata = rbuf_fifo_ctrl; 
+       16'h0040  : rdata = buffer_fifo_status; 
+       16'h0044  : rdata = {rsvd27,buffer_fifo_ctrl[4:0]}; 
+//       16'h0048  : rdata = sft_rst_ctrl_reg; 
 
       default   : rdata = 32'hdeadbeef; 
      endcase

@@ -63,8 +63,8 @@ class ca_knobs_c extends uvm_object;
     //------------------------------------------
     // Contraints
     //------------------------------------------
-    constraint c_tx_xfer_cnt_die_a { tx_xfer_cnt_die_a  inside {[1000:5000]}; }
-    constraint c_tx_xfer_cnt_die_b { tx_xfer_cnt_die_b  inside {[1000:5000]}; }
+    constraint c_tx_xfer_cnt_die_a { tx_xfer_cnt_die_a  inside {[100:500]}; }
+    constraint c_tx_xfer_cnt_die_b { tx_xfer_cnt_die_b  inside {[100:500]}; }
 
     //------------------------------------------
     // Methods

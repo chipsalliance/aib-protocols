@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -62,7 +63,7 @@ module axi_st_d128_asym_quarter_master_concat  (
 //   TX_PERSISTENT_MARKER  = 1'b1;
 //   TX_STROBE_GEN2_LOC    = 'd1;
 //   TX_MARKER_GEN2_LOC    = 'd0;
-//   TX_STROBE_GEN1_LOC    = 'd1;
+//   TX_STROBE_GEN1_LOC    = 'd38;
 //   TX_MARKER_GEN1_LOC    = 'd39;
 //   TX_ENABLE_STROBE      = 1'b1;
 //   TX_ENABLE_MARKER      = 1'b1;
@@ -262,7 +263,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_1 [  78] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [  79] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [  80] = tx_mrk_userbit[1]          ; // MARKER
-  assign tx_phy_preflop_0 [  81] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_0 [  81] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_0 [  82] = tx_st_pushbit_r1           ;
   assign tx_phy_preflop_0 [  83] = tx_st_data          [ 145] ;
   assign tx_phy_preflop_0 [  84] = tx_st_data          [ 146] ;
@@ -342,7 +343,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_0 [ 158] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 159] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [  80] = tx_mrk_userbit[1]          ; // MARKER
-  assign tx_phy_preflop_1 [  81] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_1 [  81] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_1 [  82] = tx_st_data          [ 218] ;
   assign tx_phy_preflop_1 [  83] = tx_st_data          [ 219] ;
   assign tx_phy_preflop_1 [  84] = tx_st_data          [ 220] ;
@@ -422,7 +423,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_1 [ 158] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [ 159] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 160] = tx_mrk_userbit[2]          ; // MARKER
-  assign tx_phy_preflop_0 [ 161] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_0 [ 161] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_0 [ 162] = tx_st_pushbit_r2           ;
   assign tx_phy_preflop_0 [ 163] = tx_st_data          [ 290] ;
   assign tx_phy_preflop_0 [ 164] = tx_st_data          [ 291] ;
@@ -502,7 +503,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_0 [ 238] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 239] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [ 160] = tx_mrk_userbit[2]          ; // MARKER
-  assign tx_phy_preflop_1 [ 161] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_1 [ 161] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_1 [ 162] = tx_st_data          [ 363] ;
   assign tx_phy_preflop_1 [ 163] = tx_st_data          [ 364] ;
   assign tx_phy_preflop_1 [ 164] = tx_st_data          [ 365] ;
@@ -582,7 +583,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_1 [ 238] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [ 239] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 240] = tx_mrk_userbit[3]          ; // MARKER
-  assign tx_phy_preflop_0 [ 241] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_0 [ 241] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_0 [ 242] = tx_st_pushbit_r3           ;
   assign tx_phy_preflop_0 [ 243] = tx_st_data          [ 435] ;
   assign tx_phy_preflop_0 [ 244] = tx_st_data          [ 436] ;
@@ -662,7 +663,7 @@ module axi_st_d128_asym_quarter_master_concat  (
   assign tx_phy_preflop_0 [ 318] = 1'b0                       ; // DBI
   assign tx_phy_preflop_0 [ 319] = 1'b0                       ; // DBI
   assign tx_phy_preflop_1 [ 240] = tx_mrk_userbit[3]          ; // MARKER
-  assign tx_phy_preflop_1 [ 241] = tx_stb_userbit             ; // STROBE
+  assign tx_phy_preflop_1 [ 241] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_1 [ 242] = tx_st_data          [ 508] ;
   assign tx_phy_preflop_1 [ 243] = tx_st_data          [ 509] ;
   assign tx_phy_preflop_1 [ 244] = tx_st_data          [ 510] ;
@@ -753,7 +754,7 @@ module axi_st_d128_asym_quarter_master_concat  (
 //   RX_PERSISTENT_MARKER  = 1'b1;
 //   RX_STROBE_GEN2_LOC    = 'd1;
 //   RX_MARKER_GEN2_LOC    = 'd0;
-//   RX_STROBE_GEN1_LOC    = 'd1;
+//   RX_STROBE_GEN1_LOC    = 'd38;
 //   RX_MARKER_GEN1_LOC    = 'd39;
 //   RX_ENABLE_STROBE      = 1'b1;
 //   RX_ENABLE_MARKER      = 1'b1;

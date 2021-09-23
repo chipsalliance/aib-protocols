@@ -26,7 +26,7 @@
   //
   ////////////////////////////////////////////////////////////
 
-  module lpif
+module lpif
     #(
       parameter AIB_VERSION = 2,
       parameter AIB_GENERATION = 2,
@@ -50,20 +50,20 @@
    output logic                                     pl_trdy,
    output logic [LPIF_DATA_WIDTH*8-1:0]             pl_data,
    output logic [LPIF_VALID_WIDTH-1:0]              pl_valid,
-   output logic [2:0]                               pl_stream,
+   output logic [7:0]                               pl_stream,
    output logic                                     pl_error,
    output logic                                     pl_trainerror,
    output logic                                     pl_cerror,
    output logic                                     pl_stallreq,
    output logic                                     pl_tmstmp,
-   output logic [2:0]                               pl_tmstmp_stream,
+   output logic [7:0]                               pl_tmstmp_stream,
    output logic                                     pl_phyinl1,
    output logic                                     pl_phyinl2,
 
    input logic                                      lp_irdy,
    input logic [LPIF_DATA_WIDTH*8-1:0]              lp_data,
    input logic [LPIF_VALID_WIDTH-1:0]               lp_valid,
-   input logic [2:0]                                lp_stream,
+   input logic [7:0]                                lp_stream,
    input logic                                      lp_stallack,
    input logic [3:0]                                lp_state_req,
    output logic [3:0]                               pl_state_sts,
@@ -162,10 +162,10 @@
   // Beginning of automatic wires (for undeclared instantiated-module outputs)
   logic                 ctl_link_up;            // From lpif_ctl_i of lpif_ctl.v
   logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0] dout_lpbk;// From lpif_lpbk_i of lpif_lpbk.v
-  logic [31:0]          dstrm_crc;              // From lpif_ctl_i of lpif_ctl.v
-  logic [1:0]           dstrm_crc_valid;        // From lpif_ctl_i of lpif_ctl.v
+  logic [LPIF_CRC_WIDTH-1:0] dstrm_crc;         // From lpif_ctl_i of lpif_ctl.v
+  logic [LPIF_VALID_WIDTH-1:0] dstrm_crc_valid; // From lpif_ctl_i of lpif_ctl.v
   logic [1023:0]        dstrm_data;             // From lpif_ctl_i of lpif_ctl.v
-  logic [1:0]           dstrm_dvalid;           // From lpif_ctl_i of lpif_ctl.v
+  logic [LPIF_VALID_WIDTH-1:0] dstrm_dvalid;    // From lpif_ctl_i of lpif_ctl.v
   logic [1:0]           dstrm_protid;           // From lpif_ctl_i of lpif_ctl.v
   logic [3:0]           dstrm_state;            // From lpif_ctl_i of lpif_ctl.v
   logic                 dstrm_valid;            // From lpif_ctl_i of lpif_ctl.v
@@ -175,10 +175,10 @@
   logic                 lsm_state_active;       // From lpif_lsm_i of lpif_lsm.v
   logic [31:0]          rx_upstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [31:0]          tx_downstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
-  logic [31:0]          ustrm_crc;              // From lpif_txrx_i of lpif_txrx.v
-  logic [1:0]           ustrm_crc_valid;        // From lpif_txrx_i of lpif_txrx.v
+  logic [LPIF_CRC_WIDTH-1:0] ustrm_crc;         // From lpif_txrx_i of lpif_txrx.v
+  logic [LPIF_VALID_WIDTH-1:0] ustrm_crc_valid; // From lpif_txrx_i of lpif_txrx.v
   logic [1023:0]        ustrm_data;             // From lpif_txrx_i of lpif_txrx.v
-  logic [1:0]           ustrm_dvalid;           // From lpif_txrx_i of lpif_txrx.v
+  logic [LPIF_VALID_WIDTH-1:0] ustrm_dvalid;    // From lpif_txrx_i of lpif_txrx.v
   logic [1:0]           ustrm_protid;           // From lpif_txrx_i of lpif_txrx.v
   logic [3:0]           ustrm_state;            // From lpif_txrx_i of lpif_txrx.v
   logic                 ustrm_valid;            // From lpif_txrx_i of lpif_txrx.v
@@ -290,6 +290,7 @@
       // Parameters
       .AIB_VERSION                      (AIB_VERSION),
       .AIB_GENERATION                   (AIB_GENERATION),
+      .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
       .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE))
   lpif_txrx_i
     (/*AUTOINST*/
@@ -313,9 +314,9 @@
      .ustrm_state                       (ustrm_state[3:0]),
      .ustrm_protid                      (ustrm_protid[1:0]),
      .ustrm_data                        (ustrm_data[1023:0]),
-     .ustrm_dvalid                      (ustrm_dvalid[1:0]),
-     .ustrm_crc                         (ustrm_crc[31:0]),
-     .ustrm_crc_valid                   (ustrm_crc_valid[1:0]),
+     .ustrm_dvalid                      (ustrm_dvalid[LPIF_VALID_WIDTH-1:0]),
+     .ustrm_crc                         (ustrm_crc[LPIF_CRC_WIDTH-1:0]),
+     .ustrm_crc_valid                   (ustrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .ustrm_valid                       (ustrm_valid),
      .rx_upstream_debug_status          (rx_upstream_debug_status[31:0]),
      .tx_downstream_debug_status        (tx_downstream_debug_status[31:0]),
@@ -347,9 +348,9 @@
      .dstrm_state                       (dstrm_state[3:0]),
      .dstrm_protid                      (dstrm_protid[1:0]),
      .dstrm_data                        (dstrm_data[1023:0]),
-     .dstrm_dvalid                      (dstrm_dvalid[1:0]),
-     .dstrm_crc                         (dstrm_crc[31:0]),
-     .dstrm_crc_valid                   (dstrm_crc_valid[1:0]),
+     .dstrm_dvalid                      (dstrm_dvalid[LPIF_VALID_WIDTH-1:0]),
+     .dstrm_crc                         (dstrm_crc[LPIF_CRC_WIDTH-1:0]),
+     .dstrm_crc_valid                   (dstrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .dstrm_valid                       (dstrm_valid),
      .tx_mrk_userbit                    (4'b0),                  // Templated
      .tx_stb_userbit                    (1'b0));                  // Templated
@@ -397,20 +398,20 @@
      .dstrm_state                       (dstrm_state[3:0]),
      .dstrm_protid                      (dstrm_protid[1:0]),
      .dstrm_data                        (dstrm_data[1023:0]),
-     .dstrm_dvalid                      (dstrm_dvalid[1:0]),
-     .dstrm_crc                         (dstrm_crc[31:0]),
-     .dstrm_crc_valid                   (dstrm_crc_valid[1:0]),
+     .dstrm_dvalid                      (dstrm_dvalid[LPIF_VALID_WIDTH-1:0]),
+     .dstrm_crc                         (dstrm_crc[LPIF_CRC_WIDTH-1:0]),
+     .dstrm_crc_valid                   (dstrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .dstrm_valid                       (dstrm_valid),
      .pl_data                           (pl_data[LPIF_DATA_WIDTH*8-1:0]),
      .pl_crc                            (pl_crc[LPIF_CRC_WIDTH-1:0]),
      .pl_crc_valid                      (pl_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .pl_valid                          (pl_valid[LPIF_VALID_WIDTH-1:0]),
-     .pl_stream                         (pl_stream[2:0]),
+     .pl_stream                         (pl_stream[7:0]),
      .pl_error                          (pl_error),
      .pl_trainerror                     (pl_trainerror),
      .pl_cerror                         (pl_cerror),
      .pl_tmstmp                         (pl_tmstmp),
-     .pl_tmstmp_stream                  (pl_tmstmp_stream[2:0]),
+     .pl_tmstmp_stream                  (pl_tmstmp_stream[7:0]),
      .pl_quiesce                        (pl_quiesce),
      .pl_lnk_cfg                        (pl_lnk_cfg[2:0]),
      .pl_rxframe_errmask                (pl_rxframe_errmask),
@@ -455,13 +456,13 @@
      .lp_crc                            (lp_crc[LPIF_CRC_WIDTH-1:0]),
      .lp_crc_valid                      (lp_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .lp_valid                          (lp_valid[LPIF_VALID_WIDTH-1:0]),
-     .lp_stream                         (lp_stream[2:0]),
+     .lp_stream                         (lp_stream[7:0]),
      .ustrm_state                       (ustrm_state[3:0]),
      .ustrm_protid                      (ustrm_protid[1:0]),
      .ustrm_data                        (ustrm_data[LPIF_DATA_WIDTH*8-1:0]),
-     .ustrm_dvalid                      (ustrm_dvalid[1:0]),
-     .ustrm_crc                         (ustrm_crc[31:0]),
-     .ustrm_crc_valid                   (ustrm_crc_valid[1:0]),
+     .ustrm_dvalid                      (ustrm_dvalid[LPIF_VALID_WIDTH-1:0]),
+     .ustrm_crc                         (ustrm_crc[LPIF_CRC_WIDTH-1:0]),
+     .ustrm_crc_valid                   (ustrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .ustrm_valid                       (ustrm_valid),
      .lp_tmstmp                         (lp_tmstmp),
      .lp_linkerror                      (lp_linkerror),

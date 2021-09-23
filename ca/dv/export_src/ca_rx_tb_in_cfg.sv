@@ -52,7 +52,7 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     //------------------------------------------
     // constraints 
     //------------------------------------------
-    constraint c_bit_shift      { bit_shift  inside {[0:39]}; }
+    constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
     constraint c_rx_stb_intv    { rx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
     constraint c_rden_dly       { rden_dly  inside {[4:7]}; } // FIXME - need min/max for distribution
 

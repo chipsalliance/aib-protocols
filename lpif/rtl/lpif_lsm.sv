@@ -77,6 +77,8 @@ module lpif_lsm
   logic               lsm_stall_req, d_lsm_stall_req;
   logic               lsm_stall_ack, d_lsm_stall_ack;
 
+  // sideband state encodings
+
   localparam [3:0] /* auto enum sb_info */
     SB_NULL		= 4'h0,
     SB_L1_REQ		= 4'h1,
@@ -98,7 +100,7 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("sb", "sb_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [151:0]           sb_ascii;               // Decode of sb
+  reg [151:0]         sb_ascii;               // Decode of sb
   always @(sb) begin
     case ({sb})
       SB_NULL:             sb_ascii = "sb_null            ";
@@ -117,6 +119,8 @@ module lpif_lsm
     endcase
   end
   // End of automatics
+
+  // lp_state_req encodings
 
   localparam [3:0] /* auto enum req_info */
     REQ_NOP		= 4'h0,
@@ -140,7 +144,7 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("state_req", "state_req_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           state_req_ascii;        // Decode of state_req
+  reg [111:0]         state_req_ascii;        // Decode of state_req
   always @(state_req) begin
     case ({state_req})
       REQ_NOP:        state_req_ascii = "req_nop       ";
@@ -160,6 +164,8 @@ module lpif_lsm
     endcase
   end
   // End of automatics
+
+  // pl_state_sts encodings
 
   localparam [3:0] /* auto enum sts_info */
     STS_RESET		= 4'h0,
@@ -182,7 +188,7 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("state_sts", "state_sts_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           state_sts_ascii;        // Decode of state_sts
+  reg [111:0]         state_sts_ascii;        // Decode of state_sts
   always @(state_sts) begin
     case ({state_sts})
       STS_RESET:      state_sts_ascii = "sts_reset     ";
@@ -203,7 +209,7 @@ module lpif_lsm
   end
   // End of automatics
 
-  // lp_state_req
+  // lp_state_req decodes
 
   wire                state_req_nop		= (lp_state_req == REQ_NOP);
   wire                state_req_active		= (lp_state_req == REQ_ACTIVE);
@@ -213,7 +219,7 @@ module lpif_lsm
   wire                state_req_idle_l1_1	= (lp_state_req == REQ_IDLE_L1_1);
   wire                state_req_sleep_l2	= (lp_state_req == REQ_SLEEP_L2);
 
-  // sideband decodes
+  // sideband state decodes
 
   wire                sb_null			= (sb == SB_NULL);
   wire                sb_l1_req			= (sb == SB_L1_REQ);
@@ -228,9 +234,13 @@ module lpif_lsm
   wire                sb_link_retrain_req	= (sb == SB_LINK_RETRAIN_REQ);
   wire                sb_link_retrain_sts	= (sb == SB_LINK_RETRAIN_STS);
 
+  // pl_lnk_cfg encodings
+
   localparam [2:0]
     LNK_CFG_X1	= 3'b000,
     LNK_CFG_X16	= 3'b101;
+
+  // pl_speedmode encoding
 
   localparam [2:0]
     SPEEDMODE_GEN1	= 3'b000,
@@ -265,7 +275,7 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("lsm_state", "lsm_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [119:0]           lsm_state_ascii;        // Decode of lsm_state
+  reg [119:0]         lsm_state_ascii;        // Decode of lsm_state
   always @(lsm_state) begin
     case ({lsm_state})
       LSM_RESET:       lsm_state_ascii = "lsm_reset      ";
@@ -301,8 +311,6 @@ module lpif_lsm
       lsm_state <= LSM_RESET;
     else
       lsm_state <= d_lsm_state;
-
-  // TODO: PM Entry and Exit
 
   always_comb
     begin : lsm_state_next
@@ -446,9 +454,9 @@ module lpif_lsm
         LSM_LinkReset: begin
           // entered when software writes a register or when remote phy requests
           d_lsm_dstrm_state = SB_LINK_RESET_STS;
-          if (state_req_active | state_req_disable) // TODO: also exit due to an internal request to move to RESET
+          if (state_req_active | state_req_disable)
             d_lsm_state = LSM_RESET;
-          else if (state_req_disable) // TODO: also exit due to an internal request to move to DISABLE
+          else if (state_req_disable)
             d_lsm_state = LSM_DISABLE;
           else if (sb_link_error)
             d_lsm_state = LSM_LinkError;
@@ -472,7 +480,7 @@ module lpif_lsm
             end
           else if (sb_active_req)
             begin
-              d_lsm_dstrm_state = SB_ACTIVE_REQ;
+              d_lsm_dstrm_state = SB_ACTIVE_STS;
               d_lsm_state = LSM_ACTIVE;
             end
           else if (state_req_linkreset)
@@ -524,7 +532,7 @@ module lpif_lsm
         pl_phyinrecenter <= 1'b0;
         pl_state_sts <= 4'b0;
         lsm_dstrm_state <= 4'b0;
-        lsm_lnk_cfg <= 3'b0;
+        lsm_lnk_cfg <= LNK_CFG_X1;
         lsm_speedmode <= 3'b0;
         lsm_cg_req <= 1'b0;
         lsm_cg_ack <= 1'b0;
@@ -568,7 +576,7 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("hs_state", "hs_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [103:0]           hs_state_ascii;         // Decode of hs_state
+  reg [103:0]         hs_state_ascii;         // Decode of hs_state
   always @(hs_state) begin
     case ({hs_state})
       HS_IDLE:       hs_state_ascii = "hs_idle      ";
@@ -599,9 +607,9 @@ module lpif_lsm
       case (hs_state)
         HS_IDLE: begin
           if (lsm_cg_req & ~lp_exit_cg_ack)
-              d_hs_state = HS_CG_REQ;
+            d_hs_state = HS_CG_REQ;
           else if (lsm_stall_req & ~lp_stallack)
-              d_hs_state = HS_STALL_REQ;
+            d_hs_state = HS_STALL_REQ;
         end
         HS_CG_REQ: begin
           d_pl_exit_cg_req = 1'b1;
