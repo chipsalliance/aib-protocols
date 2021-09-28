@@ -1,3 +1,31 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Functional Descript: Channel Alignment Testbench File
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 `ifndef _CA_TOP_TB_
 `define _CA_TOP_TB_
 
@@ -20,7 +48,7 @@ module ca_top_tb;
     //parameter FWD_CYCLE  = 2000;
     //parameter WR_CYCLE   = 2000;
     //parameter RD_CYCLE   = 2000;
-    parameter FWD_CYCLE  = `TB_DIE_A_CLK; //PN_REVIEW
+    parameter FWD_CYCLE  = `TB_DIE_A_CLK;
     parameter WR_CYCLE   = `TB_DIE_A_CLK;
     parameter RD_CYCLE   = `TB_DIE_A_CLK;
 
@@ -111,6 +139,10 @@ module ca_top_tb;
 
     localparam CHAN_M2S_MARKER_LOC   = 8'd39;
     localparam CHAN_S2M_MARKER_LOC   = 8'd39;
+
+    int        m2s_delay_p2p[`MAX_NUM_CHANNELS-1:0] = '{`MAX_NUM_CHANNELS{$urandom_range(`CHAN_DELAY_MAX, `CHAN_DELAY_MIN)}};
+    int        s2m_delay_p2p[`MAX_NUM_CHANNELS-1:0] = '{`MAX_NUM_CHANNELS{$urandom_range(`CHAN_DELAY_MAX, `CHAN_DELAY_MIN)}};
+ 
 `endif
 
 `ifdef P2P_LITE
@@ -179,7 +211,11 @@ module ca_top_tb;
          .AD_WIDTH          (`TB_DIE_A_AD_WIDTH),
          .SYNC_FIFO         (`SYNC_FIFO)
         ) ca_die_a (
+           `ifdef SYNC_FIFO
+             .lane_clk               ({`TB_DIE_A_NUM_CHANNELS{clk_die_a}}),
+           `else 
              .lane_clk               (clk_lane_a[`TB_DIE_A_NUM_CHANNELS-1:0]),
+           `endif
              .com_clk                (clk_die_a),
              .rst_n                  (tb_reset_l),
              .tx_online              (ca_die_a_tx_tb_out_if.tx_online),
@@ -228,7 +264,11 @@ module ca_top_tb;
          .AD_WIDTH          (`TB_DIE_B_AD_WIDTH),
          .SYNC_FIFO         (`SYNC_FIFO)
         ) ca_die_b (
+           `ifdef SYNC_FIFO
+             .lane_clk               ({`TB_DIE_B_NUM_CHANNELS{clk_die_b}}),
+           `else 
              .lane_clk               (clk_lane_b[`TB_DIE_B_NUM_CHANNELS-1:0]),
+           `endif
              .com_clk                (clk_die_b),
              .rst_n                  (tb_reset_l),
              .tx_online              (ca_die_b_tx_tb_out_if.tx_online),
@@ -297,8 +337,13 @@ generate
        .tb_master_rate               (MASTER_RATE),         
        .tb_slave_rate                (SLAVE_RATE),          
        .m_gen2_mode                  (`MODE_GEN2),  /////0:gen1    1:gen2  in ca_GENERATED_defines
+`ifdef P2P_LITE_CH_DELAY_ENB
+       .tb_m2s_latency               (m2s_delay_p2p[i]),  
+       .tb_s2m_latency               (s2m_delay_p2p[i]),  
+`else
        .tb_m2s_latency               (CHAN_0_M2S_LATENCY),  
        .tb_s2m_latency               (CHAN_0_S2M_LATENCY),  
+`endif
        .tb_master_rx_dll_time        (CHAN_0_M2S_DLL_TIME), 
        .tb_slave_rx_dll_time         (CHAN_0_M2S_DLL_TIME), 
        .tb_en_asymmetric             (1'b0));               

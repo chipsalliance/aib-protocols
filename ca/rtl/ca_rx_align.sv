@@ -89,6 +89,7 @@ module ca_rx_align
   logic [319:0]                                     rx_din_ch_tmp[NUM_CHANNELS-1:0];
 
   logic                                             rx_state_idle;
+  logic                                             rx_state_online;
   logic                                             rx_state_aligned, rx_next_state_aligned;
   logic                                             rx_state_done;
 
@@ -123,19 +124,25 @@ module ca_rx_align
   generate
     for (i = 0; i < NUM_CHANNELS; i++)
       begin : rx_online_syncs
-        levelsync
-             #(/*AUTOINSTPARAM*/
-               // Parameters
-               .RESET_VALUE             (1'b0))                  // Templated
-        level_sync_i
-             (/*AUTOINST*/
-              // Outputs
-              .dest_data                (rx_online_sync[i]),     // Templated
-              // Inputs
-              .rst_dest_n               (rst_lane_n[i]),         // Templated
-              .clk_dest                 (lane_clk[i]),           // Templated
-              .src_data                 (rx_online));             // Templated
-
+        if (SYNC_FIFO)
+          begin
+            assign rx_online_sync[i] = rx_online;
+          end
+        else
+          begin
+            levelsync
+              #(/*AUTOINSTPARAM*/
+                // Parameters
+                .RESET_VALUE            (1'b0))                  // Templated
+            level_sync_i
+              (/*AUTOINST*/
+               // Outputs
+               .dest_data               (rx_online_sync[i]),     // Templated
+               // Inputs
+               .rst_dest_n              (rst_lane_n[i]),         // Templated
+               .clk_dest                (lane_clk[i]),           // Templated
+               .src_data                (rx_online));             // Templated
+          end
       end
   endgenerate
 
@@ -232,7 +239,7 @@ module ca_rx_align
             endcase // case (1'b1)
           end
 
-        assign d_stb_det[i] = |(word[i] & rx_stb_bit_sel);
+        assign d_stb_det[i] = rx_state_online & |(word[i] & rx_stb_bit_sel);
 
         always_ff @(posedge lane_clk[i] or negedge rst_lane_n[i])
           if (~rst_lane_n[i])
@@ -256,10 +263,12 @@ module ca_rx_align
                     end
                   else
                     begin
-                      stb_det[i] <= d_stb_det[i];
                       if (~|timer_x[i])
-                        first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
-                      fifo_wr[i] <= fifo_wr[i] ? 1'b1 : d_stb_det[i];
+                        begin
+                          stb_det[i] <= d_stb_det[i];
+                          first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
+                          fifo_wr[i] <= fifo_wr[i] ? 1'b1 : d_stb_det[i];
+                        end
                     end
                 end
               if (rx_online_sync[i] & ~rx_online_sync_del[i])
@@ -327,10 +336,11 @@ module ca_rx_align
   end
   // End of automatics
 
-  assign rx_state_idle = rx_state == RX_IDLE;
-  assign rx_state_aligned = rx_state == RX_ALIGNED;
-  assign rx_next_state_aligned = d_rx_state == RX_ALIGNED;
-  assign rx_state_done = rx_state == RX_DONE;
+  assign rx_state_idle = (rx_state == RX_IDLE);
+  assign rx_state_online = (rx_state == RX_ONLINE);
+  assign rx_state_aligned = (rx_state == RX_ALIGNED);
+  assign rx_next_state_aligned = (d_rx_state == RX_ALIGNED);
+  assign rx_state_done = (rx_state == RX_DONE);
 
   always_ff @(posedge com_clk or negedge rst_com_n)
     if (~rst_com_n)

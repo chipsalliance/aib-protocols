@@ -33,7 +33,8 @@ ${PROJ_DIR}/ca/dv/ca_pkg.svh
 ${PROJ_DIR}/ca/dv/tb/ca_top_tb.sv
 -top ca_top_tb
 +access+r
-+define+P2P_LITE
+//+define+P2P_LITE
+//+define+P2P_LITE_CH_DELAY_ENB
 +define+CHAN_DELAY_ENB
 +xmtimescale+1ns/10ps
 +UVM_TESTNAME=ca_basic_test_c

@@ -1,8 +1,42 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Functional Descript: Channel Alignment Testbench File
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 cmd to run test:
 -----------------------------------------------------------------------------------------
 1. Go to directory '/design/ca/dv'
-2. Use command :   xrun -f ca_tb.args 
+2. Use command :   xrun -f ca_tb.args [-seed <number>]
    This will help run the preset test 'ca_basic_test_c' from the script file 'ca_tb.args'
+3. In order to have the external chan_delay_agent (connected before CA-Rx(rxdin)) provide random delays per active channel,
+   uncomment [made default now] the +define+CHAN_DELAY_ENB option line from the 'ca_tb.args' file before executing step #2
+4. The +define+P2P_LITE when uncommented, runs set-up with P2P Lite (SV)model instead of AIB model
+   Uncommenting +define+P2P_LITE_CH_DELAY_ENB will enable the P2P_LITE model to introduce random delay between active channels
+   +define+CHAN_DELAY_ENB is optional with use of +define+P2P_LITE_CH_DELAY_ENB.
+   (It will further introduce random channel delays in the set-up thereby incresing or decreasing inter-channel delays effectively)
 ------------------------------------------------------------------------------------------
 
 --------------------
@@ -44,6 +78,15 @@ design
 │   │   │   ├── ca_tx_tb_out_mon.sv
 │   │   │   ├── ca_tx_tb_out_pkg.svh
 │   │   │   └── ca_tx_tb_out_seqr.sv
+│   │   │   └── chan_delay_agent
+│   │   │       └── chan_delay_agent.sv
+│   │   │       └── chan_delay_cfg.sv
+│   │   │       └── chan_delay_drv.sv
+│   │   │       └── chan_delay_if.sv
+│   │   │       └── chan_delay_mon.sv
+│   │   │       └── chan_delay_pkg.svh
+│   │   │       └── chan_delay_seq_item.sv
+│   │   │       └── chan_delay_seqr.sv
 │   │   ├── local_src
 │   │   │   └── ca_gen_if.sv
 │   │   ├── README     <<<<< This file >>>>>

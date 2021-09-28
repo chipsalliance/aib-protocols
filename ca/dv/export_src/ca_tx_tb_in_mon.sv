@@ -1,3 +1,31 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Functional Descript: Channel Alignment Testbench File
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 `ifndef _CA_TX_TB_IN_MON_
 `define _CA_TX_TB_IN_MON_
 ///////////////////////////////////////////////////////////////////
@@ -153,7 +181,8 @@ task ca_tx_tb_in_mon_c::mon_tx();
                          aport.write(ca_item);
                      end
                      default: begin
-                         `uvm_fatal("mon_tx_tb_in", $sformatf("BAD case in is_stb"));
+                         //`uvm_fatal("mon_tx_tb_in", $sformatf("BAD case in is_stb"));
+                         `uvm_error("mon_tx_tb_in", $sformatf("BAD case in is_stb"));
                      end
                  endcase
              end // if
@@ -192,22 +221,22 @@ endtask : mon_err_sig
 function void ca_tx_tb_in_mon_c::verify_tx_stb();
 
     if(cfg.tx_stb_en == 0) begin
-        //`uvm_error("verify_tx_stb", $sformatf("%s tx stb rx-ed with tx_stb_en: %0d", my_name, cfg.tx_stb_en));
+        `uvm_error("verify_tx_stb", $sformatf("%s tx stb rx-ed with tx_stb_en: %0d", my_name, cfg.tx_stb_en));
     end
 
     stb_beat_cnt++;
     if(stb_sync == 0) begin
         stb_sync = 1;
         if(stb_cnt >= 2 * cfg.tx_stb_intv) begin
-         //   `uvm_error("verify_tx_stb", $sformatf("INIT: %s did NOT rx stb tx_dout beat within tx_stb_intv: %0d | act: %0d",
-         //     my_name, cfg.tx_stb_intv, stb_cnt));
+            `uvm_error("verify_tx_stb", $sformatf("INIT: %s did NOT rx stb tx_dout beat within tx_stb_intv: %0d | act: %0d",
+              my_name, cfg.tx_stb_intv, stb_cnt));
         end
     end
     else begin // sync
 
         if(stb_cnt != cfg.tx_stb_intv) begin
-         // `uvm_error("verify_tx_stb", $sformatf("%s TX did NOT rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
-         //     my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt));
+          `uvm_error("verify_tx_stb", $sformatf("%s TX did NOT rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
+              my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt));
         end  
         else begin
            // `uvm_info("verify_tx_stb", $sformatf("%s rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",

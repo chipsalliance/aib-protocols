@@ -1,3 +1,31 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Functional Descript: Channel Alignment Testbench File
+//
+//
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
 `ifndef _CA_RX_TB_IN_MON_
 `define _CA_RX_TB_IN_MON_
 ///////////////////////////////////////////////////////////////////
@@ -155,6 +183,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
                      default: begin
                          ca_item.dprint();
                          //`uvm_fatal("mon_rx_tb_in", $sformatf("BAD case in is_stb_beat for above beat"));
+                         `uvm_error("mon_rx_tb_in", $sformatf("BAD case in is_stb_beat for above beat"));
                      end
                  endcase
             end // if        
@@ -175,8 +204,8 @@ function void ca_rx_tb_in_mon_c::verify_rx_stb();
     if(stb_sync == 0) begin
         stb_sync = 1;
         if(stb_cnt >= 2 * cfg.rx_stb_intv) begin
-           // `uvm_error("verify_rx_stb", $sformatf("INIT: %s did NOT rx stb rx_dout beat within rx_stb_intv: %0d | act: %0d",
-           //     my_name, cfg.rx_stb_intv, stb_cnt));
+            `uvm_error("verify_rx_stb", $sformatf("INIT: %s did NOT rx stb rx_dout beat within rx_stb_intv: %0d | act: %0d",
+                my_name, cfg.rx_stb_intv, stb_cnt));
         end
     end
     else begin // sync
