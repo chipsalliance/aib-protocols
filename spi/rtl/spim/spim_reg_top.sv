@@ -306,7 +306,8 @@ assign wbuf_read_pop =  ~wbuf_rd_empty & (spi_read & spi_wbuf_access) ;
 
 
 
-assign rbuf_write_push = (~rbuf_wr_full & (spi_write & spi_rbuf_access));
+//assign rbuf_write_push = (~rbuf_wr_full & (spi_write & spi_rbuf_access));
+assign rbuf_write_push = (~rbuf_wr_full & (spi_write));
 assign rbuf_read_pop = ~rbuf_rd_empty & (avbreg_read & avmm_rbuf_access);
 
 assign m_status_in	= 'b0;

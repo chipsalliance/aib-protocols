@@ -80,7 +80,7 @@ reg [FIFO_WIDTH_MSB:0] rddata;
 
   integer index0;
 
-  always @(posedge clk_write or negedge rst_write_n)
+  always_ff @(posedge clk_write or negedge rst_write_n)
   if (!rst_write_n)
   begin
     for (index0 = 0; index0 < FIFO_DEPTH_WID ; index0 = index0 + 1)
@@ -91,7 +91,7 @@ reg [FIFO_WIDTH_MSB:0] rddata;
     memory[wraddr] <= wrdata;
   end
 
-  always @(posedge clk_read or negedge rst_read_n)
+  always_ff @(posedge clk_read or negedge rst_read_n)
   if (!rst_read_n)
   begin
     rddata <= {FIFO_WIDTH_WID{1'b0}};

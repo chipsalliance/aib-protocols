@@ -159,7 +159,8 @@ assign spi_read = (cur_st == ST_IDLE) & (s_transvld_detect == 1) ? 1'b1 :
 // read or write. Specifically, increase spim burst length by 1
 // in case of read
 
-assign spi_write = ((cur_st != ST_IDLE) & (cur_st != ST_INI_CMD))  & rx_data_update;
+//assign spi_write = ((cur_st != ST_IDLE) & (cur_st != ST_INI_CMD))  & rx_data_update;
+assign spi_write =  rx_data_update;
 
 
 assign spi_rd_addr = spi_read  ? 16'h0200 : 16'h0000; //wrbuf_addr; 

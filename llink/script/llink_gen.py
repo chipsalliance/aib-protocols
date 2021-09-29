@@ -1419,13 +1419,12 @@ def make_name_file(configuration):
            #            print_verilog_io_line(file_name, localdir, sig_gen2['NAME'], index=gen_index_msb(sig_gen2['SIGWID'],sig_gen2['LSB'], sysv=False))
            #
            #else:
-                localdir = gen_direction(name_file_name, llink['DIR'], True)
                 file_name.write("\n  // {0} channel\n".format(llink['NAME']))
-                for sig_gen2 in llink['SIGNALLIST_MAIN']:
-                    if sig_gen2['TYPE'] == "rstruct_enable" and localdir == 'output':
+                for sig in llink['SIGNALLIST_MAIN']:
+                    if sig['TYPE'] == "rstruct_enable" and direction == 'master' :  ## Drop the user_enable if in master (slave only)
                         continue
-                    localdir = gen_direction(name_file_name, sig_gen2['DIR'])
-                    print_verilog_io_line(file_name, localdir, sig_gen2['NAME'], index=gen_index_msb(sig_gen2['SIGWID'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig_gen2['LSB'], sysv=False))
+                    localdir = gen_direction(name_file_name, sig['DIR'])
+                    print_verilog_io_line(file_name, localdir, sig['NAME'], index=gen_index_msb(sig['SIGWID'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig['LSB'], sysv=False))
 
         # List Logic Link Signals
         file_name.write("\n  // Logic Link Interfaces\n")
@@ -2305,7 +2304,7 @@ def make_top_file(configuration):
            #else:
                 file_name.write("\n  // {0} channel\n".format(llink['NAME']))
                 for sig_gen2 in llink['SIGNALLIST_MAIN']:
-                    if sig_gen2['TYPE'] == "rstruct_enable" and localdir == 'output':
+                    if sig_gen2['TYPE'] == "rstruct_enable" and direction == 'master':
                         continue
                     localdir = gen_direction(name_file_name, sig_gen2['DIR'])
                     print_verilog_io_line(file_name, localdir, sig_gen2['NAME'], index=gen_index_msb(sig_gen2['SIGWID'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig_gen2['LSB'], sysv=False))

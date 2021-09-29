@@ -21,34 +21,38 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////
-module strobe_gen (
+module axi_ready_xactor (
 
   input logic        clk,
   input logic        rst_n,
 
-  input logic  [7:0] interval,          // Set to 0 for back to back strobes. Otherwise, interval is the time between strobes (so if you want a strobe every 10 cycles, set to 9)
-  input logic        user_marker,       // Effectiely the OR reduction of all user_marker bits. We only increment strobe count when we send a remote side word
-  input logic        online,            // Set to 1 to begin strobe generation (0 to stop)
+  input logic        disable_flowcontrol,       // Set to 1 to disable all flow control.
+  input logic  [7:0] max_span,                  // Set to maximum clock span each "event" will last (100 is good starting point) Minimum is 1 clock cycle.
+  input logic  [7:0] max_assert_flowcontrol,    // Set to percentage chance that each span will be asserting flow control.
 
-  output logic       user_strobe
+  output logic       axi_ready
 
 );
 
-parameter TX_STROBE_QUICKLY = 0; // If set, we'll send the strobe on cycle 0. Otherwise we wait one interval before sending strobe.
+logic [7:0] rand_percent_ready_delay;
 
-logic [7:0] count_reg;
+logic [7:0] rand_ready_delay_value;
+
 
 always @(posedge clk or negedge rst_n)
 if (!rst_n)
-  count_reg <= 8'h0;
-else if (~online)
-  count_reg <= 8'h0;
-else if ((user_marker) & (count_reg == interval))
-  count_reg <= 8'h0;
-else if (user_marker)
-  count_reg <= count_reg + 1;
+begin
+  axi_ready <= 1'b1;
+end
+else
+begin
+  rand_ready_delay_value   = $urandom_range(1,{24'h0,max_span});
+  rand_percent_ready_delay = $urandom_range(1,100);
 
-assign user_strobe = (count_reg == (TX_STROBE_QUICKLY ? 8'h0 : interval)) & online;
+  axi_ready <= disable_flowcontrol ? 1'b1 : (rand_percent_ready_delay >= max_assert_flowcontrol);
+
+  repeat (rand_ready_delay_value) @(posedge clk);
+end
 
 
 endmodule

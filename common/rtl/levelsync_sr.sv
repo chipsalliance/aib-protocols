@@ -20,7 +20,7 @@
 ////////////////////////////////////////////////////////////
 
 module levelsync_sr
-   (/*AUTOARG*/ 
+   (/*AUTOARG*/
    //Outputs
    dest_data,
    //Inputs
@@ -40,7 +40,7 @@ output  dest_data;
 reg             AsYnCiNpUt_ff0_reg;
 reg             ff1_reg;
 
-always @(posedge clk_dest or negedge rst_dest_n or negedge set_dest_n)
+always_ff @(posedge clk_dest or negedge rst_dest_n or negedge set_dest_n)
 if (!rst_dest_n)
 begin
   AsYnCiNpUt_ff0_reg <= RESET_VALUE;

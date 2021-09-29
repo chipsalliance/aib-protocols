@@ -91,7 +91,7 @@ wire                            rdstrobe;
 
 ////////////////////////////////////////////////////////////
 // Write FIFO Address
-always @( write_addr_reg or wrstrobe )
+always_comb
 if (wrstrobe & (write_addr_reg == FIFO_DEPTH_MSB))
   write_addr_nxt = {FIFO_ADDR_WID{1'b0}};
 else if (wrstrobe)
@@ -99,7 +99,7 @@ else if (wrstrobe)
 else
   write_addr_nxt = write_addr_reg ;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   write_addr_reg <= {FIFO_ADDR_WID{1'b0}};
 else if (soft_reset)
@@ -111,7 +111,7 @@ else
 
 ////////////////////////////////////////////////////////////
 // Read FIFO Address
-always @( rdstrobe or read_addr_reg )
+always_comb
 if (rdstrobe & (read_addr_reg == FIFO_DEPTH_MSB))
   read_addr_nxt = {FIFO_ADDR_WID{1'b0}};
 else if (rdstrobe)
@@ -119,7 +119,7 @@ else if (rdstrobe)
 else
   read_addr_nxt = read_addr_reg;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   read_addr_reg <= {FIFO_ADDR_WID{1'b0}};
 else if (soft_reset)
@@ -131,7 +131,7 @@ else
 
 ////////////////////////////////////////////////////////////
 // Counters (if not needed, do not connect and will synth away)
-always @( numfilled_reg or rdstrobe or wrstrobe )
+always_comb
 if (rdstrobe & wrstrobe)
   numfilled_nxt = numfilled_reg;
 else if (wrstrobe)
@@ -141,7 +141,7 @@ else if (rdstrobe)
 else
   numfilled_nxt = numfilled_reg;
 
-always @( numempty_reg or rdstrobe or wrstrobe )
+always_comb
 if (rdstrobe & wrstrobe)
   numempty_nxt = numempty_reg;
 else if (wrstrobe)
@@ -151,7 +151,7 @@ else if (rdstrobe)
 else
   numempty_nxt = numempty_reg;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
 begin
   numfilled_reg <= {FIFO_COUNT_WID{1'b0}};
@@ -179,7 +179,7 @@ assign numempty = numempty_reg;
 // These use a state bit that indicates if the previous write-read addr was
 // aproaching 0 (EMPTY) or 0 (FULL).
 reg             fifo_data_filling;
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   fifo_data_filling <= 1'b0 ;
 else if (soft_reset)
@@ -199,7 +199,7 @@ wire empty_comb;
 reg full_reg;
 reg empty_reg;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   full_reg <= 1'b0 ;
 else if (soft_reset)
@@ -211,7 +211,7 @@ else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write ca
 else if ((write_addr_nxt != read_addr_nxt) | (rdstrobe           ))
   full_reg <= 1'b0 ;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (~rst_core_n)
   empty_reg <= 1'b1 ;
 else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
@@ -257,7 +257,7 @@ assign rdstrobe = read_pop   ;
   reg [FIFO_WIDTH_MSB:0] memory [FIFO_DEPTH_MSB:0];
   integer index0;
 
-  always @(posedge clk_core or negedge rst_core_n)
+  always_ff @(posedge clk_core or negedge rst_core_n)
   if (!rst_core_n)
   begin
     for (index0 = 0; index0 < FIFO_DEPTH_WID ; index0 = index0 + 1)

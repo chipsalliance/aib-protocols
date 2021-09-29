@@ -35,7 +35,7 @@ output          delayed_en;
 reg  [7:0]      count_reg;
 reg             count_eq_dlyval_reg;
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
   count_reg <= 8'h0;
 else if (~enable)
@@ -43,7 +43,7 @@ else if (~enable)
 else if (count_reg != delay_value)
   count_reg <= (count_reg + 8'h1);
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
   count_eq_dlyval_reg <= 1'h0;
 else if (~enable)

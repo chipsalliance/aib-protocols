@@ -18,16 +18,16 @@
 // FF.  This represents the uncertain nature of the async
 // sampling (i.e. the clk_dest fires too soon to get the
 // latest src_data).  We do this by adding a # delay.
-// 
-// Note that in true, legit synthesis, the #delay would 
-// be synthesized away.  Still, I like the minimize the 
+//
+// Note that in true, legit synthesis, the #delay would
+// be synthesized away.  Still, I like the minimize the
 // number of synthesis warnings, so I only enable this
 // during simulations.
 //
 ////////////////////////////////////////////////////////////
 
 module levelsync
-   (/*AUTOARG*/ 
+   (/*AUTOARG*/
    //Outputs
    dest_data,
    //Inputs
@@ -46,7 +46,7 @@ reg             AsYnCiNpUt_ff0_reg;
 wire            src_data_input;
 reg             ff1_reg;
 
-always @(posedge clk_dest or negedge rst_dest_n)
+always_ff @(posedge clk_dest or negedge rst_dest_n)
 if (!rst_dest_n)
 begin
   AsYnCiNpUt_ff0_reg <= RESET_VALUE;
@@ -67,7 +67,7 @@ wire src_data_input_delay;
 reg [3:0] lsfr4_reg ;
 initial lsfr4_reg = $random | 4'h1 ; // Non-zero start for 4 bit LSFR
 
-always @(posedge clk_dest)
+always_ff @(posedge clk_dest)
 begin
   lsfr4_reg [3:1] <= lsfr4_reg [2:0];
   lsfr4_reg [0]   <= lsfr4_reg [3] ^ lsfr4_reg [2] ;

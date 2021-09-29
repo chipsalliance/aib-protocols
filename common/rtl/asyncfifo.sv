@@ -104,7 +104,7 @@ wire                          rdstrobe;
 ////////////////////////////////////////////////////////////
 // Generate Read Pointer / Gray Encoding
 
-always @(posedge clk_read or negedge rst_read_n)
+always_ff @(posedge clk_read or negedge rst_read_n)
 if (!rst_read_n)
 begin
   rd_rptr_bin_reg  <= {FIFO_ADDR_WID{1'b0}};
@@ -126,7 +126,7 @@ assign rd_rptr_gray_nxt = (rd_rptr_bin_nxt>>1) ^ rd_rptr_bin_nxt; // binary-to-g
 ////////////////////////////////////////////////////////////
 // Generate Write Pointer / Gray Encoding
 
-always @(posedge clk_write or negedge rst_write_n)
+always_ff @(posedge clk_write or negedge rst_write_n)
 if (!rst_write_n)
 begin
   wr_wptr_bin_reg  <= {FIFO_ADDR_WID{1'b0}};

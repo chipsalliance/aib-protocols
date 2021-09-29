@@ -76,14 +76,14 @@ assign req_msb_masked = requestor & req_mask;
 // If we have something in the "high priority" section, then use it.
 // otherwise, use the full (i.e. low priority) section.
 // This is LIVE, so timing critical.
-always @( req_msb_masked or requestor )
+always_comb
 if (|req_msb_masked)
   grant = find_leading_one (req_msb_masked);
 else
   grant = find_leading_one (requestor);
 
 
-always @(posedge clk_core or negedge rst_core_n)
+always_ff @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
   last_grantaddr_reg <= {REQ_ADDR_WID{1'b1}};  // Default to Req 0 having highest priority
 else if (advance & (|requestor))
