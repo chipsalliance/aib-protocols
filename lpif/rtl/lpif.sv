@@ -1,30 +1,30 @@
 ////////////////////////////////////////////////////////////
-  //
-  //        Copyright (C) 2021 Eximius Design
-  //                All Rights Reserved
-  //
-  // This entire notice must be reproduced on all copies of this file
-  // and copies of this file may only be made by a person if such person is
-  // permitted to do so under the terms of a subsisting license agreement
-  // from Eximius Design
-  //
-  // Licensed under the Apache License, Version 2.0 (the "License");
-  // you may not use this file except in compliance with the License.
-  // You may obtain a copy of the License at
-  //
-  //     http://www.apache.org/licenses/LICENSE-2.0
-  //
-  // Unless required by applicable law or agreed to in writing, software
-  // distributed under the License is distributed on an "AS IS" BASIS,
-  // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  // See the License for the specific language governing permissions and
-  // limitations under the License.
-  //
-  // Functional Descript: LPIF Adapter IP
-  //
-  //
-  //
-  ////////////////////////////////////////////////////////////
+//
+//        Copyright (C) 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Functional Descript: LPIF Adapter IP
+//
+//
+//
+////////////////////////////////////////////////////////////
 
 module lpif
     #(
@@ -36,9 +36,9 @@ module lpif
       parameter LPIF_CLOCK_RATE = 1000,
       parameter LPIF_DATA_WIDTH = 128,
       parameter LPIF_PIPELINE_STAGES = 1,
-      parameter MEM_CACHE_STREAM_ID = 3'b001,
-      parameter IO_STREAM_ID = 3'b010,
-      parameter ARB_MUX_STREAM_ID = 3'b100,
+      parameter MEM_CACHE_STREAM_ID = 8'h1,
+      parameter IO_STREAM_ID = 8'h2,
+      parameter ARB_MUX_STREAM_ID = 8'h3,
       localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
       localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
       )

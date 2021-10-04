@@ -31,9 +31,9 @@ module lpif_ctl
     parameter AIB_LANES = 4,
     parameter LPIF_DATA_WIDTH = 64,
     parameter LPIF_PIPELINE_STAGES = 1,
-    parameter MEM_CACHE_STREAM_ID = 3'b001,
-    parameter IO_STREAM_ID = 3'b010,
-    parameter ARB_MUX_STREAM_ID = 3'b100,
+    parameter MEM_CACHE_STREAM_ID = 8'h1,
+    parameter IO_STREAM_ID = 8'h2,
+    parameter ARB_MUX_STREAM_ID = 8'h3,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
     localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
@@ -230,7 +230,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("protid", "protid_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           protid_ascii;           // Decode of protid
+  reg [111:0] protid_ascii;           // Decode of protid
   always @(protid) begin
     case ({protid})
       PROTID_CACHE:   protid_ascii = "protid_cache  ";
@@ -258,7 +258,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
+  reg [111:0] pl_stream_int_ascii;    // Decode of pl_stream_int
   always @(pl_stream_int) begin
     case ({pl_stream_int})
       PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
@@ -295,7 +295,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("ctl_state", "ctl_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [135:0]           ctl_state_ascii;        // Decode of ctl_state
+  reg [135:0] ctl_state_ascii;        // Decode of ctl_state
   always @(ctl_state) begin
     case ({ctl_state})
       CTL_IDLE:          ctl_state_ascii = "ctl_idle         ";

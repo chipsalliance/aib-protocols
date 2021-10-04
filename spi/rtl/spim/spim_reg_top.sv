@@ -27,7 +27,6 @@
 ////////////////////////////////////////////////////////////
 
 
-
 module spimreg_top 
 #( 
 parameter FIFO_WIDTH = 32, 
@@ -142,7 +141,6 @@ logic	ssn_on_aclk;
 logic	ssn_on_aclk_d1;
 logic	ssn_on_pulse_aclk;
 logic 	write_reg;
-logic 	read_reg;
 logic	s_transvld_sclk;
 logic 	rd_buf_access;
 logic	wr_buf_access;
@@ -202,7 +200,6 @@ assign wr_buf_access = (spi_wbuf_access | avmm_wbuf_access);
 // s_trans_valid is used to determine if the access is from SPI or AVMM
 // Writes from AVMM register is prevented when SPI is active
 logic write_reg_quald;
-logic read_reg_quald;
 logic waitreq_reg;
 logic waitreq_buf;
 logic waitreq_reg_aclk;
@@ -227,53 +224,13 @@ always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
            
 assign waitreq_reg_aclk_pulse = waitreq_reg_aclk & ~waitreq_reg_aclk_d1;
 
-logic spi_read_aclk;
-logic spi_read_aclk_d1;
-logic spi_read_aclk_pulse;
-logic spi_write_aclk;
-logic spi_write_aclk_d1;
-logic spi_write_aclk_pulse;
-levelsync sync_spi_read_pulse (
-   	.dest_data (spi_read_aclk),
-   	.clk_dest (m_avmm_clk), 
-   	.rst_dest_n (m_avmm_rst_n), 
-   	.src_data (spi_read)
-   );
-
-levelsync sync_spi_write_pulse (
-   	.dest_data (spi_write_aclk),
-   	.clk_dest (m_avmm_clk), 
-   	.rst_dest_n (m_avmm_rst_n), 
-   	.src_data (spi_write)
-   );
-
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          spi_read_aclk_d1 <= 1'b0;	
-	else 
-          spi_read_aclk_d1 <= spi_read_aclk;
-           
-assign spi_read_aclk_pulse = spi_read_aclk & ~spi_read_aclk_d1;
-
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          spi_write_aclk_d1 <= 1'b0;	
-	else 
-          spi_write_aclk_d1 <= spi_write_aclk;
-           
-assign spi_write_aclk_pulse = spi_write_aclk & ~spi_write_aclk_d1;
 
 assign avbreg_waitreq = (avmm_rbuf_access | avmm_wbuf_access) ? waitreq_buf : waitreq_reg_aclk; 
 
-assign write_reg = (s_transvld_sclk) ? spi_write_aclk_pulse : avbreg_write; // spi write is to rd buffer(sclk); 
-							           //avb write (nios) is to wr buffer(avmm) 
 
-// Read of registers can be from either SPI or AVMM
-// spi read is to wr buffer(avmm); 
-//avb read (nios) is to rd buffer(sclk)
-assign read_reg  = (spi_read_aclk_pulse  | avbreg_read);
-
-assign read_reg_quald  = (read_reg); 
+//SPI does not write to registers
+assign write_reg = avbreg_write; 
+                                
 assign write_reg_quald = (write_reg & ~rd_buf_access & ~wr_buf_access);
 
 assign wdata_reg = avbreg_wdata; 
@@ -291,22 +248,9 @@ assign avbreg_rdata =  (avbreg_read & avmm_rbuf_access)  ? rbuf_fifo_rddata :
                        (avbreg_read & ~avmm_rbuf_access) ? rdata_reg : 32'hdead_beef;  
 
 
-
-// Mux register address from spi or avmm 
-assign spi_addr = (spi_read) ? spi_rd_addr : spi_wr_addr;
-
-
-assign avmm_access = avbreg_read | avbreg_write;
-assign addr  = (avmm_access) ? avbreg_addr  : spi_addr; 
-
-
-
+assign addr  = avbreg_addr; 
 assign wbuf_write_push = ~wbuf_wr_full & (avbreg_write & avmm_wbuf_access);
 assign wbuf_read_pop =  ~wbuf_rd_empty & (spi_read & spi_wbuf_access) ;
-
-
-
-//assign rbuf_write_push = (~rbuf_wr_full & (spi_write & spi_rbuf_access));
 assign rbuf_write_push = (~rbuf_wr_full & (spi_write));
 assign rbuf_read_pop = ~rbuf_rd_empty & (avbreg_read & avmm_rbuf_access);
 
@@ -552,7 +496,7 @@ spim_reg
 	.arst_n (m_avmm_rst_n),
 	.wdata (wdata_reg),
 	.write (write_reg_quald),
-	.read (read_reg_quald),
+	.read (avbreg_read),
 	.addr (addr),
 	.rdata (rdata_reg),
 	.avbreg_rdatavld (avbreg_rdatavld),
