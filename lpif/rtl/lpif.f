@@ -14,3 +14,4 @@
 -v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_top.sv
 -v ${PROJ_DIR}/llink/rtl/ll_auto_sync.sv
 -v ${PROJ_DIR}/common/rtl/level_delay.sv
+-v ${PROJ_DIR}/common/rtl/levelsync.sv

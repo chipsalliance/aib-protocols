@@ -20,26 +20,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
+//Functional Descript:
+//
+//
+//
 ////////////////////////////////////////////////////////////
-module rst_regen_low
-(
- clk,
- async_rst_n, rst_n
+
+
+module pulse_sync (
+input logic  src_pulse,
+input logic  clk_src,
+input logic  rst_src_n,
+input logic clk_dest,
+input logic rst_dest_n,
+output logic dest_pulse 
 );
 
-  input  clk;          // Clock
-  input  async_rst_n;  // Asynchronous Reset Signal Input (active-low)
-  output rst_n;         // Synchronized Reset Signal Output (active-low)
+logic src_pulse_int;
+logic src_lvl_int;
+logic dest_lvl; 
+logic dest_lvl_int; 
 
-  levelsync
-    #(
-      .RESET_VALUE(1'b0)
-     ) levelsync_i
-     (
-      .clk_dest   (clk),
-      .rst_dest_n (async_rst_n),
-      .src_data   (1'b1),
-      .dest_data  (rst_n)
-     );
+assign src_pulse_int = src_pulse ^ src_lvl_int;
 
-endmodule // rst_regen_low
+always @(posedge clk_src or negedge rst_src_n)
+       if (~rst_src_n)
+          src_lvl_int <= 1'b0;
+       else
+          src_lvl_int <= src_pulse_int;
+
+
+levelsync sync_pulse (
+   	.dest_data (dest_lvl_int),
+   	.clk_dest (clk_dest), 
+   	.rst_dest_n (rst_dest_n), 
+   	.src_data (src_lvl_int)
+   );
+
+always @(posedge clk_dest or negedge rst_dest_n)
+       if (~rst_dest_n)
+          dest_lvl <= 1'b0;
+       else
+          dest_lvl <= dest_lvl_int;
+
+assign dest_pulse = dest_lvl_int ^ dest_lvl;
+
+endmodule

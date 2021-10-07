@@ -56,8 +56,8 @@ module ca_rx_align
    output logic                                     rx_stb_pos_err,
    output logic                                     rx_stb_pos_coding_err,
 
-   input logic [4:0]                                fifo_full_val,
-   input logic [4:0]                                fifo_pfull_val,
+   input logic [5:0]                                fifo_full_val,
+   input logic [5:0]                                fifo_pfull_val,
    input logic [2:0]                                fifo_empty_val,
    input logic [2:0]                                fifo_pempty_val,
 
@@ -239,7 +239,7 @@ module ca_rx_align
             endcase // case (1'b1)
           end
 
-        assign d_stb_det[i] = rx_state_online & |(word[i] & rx_stb_bit_sel);
+        assign d_stb_det[i] = (rx_state_online | rx_state_aligned | rx_state_done) & |(word[i] & rx_stb_bit_sel);
 
         always_ff @(posedge lane_clk[i] or negedge rst_lane_n[i])
           if (~rst_lane_n[i])

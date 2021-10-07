@@ -98,8 +98,6 @@ module lpif_ctl
    output logic [2:0]                   pl_protocol,
    output logic                         pl_protocol_vld,
    output logic                         pl_err_pipestg,
-   input logic                          lp_wake_req,
-   output logic                         pl_wake_ack,
    input logic                          lp_force_detect,
    output logic [7:0]                   pl_cfg,
    output logic                         pl_cfg_vld,
@@ -181,7 +179,6 @@ module lpif_ctl
 
   // tied-off for now
   assign pl_trainerror = 1'b0;
-  assign pl_wake_ack = 1'b0;
 
   // optional as described in LPIF Adapter White Paper
   assign pl_cfg_vld = 1'b0;
@@ -217,20 +214,20 @@ module lpif_ctl
       pl_trdy = lsm_state_active;
     end
 
-  localparam [1:0] /* auto enum protid_info */
-    PROTID_CACHE	= 2'h0,
-    PROTID_IO		= 2'h1,
-    PROTID_ARB_MUX	= 2'h2;
+  localparam [7:0] /* auto enum protid_info */
+    PROTID_CACHE	= 8'h0,
+    PROTID_IO		= 8'h1,
+    PROTID_ARB_MUX	= 8'h2;
 
-  logic [1:0] d_dstrm_protid;
-  logic [1:0] /* auto enum protid_info */
+  logic [7:0] d_dstrm_protid;
+  logic [7:0] /* auto enum protid_info */
               protid;
 
   assign d_dstrm_protid = protid;
 
   /*AUTOASCIIENUM("protid", "protid_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0] protid_ascii;           // Decode of protid
+  reg [111:0]           protid_ascii;           // Decode of protid
   always @(protid) begin
     case ({protid})
       PROTID_CACHE:   protid_ascii = "protid_cache  ";
@@ -258,7 +255,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0] pl_stream_int_ascii;    // Decode of pl_stream_int
+  reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
   always @(pl_stream_int) begin
     case ({pl_stream_int})
       PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
@@ -270,12 +267,12 @@ module lpif_ctl
   // End of automatics
   always_comb
     begin : lp_stream_id
-      case (ustrm_protid)
+      case ({6'b0, ustrm_protid})
         PROTID_CACHE: pl_stream_int = MEM_CACHE_STREAM_ID;
         PROTID_IO: pl_stream_int = IO_STREAM_ID;
         PROTID_ARB_MUX: pl_stream_int = ARB_MUX_STREAM_ID;
         default: pl_stream_int = MEM_CACHE_STREAM_ID;
-      endcase // case (ustrm_protid)
+      endcase // case ({6'b0, ustrm_protid})
     end
 
   // Control State Machine
@@ -295,7 +292,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("ctl_state", "ctl_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [135:0] ctl_state_ascii;        // Decode of ctl_state
+  reg [135:0]           ctl_state_ascii;        // Decode of ctl_state
   always @(ctl_state) begin
     case ({ctl_state})
       CTL_IDLE:          ctl_state_ascii = "ctl_idle         ";

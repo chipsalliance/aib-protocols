@@ -26,7 +26,6 @@
 //
 ////////////////////////////////////////////////////////////
 
-
 module spim_intf (
 // SPI Interface
 input logic 		rst_n,
@@ -159,8 +158,7 @@ assign spi_read = (cur_st == ST_IDLE) & (s_transvld_detect == 1) ? 1'b1 :
 // read or write. Specifically, increase spim burst length by 1
 // in case of read
 
-//assign spi_write = ((cur_st != ST_IDLE) & (cur_st != ST_INI_CMD))  & rx_data_update;
-assign spi_write =  rx_data_update;
+assign spi_write = rx_data_update;
 
 
 assign spi_rd_addr = spi_read  ? 16'h0200 : 16'h0000; //wrbuf_addr; 
@@ -233,8 +231,13 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 always_ff @ (posedge sclk_in or negedge rst_n) 
 	if (~rst_n)
 	 begin
-	   flag_word_q  <= 'b0;
+	   flag_word_q   <= 'b0;
 	   flag_word_q1  <= 'b0;
+         end
+	else if (ss_n_dly1)	    
+	 begin	                   
+	   flag_word_q    <= 'b0;  
+	   flag_word_q1   <= 'b0;  
          end
 	else 
 	 begin
@@ -283,13 +286,13 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	   load_sereg   <= 1'b0;
            tx_load	<= 1'b0;
          end 
-	else if (ss_n_cmb)
+	else if (ss_n_int)
 	 begin 
 	   tx_count	<= 5'b11111;
 	   load_sereg   <= 1'b0;
            tx_load	<= 1'b0;
          end 
-	else if (ss_n_cmb == 0) begin  
+	else if (ss_n_int == 0) begin  
 	   tx_count 	<= tx_count + 1'b1;
   	       if (tx_count == 5'b11111)  begin
                 tx_load	<= 1'b1;

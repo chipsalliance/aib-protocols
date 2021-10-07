@@ -48,8 +48,8 @@ module ca_rx_align_fifo
    output logic                        rd_empty,
    output logic                        wr_overflow_pulse,
 
-   input logic [4:0]                   fifo_full_val,
-   input logic [4:0]                   fifo_pfull_val,
+   input logic [5:0]                   fifo_full_val,
+   input logic [5:0]                   fifo_pfull_val,
    input logic [2:0]                   fifo_empty_val,
    input logic [2:0]                   fifo_pempty_val,
 
@@ -67,6 +67,7 @@ module ca_rx_align_fifo
   localparam FIFO_ADDR_WID = AD_WIDTH+1;
 
   logic [FIFO_ADDR_WID-1:0]            rd_numfilled;
+  logic [FIFO_ADDR_WID-1:0]            wr_numfilled;
   logic [FIFO_ADDR_WID-1:0]            wr_numempty;
 
   logic                                wr_full;
@@ -185,12 +186,14 @@ module ca_rx_align_fifo
 
   /* FIFO flags */
 
+  assign wr_numfilled = FIFO_DEPTH_WID - wr_numempty;
+
   always_comb
     begin
-      fifo_full = rd_numfilled == fifo_full_val;
-      fifo_pfull = rd_numfilled == fifo_pfull_val;
-      fifo_empty = wr_numempty == fifo_empty_val;
-      fifo_pempty = wr_numempty == fifo_pempty_val;
+      fifo_full = (rd_numfilled >= fifo_full_val);
+      fifo_pfull = (rd_numfilled >= fifo_pfull_val);
+      fifo_empty = (wr_numfilled == fifo_empty_val);
+      fifo_pempty = (wr_numfilled <= fifo_pempty_val);
     end
 
 endmodule // ca_rx_align_fifo

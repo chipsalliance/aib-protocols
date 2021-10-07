@@ -211,11 +211,8 @@ module ca_top_tb;
          .AD_WIDTH          (`TB_DIE_A_AD_WIDTH),
          .SYNC_FIFO         (`SYNC_FIFO)
         ) ca_die_a (
-           `ifdef SYNC_FIFO
-             .lane_clk               ({`TB_DIE_A_NUM_CHANNELS{clk_die_a}}),
-           `else 
-             .lane_clk               (clk_lane_a[`TB_DIE_A_NUM_CHANNELS-1:0]),
-           `endif
+           
+             .lane_clk               (`SYNC_FIFO ? {`TB_DIE_A_NUM_CHANNELS{clk_die_a}} : clk_lane_a[`TB_DIE_A_NUM_CHANNELS-1:0]),
              .com_clk                (clk_die_a),
              .rst_n                  (tb_reset_l),
              .tx_online              (ca_die_a_tx_tb_out_if.tx_online),
@@ -264,11 +261,7 @@ module ca_top_tb;
          .AD_WIDTH          (`TB_DIE_B_AD_WIDTH),
          .SYNC_FIFO         (`SYNC_FIFO)
         ) ca_die_b (
-           `ifdef SYNC_FIFO
-             .lane_clk               ({`TB_DIE_B_NUM_CHANNELS{clk_die_b}}),
-           `else 
-             .lane_clk               (clk_lane_b[`TB_DIE_B_NUM_CHANNELS-1:0]),
-           `endif
+             .lane_clk               (`SYNC_FIFO ? {`TB_DIE_B_NUM_CHANNELS{clk_die_b}} : clk_lane_b[`TB_DIE_B_NUM_CHANNELS-1:0]),
              .com_clk                (clk_die_b),
              .rst_n                  (tb_reset_l),
              .tx_online              (ca_die_b_tx_tb_out_if.tx_online),

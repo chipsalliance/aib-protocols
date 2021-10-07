@@ -27,6 +27,7 @@
 ////////////////////////////////////////////////////////////
 
 
+
 module spimreg_top 
 #( 
 parameter FIFO_WIDTH = 32, 
@@ -107,8 +108,6 @@ logic				wbuf_wr_soft_reset;
 logic				wbuf_rd_soft_reset;
 logic				rbuf_wr_soft_reset;
 logic				rbuf_rd_soft_reset;
-logic				rbuf_rd_empty_d1;
-logic				rbuf_rd_empty_pulse;
 
 logic                           wbuf_wr_full;
 logic                           wbuf_rd_empty;
@@ -131,14 +130,8 @@ logic 	[31:0] 	m_diag1;
 
 logic 	[31:0] 	m_cmd;
 
-logic	stransvld_up_aclk; // syc'd to aclk
-logic	stransvld_up_aclk_d1; // syc'd to aclk
 logic	stransvld_up_aclk_pulse; // syc'd to aclk
-logic	ssn_off_aclk;
-logic	ssn_off_aclk_d1;
 logic	ssn_off_pulse_aclk;
-logic	ssn_on_aclk;
-logic	ssn_on_aclk_d1;
 logic	ssn_on_pulse_aclk;
 logic 	write_reg;
 logic	s_transvld_sclk;
@@ -159,33 +152,35 @@ logic rbuf_sfrst_ctrl;
 logic wbuf_rd_sfrst_cmb;
 logic rbuf_rd_sfrst_cmb;
 
-levelsync sync_transvld (
-   	.dest_data (s_transvld_sclk),
-   	.clk_dest (sclk_in), 
-   	.rst_dest_n (rst_n), 
-   	.src_data (s_transvld)
-   );
 
-levelsync sync_transvld_up (
-   	.dest_data (stransvld_up_aclk),
-   	.clk_dest (m_avmm_clk), 
-   	.rst_dest_n (m_avmm_rst_n), 
-   	.src_data (stransvld_up)
-   );
+pulse_sync trans_pulse_sync (
+        .dest_pulse (stransvld_up_aclk_pulse),
+        .clk_dest (m_avmm_clk),
+        .rst_dest_n (m_avmm_rst_n),
+        .clk_src (sclk_in),
+        .rst_src_n (rst_n),
+        .src_pulse (stransvld_up)
+        );
 
-levelsync sync_ssn_off_pulse (
-   	.dest_data (ssn_off_aclk),
-   	.clk_dest (m_avmm_clk), 
-   	.rst_dest_n (m_avmm_rst_n), 
-   	.src_data (ssn_off_pulse_sclk)
-   );
 
-levelsync sync_ssn_on_pulse (
-   	.dest_data (ssn_on_aclk),
-   	.clk_dest (m_avmm_clk), 
-   	.rst_dest_n (m_avmm_rst_n), 
-   	.src_data (ssn_on_pulse_sclk)
-   );
+pulse_sync ssn_off_pulse_sync (
+        .dest_pulse (ssn_off_pulse_aclk),
+        .clk_dest (m_avmm_clk),
+        .rst_dest_n (m_avmm_rst_n),
+        .clk_src (sclk_in),
+        .rst_src_n (rst_n),
+        .src_pulse (ssn_off_pulse_sclk)
+        );
+
+
+pulse_sync ssn_on_pulse_sync (
+        .dest_pulse (ssn_on_pulse_aclk),
+        .clk_dest (m_avmm_clk),
+        .rst_dest_n (m_avmm_rst_n),
+        .clk_src (sclk_in),
+        .rst_src_n (rst_n),
+        .src_pulse (ssn_on_pulse_sclk)
+        );
 
 assign spi_rbuf_access =  ((16'h1000 <= spi_wr_addr) & (spi_wr_addr <= 16'h17FF));
 assign avmm_rbuf_access = ((16'h1000 <= avbreg_addr) & (avbreg_addr <= 16'h17FF));
@@ -224,13 +219,13 @@ always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
            
 assign waitreq_reg_aclk_pulse = waitreq_reg_aclk & ~waitreq_reg_aclk_d1;
 
-
 assign avbreg_waitreq = (avmm_rbuf_access | avmm_wbuf_access) ? waitreq_buf : waitreq_reg_aclk; 
 
 
 //SPI does not write to registers
-assign write_reg = avbreg_write; 
-                                
+assign write_reg = avbreg_write; // spi write is to rd buffer(sclk); 
+							           //avb write (nios) is to wr buffer(avmm) 
+
 assign write_reg_quald = (write_reg & ~rd_buf_access & ~wr_buf_access);
 
 assign wdata_reg = avbreg_wdata; 
@@ -248,11 +243,19 @@ assign avbreg_rdata =  (avbreg_read & avmm_rbuf_access)  ? rbuf_fifo_rddata :
                        (avbreg_read & ~avmm_rbuf_access) ? rdata_reg : 32'hdead_beef;  
 
 
+
+// Mux register address from spi or avmm 
 assign addr  = avbreg_addr; 
-assign wbuf_write_push = ~wbuf_wr_full & (avbreg_write & avmm_wbuf_access);
-assign wbuf_read_pop =  ~wbuf_rd_empty & (spi_read & spi_wbuf_access) ;
-assign rbuf_write_push = (~rbuf_wr_full & (spi_write));
-assign rbuf_read_pop = ~rbuf_rd_empty & (avbreg_read & avmm_rbuf_access);
+
+
+
+assign wbuf_write_push = avbreg_write & avmm_wbuf_access;
+assign wbuf_read_pop =  spi_read & spi_wbuf_access;
+
+
+
+assign rbuf_write_push = spi_write;
+assign rbuf_read_pop = avbreg_read & avmm_rbuf_access;
 
 assign m_status_in	= 'b0;
 
@@ -261,6 +264,79 @@ assign m_diag1_in	= dbg_bus1;
 
 // assign m_cmd outputs
 assign s_transvld	= m_cmd[0];
+
+//Adding the following logic to account for case when SPI clock is 
+//very very slow in comparision to AVMM clock. 
+parameter ST_ZERO         =2'b00;
+parameter ST_WAIT_ONE     =2'b01;
+parameter ST_ONE          =2'b10;
+parameter ST_WAIT_ZERO    =2'b11;
+
+logic [1:0] cdc_st;
+logic start_transvld; 
+logic cdc_req;
+logic cdc_ack;
+logic cdc_req_sclk;
+logic cdc_ack_aclk;
+
+always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
+        if (~m_avmm_rst_n) begin
+          start_transvld <= 1'b0;
+          cdc_st         <= ST_ZERO;
+          cdc_req        <= 1'b0;
+        end 
+        else begin
+          case (cdc_st)
+           ST_ZERO:      if (s_transvld & ~cdc_ack_aclk) begin
+                            cdc_st <= ST_WAIT_ONE;
+                            cdc_req <= 1'b1;
+                            start_transvld <= 1'b0;
+                         end 
+           
+           ST_WAIT_ONE:  if (cdc_ack_aclk) begin
+                            cdc_st <= ST_ONE;
+                            cdc_req <= 1'b0;
+                            start_transvld <= 1'b1;
+                         end 
+           
+           ST_ONE:       if (~s_transvld & ~cdc_ack_aclk) begin
+                            cdc_st <= ST_WAIT_ZERO;
+                            cdc_req <= 1'b1;
+                            start_transvld <= 1'b1;
+                         end 
+           
+           ST_WAIT_ZERO: if (cdc_ack_aclk == 1'b1) begin
+                            cdc_st <= ST_ZERO;
+                            cdc_req <= 1'b0;
+                            start_transvld <= 1'b0;
+                         end 
+            endcase
+        end
+           
+
+ levelsync sync_strans_req (
+    	.dest_data (cdc_req_sclk),
+    	.clk_dest (sclk_in), 
+    	.rst_dest_n (rst_n), 
+    	.src_data (cdc_req)
+    );
+
+ levelsync sync_strans_ack (
+    	.dest_data (cdc_ack_aclk),
+    	.clk_dest (m_avmm_clk), 
+    	.rst_dest_n (m_avmm_rst_n), 
+    	.src_data (cdc_req_sclk)
+    );
+
+
+//Using level sync to synchronize the register bit from avmm clk to spi clk
+levelsync sync_transvld (
+   	.dest_data (s_transvld_sclk),
+   	.clk_dest (sclk_in), 
+   	.rst_dest_n (rst_n), 
+   	.src_data (start_transvld)
+   );
+
 
 always_ff @ (posedge sclk_in or negedge rst_n)
         if (~rst_n) begin
@@ -282,39 +358,7 @@ always_ff @ (posedge sclk_in or negedge rst_n)
            
 
 
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          stransvld_up_aclk_d1 <= 1'b0;	
-	else 
-          stransvld_up_aclk_d1 <= stransvld_up_aclk;
-           
- assign stransvld_up_aclk_pulse  = stransvld_up_aclk & ~stransvld_up_aclk_d1; 
-
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          ssn_off_aclk_d1 <= 1'b0;	
-	else 
-          ssn_off_aclk_d1 <= ssn_off_aclk;
-           
-assign ssn_off_pulse_aclk  = ssn_off_aclk & ~ssn_off_aclk_d1; 
-
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          ssn_on_aclk_d1 <= 1'b0;	
-	else 
-          ssn_on_aclk_d1 <= ssn_on_aclk;
-           
-assign ssn_on_pulse_aclk  = ~ssn_on_aclk & ssn_on_aclk_d1; 
-
 assign load_dbg_bus0 =  ~stransvld_up_aclk_pulse & ssn_off_pulse_aclk;
-
-always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
-        if (~m_avmm_rst_n) 
-          rbuf_rd_empty_d1 <= 1'b0;	
-	else 
-          rbuf_rd_empty_d1 <= rbuf_rd_empty;
-           
- assign rbuf_rd_empty_pulse  = rbuf_rd_empty & ~rbuf_rd_empty_d1; 
 
 always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
         if (~m_avmm_rst_n) 

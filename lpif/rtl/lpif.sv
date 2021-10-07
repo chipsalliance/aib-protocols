@@ -428,7 +428,6 @@ module lpif
      .pl_protocol                       (pl_protocol[2:0]),
      .pl_protocol_vld                   (pl_protocol_vld),
      .pl_err_pipestg                    (pl_err_pipestg),
-     .pl_wake_ack                       (pl_wake_ack),
      .pl_cfg                            (pl_cfg[7:0]),
      .pl_cfg_vld                        (pl_cfg_vld),
      .ns_mac_rdy                        (ns_mac_rdy),
@@ -468,7 +467,6 @@ module lpif
      .lp_linkerror                      (lp_linkerror),
      .lp_flushed_all                    (lp_flushed_all),
      .lp_rcvd_crc_err                   (lp_rcvd_crc_err),
-     .lp_wake_req                       (lp_wake_req),
      .lp_force_detect                   (lp_force_detect),
      .com_clk                           (com_clk),
      .rst_n                             (rst_n),
@@ -509,6 +507,7 @@ module lpif
      .lsm_state_active                  (lsm_state_active),
      .pl_exit_cg_req                    (pl_exit_cg_req),
      .pl_stallreq                       (pl_stallreq),
+     .pl_wake_ack                       (pl_wake_ack),
      .pl_phyinl1                        (pl_phyinl1),
      .pl_phyinl2                        (pl_phyinl2),
      .pl_phyinrecenter                  (pl_phyinrecenter),
@@ -523,7 +522,8 @@ module lpif
      .ustrm_state                       (ustrm_state[3:0]),
      .ctl_link_up                       (ctl_link_up),
      .lp_exit_cg_ack                    (lp_exit_cg_ack),
-     .lp_stallack                       (lp_stallack));
+     .lp_stallack                       (lp_stallack),
+     .lp_wake_req                       (lp_wake_req));
 
 endmodule // lpif
 

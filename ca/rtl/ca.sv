@@ -68,8 +68,8 @@ module ca
    output logic                                     rx_stb_pos_err,
    output logic                                     rx_stb_pos_coding_err,
 
-   input logic [4:0]                                fifo_full_val,
-   input logic [4:0]                                fifo_pfull_val,
+   input logic [5:0]                                fifo_full_val,
+   input logic [5:0]                                fifo_pfull_val,
    input logic [2:0]                                fifo_empty_val,
    input logic [2:0]                                fifo_pempty_val,
 

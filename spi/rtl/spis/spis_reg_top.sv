@@ -134,15 +134,12 @@ logic	write_reg;
 logic	read_reg;
 
 
-logic 	spi_write_aclk; // sync'd to aclk
-logic 	spi_write_aclk_d1; // sync'd to aclk
 logic 	spi_write_aclk_pulse; // sync'd to aclk
+logic 	[31:0] 	mosi_data_reg;
 
 logic 	rd_buf_access;
 logic 	wr_buf_access;
 
-logic 	ssn_off_aclk;
-logic 	ssn_off_aclk_d1;
 logic 	ssn_off_pulse_aclk;
 logic 	ssn_off_pulse_sclk_d1;
 logic   single_read_d1;
@@ -175,46 +172,32 @@ always_ff @ (posedge sclk or negedge rst_n)
 
 
 
-levelsync sync_spi_write (
-   	.dest_data (spi_write_aclk),
-   	.clk_dest (s_avmm_clk), 
-   	.rst_dest_n (s_avmm_rst_n), 
-   	.src_data (spi_write)
-   );
+
+pulse_sync spiwrite_pulse_sync (
+        .dest_pulse (spi_write_aclk_pulse),
+        .clk_dest (s_avmm_clk),
+        .rst_dest_n (s_avmm_rst_n),
+        .clk_src (sclk),
+        .rst_src_n (rst_n),
+        .src_pulse (spi_write)
+        );
 
 
-levelsync sync_ssn_off_pulse (
-   	.dest_data (ssn_off_aclk),
-   	.clk_dest (s_avmm_clk), 
-   	.rst_dest_n (s_avmm_rst_n), 
-   	.src_data (ssn_off_pulse_sclk_d1)
-   );
+pulse_sync ssnoff_pulse_sync (
+        .dest_pulse (ssn_off_pulse_aclk),
+        .clk_dest (s_avmm_clk),
+        .rst_dest_n (s_avmm_rst_n),
+        .clk_src (sclk),
+        .rst_src_n (rst_n),
+        .src_pulse (ssn_off_pulse_sclk_d1)
+        );
 
 assign avmm_active = avmm_transvld;
 
 
-always_ff @ (posedge s_avmm_clk or negedge s_avmm_rst_n)
-        if (~s_avmm_rst_n) 
-          spi_write_aclk_d1 <= 1'b0;	
-	else 
-         spi_write_aclk_d1 <= spi_write_aclk;
-
-
-assign spi_write_aclk_pulse  = spi_write_aclk & ~spi_write_aclk_d1; 
-
-
-
-always_ff @ (posedge s_avmm_clk or negedge s_avmm_rst_n)
-        if (~s_avmm_rst_n) 
-          ssn_off_aclk_d1 <= 1'b0;	
-	else 
-         ssn_off_aclk_d1 <= ssn_off_aclk;
-
-
-assign ssn_off_pulse_aclk  = ssn_off_aclk & ~ssn_off_aclk_d1; 
 
 assign load_dbg_bus0 = ssn_off_pulse_aclk;
-assign load_dbg_bus1 = avmmtransvld_up;
+assign load_dbg_bus1 = avmmtransvld_up;  
 
 always_ff @ (posedge s_avmm_clk or negedge s_avmm_rst_n)
         if (~s_avmm_rst_n) 
@@ -237,12 +220,15 @@ assign wr_buf_access = (spi_wbuf_access | avmm_wbuf_access);
 assign spi_addr = spi_read ? spi_rd_addr : spi_wr_addr;
 assign addr  = spi_addr; 
 
-assign write_reg = spi_write_aclk_pulse; // spi write is to write buffer (mosi data); 
+//SPI writes to registers for commands and for fifo controls
+assign write_reg = spi_write_aclk_pulse; 
 // avmm writes (nios) data read from avb  to read buffer 
-// spi read is from read buffer (miso data); 
-// avmm reads (nios) write data to avb from write buffer
+// spi reads rd buffer for aib channel read data (miso data); 
+// avmm slave reads wr buffer for aib channel write data 
 
-assign read_reg  = spi_read;  // spi read is from read buffer (miso data); 
+//SPI reads registers during polling for command completion.
+// Can also read for fifo status or debug data 
+assign read_reg  = spi_read;
 
 
 assign wdata_reg = mosi_data;   // SPI clock - Does not change for 32 spi clocks  
@@ -256,12 +242,12 @@ assign miso_data = (spi_read & spi_rbuf_access) ? rbuf_fifo_rddata :
 
 assign reg2avb_wdata = wbuf_read_pop ? wbuf_fifo_rddata : 32'b0; 
 
-assign wbuf_write_push = (~wbuf_wr_full & (spi_write & spi_wbuf_access) & ~avmm_cmd_rd);
-assign wbuf_read_pop =   (~wbuf_rd_empty & (avb2reg_read_pulse & avmm_wbuf_access)) ;
+assign wbuf_write_push = ((spi_write & spi_wbuf_access) & ~avmm_cmd_rd);
+assign wbuf_read_pop =   ((avb2reg_read_pulse & avmm_wbuf_access)) ;
 
 
-assign rbuf_write_push = (~rbuf_wr_full  & (avb2reg_write & avmm_rbuf_access));
-assign rbuf_read_pop   = (~rbuf_rd_empty & (spi_read & spi_rbuf_access));
+assign rbuf_write_push = ((avb2reg_write & avmm_rbuf_access));
+assign rbuf_read_pop   = ((spi_read & spi_rbuf_access));
 
 // assign s_cmd outputs
 assign avmm_brstlen 	= s_cmd[31:24];

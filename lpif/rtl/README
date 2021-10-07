@@ -1,0 +1,9 @@
+This directory contains the main LPIF Adapter IP RTL.
+
+The file lpif.f is a filelist of all the modules, including ones from the ../../common/rtl directory.
+
+The LPIF Adapter uses datapaths generated from the Logic Link IP. The config files are in cfg and the generated files are checked in to the lpif_txrx directory.
+
+For example, to generate a datapath, execute this from this directory:
+
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_f2.cfg --odir lpif_txrx
