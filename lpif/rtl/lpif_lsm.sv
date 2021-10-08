@@ -37,6 +37,7 @@ module lpif_lsm
    input logic [3:0]  ustrm_state,
 
    input logic        ctl_link_up,
+   input logic        ctl_phy_err,
    output logic       lsm_state_active,
 
    output logic       pl_exit_cg_req,
@@ -376,243 +377,241 @@ module lpif_lsm
       d_coldstart = coldstart;
       d_lsm_exit_lp = lsm_exit_lp;
       d_pl_state_sts = pl_state_sts;
-      case (lsm_state)
-        LSM_RESET: begin
-          d_pl_state_sts = STS_RESET;
-          if (ctl_link_up)
-            d_lsm_state = LSM_RESET_a;
-        end
-        LSM_RESET_a: begin
-          begin
-            d_pl_lnk_up = 1'b1;
-            if (state_req_active)
-              begin
-                lsm_cg_req = 1'b1;
-                d_lsm_state = LSM_ACTIVE_a;
-              end
-            else if (state_req_linkreset)
-              d_lsm_state = LSM_LinkReset;
-            else if (state_req_disable)
-              d_lsm_state = LSM_DISABLE;
-            else if (sb_ustrm_link_error)
-              d_lsm_state = LSM_LinkError;
-          end // UNMATCHED !!
-        end
-        LSM_ACTIVE_a: begin
-          if (pl_exit_cg_req & lp_exit_cg_ack)
+        case (lsm_state)
+          LSM_RESET: begin
+            d_pl_state_sts = STS_RESET;
+            if (ctl_link_up)
+              d_lsm_state = LSM_RESET_a;
+          end
+          LSM_RESET_a: begin
             begin
-              d_pl_state_sts = STS_ACTIVE;
-              d_lsm_dstrm_state = SB_ACTIVE_STS;
-              d_lsm_state = LSM_ACTIVE;
-            end
-        end
-        LSM_ACTIVE: begin
-          if (exit_active)
-            begin
-              lsm_stall_req = 1'b1;
-              d_lsm_state = LSM_ACTIVE_b;
-            end
-        end
-        LSM_ACTIVE_b: begin
-          if (pl_stallreq & lp_stallack)
-            begin
-              if (state_req_retrain | coldstart)
+              d_pl_lnk_up = 1'b1;
+              if (state_req_active)
                 begin
-                  d_pl_state_sts = STS_RETRAIN;
-                  d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
-                  d_lsm_state = LSM_RETRAIN_a;
+                  lsm_cg_req = 1'b1;
+                  d_lsm_state = LSM_ACTIVE_a;
                 end
-              else if (state_req_idle_l1_1 | sb_ustrm_l1_req)
-                begin
-                  d_pl_state_sts = STS_IDLE_L1_1;
-                  d_lsm_state = LSM_IDLE_L1_1;
-                end
-              else if (state_req_sleep_l2 | sb_ustrm_l2_req)
-                d_lsm_state = LSM_SLEEP_L2;
               else if (state_req_linkreset)
-                begin
-                  d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-                  d_lsm_state = LSM_LinkReset_a;
-                end
-              else if (sb_ustrm_link_reset_req)
                 d_lsm_state = LSM_LinkReset;
-              else if (sb_ustrm_link_retrain_req)
-                d_lsm_state = LSM_RETRAIN;
               else if (state_req_disable)
                 d_lsm_state = LSM_DISABLE;
               else if (sb_ustrm_link_error)
                 d_lsm_state = LSM_LinkError;
-            end
+            end // UNMATCHED !!
+          end
+          LSM_ACTIVE_a: begin
+            if (pl_exit_cg_req & lp_exit_cg_ack)
+              begin
+                d_pl_state_sts = STS_ACTIVE;
+                d_lsm_dstrm_state = SB_ACTIVE_STS;
+                d_lsm_state = LSM_ACTIVE;
+              end
+          end
+          LSM_ACTIVE: begin
+            if (exit_active)
+              begin
+                lsm_stall_req = 1'b1;
+                d_lsm_state = LSM_ACTIVE_b;
+              end
+          end
+          LSM_ACTIVE_b: begin
+            if (pl_stallreq & lp_stallack)
+              begin
+                if (state_req_retrain | coldstart)
+                  begin
+                    d_pl_state_sts = STS_RETRAIN;
+                    d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
+                    d_lsm_state = LSM_RETRAIN_a;
+                  end
+                else if (state_req_idle_l1_1 | sb_ustrm_l1_req)
+                  begin
+                    d_pl_state_sts = STS_IDLE_L1_1;
+                    d_lsm_state = LSM_IDLE_L1_1;
+                  end
+                else if (state_req_sleep_l2 | sb_ustrm_l2_req)
+                  d_lsm_state = LSM_SLEEP_L2;
+                else if (state_req_linkreset)
+                  begin
+                    d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                    d_lsm_state = LSM_LinkReset_a;
+                  end
+                else if (sb_ustrm_link_reset_req)
+                  d_lsm_state = LSM_LinkReset;
+                else if (sb_ustrm_link_retrain_req)
+                  d_lsm_state = LSM_RETRAIN;
+                else if (state_req_disable)
+                  d_lsm_state = LSM_DISABLE;
+                else if (sb_ustrm_link_error)
+                  d_lsm_state = LSM_LinkError;
+              end
+          end
+          LSM_IDLE_L1_1: begin
+            d_lsm_dstrm_state = SB_L1_STS;
+            d_pl_phyinl1 = 1'b1;
+            if (state_req_active | state_req_retrain)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN_a;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_IDLE_L1_2: begin
+            d_lsm_dstrm_state = SB_L1_STS;
+            d_pl_phyinl1 = 1'b1;
+            if (state_req_active | state_req_retrain)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN_a;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_IDLE_L1_3: begin
+            d_lsm_dstrm_state = SB_L1_STS;
+            d_pl_phyinl1 = 1'b1;
+            if (state_req_active | state_req_retrain)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN_a;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_IDLE_L1_4: begin
+            d_lsm_dstrm_state = SB_L1_STS;
+            d_pl_phyinl1 = 1'b1;
+            if (state_req_active | state_req_retrain)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN_a;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_SLEEP_L2: begin
+            d_lsm_dstrm_state = SB_L2_STS;
+            d_pl_phyinl2 = 1'b1;
+            if (state_req_active | state_req_retrain)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN_a;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_LinkReset_a: begin
+            if (sb_ustrm_link_reset_sts)
+              begin
+                d_pl_state_sts = STS_LinkReset;
+                d_lsm_state = LSM_LinkReset;
+              end
+          end
+          LSM_LinkReset: begin
+            // entered when software writes a register or when remote phy requests
+            d_lsm_dstrm_state = SB_LINK_RESET_STS;
+            if (state_req_active | state_req_disable)
+              d_lsm_state = LSM_RESET;
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_LinkError: begin
+            d_lsm_dstrm_state = SB_LINK_ERROR;
+          end
+          LSM_RETRAIN_a: begin
+            d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
+            d_lsm_state = LSM_RETRAIN_b;
+          end
+          LSM_RETRAIN_b: begin
+            d_lsm_state = LSM_RETRAIN_c;
+          end
+          LSM_RETRAIN_c: begin
+            if ((coldstart | lsm_exit_lp | sb_ustrm_link_retrain_sts) & ~lp_exit_cg_ack)
+              d_lsm_state = LSM_RETRAIN;
+          end
+          LSM_RETRAIN: begin
+            d_lsm_lnk_cfg = LNK_CFG_X16;
+            d_lsm_speedmode = SPEEDMODE_GEN5;
+            lsm_cg_req = 1'b1;
+            d_pl_phyinrecenter = 1'b1;
+            d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
+            if (state_req_active | coldstart | lsm_exit_lp)
+              begin
+                d_coldstart = 1'b0;
+                d_lsm_exit_lp = 1'b0;
+                d_lsm_state = LSM_ACTIVE_a;
+              end
+            else if (sb_ustrm_active_req)
+              begin
+                d_lsm_dstrm_state = SB_ACTIVE_STS;
+                d_lsm_state = LSM_ACTIVE;
+              end
+            else if (state_req_linkreset)
+              begin
+                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_state = LSM_LinkReset_a;
+              end
+            else if (state_req_disable)
+              d_lsm_state = LSM_DISABLE;
+            else if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+          end
+          LSM_DISABLE: begin
+            d_pl_state_sts = STS_DISABLE;
+            if (sb_ustrm_link_error)
+              d_lsm_state = LSM_LinkError;
+            else if (state_req_active)
+              d_lsm_state = LSM_RESET;
+          end
+          default: d_lsm_state = LSM_RESET;
+        endcase // case (lsm_state)
+      if (ctl_phy_err)
+        begin
+          d_pl_state_sts = STS_LinkError;
+          d_lsm_state = LSM_LinkError;
         end
-        LSM_IDLE_L1_1: begin
-          d_lsm_dstrm_state = SB_L1_STS;
-          d_pl_phyinl1 = 1'b1;
-          if (state_req_active | state_req_retrain)
-            begin
-              d_lsm_exit_lp = 1'b1;
-              d_pl_state_sts = STS_RETRAIN;
-              d_lsm_state = LSM_RETRAIN_a;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_IDLE_L1_2: begin
-          d_lsm_dstrm_state = SB_L1_STS;
-          d_pl_phyinl1 = 1'b1;
-          if (state_req_active | state_req_retrain)
-            begin
-              d_lsm_exit_lp = 1'b1;
-              d_pl_state_sts = STS_RETRAIN;
-              d_lsm_state = LSM_RETRAIN_a;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_IDLE_L1_3: begin
-          d_lsm_dstrm_state = SB_L1_STS;
-          d_pl_phyinl1 = 1'b1;
-          if (state_req_active | state_req_retrain)
-            begin
-              d_lsm_exit_lp = 1'b1;
-              d_pl_state_sts = STS_RETRAIN;
-              d_lsm_state = LSM_RETRAIN_a;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_IDLE_L1_4: begin
-          d_lsm_dstrm_state = SB_L1_STS;
-          d_pl_phyinl1 = 1'b1;
-          if (state_req_active | state_req_retrain)
-            begin
-              d_lsm_exit_lp = 1'b1;
-              d_pl_state_sts = STS_RETRAIN;
-              d_lsm_state = LSM_RETRAIN_a;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_SLEEP_L2: begin
-          d_lsm_dstrm_state = SB_L2_STS;
-          d_pl_phyinl2 = 1'b1;
-          if (state_req_active | state_req_retrain)
-            begin
-              d_lsm_exit_lp = 1'b1;
-              d_pl_state_sts = STS_RETRAIN;
-              d_lsm_state = LSM_RETRAIN_a;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_LinkReset_a: begin
-          if (sb_ustrm_link_reset_sts)
-            begin
-              d_pl_state_sts = STS_LinkReset;
-              d_lsm_state = LSM_LinkReset;
-            end
-        end
-        LSM_LinkReset: begin
-          // entered when software writes a register or when remote phy requests
-          d_lsm_dstrm_state = SB_LINK_RESET_STS;
-          if (state_req_active | state_req_disable)
-            d_lsm_state = LSM_RESET;
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_LinkError: begin
-          d_lsm_dstrm_state = SB_LINK_ERROR;
-        end
-        LSM_RETRAIN_a: begin
-          d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
-          d_lsm_state = LSM_RETRAIN_b;
-        end
-        LSM_RETRAIN_b: begin
-          d_lsm_state = LSM_RETRAIN_c;
-        end
-        LSM_RETRAIN_c: begin
-          if ((coldstart | lsm_exit_lp | sb_ustrm_link_retrain_sts) & ~lp_exit_cg_ack)
-            d_lsm_state = LSM_RETRAIN;
-        end
-        LSM_RETRAIN: begin
-          d_lsm_lnk_cfg = LNK_CFG_X16;
-          d_lsm_speedmode = SPEEDMODE_GEN5;
-          lsm_cg_req = 1'b1;
-          d_pl_phyinrecenter = 1'b1;
-          d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
-          if (state_req_active | coldstart | lsm_exit_lp)
-            begin
-              d_coldstart = 1'b0;
-              d_lsm_exit_lp = 1'b0;
-              d_lsm_state = LSM_ACTIVE_a;
-            end
-          else if (sb_ustrm_active_req)
-            begin
-              d_lsm_dstrm_state = SB_ACTIVE_STS;
-              d_lsm_state = LSM_ACTIVE;
-            end
-          else if (state_req_linkreset)
-            begin
-              d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-              d_lsm_state = LSM_LinkReset_a;
-            end
-          else if (state_req_disable)
-            d_lsm_state = LSM_DISABLE;
-          else if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-        end
-        LSM_DISABLE: begin
-          d_pl_state_sts = STS_DISABLE;
-          if (sb_ustrm_link_error)
-            d_lsm_state = LSM_LinkError;
-          else if (state_req_active)
-            d_lsm_state = LSM_RESET;
-        end
-        /* -----\/----- EXCLUDED -----\/-----
-         LSM_SB_ACK: begin
-         case (1'b1)
-         sb_l1_sts:
-          endcase
-        end
-         -----/\----- EXCLUDED -----/\----- */
-        default: d_lsm_state = LSM_RESET;
-      endcase // case (lsm_state)
     end // block: lsm_state_next
 
   // pl_state_sts

@@ -154,6 +154,8 @@ assign rx_load = flag_word_q ^ flag_word_q1;
 assign spi_read = (cur_st == ST_IDLE) & (s_transvld_detect == 1) ? 1'b1 :  
                   (tx_count == 'd28)                             ? 1'b1 : 1'b0;
 	                                          
+	                                          
+	                                          
 // adjust spim burstlength from m_cmd register based on
 // read or write. Specifically, increase spim burst length by 1
 // in case of read

@@ -161,6 +161,7 @@ module lpif
   /*AUTOWIRE*/
   // Beginning of automatic wires (for undeclared instantiated-module outputs)
   logic                 ctl_link_up;            // From lpif_ctl_i of lpif_ctl.v
+  logic                 ctl_phy_err;            // From lpif_ctl_i of lpif_ctl.v
   logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0] dout_lpbk;// From lpif_lpbk_i of lpif_lpbk.v
   logic [LPIF_CRC_WIDTH-1:0] dstrm_crc;         // From lpif_ctl_i of lpif_ctl.v
   logic [LPIF_VALID_WIDTH-1:0] dstrm_crc_valid; // From lpif_ctl_i of lpif_ctl.v
@@ -447,6 +448,7 @@ module lpif
      .tx_online                         (tx_online),
      .rx_online                         (rx_online),
      .ctl_link_up                       (ctl_link_up),
+     .ctl_phy_err                       (ctl_phy_err),
      // Inputs
      .lclk                              (lclk),
      .reset                             (reset),
@@ -521,6 +523,7 @@ module lpif
      .lp_state_req                      (lp_state_req[3:0]),
      .ustrm_state                       (ustrm_state[3:0]),
      .ctl_link_up                       (ctl_link_up),
+     .ctl_phy_err                       (ctl_phy_err),
      .lp_exit_cg_ack                    (lp_exit_cg_ack),
      .lp_stallack                       (lp_stallack),
      .lp_wake_req                       (lp_wake_req));

@@ -152,7 +152,8 @@ module lpif_ctl
    // misc
 
    output logic                         ctl_link_up,
-   input logic                          lsm_state_active
+   input logic                          lsm_state_active,
+   output logic                         ctl_phy_err
    );
 
   // phy to link layer
@@ -208,6 +209,10 @@ module lpif_ctl
 
   logic                                 d_tx_online;
   logic                                 d_rx_online;
+
+  wire                                  phy_err = ~&{ms_tx_transfer_en, sl_tx_transfer_en} |
+                                        |wa_error |
+                                        lp_linkerror;
 
   always_comb
     begin
@@ -285,7 +290,7 @@ module lpif_ctl
     CTL_WAIT_CA_ALIGN	= 3'h4,
     CTL_CA_ALIGNED	= 3'h5,
     CTL_LINK_UP		= 3'h6,
-    CTL_HALT		= 3'h7;
+    CTL_PHY_ERR		= 3'h7;
 
   logic [2:0] /* auto enum ctl_state_info */
               ctl_state, d_ctl_state;
@@ -302,7 +307,7 @@ module lpif_ctl
       CTL_WAIT_CA_ALIGN: ctl_state_ascii = "ctl_wait_ca_align";
       CTL_CA_ALIGNED:    ctl_state_ascii = "ctl_ca_aligned   ";
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
-      CTL_HALT:          ctl_state_ascii = "ctl_halt         ";
+      CTL_PHY_ERR:       ctl_state_ascii = "ctl_phy_err      ";
       default:           ctl_state_ascii = "%Error           ";
     endcase
   end
@@ -324,6 +329,7 @@ module lpif_ctl
       d_dstrm_valid = dstrm_valid;
       d_tx_online = tx_online;
       d_rx_online = rx_online;
+      ctl_phy_err = 1'b0;
       case (ctl_state)
         CTL_IDLE: begin
           d_ctl_state = CTL_PHY_INIT;
@@ -355,7 +361,11 @@ module lpif_ctl
           d_ctl_state = CTL_CA_ALIGNED;
         end
         CTL_LINK_UP: begin
-          d_ctl_state = CTL_LINK_UP;
+          if (phy_err)
+            d_ctl_state = CTL_PHY_ERR;
+        end
+        CTL_PHY_ERR: begin
+          ctl_phy_err = 1'b1;
         end
         default: d_ctl_state = CTL_IDLE;
       endcase // case (ctl_state)

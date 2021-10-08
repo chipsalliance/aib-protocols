@@ -242,12 +242,12 @@ assign miso_data = (spi_read & spi_rbuf_access) ? rbuf_fifo_rddata :
 
 assign reg2avb_wdata = wbuf_read_pop ? wbuf_fifo_rddata : 32'b0; 
 
-assign wbuf_write_push = ((spi_write & spi_wbuf_access) & ~avmm_cmd_rd);
-assign wbuf_read_pop =   ((avb2reg_read_pulse & avmm_wbuf_access)) ;
 
+assign wbuf_write_push = (~wbuf_wr_full & (spi_write & spi_wbuf_access) & ~avmm_cmd_rd);
+assign wbuf_read_pop =   (~wbuf_rd_empty & (avb2reg_read_pulse & avmm_wbuf_access)) ;
 
-assign rbuf_write_push = ((avb2reg_write & avmm_rbuf_access));
-assign rbuf_read_pop   = ((spi_read & spi_rbuf_access));
+assign rbuf_write_push = (~rbuf_wr_full  & (avb2reg_write & avmm_rbuf_access));
+assign rbuf_read_pop   = (~rbuf_rd_empty & (spi_read & spi_rbuf_access));
 
 // assign s_cmd outputs
 assign avmm_brstlen 	= s_cmd[31:24];
