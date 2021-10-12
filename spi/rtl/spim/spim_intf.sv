@@ -151,8 +151,9 @@ assign ss_n_cmb = (ss_n_0_int & ss_n_1_int & ss_n_2_int & ss_n_3_int);
 // Receive logic 
 assign rx_load = flag_word_q ^ flag_word_q1;
 
+	                                          
 assign spi_read = (cur_st == ST_IDLE) & (s_transvld_detect == 1) ? 1'b1 :  
-                  (tx_count == 'd28)                             ? 1'b1 : 1'b0;
+                  ((tx_count == 'd28) & (burstcount != 'd0)) ? 1'b1 : 1'b0;
 	                                          
 	                                          
 	                                          

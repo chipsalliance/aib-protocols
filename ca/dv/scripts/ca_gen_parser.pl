@@ -403,10 +403,10 @@ else  {
 }
 
 ## Printing CA calculated values
-$CaTxStbWdSel  = (1 << ($TxStrobeGenLoc/32));
-$CaTxStbBitSel = (1<< ($TxStrobeGenLoc%32));
-$CaRxStbWdSel  = (1 << ($RxStrobeGenLoc/32));
-$CaRxStbBitSel = (1<< ($RxStrobeGenLoc%32));
+$CaTxStbWdSel  = (1 << ($TxStrobeGenLoc/40));
+$CaTxStbBitSel = (1<< ($TxStrobeGenLoc%40));
+$CaRxStbWdSel  = (1 << ($RxStrobeGenLoc/40));
+$CaRxStbBitSel = (1<< ($RxStrobeGenLoc%40));
 $CaTxStbEn     = ($TxEnableStrobe= 1) ? 0 : 1;
 $CaRxStbEn     = ($RxEnableStrobe= 1) ? 0 : 1;
 $CaFifoPFull   = $CaFifoDepth-4;

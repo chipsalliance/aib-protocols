@@ -26,8 +26,6 @@
 //
 ////////////////////////////////////////////////////////////
 
-
-
 module spis_intf (
 // SPI Interface
 input logic 		rst_n,
@@ -41,6 +39,7 @@ input logic	[31:0]	tx_rdata,
 output logic		ssn_off_pulse,
 output logic		cmd_is_read,
 output logic		cmd_is_write,
+output logic		bc_zero,
 output logic		miso,
 output logic		spi_write,  // to spisreg_top for spi write indication
 output logic 		spi_read,   // to spisreg_top for spi read indication
@@ -152,9 +151,10 @@ logic [15:0] spi_wr_addr; 		// to capture the wr address to register
  	    spi_wr_addr_2reg <= spi_wr_addr;
           end
 
+assign bc_zero = burstcount == 8'b0;
 
-
-assign spi_read  = (tx_count == 'd28) ? 1'b1 : 1'b0;
+assign spi_read  = (~single_read & tx_count == 'd28 & burstcount != 'd0) ? 1'b1 :
+                   (tx_count == 'd28 ) ? 1'b1 : 1'b0;
 assign spi_write = rx_data_update;
 
 assign spi_wr_addr = (cmd_is_write) ? reg_addr : wrbuf_addr;
@@ -240,7 +240,7 @@ always_comb begin
 	end
 	else if (cmd_rw == 8'h20) begin
 	  read 		= 1'b1;
-	  burstlength 	= cmd_brstlen - 1'b1; // To account for first read
+ 	  burstlength 	= cmd_brstlen; // To account for first read
 	end
 	else if (cmd_rw == 8'h21) begin
 	  write 	= 1'b1;

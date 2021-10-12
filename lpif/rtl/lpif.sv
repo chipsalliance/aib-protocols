@@ -282,8 +282,6 @@ module lpif
    .clk_wr                 (com_clk),
    .rst_wr_n               (~reset),
    .init_downstream_credit (8'hff),
-   .tx_mrk_userbit         (4'b0), // FIX THIS
-   .tx_stb_userbit         (1'b0), // FIX THIS
    ); */
 
   lpif_txrx
@@ -352,9 +350,7 @@ module lpif
      .dstrm_dvalid                      (dstrm_dvalid[LPIF_VALID_WIDTH-1:0]),
      .dstrm_crc                         (dstrm_crc[LPIF_CRC_WIDTH-1:0]),
      .dstrm_crc_valid                   (dstrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
-     .dstrm_valid                       (dstrm_valid),
-     .tx_mrk_userbit                    (4'b0),                  // Templated
-     .tx_stb_userbit                    (1'b0));                  // Templated
+     .dstrm_valid                       (dstrm_valid));
 
   /* Loopback */
 

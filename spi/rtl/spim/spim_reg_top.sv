@@ -26,8 +26,6 @@
 //
 ////////////////////////////////////////////////////////////
 
-
-
 module spimreg_top 
 #( 
 parameter FIFO_WIDTH = 32, 
@@ -250,11 +248,12 @@ assign addr  = avbreg_addr;
 
 
 
-assign wbuf_write_push = ~wbuf_wr_full & (avbreg_write & avmm_wbuf_access);
-assign wbuf_read_pop =  ~wbuf_rd_empty & (spi_read & spi_wbuf_access) ;
+
+assign wbuf_write_push = (avbreg_write & avmm_wbuf_access);
+assign wbuf_read_pop =   (~cmd_is_read & spi_read & spi_wbuf_access) ;
  
-assign rbuf_write_push = (~rbuf_wr_full & (spi_write));
-assign rbuf_read_pop = ~rbuf_rd_empty & (avbreg_read & avmm_rbuf_access);
+assign rbuf_write_push = (spi_write);
+assign rbuf_read_pop =  (avbreg_read & avmm_rbuf_access);
 
 
 

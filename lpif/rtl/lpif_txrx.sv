@@ -97,20 +97,20 @@ module lpif_txrx
    output logic [LPIF_VALID_WIDTH-1:0] ustrm_crc_valid,
    output logic                        ustrm_valid,
 
-   input [3:0]                         tx_mrk_userbit,
-   input                               tx_stb_userbit,
-
    output logic [31:0]                 rx_upstream_debug_status,
    output logic [31:0]                 tx_downstream_debug_status
    );
 
   /*AUTOWIRE*/
 
+  logic                                tx_stb_userbit;
+  logic [3:0]                          tx_mrk_userbit;
+
   // FIX THIS
-  logic [6:0]                         ustrm_bstart;
-  logic [127:0]                       ustrm_bvalid;
-  logic [6:0]                         dstrm_bstart;
-  logic [127:0]                       dstrm_bvalid;
+  logic [6:0]                          ustrm_bstart;
+  logic [127:0]                        ustrm_bvalid;
+  logic [6:0]                          dstrm_bstart;
+  logic [127:0]                        dstrm_bvalid;
   //  assign ustrm_bstart = 7'b0;
   //  assign ustrm_bvalid = 128'b0;
   assign ustrm_bstart = 7'b0;
@@ -158,7 +158,7 @@ module lpif_txrx
    .dstrm_valid            (dstrm_valid),
    ); */
 
-  genvar                              i;
+  genvar                               i;
   generate
     if ((AIB_VERSION == 2) && (AIB_GENERATION == 2))
       begin
@@ -428,9 +428,58 @@ module lpif_txrx
       end // if ((AIB_VERSION == 2) && (AIB_GENERATION == 1))
   endgenerate
 
+  localparam STB_INTERVAL = 8'h8;
+  localparam STB_DELAY = 8'h14;
+
+  localparam FULL = 4'h1;
+  localparam HALF = 4'h2;
+  localparam QUARTER = 4'h4;
+
+  /* strobe_gen_w_delay AUTO_TEMPLATE (
+   .clk         (com_clk),
+   .rst_n       (rst_n),
+   .user_strobe (tx_stb_userbit),
+   .interval    (STB_INTERVAL),
+   .delay_value (STB_DELAY),
+   .user_marker (1'b1),
+   .online      (tx_online),
+   ); */
+
+  strobe_gen_w_delay
+    strobe_gen_w_delay_i
+      (/*AUTOINST*/
+       // Outputs
+       .user_strobe                     (tx_stb_userbit),        // Templated
+       // Inputs
+       .clk                             (com_clk),               // Templated
+       .rst_n                           (rst_n),                 // Templated
+       .interval                        (STB_INTERVAL),          // Templated
+       .delay_value                     (STB_DELAY),             // Templated
+       .user_marker                     (1'b1),                  // Templated
+       .online                          (tx_online));             // Templated
+
+  /* marker_gen AUTO_TEMPLATE (
+   .clk         (com_clk),
+   .rst_n       (rst_n),
+   .user_marker (tx_mrk_userbit[]),
+   .local_rate  (FULL),
+   .remote_rate  (FULL),
+   ); */
+
+  marker_gen
+  marker_gen_i
+    (/*AUTOINST*/
+     // Outputs
+     .user_marker                       (tx_mrk_userbit[3:0]),   // Templated
+     // Inputs
+     .clk                               (com_clk),               // Templated
+     .rst_n                             (rst_n),                 // Templated
+     .local_rate                        (FULL),                  // Templated
+     .remote_rate                       (FULL));                  // Templated
+
 endmodule // lpif_txrx
 
 // Local Variables:
-// verilog-library-directories:("." "./lpif_txrx" "${PROJ_DIR}/common/rtl")
+// verilog-library-directories:("." "./lpif_txrx" "${PROJ_DIR}/common/rtl" "${PROJ_DIR}/common/dv")
 // verilog-auto-inst-param-value:t
 // End:

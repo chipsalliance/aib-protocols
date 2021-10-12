@@ -34,21 +34,26 @@ module strobe_gen (
 
 );
 
-parameter TX_STROBE_QUICKLY = 0; // If set, we'll send the strobe on cycle 0. Otherwise we wait one interval before sending strobe.
-
+logic       marker_dly_reg;
 logic [7:0] count_reg;
+
+always @(posedge clk or negedge rst_n)
+if (!rst_n)
+  marker_dly_reg <= 1'h0;
+else
+  marker_dly_reg <= user_marker;
 
 always @(posedge clk or negedge rst_n)
 if (!rst_n)
   count_reg <= 8'h0;
 else if (~online)
   count_reg <= 8'h0;
-else if ((user_marker) & (count_reg == interval))
-  count_reg <= 8'h0;
-else if (user_marker)
-  count_reg <= count_reg + 1;
+else if ((marker_dly_reg) & (|count_reg[7:1] == 7'h0)) // If we get a marker and we are empty or at 1.
+  count_reg <= interval;
+else if (|count_reg)
+  count_reg <= count_reg - 8'h1;
 
-assign user_strobe = (count_reg == (TX_STROBE_QUICKLY ? 8'h0 : interval)) & online;
+assign user_strobe = (count_reg == 8'h1) & online;
 
 
 endmodule

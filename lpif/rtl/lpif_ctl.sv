@@ -401,7 +401,7 @@ module lpif_ctl
       else
         begin
           dstrm_state <= lsm_dstrm_state;
-          dstrm_protid <= d_dstrm_protid;
+          dstrm_protid <= d_dstrm_protid[1:0];
           dstrm_data <= lp_data;
           dstrm_dvalid <= lp_valid;
           dstrm_crc <= lp_crc;

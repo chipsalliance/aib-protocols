@@ -13,5 +13,8 @@
 -v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_name.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_txrx/lpif_txrx_x16_f2_master_top.sv
 -v ${PROJ_DIR}/llink/rtl/ll_auto_sync.sv
+-v ${PROJ_DIR}/common/dv/marker_gen.sv
+-v ${PROJ_DIR}/common/dv/strobe_gen.sv
 -v ${PROJ_DIR}/common/rtl/level_delay.sv
 -v ${PROJ_DIR}/common/rtl/levelsync.sv
+-v ${PROJ_DIR}/common/rtl/strobe_gen_w_delay.sv

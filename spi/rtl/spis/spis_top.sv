@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
 //                All Rights Reserved
@@ -25,6 +25,7 @@
 //
 //
 ////////////////////////////////////////////////////////////
+
 // spis_top - top level module for SPI Slave
 // 
 
@@ -92,6 +93,7 @@ logic	[15:0]	spi_wr_addr;
 logic	[15:0]	spi_rd_addr;
 logic		cmd_is_read;
 logic		cmd_is_write;
+logic		bc_zero;
 
 logic	[7:0] 	avmm_brstlen;
 logic	[1:0]	avmm_sel;
@@ -132,6 +134,7 @@ spis_intf  i_spis_intf (
 	.ssn_off_pulse		(ssn_off_pulse),
 	.cmd_is_read		(cmd_is_read),
 	.cmd_is_write		(cmd_is_write),
+	.bc_zero		(bc_zero),
 	.dbg_bus0               (dbg_bus0),
 	.rx_wdata		(mosi_data)
 
@@ -172,6 +175,7 @@ i_spisreg_top (
 	.avmm_offset 		(avmm_offset),
 	.avmm_rdnwr 		(avmm_rdnwr),
 	.avmm_transvld  	(avmm_transvld),
+	.bc_zero		(bc_zero),
 	.cmd_is_read		(cmd_is_read),
 	.cmd_is_write		(cmd_is_write)
 
