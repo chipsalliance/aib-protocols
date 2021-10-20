@@ -19,15 +19,16 @@ function run_test {
   sh $test_script
 
   if [ -f "$test_log" ]; then
-    # Note the specific "UVM_<message> :" format; this should only appear
-    # once in the log file underneath the "--- UVM Report Summary ---" line.
-    num_fatal=$(grep "UVM_FATAL :" $test_log | sed 's/[^0-9]*//g')
-    num_error=$(grep "UVM_ERROR :" $test_log | sed 's/[^0-9]*//g')
-
-    if [ $(($num_fatal + $num_error)) -ne 0 ]; then
-      echo -e "    RESULT : FAILED\n" >> $RESULTS
+    if [ -s "$test_log" ]; then
+      # $test_log exists and is not empty.
+      if `grep -qE "UVM_ERROR\s*:\s*0\s*$" $test_log`  && `grep -qE "UVM_FATAL\s*:\s*0\s*$" $test_log`;  then
+        echo -e "    RESULT : PASSED\n" >> $RESULTS
+      else
+        echo -e "    RESULT : FAILED\n" >> $RESULTS
+      fi
     else
-      echo -e "    RESULT : PASSED\n" >> $RESULTS
+      # $test_log exists but is empty.
+      echo -e "    RESULT : COMPILE ERROR\n" >> $RESULTS
     fi
   else
     echo -e "    RESULT : NOT RUN\n" >> $RESULTS
@@ -59,31 +60,31 @@ for MODULE in AXI4-MM AXI4-ST CA LPIF SPI; do
     AXI4-MM)
       DIR=$PROJ_DIR/llink/dv/aximm
       SCRIPT=run_smoke.sh
-      LOG=tb_mh2.1_sh1_128/smoke.txt
+      LOG=tb_mh2.1_sh1_128/smoke_log.txt
       ;;
 
     AXI4-ST)
       DIR=$PROJ_DIR/llink/dv/axist
       SCRIPT=run_smoke.sh
-      LOG=tb_mf2.1_sh1_d256/smoke.txt
+      LOG=tb_mf2.1_sh1_d256/smoke_log.txt
       ;;
 
     CA)
       DIR=$PROJ_DIR/ca/dv
-      SCRIPT=ca_smoke_test.sh
-      LOG=ca_tb.log
+      SCRIPT=run_smoke.sh
+      LOG=smoke_log.txt
       ;;
 
     LPIF)
       DIR=$PROJ_DIR/lpif/dv
-      SCRIPT=lpif_smoke_test.sh
-      LOG=lpif_tb.log
+      SCRIPT=run_smoke.sh
+      LOG=smoke_log.txt
       ;;
 
     SPI)
       DIR=$PROJ_DIR/spi
       SCRIPT=run_smoke.sh
-      LOG=dv/tb/tb_spi_master_slave_2/smoke.txt
+      LOG=dv/tb/tb_spi_master_slave_2/smoke_log.txt
       ;;
 
     *)

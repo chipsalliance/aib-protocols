@@ -40,15 +40,15 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit    has_func_cov  = 0;
 
     string           my_name = "";
-    bit [7:0]        rx_stb_wd_sel    = 'h1;
-    bit [39:0]       rx_stb_bit_sel   = 'h1;
+    bit [7:0]        rx_stb_wd_sel    = `CA_RX_STB_WD_SEL ;
+    bit [39:0]       rx_stb_bit_sel   = `CA_RX_STB_BIT_SEL;
     bit              rx_online        = 1;    // default
-    bit              rx_stb_en        = 1;    // default
-    bit              align_fly        = `ALIGN_FLY;    // default
-    bit [4:0]        fifo_full_val    = 4;    // default
-    bit [4:0]        fifo_pfull_val   = 2;
-    bit [2:0]        fifo_empty_val   = 0;    // default
-    bit [2:0]        fifo_pempty_val  = 2;    // default
+    bit              rx_stb_en        = `CA_RX_STB_EN; 
+    bit              align_fly        = `ALIGN_FLY;
+    bit [5:0]        fifo_full_val    = `CA_FIFO_FULL -1 ;
+    bit [5:0]        fifo_pfull_val   = `CA_FIFO_PFULL;
+    bit [2:0]        fifo_empty_val   = `CA_FIFO_EMPTY; 
+    bit [2:0]        fifo_pempty_val  = `CA_FIFO_PEMPTY;
     rand bit [2:0]   rden_dly; 
     rand bit [7:0]   rx_stb_intv;
     rand int         bit_shift;

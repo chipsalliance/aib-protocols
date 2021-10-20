@@ -1,0 +1,5 @@
+
+python3 run_all_sim.py copy -d sim_copy -cfg sailrock_cfg.txt
+python3 run_all_sim.py regression -d sim_regress -t target_cfg.txt -cfg sailrock_cfg.txt
+python3 run_all_sim.py random -rn 3 -d sim_random -t target_cfg.txt -cfg sailrock_cfg.txt
+python3 run_all_sim.py good -d sim_good

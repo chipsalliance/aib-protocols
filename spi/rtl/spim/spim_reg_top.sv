@@ -217,14 +217,14 @@ always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
            
 assign waitreq_reg_aclk_pulse = waitreq_reg_aclk & ~waitreq_reg_aclk_d1;
 
-assign avbreg_waitreq = (avmm_rbuf_access | avmm_wbuf_access) ? waitreq_buf : waitreq_reg_aclk; 
+assign avbreg_waitreq = (avbreg_write | avbreg_read) ? 1'b0 : 1'b1; 
 
 
 //SPI does not write to registers
 assign write_reg = avbreg_write; // spi write is to rd buffer(sclk); 
 							           //avb write (nios) is to wr buffer(avmm) 
 
-assign write_reg_quald = (write_reg & ~rd_buf_access & ~wr_buf_access);
+assign write_reg_quald = (write_reg);
 
 assign wdata_reg = avbreg_wdata; 
 assign rbuf_fifo_wrdata = miso_data;
@@ -263,7 +263,9 @@ assign m_diag0_in	= dbg_bus0;
 assign m_diag1_in	= dbg_bus1;
 
 // assign m_cmd outputs
-assign s_transvld	= m_cmd[0];
+logic s_transvld_int;  
+assign s_transvld	= s_transvld_sclk; 
+assign s_transvld_int	= m_cmd[0]; 
 
 //Adding the following logic to account for case when SPI clock is 
 //very very slow in comparision to AVMM clock. 
@@ -287,7 +289,8 @@ always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
         end 
         else begin
           case (cdc_st)
-           ST_ZERO:      if (s_transvld & ~cdc_ack_aclk) begin
+//10/13:            ST_ZERO:      if (s_transvld & ~cdc_ack_aclk) begin
+           ST_ZERO:      if (s_transvld_int & ~cdc_ack_aclk) begin
                             cdc_st <= ST_WAIT_ONE;
                             cdc_req <= 1'b1;
                             start_transvld <= 1'b0;
@@ -299,7 +302,8 @@ always_ff @(posedge m_avmm_clk or negedge m_avmm_rst_n)
                             start_transvld <= 1'b1;
                          end 
            
-           ST_ONE:       if (~s_transvld & ~cdc_ack_aclk) begin
+//10/13:            ST_ONE:       if (~s_transvld & ~cdc_ack_aclk) begin
+           ST_ONE:       if (~s_transvld_int & ~cdc_ack_aclk) begin
                             cdc_st <= ST_WAIT_ZERO;
                             cdc_req <= 1'b1;
                             start_transvld <= 1'b1;
@@ -356,7 +360,16 @@ always_ff @ (posedge sclk_in or negedge rst_n)
 	else 
           s_transvld_sclk_d1 <= s_transvld_sclk;
            
-
+//Use s_transvld_sclk to generate the reset pulse for read buffer soft reset
+logic start_transvld_d1;
+logic start_transvld_pulse;
+always_ff @ (posedge m_avmm_clk or negedge m_avmm_rst_n)
+        if (~m_avmm_rst_n) 
+          start_transvld_d1 <= 1'b0;	
+	else 
+          start_transvld_d1 <= start_transvld;
+           
+assign start_transvld_pulse = start_transvld & ~start_transvld_d1;
 
 assign load_dbg_bus0 =  ~stransvld_up_aclk_pulse & ssn_off_pulse_aclk;
 
@@ -435,7 +448,7 @@ levelsync sync_rbuf_wrsrst (
 // TO PREVENT MESSING UP READ COMMAND TO SLAVE FOR POLLING PURPOSES
 
 //Changing to reset read buffer at the beginning of each transaction
-assign rbuf_rd_sfrst_cmb = rbuf_sfrst_ctrl ? rbuf_rd_soft_reset :  ssn_on_pulse_aclk;
+assign rbuf_rd_sfrst_cmb = rbuf_sfrst_ctrl ? rbuf_rd_soft_reset :  start_transvld_pulse;
 
 
  

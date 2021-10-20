@@ -32,9 +32,9 @@ module lpif
       parameter AIB_GENERATION = 2,
       parameter AIB_LANES = 4,
       parameter AIB_BITS_PER_LANE = 320,
-      parameter AIB_CLOCK_RATE = 1000,
-      parameter LPIF_CLOCK_RATE = 1000,
-      parameter LPIF_DATA_WIDTH = 128,
+      parameter AIB_CLOCK_RATE = 2000,
+      parameter LPIF_CLOCK_RATE = 2000,
+      parameter LPIF_DATA_WIDTH = 32,
       parameter LPIF_PIPELINE_STAGES = 1,
       parameter MEM_CACHE_STREAM_ID = 8'h1,
       parameter IO_STREAM_ID = 8'h2,
@@ -165,7 +165,7 @@ module lpif
   logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0] dout_lpbk;// From lpif_lpbk_i of lpif_lpbk.v
   logic [LPIF_CRC_WIDTH-1:0] dstrm_crc;         // From lpif_ctl_i of lpif_ctl.v
   logic [LPIF_VALID_WIDTH-1:0] dstrm_crc_valid; // From lpif_ctl_i of lpif_ctl.v
-  logic [1023:0]        dstrm_data;             // From lpif_ctl_i of lpif_ctl.v
+  logic [LPIF_DATA_WIDTH*8-1:0] dstrm_data;     // From lpif_ctl_i of lpif_ctl.v
   logic [LPIF_VALID_WIDTH-1:0] dstrm_dvalid;    // From lpif_ctl_i of lpif_ctl.v
   logic [1:0]           dstrm_protid;           // From lpif_ctl_i of lpif_ctl.v
   logic [3:0]           dstrm_state;            // From lpif_ctl_i of lpif_ctl.v
@@ -178,7 +178,7 @@ module lpif
   logic [31:0]          tx_downstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
   logic [LPIF_CRC_WIDTH-1:0] ustrm_crc;         // From lpif_txrx_i of lpif_txrx.v
   logic [LPIF_VALID_WIDTH-1:0] ustrm_crc_valid; // From lpif_txrx_i of lpif_txrx.v
-  logic [1023:0]        ustrm_data;             // From lpif_txrx_i of lpif_txrx.v
+  logic [LPIF_DATA_WIDTH*8-1:0] ustrm_data;     // From lpif_txrx_i of lpif_txrx.v
   logic [LPIF_VALID_WIDTH-1:0] ustrm_dvalid;    // From lpif_txrx_i of lpif_txrx.v
   logic [1:0]           ustrm_protid;           // From lpif_txrx_i of lpif_txrx.v
   logic [3:0]           ustrm_state;            // From lpif_txrx_i of lpif_txrx.v
@@ -312,7 +312,7 @@ module lpif
      .tx_phy15                          (tx_phy15[319:0]),
      .ustrm_state                       (ustrm_state[3:0]),
      .ustrm_protid                      (ustrm_protid[1:0]),
-     .ustrm_data                        (ustrm_data[1023:0]),
+     .ustrm_data                        (ustrm_data[LPIF_DATA_WIDTH*8-1:0]),
      .ustrm_dvalid                      (ustrm_dvalid[LPIF_VALID_WIDTH-1:0]),
      .ustrm_crc                         (ustrm_crc[LPIF_CRC_WIDTH-1:0]),
      .ustrm_crc_valid                   (ustrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
@@ -346,7 +346,7 @@ module lpif
      .rx_phy15                          (rx_phy15[319:0]),
      .dstrm_state                       (dstrm_state[3:0]),
      .dstrm_protid                      (dstrm_protid[1:0]),
-     .dstrm_data                        (dstrm_data[1023:0]),
+     .dstrm_data                        (dstrm_data[LPIF_DATA_WIDTH*8-1:0]),
      .dstrm_dvalid                      (dstrm_dvalid[LPIF_VALID_WIDTH-1:0]),
      .dstrm_crc                         (dstrm_crc[LPIF_CRC_WIDTH-1:0]),
      .dstrm_crc_valid                   (dstrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
@@ -394,7 +394,7 @@ module lpif
      .pl_trdy                           (pl_trdy),
      .dstrm_state                       (dstrm_state[3:0]),
      .dstrm_protid                      (dstrm_protid[1:0]),
-     .dstrm_data                        (dstrm_data[1023:0]),
+     .dstrm_data                        (dstrm_data[LPIF_DATA_WIDTH*8-1:0]),
      .dstrm_dvalid                      (dstrm_dvalid[LPIF_VALID_WIDTH-1:0]),
      .dstrm_crc                         (dstrm_crc[LPIF_CRC_WIDTH-1:0]),
      .dstrm_crc_valid                   (dstrm_crc_valid[LPIF_VALID_WIDTH-1:0]),

@@ -1,3 +1,31 @@
+## ////////////////////////////////////////////////////////////////////////////////////////////////////
+## //
+## //        Copyright (C) 2021 Eximius Design
+## //                All Rights Reserved
+## //
+## // This entire notice must be reproduced on all copies of this file
+## // and copies of this file may only be made by a person if such person is
+## // permitted to do so under the terms of a subsisting license agreement
+## // from Eximius Design
+## //
+## // Licensed under the Apache License, Version 2.0 (the "License");
+## // you may not use this file except in compliance with the License.
+## // You may obtain a copy of the License at
+## //
+## //     http://www.apache.org/licenses/LICENSE-2.0
+## //
+## // Unless required by applicable law or agreed to in writing, software
+## // distributed under the License is distributed on an "AS IS" BASIS,
+## // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## // See the License for the specific language governing permissions and
+## // limitations under the License.
+## //
+## // Functional Descript: Channel Alignment Testbench File
+## //
+## //
+## //
+## ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 use Getopt::Long qw(GetOptions);
 # TODO
 #print "-------------------USAGE-------------------------\n";
@@ -7,14 +35,14 @@ use Getopt::Long qw(GetOptions);
 my $filename = '';
 my $randEnable=0;
 GetOptions( 'f=s' => \$filename,
-		'rand' =>\$randEnable );
+            'rand' =>\$randEnable );
 
 my $randFile = $filename;
 $randFile =~ s/\.txt/_rand\.txt/;
 
 # TODO :print $randEnable ? "Randomizing\n" : "No Randomize\n";
 if($randEnable) {
-	open (OP3, '>', $randFile) or die $!;
+   open (OP3, '>', $randFile) or die $!;
 }
 my @contentArr;
 my $NumChannel,$ChanType,$TxRate,$RxRate,$TxDBI,$RxDBI;
@@ -31,20 +59,16 @@ my @DBI_locArr = (38,39,78,79);
 my $fKey, $fVal1,$fVal2, $fVal3, $fVal4, $rxFifoDepRand = 0, $txFifoDepRand =0; 
 
 my $CaTxStbWdSel,$CaRxStbWdSel,$CaTxStbBitSel,$CaRxStbBitSel,$CaTxStbEn,$CaRxStbEn,$CaFifoDepth,$CaFifoPFull ;
-my @randKeyArr= ("GLOBAL_GEN2_MODE","GLOBAL_TX_MODE","GLOBAL_RX_MODE","AXIST_ASYMMETRIC_SUPPORT",
-		"GLOBAL_TX_WMARKER_EN","GLOBAL_TX_DBI_EN","GLOBAL_RX_DBI_EN","LLINK_TX_ENABLE_STROBE",
-		"LLINK_RX_ENABLE_STROBE","LLINK_TX_PERSISTENT_STROBE",
-		"LLINK_RX_PERSISTENT_STROBE","LLINK_TX_USER_STROBE","LLINK_RX_USER_STROBE",
-		"LLINK_TX_STROBE_LOC","LLINK_RX_STROBE_LOC","LLINK_TX_PERSISTENT_MARKER",
-		"LLINK_RX_PERSISTENT_MARKER","LLINK_TX_USER_MARKER","LLINK_RX_USER_MARKER","GLOBAL_TX_MARKER_LOC","GLOBAL_RX_MARKER_LOC",
-		"AXIST_RX_FIFO_DEPTH","AXIST_USER_TDATA","AXIST_USER_TKEEP","AXIST_USER_TLAST",
-		"AXIST_USER_TVALID","AXIST_USER_TREADY");
+my @randKeyArr= ("GLOBAL_GEN2_MODE","GLOBAL_TX_MODE","GLOBAL_RX_MODE","CA_ASYMMETRIC",
+		"GLOBAL_TX_WMARKER_EN","GLOBAL_TX_DBI_EN","GLOBAL_RX_DBI_EN",
+		"GLOBAL_TX_MARKER_LOC","GLOBAL_RX_MARKER_LOC"
+		);
 
 sub writeToFile {
-	($fKey,$fVal1,$fVal2,$fVal3, $fVal4) = @_;
-	select(OP3);
-	$~ = "MYFORMAT";
-	write;
+    ($fKey,$fVal1,$fVal2,$fVal3, $fVal4) = @_;
+    select(OP3);
+    $~ = "MYFORMAT";
+    write;
 }
 
 format MYFORMAT = 
@@ -61,11 +85,11 @@ sub printRandVal {
 			$valStr2 = $valStr1;
 		$ChanType = $valStr1; 
 	}
-	elsif($keyStr eq "AXIST_ASYMMETRIC_SUPPORT" ) {
+	elsif($keyStr eq "CA_ASYMMETRIC" ) {
 		$valStr1 = $Asymmetric;
 	}
 	elsif($keyStr eq "GLOBAL_TX_MODE") {
-		if ( grep( /^AXIST_ASYMMETRIC_SUPPORT/, @contentArr ) ) { #check
+		if ( grep( /^CA_ASYMMETRIC/, @contentArr ) ) { #check
 			$Asymmetric = int(rand(2));
 		}
 		if($ChanType eq "Gen1" || $ChanType eq "Gen1Only") { 
@@ -174,253 +198,203 @@ sub printRandVal {
 }
 
 my %masterHash, %slaveHash;
-#: this loop is for randEnable, takes i/p file and randomize
-if($randEnable){
-	open $IP, '<', $filename or die $!; #opening a file in read mode.
-		@contentArr = <$IP>;
-	close($IP);
-	foreach $line (@contentArr){
-		next if ($line =~ /\/\/.*/);
-		next if ($line =~/^interface_0.*/);
-		chomp($line);
-		if ($line ne ""){
 
-			($key, $master, $slave, $val, @commentArr) = split ' ', $line;
-			$comment = join(' ', @commentArr);
-			if ( grep( /^$key$/, @randKeyArr ) ) {
-				if($slave eq  "") {
-					printRandVal($key,1);
-				}
-				else {
-					printRandVal($key,2);
-				}
-			}
-			else {
-				next if($key eq "AXIST_TX_FIFO_DEPTH");
-				writeToFile($key, $master, $slave, $val, $comment);
-			}
-		}
-	}
-#TODO
-#calculate NUM_CHAN and print
-#writeToFile("NUM_CHAN", $valNumChan);
-	close(OP3);
-	$filename = $randFile; 
-	select(STDOUT);
-	print "Generated Rand file : $randFile\n";
-}
-
-# here the i/p file is randfile if randEnable, else the original i/p file
-#and the usual process continues here..
 print "i/p file is: $filename\n";
 open(FH, '<', $filename) or die $!; #opening a file in read mode.
 open (OP4, '>', "ca_config_define.svi") or die $!;
 while(<FH>) {    
-	$str = $_;  
-	next if ($line =~ /\/\/.*/);
-	next if ($line =~/^interface_0.*/);
-	$str =~ s/\/\/.*/ /g;
-	chomp($str);
-	if ($str ne ""){
+    $str = $_;  
+    next if ($line =~ /\/\/.*/);
+    next if ($line =~/^interface_0.*/);
+    $str =~ s/\/\/.*/ /g;
+    chomp($str);
+    if ($str ne ""){
 
-		($key, $master,$slave) = split ' ', $str;
-		if ($key =~ m/^CA_.*/) {
-			print OP4 "`define $key\t\t$master\n";
-		}
-		$masterHash{$key}=$master;
-		$slaveHash{$key}=$slave;
+        ($key, $master,$slave) = split ' ', $str;
+        if ($key =~ m/^CA_.*/) {
+            print OP4 "`define $key\t\t$master\n";
+        }
+        $masterHash{$key}=$master;
+        $slaveHash{$key}=$slave;
 
-	}
-	if(exists($masterHash{"CA_FIFO_DEPTH"})) {
-		$CaFifoDepth= $masterHash{"CA_FIFO_DEPTH"} ;
-	}
+    }
+    if(exists($masterHash{"CA_FIFO_DEPTH"})) {
+        $CaFifoDepth= $masterHash{"CA_FIFO_DEPTH"} ;
+    }
 }
 
 close(FH);
 
-my $TxEnableStrobe,$RxEnableStrobe,$TxPersistentStrobe,$RxPersistentStrobe,$TxUserStrobe,$RxUserStrobe,$TxStrobeGenLoc,$RxStrobeGenLoc;
-my $TxEnableMarker,$RxEnableMarker, $TxPersistentMarker, $RxPersistentMarker,$TxUserMarker,$RxUserMarker,$TxMarkerGenLoc,$RxMarkerGenLoc;
+##############################################################################
+my $CaTxEnableStrobe,$CaRxEnableStrobe,$CaTxStrobeGenLoc,$CaRxStrobeGenLoc;
 
 if(exists($masterHash{"GLOBAL_NUM_OF_CHANNEL"})) {
-	$NumChannel= $masterHash{"GLOBAL_NUM_OF_CHANNEL"} ;
+    $NumChannel= $masterHash{"GLOBAL_NUM_OF_CHANNEL"} ;
 }
 
 if(exists($masterHash{"GLOBAL_GEN2_MODE"})){
 
-	$ChanType = $masterHash{"GLOBAL_GEN2_MODE"};
-	if ($ChanType == 0 ){
-		$ChanType = "Gen1Only"; 
-	}
-	elsif ($ChanType == 1 ){
-		$ChanType = "Gen2Only"; 
-	}
-	else{
-		print OP2 "CHAN_TYPE\t\t\t\tNot Valid\n";
-		exit;
-	}
+    $ChanType = $masterHash{"GLOBAL_GEN2_MODE"};
+    if ($ChanType == 0 ){
+        $ChanType = "Gen1Only"; 
+    }
+    elsif ($ChanType == 1 ){
+        $ChanType = "Gen2Only"; 
+    }
+    else{
+        print OP2 "CHAN_TYPE\t\t\t\tNot Valid\n";
+        exit;
+    }
 }
+
+##############################################################################
+print OP4 "`define CA_NUM_CHAN\t\t$NumChannel\n";
 
 if(exists($masterHash{"GLOBAL_TX_MODE"})){
-	$TxRate = $masterHash{"GLOBAL_TX_MODE"};
-	$RxRate = $slaveHash{"GLOBAL_TX_MODE"};
+    $TxRate = $masterHash{"GLOBAL_TX_MODE"};
+    $RxRate = $slaveHash{"GLOBAL_TX_MODE"};
 
-	$TxRate = "Full" if ($TxRate eq "fifo_1x");
-	$TxRate = "Full" if ($TxRate eq "reg");
-	$TxRate = "Half" if ($TxRate eq "fifo_2x");
-	$TxRate = "Quarter" if ($TxRate eq "fifo_4x");
+    $TxRate = "Full" if ($TxRate eq "fifo_1x");
+    $TxRate = "Full" if ($TxRate eq "reg");
+    $TxRate = "Half" if ($TxRate eq "fifo_2x");
+    $TxRate = "Quarter" if ($TxRate eq "fifo_4x");
 
-	$RxRate = "Full" if ($RxRate eq "fifo_1x");
-	$RxRate = "Full" if ($RxRate eq "reg");
-	$RxRate = "Half" if ($RxRate eq "fifo_2x");
-	$RxRate = "Quarter" if ($RxRate eq "fifo_4x");
+    $RxRate = "Full" if ($RxRate eq "fifo_1x");
+    $RxRate = "Full" if ($RxRate eq "reg");
+    $RxRate = "Half" if ($RxRate eq "fifo_2x");
+    $RxRate = "Quarter" if ($RxRate eq "fifo_4x");
 
-	if ($ChanType eq "Gen1Only") {
-		if (($TxRate ne "Full") and ($TxRate ne "Half")){
-			print OP4 "TX_RATE\t\t\t\tNot Valid\n";
-			exit;
-		}
-		elsif (($RxRate ne "Full") and ($RxRate ne "Half")){
-			print OP4 "RX_RATE\t\t\t\tNot Valid\n";
-			exit;
-		}
-	}
-	else { #Gen2
-		if (($TxRate ne "Full") and ($TxRate ne "Half") and ($TxRate ne "Quarter")){
-			print OP4 "TX_RATE\t\t\t\tNot Valid\n";
-			exit;
-		}
-		elsif (($RxRate ne "Full") and ($RxRate ne "Half") and ($RxRate ne "Quarter")){
-			print OP4 "RX_RATE\t\t\t\tNot Valid\n";
-			exit;
-		}
-	}
+    if ($ChanType eq "Gen1Only") {
+        if (($TxRate ne "Full") and ($TxRate ne "Half")){
+            print OP4 "TX_RATE\t\t\t\tNot Valid\n";
+            exit;
+        }
+        elsif (($RxRate ne "Full") and ($RxRate ne "Half")){
+            print OP4 "RX_RATE\t\t\t\tNot Valid\n";
+            exit;
+        }
+    }
+    else { #Gen2
+        if (($TxRate ne "Full") and ($TxRate ne "Half") and ($TxRate ne "Quarter")){
+            print OP4 "TX_RATE\t\t\t\tNot Valid\n";
+            exit;
+        }
+        elsif (($RxRate ne "Full") and ($RxRate ne "Half") and ($RxRate ne "Quarter")){
+            print OP4 "RX_RATE\t\t\t\tNot Valid\n";
+            exit;
+        }
+    }
 
-}
-if(exists($masterHash{'AXIST_ASYMMETRIC_SUPPORT'})) {
-	$Asymmetric= ($masterHash{'AXIST_ASYMMETRIC_SUPPORT'} == 1) ? "True" : "False";
 }
 
 if(exists($masterHash{'GLOBAL_TX_WMARKER_EN'})){         #If AIB marker is enabled, LLINK USER marker will be disabled.
-	$TxEnableMarker= ($masterHash{'GLOBAL_TX_WMARKER_EN'} == 1) ? "True" : "False";
-	$RxEnableMarker= ($slaveHash{'GLOBAL_TX_WMARKER_EN'} == 1) ? "True" : "False";
-	if ($Asymmetric eq "True"){
-		$TxEnableMarker=  "True";
-		$RxEnableMarker=  "True";
-	}
+    $TxEnableMarker= ($masterHash{'GLOBAL_TX_WMARKER_EN'} == 1) ? "True" : "False";
+    $RxEnableMarker= ($slaveHash{'GLOBAL_TX_WMARKER_EN'} == 1) ? "True" : "False";
+    if ($Asymmetric eq "True"){
+        $TxEnableMarker=  "True";
+        $RxEnableMarker=  "True";
+    }
 }
 
 if(exists($masterHash{"GLOBAL_TX_DBI_EN"})){
-	$TxDBI = ($masterHash{"GLOBAL_TX_DBI_EN"}== 1) ? "True" : "False";
+    $TxDBI = ($masterHash{"GLOBAL_TX_DBI_EN"}== 1) ? "True" : "False";
 }
 
 if(exists($masterHash{"GLOBAL_RX_DBI_EN"})){
-	$RxDBI = ($masterHash{"GLOBAL_RX_DBI_EN"}== 1) ? "True" : "False";
+    $RxDBI = ($masterHash{"GLOBAL_RX_DBI_EN"}== 1) ? "True" : "False";
 }
 
-if(exists($masterHash{"LLINK_TX_ENABLE_STROBE"})){
-	$TxEnableStrobe = ($masterHash{"LLINK_TX_ENABLE_STROBE"}== 1) ? "True" : "False";
+if(exists($masterHash{"CA_TX_STB_EN"})){
+    $CaTxEnableStrobe = ($masterHash{"CA_TX_STB_EN"}== 1) ? "True" : "False";
 }
 
-if(exists($masterHash{"LLINK_RX_ENABLE_STROBE"})){
-	$RxEnableStrobe = ($masterHash{"LLINK_RX_ENABLE_STROBE"}== 1) ? "True" : "False";
+if(exists($masterHash{"CA_RX_STB_EN"})){
+    $CaRxEnableStrobe = ($masterHash{"CA_RX_STB_EN"}== 1) ? "True" : "False";
 }
 
-if(exists($masterHash{"LLINK_TX_PERSISTENT_STROBE"})){
-	$TxPersistentStrobe= ($masterHash{"LLINK_TX_PERSISTENT_STROBE"}== 1) ? "True" : "False";
+if(exists($masterHash{"CA_TX_STB_LOC"})){
+    $CaTxStrobeGenLoc = $masterHash{"CA_TX_STB_LOC"};
 }
 
-if(exists($masterHash{"LLINK_RX_PERSISTENT_STROBE"})){
-	$RxPersistentStrobe= ($masterHash{"LLINK_RX_PERSISTENT_STROBE"}== 1) ? "True" : "False";
-}
-
-if(exists($masterHash{"LLINK_TX_USER_STROBE"})){
-	$TxUserStrobe = ($masterHash{"LLINK_TX_USER_STROBE"}== 1) ? "True" : "False";
-}
-if(exists($masterHash{"LLINK_RX_USER_STROBE"})){
-	$RxUserStrobe = ($masterHash{"LLINK_RX_USER_STROBE"}== 1) ? "True" : "False";
-}
-
-if(exists($masterHash{"LLINK_TX_STROBE_LOC"})){
-	$TxStrobeGenLoc = $masterHash{"LLINK_TX_STROBE_LOC"};
-}
-
-if(exists($masterHash{"LLINK_RX_STROBE_LOC"})){
-	$RxStrobeGenLoc = $masterHash{"LLINK_RX_STROBE_LOC"};
+if(exists($masterHash{"CA_RX_STB_LOC"})){
+    $CaRxStrobeGenLoc = $masterHash{"CA_RX_STB_LOC"};
 }
 
 if(exists($masterHash{"GLOBAL_TX_MARKER_LOC"})){
-	$TxMarkerGenLoc= $masterHash{"GLOBAL_TX_MARKER_LOC"};
+    $TxMarkerGenLoc= $masterHash{"GLOBAL_TX_MARKER_LOC"};
 }
 
 if(exists($masterHash{"GLOBAL_RX_MARKER_LOC"})){
-	$RxMarkerGenLoc= $masterHash{"GLOBAL_RX_MARKER_LOC"};
+    $RxMarkerGenLoc= $masterHash{"GLOBAL_RX_MARKER_LOC"};
 }
 
 
 ############################################################################
 
 if ($ChanType eq "Gen2Only") {
-	print OP4 "`define GEN2\n\n";
+    print OP4 "`define GEN2\n\n";
 }
 else {
-	print OP4 "`define GEN1\n";
+    print OP4 "`define GEN1\n";
 }
 
 if ($TxRate eq "Full") {
 
 	print OP4 "`define TX_RATE_F\n";
+        print OP4 "`define MSR_GEAR\t\t1\n";
 }
 
 elsif ($TxRate eq "Half") {
 
 	print OP4 "`define TX_RATE_H\n";
+        print OP4 "`define MSR_GEAR\t\t2\n";
 }
 elsif ($TxRate eq "Quarter") {
 
 	print OP4 "`define TX_RATE_Q\n";
+        print OP4 "`define MSR_GEAR\t\t4\n";
 }
 else  {
 
-	print OP4 "Not Defined\n";
+    print OP4 "Not Defined\n";
 }
 
 if ($RxRate eq "Full") {
 
 	print OP4 "`define RX_RATE_F\n";
+	print OP4 "`define SLV_GEAR\t\t1\n";
 }
 
 elsif ($RxRate eq "Half") {
 
 	print OP4 "`define RX_RATE_H\n";
+	print OP4 "`define SLV_GEAR\t\t2\n";
 }
 elsif ($RxRate eq "Quarter") {
 
 	print OP4 "`define RX_RATE_Q\n";
+	print OP4 "`define SLV_GEAR\t\t4\n";
 }
 else  {
 
-	print OP4 "Not Defined\n";
+    print OP4 "Not Defined\n";
 }
 
 ## Printing CA calculated values
-$CaTxStbWdSel  = (1 << ($TxStrobeGenLoc/40));
-$CaTxStbBitSel = (1<< ($TxStrobeGenLoc%40));
-$CaRxStbWdSel  = (1 << ($RxStrobeGenLoc/40));
-$CaRxStbBitSel = (1<< ($RxStrobeGenLoc%40));
-$CaTxStbEn     = ($TxEnableStrobe= 1) ? 0 : 1;
-$CaRxStbEn     = ($RxEnableStrobe= 1) ? 0 : 1;
+$CaTxStbWdSel  = (1 << ($CaTxStrobeGenLoc/40));
+$CaTxStbBitSel = (1<< ($CaTxStrobeGenLoc%40));
+$CaRxStbWdSel  = (1 << ($CaRxStrobeGenLoc/40));
+$CaRxStbBitSel = (1<< ($CaRxStrobeGenLoc%40));
 $CaFifoPFull   = $CaFifoDepth-4;
-print OP4 "`define CA_FIFO_DEPTH		$CaFifoDepth\n";
-print OP4 "`define CA_FIFO_FULL		$CaFifoDepth\n";
-print OP4 "`define CA_FIFO_PFULL		$CaFifoPFull\n";
-print OP4 "`define CA_FIFO_EMPTY		0\n";
-print OP4 "`define CA_FIFO_PEMPTY		2\n";
-print OP4 "`define CA_TX_STB_EN		$CaTxStbEn\n";
-print OP4 "`define CA_RX_STB_EN		$CaRxStbEn\n";
+##print OP4 "`define CA_FIFO_DEPTH           $CaFifoDepth\n";
+print OP4 "`define CA_FIFO_FULL            $CaFifoDepth\n";
+print OP4 "`define CA_FIFO_PFULL           $CaFifoPFull\n";
+print OP4 "`define CA_FIFO_EMPTY           0\n";
+print OP4 "`define CA_FIFO_PEMPTY          2\n";
 
-printf (OP4 "`define CA_TX_STB_WD_SEL	%0x\n",$CaTxStbWdSel);
-printf (OP4 "`define CA_RX_STB_WD_SEL	%0x\n",$CaRxStbWdSel);
-printf (OP4 "`define CA_TX_STB_BIT_SEL	40'h%x\n",$CaTxStbBitSel);
-printf (OP4 "`define CA_RX_STB_BIT_SEL	40'h%x\n",$CaRxStbBitSel);
+printf (OP4 "`define CA_TX_STB_WD_SEL        %0x\n",$CaTxStbWdSel);
+printf (OP4 "`define CA_RX_STB_WD_SEL        %0x\n",$CaRxStbWdSel);
+printf (OP4 "`define CA_TX_STB_BIT_SEL       40'h%x\n",$CaTxStbBitSel);
+printf (OP4 "`define CA_RX_STB_BIT_SEL       40'h%x\n",$CaRxStbBitSel);
 
 close(OP4);

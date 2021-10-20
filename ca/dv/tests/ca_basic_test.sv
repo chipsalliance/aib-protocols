@@ -39,6 +39,7 @@ class ca_basic_test_c extends base_ca_test_c;
     // Data Members
     //------------------------------------------
     ca_seq_lib_c    ca_vseq;
+    uvm_event       sinit_event;
  
     //------------------------------------------
     // Component Members
@@ -77,12 +78,21 @@ endfunction: start_of_simulation
 //------------------------------------------
 // run phase 
 task ca_basic_test_c::run_phase(uvm_phase phase);
+`ifdef CA_YELLOW_OVAL
+    super.run_phase(phase);
+    $display("\n CA TEST :: run phase at %0t waiting for sinit_event",$time);
+     sinit_event = uvm_event_pool::get_global("ev_ab");	
+     `uvm_info(get_type_name(),$sformatf(" Wating done for AIB initialization ready event ... starting CA test"), UVM_LOW)
+     ////sinit_event.wait_trigger;
+`endif
 
     fork
         run_test(phase);
         global_timer(); // and check for error count
         ck_eot(phase);
     join
+    #1us;
+    $display("\n CA END OF TEST %0t",$time);
 
 endtask : run_phase
 

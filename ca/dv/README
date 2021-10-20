@@ -28,15 +28,22 @@
 
 cmd to run test:
 -----------------------------------------------------------------------------------------
-1. Go to directory '/design/ca/dv'
-2. Use command :   xrun -f ca_tb.args [-seed <number>]
-   This will help run the preset test 'ca_basic_test_c' from the script file 'ca_tb.args'
-3. In order to have the external chan_delay_agent (connected before CA-Rx(rxdin)) provide random delays per active channel,
-   uncomment [made default now] the +define+CHAN_DELAY_ENB option line from the 'ca_tb.args' file before executing step #2
-4. The +define+P2P_LITE when uncommented, runs set-up with P2P Lite (SV)model instead of AIB model
+1. Go to directory '/design/ca/dv/scripts'
+2. Use command :   python3 run_all_sim.py copy -d MY_TEST1 -cfg sailrock_cfg.txt
+   This will help create a directory named <MY_TEST1> in parallel to 'scripts' under 'dv' folder.
+   User may choose any name in place of MY_TEST1
+3. Go to directory '../MY_TEST1'
+4. Use command:  ./run_sim
+
+   This will run 'ca_basic_test_c' test-sequence
+   At present, Full-to-Full  AIB2-Gen1 and AIB2-Gen2 are clean
+
+   {Yet to be supported}
+5. The +define+P2P_LITE when uncommented, runs set-up with P2P Lite (SV)model instead of AIB model 
    Uncommenting +define+P2P_LITE_CH_DELAY_ENB will enable the P2P_LITE model to introduce random delay between active channels
    +define+CHAN_DELAY_ENB is optional with use of +define+P2P_LITE_CH_DELAY_ENB.
    (It will further introduce random channel delays in the set-up thereby incresing or decreasing inter-channel delays effectively)
+6. Regression mode
 ------------------------------------------------------------------------------------------
 
 --------------------
@@ -105,3 +112,18 @@ design
 │   │   │   ├── ca_basic_test.sv
 │   │   │   ├── ca_cfg.sv
 │   │   │   └── ca_knobs.sv
+│   │   ├── scripts
+│   │   │   ├── aib_cfg_default.txt
+│   │   │   ├── aib_gen_config
+│   │   │   ├── aib_gen_parser.py
+│   │   │   ├── ca_cfg_default.txt
+│   │   │   ├── ca_gen_parser.pl
+│   │   │   ├── ca_gen_parser.py
+│   │   │   ├── makefile
+│   │   │   ├── readme
+│   │   │   ├── run_all_sim.py
+│   │   │   ├── run_change_makefile.py
+│   │   │   ├── run_sim
+│   │   │   ├── sailrock_cfg.txt
+│   │   │   └── target_cfg.txt
+

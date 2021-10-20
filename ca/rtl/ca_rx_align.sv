@@ -296,7 +296,7 @@ module ca_rx_align
           rd_dly <= rden_dly;
         else if (all_fifos_not_empty & |rd_dly)
           rd_dly <= rd_dly - 1'b1;
-        align_err <= d_align_err | align_err_intv;
+        align_err <= d_align_err;
         align_done <= d_align_done;
       end
 
@@ -311,10 +311,9 @@ module ca_rx_align
     RX_IDLE		= 3'h0,
     RX_ONLINE		= 3'h1,
     RX_ALIGNED		= 3'h2,
-    RX_MON		= 3'h3,
-    RX_ERR		= 3'h4,
-    RX_DONE		= 3'h5,
-    RX_SOFT_RESET	= 3'h6;
+    RX_ERR              = 3'h3,
+    RX_DONE             = 3'h4,
+    RX_SOFT_RESET       = 3'h5;
 
   logic [2:0] /* auto enum state_info */
               rx_state, d_rx_state;
@@ -327,7 +326,6 @@ module ca_rx_align
       RX_IDLE:       rx_state_ascii = "rx_idle      ";
       RX_ONLINE:     rx_state_ascii = "rx_online    ";
       RX_ALIGNED:    rx_state_ascii = "rx_aligned   ";
-      RX_MON:        rx_state_ascii = "rx_mon       ";
       RX_ERR:        rx_state_ascii = "rx_err       ";
       RX_DONE:       rx_state_ascii = "rx_done      ";
       RX_SOFT_RESET: rx_state_ascii = "rx_soft_reset";
@@ -369,11 +367,6 @@ module ca_rx_align
           if (~|rd_dly)
             d_rx_state = RX_DONE;
         end
-        RX_MON: begin
-          d_align_done = 1'b1;
-          if (align_err_intv)
-            d_rx_state = RX_ERR;
-        end
         RX_ERR: begin
           d_align_err = 1'b1;
           if (align_fly)
@@ -384,6 +377,13 @@ module ca_rx_align
         end
         RX_DONE: begin
           d_align_done = 1'b1;
+          if (align_err_intv & align_fly)
+          begin
+            d_align_err = 1'b1;
+            d_rx_state = RX_SOFT_RESET;
+          end
+          else if (align_err_intv)
+            d_align_err = 1'b1;
         end
         RX_SOFT_RESET: begin
           fifo_soft_reset = 1'b1;

@@ -1,0 +1,727 @@
+////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
+//
+//        (C) Copyright 2021 Eximius Design
+//                All Rights Reserved
+//
+// This entire notice must be reproduced on all copies of this file
+// and copies of this file may only be made by a person if such person is
+// permitted to do so under the terms of a subsisting license agreement
+// from Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink MAIN     downstream TX  153  RX    0
+    LogicLink MAIN     upstream TX    0  RX  153
+                                -------  -------
+    Total     MAIN              TX  153  RX  153
+
+  Channel Info
+    MAIN: Each channel is Gen1Only PHY running at Full Rate with 40 bits
+    MAIN: 8x channels
+    MAIN: Total AIB bits is 320 bits
+
+       TX: No DBI
+       TX: Persistent Strobe adds 1 overhead bits per channel
+       TX: Persistent Marker adds 1 overhead bits per channel
+       TX: Total overhead bits across 8 channels is 16
+       TX: Total data bits available 304
+
+       RX: No DBI
+       RX: Persistent Strobe adds 1 overhead bits per channel
+       RX: Persistent Marker adds 1 overhead bits per channel
+       RX: Total overhead bits across 8 channels is 16
+       RX: Total data bits available 304
+
+  MAIN TX needs  153 bits of data and has  304 bits available across 8x Gen1Only Full Rate channels so  151 spare bits
+  INFORMATION: At least one full channel unused for TX
+  MAIN RX needs  153 bits of data and has  304 bits available across 8x Gen1Only Full Rate channels so  151 spare bits
+  INFORMATION: At least one full channel unused for RX
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to Logic Link Data Mapping
+// This AXI Data FIFO packing
+  assign tx_downstream_data   [   0 +:   4] = dstrm_state          [   0 +:   4]
+  assign tx_downstream_data   [   4 +:   2] = dstrm_protid         [   0 +:   2]
+  assign tx_downstream_data   [   6 +: 128] = dstrm_data           [   0 +: 128]
+  assign tx_downstream_data   [ 134 +:   1] = dstrm_dvalid         [   0 +:   1]
+  assign tx_downstream_data   [ 135 +:  16] = dstrm_crc            [   0 +:  16]
+  assign tx_downstream_data   [ 151 +:   1] = dstrm_crc_valid      [   0 +:   1]
+  assign tx_downstream_data   [ 152 +:   1] = dstrm_valid          [   0 +:   1]
+
+  assign rx_upstream_data     [   0 +:   4] = ustrm_state          [   0 +:   4]
+  assign rx_upstream_data     [   4 +:   2] = ustrm_protid         [   0 +:   2]
+  assign rx_upstream_data     [   6 +: 128] = ustrm_data           [   0 +: 128]
+  assign rx_upstream_data     [ 134 +:   1] = ustrm_dvalid         [   0 +:   1]
+  assign rx_upstream_data     [ 135 +:  16] = ustrm_crc            [   0 +:  16]
+  assign rx_upstream_data     [ 151 +:   1] = ustrm_crc_valid      [   0 +:   1]
+  assign rx_upstream_data     [ 152 +:   1] = ustrm_valid          [   0 +:   1]
+// AXI to Logic Link Data Mapping
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [   0] = dstrm_state          [   0]
+  Channel 0 TX   [   1] = 1'b1 // STROBE
+  Channel 0 TX   [   2] = dstrm_state          [   1]
+  Channel 0 TX   [   3] = dstrm_state          [   2]
+  Channel 0 TX   [   4] = dstrm_state          [   3]
+  Channel 0 TX   [   5] = dstrm_protid         [   0]
+  Channel 0 TX   [   6] = dstrm_protid         [   1]
+  Channel 0 TX   [   7] = dstrm_data           [   0]
+  Channel 0 TX   [   8] = dstrm_data           [   1]
+  Channel 0 TX   [   9] = dstrm_data           [   2]
+  Channel 0 TX   [  10] = dstrm_data           [   3]
+  Channel 0 TX   [  11] = dstrm_data           [   4]
+  Channel 0 TX   [  12] = dstrm_data           [   5]
+  Channel 0 TX   [  13] = dstrm_data           [   6]
+  Channel 0 TX   [  14] = dstrm_data           [   7]
+  Channel 0 TX   [  15] = dstrm_data           [   8]
+  Channel 0 TX   [  16] = dstrm_data           [   9]
+  Channel 0 TX   [  17] = dstrm_data           [  10]
+  Channel 0 TX   [  18] = dstrm_data           [  11]
+  Channel 0 TX   [  19] = dstrm_data           [  12]
+  Channel 0 TX   [  20] = dstrm_data           [  13]
+  Channel 0 TX   [  21] = dstrm_data           [  14]
+  Channel 0 TX   [  22] = dstrm_data           [  15]
+  Channel 0 TX   [  23] = dstrm_data           [  16]
+  Channel 0 TX   [  24] = dstrm_data           [  17]
+  Channel 0 TX   [  25] = dstrm_data           [  18]
+  Channel 0 TX   [  26] = dstrm_data           [  19]
+  Channel 0 TX   [  27] = dstrm_data           [  20]
+  Channel 0 TX   [  28] = dstrm_data           [  21]
+  Channel 0 TX   [  29] = dstrm_data           [  22]
+  Channel 0 TX   [  30] = dstrm_data           [  23]
+  Channel 0 TX   [  31] = dstrm_data           [  24]
+  Channel 0 TX   [  32] = dstrm_data           [  25]
+  Channel 0 TX   [  33] = dstrm_data           [  26]
+  Channel 0 TX   [  34] = dstrm_data           [  27]
+  Channel 0 TX   [  35] = dstrm_data           [  28]
+  Channel 0 TX   [  36] = dstrm_data           [  29]
+  Channel 0 TX   [  37] = dstrm_data           [  30]
+  Channel 0 TX   [  38] = dstrm_data           [  31]
+  Channel 0 TX   [  39] = 1'b0 // MARKER
+  Channel 1 TX   [   0] = dstrm_data           [  32]
+  Channel 1 TX   [   1] = 1'b1 // STROBE
+  Channel 1 TX   [   2] = dstrm_data           [  33]
+  Channel 1 TX   [   3] = dstrm_data           [  34]
+  Channel 1 TX   [   4] = dstrm_data           [  35]
+  Channel 1 TX   [   5] = dstrm_data           [  36]
+  Channel 1 TX   [   6] = dstrm_data           [  37]
+  Channel 1 TX   [   7] = dstrm_data           [  38]
+  Channel 1 TX   [   8] = dstrm_data           [  39]
+  Channel 1 TX   [   9] = dstrm_data           [  40]
+  Channel 1 TX   [  10] = dstrm_data           [  41]
+  Channel 1 TX   [  11] = dstrm_data           [  42]
+  Channel 1 TX   [  12] = dstrm_data           [  43]
+  Channel 1 TX   [  13] = dstrm_data           [  44]
+  Channel 1 TX   [  14] = dstrm_data           [  45]
+  Channel 1 TX   [  15] = dstrm_data           [  46]
+  Channel 1 TX   [  16] = dstrm_data           [  47]
+  Channel 1 TX   [  17] = dstrm_data           [  48]
+  Channel 1 TX   [  18] = dstrm_data           [  49]
+  Channel 1 TX   [  19] = dstrm_data           [  50]
+  Channel 1 TX   [  20] = dstrm_data           [  51]
+  Channel 1 TX   [  21] = dstrm_data           [  52]
+  Channel 1 TX   [  22] = dstrm_data           [  53]
+  Channel 1 TX   [  23] = dstrm_data           [  54]
+  Channel 1 TX   [  24] = dstrm_data           [  55]
+  Channel 1 TX   [  25] = dstrm_data           [  56]
+  Channel 1 TX   [  26] = dstrm_data           [  57]
+  Channel 1 TX   [  27] = dstrm_data           [  58]
+  Channel 1 TX   [  28] = dstrm_data           [  59]
+  Channel 1 TX   [  29] = dstrm_data           [  60]
+  Channel 1 TX   [  30] = dstrm_data           [  61]
+  Channel 1 TX   [  31] = dstrm_data           [  62]
+  Channel 1 TX   [  32] = dstrm_data           [  63]
+  Channel 1 TX   [  33] = dstrm_data           [  64]
+  Channel 1 TX   [  34] = dstrm_data           [  65]
+  Channel 1 TX   [  35] = dstrm_data           [  66]
+  Channel 1 TX   [  36] = dstrm_data           [  67]
+  Channel 1 TX   [  37] = dstrm_data           [  68]
+  Channel 1 TX   [  38] = dstrm_data           [  69]
+  Channel 1 TX   [  39] = 1'b0 // MARKER
+  Channel 2 TX   [   0] = dstrm_data           [  70]
+  Channel 2 TX   [   1] = 1'b1 // STROBE
+  Channel 2 TX   [   2] = dstrm_data           [  71]
+  Channel 2 TX   [   3] = dstrm_data           [  72]
+  Channel 2 TX   [   4] = dstrm_data           [  73]
+  Channel 2 TX   [   5] = dstrm_data           [  74]
+  Channel 2 TX   [   6] = dstrm_data           [  75]
+  Channel 2 TX   [   7] = dstrm_data           [  76]
+  Channel 2 TX   [   8] = dstrm_data           [  77]
+  Channel 2 TX   [   9] = dstrm_data           [  78]
+  Channel 2 TX   [  10] = dstrm_data           [  79]
+  Channel 2 TX   [  11] = dstrm_data           [  80]
+  Channel 2 TX   [  12] = dstrm_data           [  81]
+  Channel 2 TX   [  13] = dstrm_data           [  82]
+  Channel 2 TX   [  14] = dstrm_data           [  83]
+  Channel 2 TX   [  15] = dstrm_data           [  84]
+  Channel 2 TX   [  16] = dstrm_data           [  85]
+  Channel 2 TX   [  17] = dstrm_data           [  86]
+  Channel 2 TX   [  18] = dstrm_data           [  87]
+  Channel 2 TX   [  19] = dstrm_data           [  88]
+  Channel 2 TX   [  20] = dstrm_data           [  89]
+  Channel 2 TX   [  21] = dstrm_data           [  90]
+  Channel 2 TX   [  22] = dstrm_data           [  91]
+  Channel 2 TX   [  23] = dstrm_data           [  92]
+  Channel 2 TX   [  24] = dstrm_data           [  93]
+  Channel 2 TX   [  25] = dstrm_data           [  94]
+  Channel 2 TX   [  26] = dstrm_data           [  95]
+  Channel 2 TX   [  27] = dstrm_data           [  96]
+  Channel 2 TX   [  28] = dstrm_data           [  97]
+  Channel 2 TX   [  29] = dstrm_data           [  98]
+  Channel 2 TX   [  30] = dstrm_data           [  99]
+  Channel 2 TX   [  31] = dstrm_data           [ 100]
+  Channel 2 TX   [  32] = dstrm_data           [ 101]
+  Channel 2 TX   [  33] = dstrm_data           [ 102]
+  Channel 2 TX   [  34] = dstrm_data           [ 103]
+  Channel 2 TX   [  35] = dstrm_data           [ 104]
+  Channel 2 TX   [  36] = dstrm_data           [ 105]
+  Channel 2 TX   [  37] = dstrm_data           [ 106]
+  Channel 2 TX   [  38] = dstrm_data           [ 107]
+  Channel 2 TX   [  39] = 1'b0 // MARKER
+  Channel 3 TX   [   0] = dstrm_data           [ 108]
+  Channel 3 TX   [   1] = 1'b1 // STROBE
+  Channel 3 TX   [   2] = dstrm_data           [ 109]
+  Channel 3 TX   [   3] = dstrm_data           [ 110]
+  Channel 3 TX   [   4] = dstrm_data           [ 111]
+  Channel 3 TX   [   5] = dstrm_data           [ 112]
+  Channel 3 TX   [   6] = dstrm_data           [ 113]
+  Channel 3 TX   [   7] = dstrm_data           [ 114]
+  Channel 3 TX   [   8] = dstrm_data           [ 115]
+  Channel 3 TX   [   9] = dstrm_data           [ 116]
+  Channel 3 TX   [  10] = dstrm_data           [ 117]
+  Channel 3 TX   [  11] = dstrm_data           [ 118]
+  Channel 3 TX   [  12] = dstrm_data           [ 119]
+  Channel 3 TX   [  13] = dstrm_data           [ 120]
+  Channel 3 TX   [  14] = dstrm_data           [ 121]
+  Channel 3 TX   [  15] = dstrm_data           [ 122]
+  Channel 3 TX   [  16] = dstrm_data           [ 123]
+  Channel 3 TX   [  17] = dstrm_data           [ 124]
+  Channel 3 TX   [  18] = dstrm_data           [ 125]
+  Channel 3 TX   [  19] = dstrm_data           [ 126]
+  Channel 3 TX   [  20] = dstrm_data           [ 127]
+  Channel 3 TX   [  21] = dstrm_dvalid         [   0]
+  Channel 3 TX   [  22] = dstrm_crc            [   0]
+  Channel 3 TX   [  23] = dstrm_crc            [   1]
+  Channel 3 TX   [  24] = dstrm_crc            [   2]
+  Channel 3 TX   [  25] = dstrm_crc            [   3]
+  Channel 3 TX   [  26] = dstrm_crc            [   4]
+  Channel 3 TX   [  27] = dstrm_crc            [   5]
+  Channel 3 TX   [  28] = dstrm_crc            [   6]
+  Channel 3 TX   [  29] = dstrm_crc            [   7]
+  Channel 3 TX   [  30] = dstrm_crc            [   8]
+  Channel 3 TX   [  31] = dstrm_crc            [   9]
+  Channel 3 TX   [  32] = dstrm_crc            [  10]
+  Channel 3 TX   [  33] = dstrm_crc            [  11]
+  Channel 3 TX   [  34] = dstrm_crc            [  12]
+  Channel 3 TX   [  35] = dstrm_crc            [  13]
+  Channel 3 TX   [  36] = dstrm_crc            [  14]
+  Channel 3 TX   [  37] = dstrm_crc            [  15]
+  Channel 3 TX   [  38] = dstrm_crc_valid      [   0]
+  Channel 3 TX   [  39] = 1'b0 // MARKER
+  Channel 4 TX   [   0] = dstrm_valid          [   0]
+  Channel 4 TX   [   1] = 1'b1 // STROBE
+  Channel 4 TX   [   2] = 1'b0                
+  Channel 4 TX   [   3] = 1'b0                
+  Channel 4 TX   [   4] = 1'b0                
+  Channel 4 TX   [   5] = 1'b0                
+  Channel 4 TX   [   6] = 1'b0                
+  Channel 4 TX   [   7] = 1'b0                
+  Channel 4 TX   [   8] = 1'b0                
+  Channel 4 TX   [   9] = 1'b0                
+  Channel 4 TX   [  10] = 1'b0                
+  Channel 4 TX   [  11] = 1'b0                
+  Channel 4 TX   [  12] = 1'b0                
+  Channel 4 TX   [  13] = 1'b0                
+  Channel 4 TX   [  14] = 1'b0                
+  Channel 4 TX   [  15] = 1'b0                
+  Channel 4 TX   [  16] = 1'b0                
+  Channel 4 TX   [  17] = 1'b0                
+  Channel 4 TX   [  18] = 1'b0                
+  Channel 4 TX   [  19] = 1'b0                
+  Channel 4 TX   [  20] = 1'b0                
+  Channel 4 TX   [  21] = 1'b0                
+  Channel 4 TX   [  22] = 1'b0                
+  Channel 4 TX   [  23] = 1'b0                
+  Channel 4 TX   [  24] = 1'b0                
+  Channel 4 TX   [  25] = 1'b0                
+  Channel 4 TX   [  26] = 1'b0                
+  Channel 4 TX   [  27] = 1'b0                
+  Channel 4 TX   [  28] = 1'b0                
+  Channel 4 TX   [  29] = 1'b0                
+  Channel 4 TX   [  30] = 1'b0                
+  Channel 4 TX   [  31] = 1'b0                
+  Channel 4 TX   [  32] = 1'b0                
+  Channel 4 TX   [  33] = 1'b0                
+  Channel 4 TX   [  34] = 1'b0                
+  Channel 4 TX   [  35] = 1'b0                
+  Channel 4 TX   [  36] = 1'b0                
+  Channel 4 TX   [  37] = 1'b0                
+  Channel 4 TX   [  38] = 1'b0                
+  Channel 4 TX   [  39] = 1'b0 // MARKER
+  Channel 5 TX   [   0] = 1'b0                
+  Channel 5 TX   [   1] = 1'b1 // STROBE
+  Channel 5 TX   [   2] = 1'b0                
+  Channel 5 TX   [   3] = 1'b0                
+  Channel 5 TX   [   4] = 1'b0                
+  Channel 5 TX   [   5] = 1'b0                
+  Channel 5 TX   [   6] = 1'b0                
+  Channel 5 TX   [   7] = 1'b0                
+  Channel 5 TX   [   8] = 1'b0                
+  Channel 5 TX   [   9] = 1'b0                
+  Channel 5 TX   [  10] = 1'b0                
+  Channel 5 TX   [  11] = 1'b0                
+  Channel 5 TX   [  12] = 1'b0                
+  Channel 5 TX   [  13] = 1'b0                
+  Channel 5 TX   [  14] = 1'b0                
+  Channel 5 TX   [  15] = 1'b0                
+  Channel 5 TX   [  16] = 1'b0                
+  Channel 5 TX   [  17] = 1'b0                
+  Channel 5 TX   [  18] = 1'b0                
+  Channel 5 TX   [  19] = 1'b0                
+  Channel 5 TX   [  20] = 1'b0                
+  Channel 5 TX   [  21] = 1'b0                
+  Channel 5 TX   [  22] = 1'b0                
+  Channel 5 TX   [  23] = 1'b0                
+  Channel 5 TX   [  24] = 1'b0                
+  Channel 5 TX   [  25] = 1'b0                
+  Channel 5 TX   [  26] = 1'b0                
+  Channel 5 TX   [  27] = 1'b0                
+  Channel 5 TX   [  28] = 1'b0                
+  Channel 5 TX   [  29] = 1'b0                
+  Channel 5 TX   [  30] = 1'b0                
+  Channel 5 TX   [  31] = 1'b0                
+  Channel 5 TX   [  32] = 1'b0                
+  Channel 5 TX   [  33] = 1'b0                
+  Channel 5 TX   [  34] = 1'b0                
+  Channel 5 TX   [  35] = 1'b0                
+  Channel 5 TX   [  36] = 1'b0                
+  Channel 5 TX   [  37] = 1'b0                
+  Channel 5 TX   [  38] = 1'b0                
+  Channel 5 TX   [  39] = 1'b0 // MARKER
+  Channel 6 TX   [   0] = 1'b0                
+  Channel 6 TX   [   1] = 1'b1 // STROBE
+  Channel 6 TX   [   2] = 1'b0                
+  Channel 6 TX   [   3] = 1'b0                
+  Channel 6 TX   [   4] = 1'b0                
+  Channel 6 TX   [   5] = 1'b0                
+  Channel 6 TX   [   6] = 1'b0                
+  Channel 6 TX   [   7] = 1'b0                
+  Channel 6 TX   [   8] = 1'b0                
+  Channel 6 TX   [   9] = 1'b0                
+  Channel 6 TX   [  10] = 1'b0                
+  Channel 6 TX   [  11] = 1'b0                
+  Channel 6 TX   [  12] = 1'b0                
+  Channel 6 TX   [  13] = 1'b0                
+  Channel 6 TX   [  14] = 1'b0                
+  Channel 6 TX   [  15] = 1'b0                
+  Channel 6 TX   [  16] = 1'b0                
+  Channel 6 TX   [  17] = 1'b0                
+  Channel 6 TX   [  18] = 1'b0                
+  Channel 6 TX   [  19] = 1'b0                
+  Channel 6 TX   [  20] = 1'b0                
+  Channel 6 TX   [  21] = 1'b0                
+  Channel 6 TX   [  22] = 1'b0                
+  Channel 6 TX   [  23] = 1'b0                
+  Channel 6 TX   [  24] = 1'b0                
+  Channel 6 TX   [  25] = 1'b0                
+  Channel 6 TX   [  26] = 1'b0                
+  Channel 6 TX   [  27] = 1'b0                
+  Channel 6 TX   [  28] = 1'b0                
+  Channel 6 TX   [  29] = 1'b0                
+  Channel 6 TX   [  30] = 1'b0                
+  Channel 6 TX   [  31] = 1'b0                
+  Channel 6 TX   [  32] = 1'b0                
+  Channel 6 TX   [  33] = 1'b0                
+  Channel 6 TX   [  34] = 1'b0                
+  Channel 6 TX   [  35] = 1'b0                
+  Channel 6 TX   [  36] = 1'b0                
+  Channel 6 TX   [  37] = 1'b0                
+  Channel 6 TX   [  38] = 1'b0                
+  Channel 6 TX   [  39] = 1'b0 // MARKER
+  Channel 7 TX   [   0] = 1'b0                
+  Channel 7 TX   [   1] = 1'b1 // STROBE
+  Channel 7 TX   [   2] = 1'b0                
+  Channel 7 TX   [   3] = 1'b0                
+  Channel 7 TX   [   4] = 1'b0                
+  Channel 7 TX   [   5] = 1'b0                
+  Channel 7 TX   [   6] = 1'b0                
+  Channel 7 TX   [   7] = 1'b0                
+  Channel 7 TX   [   8] = 1'b0                
+  Channel 7 TX   [   9] = 1'b0                
+  Channel 7 TX   [  10] = 1'b0                
+  Channel 7 TX   [  11] = 1'b0                
+  Channel 7 TX   [  12] = 1'b0                
+  Channel 7 TX   [  13] = 1'b0                
+  Channel 7 TX   [  14] = 1'b0                
+  Channel 7 TX   [  15] = 1'b0                
+  Channel 7 TX   [  16] = 1'b0                
+  Channel 7 TX   [  17] = 1'b0                
+  Channel 7 TX   [  18] = 1'b0                
+  Channel 7 TX   [  19] = 1'b0                
+  Channel 7 TX   [  20] = 1'b0                
+  Channel 7 TX   [  21] = 1'b0                
+  Channel 7 TX   [  22] = 1'b0                
+  Channel 7 TX   [  23] = 1'b0                
+  Channel 7 TX   [  24] = 1'b0                
+  Channel 7 TX   [  25] = 1'b0                
+  Channel 7 TX   [  26] = 1'b0                
+  Channel 7 TX   [  27] = 1'b0                
+  Channel 7 TX   [  28] = 1'b0                
+  Channel 7 TX   [  29] = 1'b0                
+  Channel 7 TX   [  30] = 1'b0                
+  Channel 7 TX   [  31] = 1'b0                
+  Channel 7 TX   [  32] = 1'b0                
+  Channel 7 TX   [  33] = 1'b0                
+  Channel 7 TX   [  34] = 1'b0                
+  Channel 7 TX   [  35] = 1'b0                
+  Channel 7 TX   [  36] = 1'b0                
+  Channel 7 TX   [  37] = 1'b0                
+  Channel 7 TX   [  38] = 1'b0                
+  Channel 7 TX   [  39] = 1'b0 // MARKER
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [   0] = ustrm_state          [   0]
+  Channel 0 RX   [   1] = 1'b1 // STROBE
+  Channel 0 RX   [   2] = ustrm_state          [   1]
+  Channel 0 RX   [   3] = ustrm_state          [   2]
+  Channel 0 RX   [   4] = ustrm_state          [   3]
+  Channel 0 RX   [   5] = ustrm_protid         [   0]
+  Channel 0 RX   [   6] = ustrm_protid         [   1]
+  Channel 0 RX   [   7] = ustrm_data           [   0]
+  Channel 0 RX   [   8] = ustrm_data           [   1]
+  Channel 0 RX   [   9] = ustrm_data           [   2]
+  Channel 0 RX   [  10] = ustrm_data           [   3]
+  Channel 0 RX   [  11] = ustrm_data           [   4]
+  Channel 0 RX   [  12] = ustrm_data           [   5]
+  Channel 0 RX   [  13] = ustrm_data           [   6]
+  Channel 0 RX   [  14] = ustrm_data           [   7]
+  Channel 0 RX   [  15] = ustrm_data           [   8]
+  Channel 0 RX   [  16] = ustrm_data           [   9]
+  Channel 0 RX   [  17] = ustrm_data           [  10]
+  Channel 0 RX   [  18] = ustrm_data           [  11]
+  Channel 0 RX   [  19] = ustrm_data           [  12]
+  Channel 0 RX   [  20] = ustrm_data           [  13]
+  Channel 0 RX   [  21] = ustrm_data           [  14]
+  Channel 0 RX   [  22] = ustrm_data           [  15]
+  Channel 0 RX   [  23] = ustrm_data           [  16]
+  Channel 0 RX   [  24] = ustrm_data           [  17]
+  Channel 0 RX   [  25] = ustrm_data           [  18]
+  Channel 0 RX   [  26] = ustrm_data           [  19]
+  Channel 0 RX   [  27] = ustrm_data           [  20]
+  Channel 0 RX   [  28] = ustrm_data           [  21]
+  Channel 0 RX   [  29] = ustrm_data           [  22]
+  Channel 0 RX   [  30] = ustrm_data           [  23]
+  Channel 0 RX   [  31] = ustrm_data           [  24]
+  Channel 0 RX   [  32] = ustrm_data           [  25]
+  Channel 0 RX   [  33] = ustrm_data           [  26]
+  Channel 0 RX   [  34] = ustrm_data           [  27]
+  Channel 0 RX   [  35] = ustrm_data           [  28]
+  Channel 0 RX   [  36] = ustrm_data           [  29]
+  Channel 0 RX   [  37] = ustrm_data           [  30]
+  Channel 0 RX   [  38] = ustrm_data           [  31]
+  Channel 0 RX   [  39] = 1'b0 // MARKER
+  Channel 1 RX   [   0] = ustrm_data           [  32]
+  Channel 1 RX   [   1] = 1'b1 // STROBE
+  Channel 1 RX   [   2] = ustrm_data           [  33]
+  Channel 1 RX   [   3] = ustrm_data           [  34]
+  Channel 1 RX   [   4] = ustrm_data           [  35]
+  Channel 1 RX   [   5] = ustrm_data           [  36]
+  Channel 1 RX   [   6] = ustrm_data           [  37]
+  Channel 1 RX   [   7] = ustrm_data           [  38]
+  Channel 1 RX   [   8] = ustrm_data           [  39]
+  Channel 1 RX   [   9] = ustrm_data           [  40]
+  Channel 1 RX   [  10] = ustrm_data           [  41]
+  Channel 1 RX   [  11] = ustrm_data           [  42]
+  Channel 1 RX   [  12] = ustrm_data           [  43]
+  Channel 1 RX   [  13] = ustrm_data           [  44]
+  Channel 1 RX   [  14] = ustrm_data           [  45]
+  Channel 1 RX   [  15] = ustrm_data           [  46]
+  Channel 1 RX   [  16] = ustrm_data           [  47]
+  Channel 1 RX   [  17] = ustrm_data           [  48]
+  Channel 1 RX   [  18] = ustrm_data           [  49]
+  Channel 1 RX   [  19] = ustrm_data           [  50]
+  Channel 1 RX   [  20] = ustrm_data           [  51]
+  Channel 1 RX   [  21] = ustrm_data           [  52]
+  Channel 1 RX   [  22] = ustrm_data           [  53]
+  Channel 1 RX   [  23] = ustrm_data           [  54]
+  Channel 1 RX   [  24] = ustrm_data           [  55]
+  Channel 1 RX   [  25] = ustrm_data           [  56]
+  Channel 1 RX   [  26] = ustrm_data           [  57]
+  Channel 1 RX   [  27] = ustrm_data           [  58]
+  Channel 1 RX   [  28] = ustrm_data           [  59]
+  Channel 1 RX   [  29] = ustrm_data           [  60]
+  Channel 1 RX   [  30] = ustrm_data           [  61]
+  Channel 1 RX   [  31] = ustrm_data           [  62]
+  Channel 1 RX   [  32] = ustrm_data           [  63]
+  Channel 1 RX   [  33] = ustrm_data           [  64]
+  Channel 1 RX   [  34] = ustrm_data           [  65]
+  Channel 1 RX   [  35] = ustrm_data           [  66]
+  Channel 1 RX   [  36] = ustrm_data           [  67]
+  Channel 1 RX   [  37] = ustrm_data           [  68]
+  Channel 1 RX   [  38] = ustrm_data           [  69]
+  Channel 1 RX   [  39] = 1'b0 // MARKER
+  Channel 2 RX   [   0] = ustrm_data           [  70]
+  Channel 2 RX   [   1] = 1'b1 // STROBE
+  Channel 2 RX   [   2] = ustrm_data           [  71]
+  Channel 2 RX   [   3] = ustrm_data           [  72]
+  Channel 2 RX   [   4] = ustrm_data           [  73]
+  Channel 2 RX   [   5] = ustrm_data           [  74]
+  Channel 2 RX   [   6] = ustrm_data           [  75]
+  Channel 2 RX   [   7] = ustrm_data           [  76]
+  Channel 2 RX   [   8] = ustrm_data           [  77]
+  Channel 2 RX   [   9] = ustrm_data           [  78]
+  Channel 2 RX   [  10] = ustrm_data           [  79]
+  Channel 2 RX   [  11] = ustrm_data           [  80]
+  Channel 2 RX   [  12] = ustrm_data           [  81]
+  Channel 2 RX   [  13] = ustrm_data           [  82]
+  Channel 2 RX   [  14] = ustrm_data           [  83]
+  Channel 2 RX   [  15] = ustrm_data           [  84]
+  Channel 2 RX   [  16] = ustrm_data           [  85]
+  Channel 2 RX   [  17] = ustrm_data           [  86]
+  Channel 2 RX   [  18] = ustrm_data           [  87]
+  Channel 2 RX   [  19] = ustrm_data           [  88]
+  Channel 2 RX   [  20] = ustrm_data           [  89]
+  Channel 2 RX   [  21] = ustrm_data           [  90]
+  Channel 2 RX   [  22] = ustrm_data           [  91]
+  Channel 2 RX   [  23] = ustrm_data           [  92]
+  Channel 2 RX   [  24] = ustrm_data           [  93]
+  Channel 2 RX   [  25] = ustrm_data           [  94]
+  Channel 2 RX   [  26] = ustrm_data           [  95]
+  Channel 2 RX   [  27] = ustrm_data           [  96]
+  Channel 2 RX   [  28] = ustrm_data           [  97]
+  Channel 2 RX   [  29] = ustrm_data           [  98]
+  Channel 2 RX   [  30] = ustrm_data           [  99]
+  Channel 2 RX   [  31] = ustrm_data           [ 100]
+  Channel 2 RX   [  32] = ustrm_data           [ 101]
+  Channel 2 RX   [  33] = ustrm_data           [ 102]
+  Channel 2 RX   [  34] = ustrm_data           [ 103]
+  Channel 2 RX   [  35] = ustrm_data           [ 104]
+  Channel 2 RX   [  36] = ustrm_data           [ 105]
+  Channel 2 RX   [  37] = ustrm_data           [ 106]
+  Channel 2 RX   [  38] = ustrm_data           [ 107]
+  Channel 2 RX   [  39] = 1'b0 // MARKER
+  Channel 3 RX   [   0] = ustrm_data           [ 108]
+  Channel 3 RX   [   1] = 1'b1 // STROBE
+  Channel 3 RX   [   2] = ustrm_data           [ 109]
+  Channel 3 RX   [   3] = ustrm_data           [ 110]
+  Channel 3 RX   [   4] = ustrm_data           [ 111]
+  Channel 3 RX   [   5] = ustrm_data           [ 112]
+  Channel 3 RX   [   6] = ustrm_data           [ 113]
+  Channel 3 RX   [   7] = ustrm_data           [ 114]
+  Channel 3 RX   [   8] = ustrm_data           [ 115]
+  Channel 3 RX   [   9] = ustrm_data           [ 116]
+  Channel 3 RX   [  10] = ustrm_data           [ 117]
+  Channel 3 RX   [  11] = ustrm_data           [ 118]
+  Channel 3 RX   [  12] = ustrm_data           [ 119]
+  Channel 3 RX   [  13] = ustrm_data           [ 120]
+  Channel 3 RX   [  14] = ustrm_data           [ 121]
+  Channel 3 RX   [  15] = ustrm_data           [ 122]
+  Channel 3 RX   [  16] = ustrm_data           [ 123]
+  Channel 3 RX   [  17] = ustrm_data           [ 124]
+  Channel 3 RX   [  18] = ustrm_data           [ 125]
+  Channel 3 RX   [  19] = ustrm_data           [ 126]
+  Channel 3 RX   [  20] = ustrm_data           [ 127]
+  Channel 3 RX   [  21] = ustrm_dvalid         [   0]
+  Channel 3 RX   [  22] = ustrm_crc            [   0]
+  Channel 3 RX   [  23] = ustrm_crc            [   1]
+  Channel 3 RX   [  24] = ustrm_crc            [   2]
+  Channel 3 RX   [  25] = ustrm_crc            [   3]
+  Channel 3 RX   [  26] = ustrm_crc            [   4]
+  Channel 3 RX   [  27] = ustrm_crc            [   5]
+  Channel 3 RX   [  28] = ustrm_crc            [   6]
+  Channel 3 RX   [  29] = ustrm_crc            [   7]
+  Channel 3 RX   [  30] = ustrm_crc            [   8]
+  Channel 3 RX   [  31] = ustrm_crc            [   9]
+  Channel 3 RX   [  32] = ustrm_crc            [  10]
+  Channel 3 RX   [  33] = ustrm_crc            [  11]
+  Channel 3 RX   [  34] = ustrm_crc            [  12]
+  Channel 3 RX   [  35] = ustrm_crc            [  13]
+  Channel 3 RX   [  36] = ustrm_crc            [  14]
+  Channel 3 RX   [  37] = ustrm_crc            [  15]
+  Channel 3 RX   [  38] = ustrm_crc_valid      [   0]
+  Channel 3 RX   [  39] = 1'b0 // MARKER
+  Channel 4 RX   [   0] = ustrm_valid          [   0]
+  Channel 4 RX   [   1] = 1'b1 // STROBE
+  Channel 4 RX   [   2] = 1'b0                
+  Channel 4 RX   [   3] = 1'b0                
+  Channel 4 RX   [   4] = 1'b0                
+  Channel 4 RX   [   5] = 1'b0                
+  Channel 4 RX   [   6] = 1'b0                
+  Channel 4 RX   [   7] = 1'b0                
+  Channel 4 RX   [   8] = 1'b0                
+  Channel 4 RX   [   9] = 1'b0                
+  Channel 4 RX   [  10] = 1'b0                
+  Channel 4 RX   [  11] = 1'b0                
+  Channel 4 RX   [  12] = 1'b0                
+  Channel 4 RX   [  13] = 1'b0                
+  Channel 4 RX   [  14] = 1'b0                
+  Channel 4 RX   [  15] = 1'b0                
+  Channel 4 RX   [  16] = 1'b0                
+  Channel 4 RX   [  17] = 1'b0                
+  Channel 4 RX   [  18] = 1'b0                
+  Channel 4 RX   [  19] = 1'b0                
+  Channel 4 RX   [  20] = 1'b0                
+  Channel 4 RX   [  21] = 1'b0                
+  Channel 4 RX   [  22] = 1'b0                
+  Channel 4 RX   [  23] = 1'b0                
+  Channel 4 RX   [  24] = 1'b0                
+  Channel 4 RX   [  25] = 1'b0                
+  Channel 4 RX   [  26] = 1'b0                
+  Channel 4 RX   [  27] = 1'b0                
+  Channel 4 RX   [  28] = 1'b0                
+  Channel 4 RX   [  29] = 1'b0                
+  Channel 4 RX   [  30] = 1'b0                
+  Channel 4 RX   [  31] = 1'b0                
+  Channel 4 RX   [  32] = 1'b0                
+  Channel 4 RX   [  33] = 1'b0                
+  Channel 4 RX   [  34] = 1'b0                
+  Channel 4 RX   [  35] = 1'b0                
+  Channel 4 RX   [  36] = 1'b0                
+  Channel 4 RX   [  37] = 1'b0                
+  Channel 4 RX   [  38] = 1'b0                
+  Channel 4 RX   [  39] = 1'b0 // MARKER
+  Channel 5 RX   [   0] = 1'b0                
+  Channel 5 RX   [   1] = 1'b1 // STROBE
+  Channel 5 RX   [   2] = 1'b0                
+  Channel 5 RX   [   3] = 1'b0                
+  Channel 5 RX   [   4] = 1'b0                
+  Channel 5 RX   [   5] = 1'b0                
+  Channel 5 RX   [   6] = 1'b0                
+  Channel 5 RX   [   7] = 1'b0                
+  Channel 5 RX   [   8] = 1'b0                
+  Channel 5 RX   [   9] = 1'b0                
+  Channel 5 RX   [  10] = 1'b0                
+  Channel 5 RX   [  11] = 1'b0                
+  Channel 5 RX   [  12] = 1'b0                
+  Channel 5 RX   [  13] = 1'b0                
+  Channel 5 RX   [  14] = 1'b0                
+  Channel 5 RX   [  15] = 1'b0                
+  Channel 5 RX   [  16] = 1'b0                
+  Channel 5 RX   [  17] = 1'b0                
+  Channel 5 RX   [  18] = 1'b0                
+  Channel 5 RX   [  19] = 1'b0                
+  Channel 5 RX   [  20] = 1'b0                
+  Channel 5 RX   [  21] = 1'b0                
+  Channel 5 RX   [  22] = 1'b0                
+  Channel 5 RX   [  23] = 1'b0                
+  Channel 5 RX   [  24] = 1'b0                
+  Channel 5 RX   [  25] = 1'b0                
+  Channel 5 RX   [  26] = 1'b0                
+  Channel 5 RX   [  27] = 1'b0                
+  Channel 5 RX   [  28] = 1'b0                
+  Channel 5 RX   [  29] = 1'b0                
+  Channel 5 RX   [  30] = 1'b0                
+  Channel 5 RX   [  31] = 1'b0                
+  Channel 5 RX   [  32] = 1'b0                
+  Channel 5 RX   [  33] = 1'b0                
+  Channel 5 RX   [  34] = 1'b0                
+  Channel 5 RX   [  35] = 1'b0                
+  Channel 5 RX   [  36] = 1'b0                
+  Channel 5 RX   [  37] = 1'b0                
+  Channel 5 RX   [  38] = 1'b0                
+  Channel 5 RX   [  39] = 1'b0 // MARKER
+  Channel 6 RX   [   0] = 1'b0                
+  Channel 6 RX   [   1] = 1'b1 // STROBE
+  Channel 6 RX   [   2] = 1'b0                
+  Channel 6 RX   [   3] = 1'b0                
+  Channel 6 RX   [   4] = 1'b0                
+  Channel 6 RX   [   5] = 1'b0                
+  Channel 6 RX   [   6] = 1'b0                
+  Channel 6 RX   [   7] = 1'b0                
+  Channel 6 RX   [   8] = 1'b0                
+  Channel 6 RX   [   9] = 1'b0                
+  Channel 6 RX   [  10] = 1'b0                
+  Channel 6 RX   [  11] = 1'b0                
+  Channel 6 RX   [  12] = 1'b0                
+  Channel 6 RX   [  13] = 1'b0                
+  Channel 6 RX   [  14] = 1'b0                
+  Channel 6 RX   [  15] = 1'b0                
+  Channel 6 RX   [  16] = 1'b0                
+  Channel 6 RX   [  17] = 1'b0                
+  Channel 6 RX   [  18] = 1'b0                
+  Channel 6 RX   [  19] = 1'b0                
+  Channel 6 RX   [  20] = 1'b0                
+  Channel 6 RX   [  21] = 1'b0                
+  Channel 6 RX   [  22] = 1'b0                
+  Channel 6 RX   [  23] = 1'b0                
+  Channel 6 RX   [  24] = 1'b0                
+  Channel 6 RX   [  25] = 1'b0                
+  Channel 6 RX   [  26] = 1'b0                
+  Channel 6 RX   [  27] = 1'b0                
+  Channel 6 RX   [  28] = 1'b0                
+  Channel 6 RX   [  29] = 1'b0                
+  Channel 6 RX   [  30] = 1'b0                
+  Channel 6 RX   [  31] = 1'b0                
+  Channel 6 RX   [  32] = 1'b0                
+  Channel 6 RX   [  33] = 1'b0                
+  Channel 6 RX   [  34] = 1'b0                
+  Channel 6 RX   [  35] = 1'b0                
+  Channel 6 RX   [  36] = 1'b0                
+  Channel 6 RX   [  37] = 1'b0                
+  Channel 6 RX   [  38] = 1'b0                
+  Channel 6 RX   [  39] = 1'b0 // MARKER
+  Channel 7 RX   [   0] = 1'b0                
+  Channel 7 RX   [   1] = 1'b1 // STROBE
+  Channel 7 RX   [   2] = 1'b0                
+  Channel 7 RX   [   3] = 1'b0                
+  Channel 7 RX   [   4] = 1'b0                
+  Channel 7 RX   [   5] = 1'b0                
+  Channel 7 RX   [   6] = 1'b0                
+  Channel 7 RX   [   7] = 1'b0                
+  Channel 7 RX   [   8] = 1'b0                
+  Channel 7 RX   [   9] = 1'b0                
+  Channel 7 RX   [  10] = 1'b0                
+  Channel 7 RX   [  11] = 1'b0                
+  Channel 7 RX   [  12] = 1'b0                
+  Channel 7 RX   [  13] = 1'b0                
+  Channel 7 RX   [  14] = 1'b0                
+  Channel 7 RX   [  15] = 1'b0                
+  Channel 7 RX   [  16] = 1'b0                
+  Channel 7 RX   [  17] = 1'b0                
+  Channel 7 RX   [  18] = 1'b0                
+  Channel 7 RX   [  19] = 1'b0                
+  Channel 7 RX   [  20] = 1'b0                
+  Channel 7 RX   [  21] = 1'b0                
+  Channel 7 RX   [  22] = 1'b0                
+  Channel 7 RX   [  23] = 1'b0                
+  Channel 7 RX   [  24] = 1'b0                
+  Channel 7 RX   [  25] = 1'b0                
+  Channel 7 RX   [  26] = 1'b0                
+  Channel 7 RX   [  27] = 1'b0                
+  Channel 7 RX   [  28] = 1'b0                
+  Channel 7 RX   [  29] = 1'b0                
+  Channel 7 RX   [  30] = 1'b0                
+  Channel 7 RX   [  31] = 1'b0                
+  Channel 7 RX   [  32] = 1'b0                
+  Channel 7 RX   [  33] = 1'b0                
+  Channel 7 RX   [  34] = 1'b0                
+  Channel 7 RX   [  35] = 1'b0                
+  Channel 7 RX   [  36] = 1'b0                
+  Channel 7 RX   [  37] = 1'b0                
+  Channel 7 RX   [  38] = 1'b0                
+  Channel 7 RX   [  39] = 1'b0 // MARKER
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////

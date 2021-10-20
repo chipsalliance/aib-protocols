@@ -92,7 +92,7 @@ task ca_rx_tb_in_drv_c::run_phase(uvm_phase phase);
    fork
         get_item_from_seq();
         drv_rx();
-        drv_rx_online();
+        //drv_rx_online();
     join
 endtask : run_phase
 

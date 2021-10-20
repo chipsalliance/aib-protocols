@@ -28,10 +28,11 @@
 
 `ifndef _ca_GENERATED_defines_
 `define _ca_GENERATED_defines_
+
+`include "ca_config_define.svi"   //// auto generated from sailrock_cfg.txt
 ///////////////////////////////////////////////////////////
-// *** AUTO GENERATED FILE do not alter && check in ***
-///////////////////////////////////////////////////////////
-// 
+`define AIB_CH_CNT              `CA_NUM_CHAN
+
 // COMMON
 `define MIN_BUS_BIT_WIDTH       40
 `define MAX_BUS_BIT_WIDTH       320 
@@ -40,48 +41,81 @@
 `define AIB_PROG_FIFO_MODE      1  
 
 // DIE A
-`define TB_DIE_A_AIB            2
-`define TB_DIE_A_NUM_CHANNELS   8
-`define TB_DIE_A_AD_WIDTH       4
+`define TB_DIE_A_AIB            2 //unused in testbench 
+`define TB_DIE_A_NUM_CHANNELS   `CA_NUM_CHAN  
+`define TB_DIE_A_AD_WIDTH       $clog2(`CA_FIFO_DEPTH)
 
 // DIE B
-`define TB_DIE_B_AIB            2
-`define TB_DIE_B_NUM_CHANNELS   8
-`define TB_DIE_B_AD_WIDTH       4
+`define TB_DIE_B_AIB            2 //unused in testbench 
+`define TB_DIE_B_NUM_CHANNELS   `CA_NUM_CHAN
+`define TB_DIE_B_AD_WIDTH       $clog2(`CA_FIFO_DEPTH)
 
-//GEN1 mode, bits_per_ch 40,1GHZ 
-`define TB_DIE_A_BUS_BIT_WIDTH  40 
-`define TB_DIE_A_CLK            1000 
-`define TB_DIE_B_BUS_BIT_WIDTH  40 
-`define TB_DIE_B_CLK            1000 
-
-//GEN1 mode, bits_per_ch 80,500MHZ 
-//`define TB_DIE_A_BUS_BIT_WIDTH  80 
-//`define TB_DIE_A_CLK            2000 
-//`define TB_DIE_B_BUS_BIT_WIDTH  80 
-//`define TB_DIE_B_CLK            2000
-// 
-////GEN2 mode, bits_per_ch 80,2GHZ 
-//`define TB_DIE_A_BUS_BIT_WIDTH  80 
-//`define TB_DIE_A_CLK            500 
-//`define TB_DIE_B_BUS_BIT_WIDTH  80 
-//`define TB_DIE_B_CLK            500
-// 
-////GEN2 mode, bits_per_ch 160,1GHZ 
-//`define TB_DIE_A_BUS_BIT_WIDTH  160 
-//`define TB_DIE_A_CLK            1000 
-//`define TB_DIE_B_BUS_BIT_WIDTH  160
-//`define TB_DIE_B_CLK            1000
- 
-////GEN2 mode, bits_per_ch 320,500MHZ 
-//`define TB_DIE_A_BUS_BIT_WIDTH  320 
-//`define TB_DIE_A_CLK            2000 
-//`define TB_DIE_B_BUS_BIT_WIDTH  320
-//`define TB_DIE_B_CLK            2000 
 ///////////////////////////////////////////////////////////
-`define MODE_GEN2                 1'b0
-`define CHAN_DELAY_MIN            1
-`define CHAN_DELAY_MAX            15
-`define ALIGN_FLY                 1'b0
-
+`define ALIGN_FLY                 `CA_ALIGN_FLY
+`ifdef GEN1
+    `define MODE_GEN2                 1'b0
+`else
+    `define MODE_GEN2                 1'b1
 `endif
+`define CHAN_DELAY_MIN            1
+`define CHAN_DELAY_MAX            5
+parameter osc_period  = 1000;
+
+///////////////////////////////////////////////////////////
+`ifdef GEN1
+  `ifdef TX_RATE_F
+          `define MLLPHY_WIDTH            40
+          `define SLLPHY_WIDTH            40
+          `define TB_DIE_A_BUS_BIT_WIDTH  40 
+          `define TB_DIE_A_CLK            1000 
+          `define TB_DIE_B_BUS_BIT_WIDTH  40 
+          `define TB_DIE_B_CLK            1000 
+          `define MASTER_RATE             FULL 
+          `define SLAVE_RATE              FULL 
+  `endif
+  `ifdef TX_RATE_H
+          `define MLLPHY_WIDTH            80
+          `define SLLPHY_WIDTH            80
+          `define TB_DIE_A_BUS_BIT_WIDTH  80 
+          `define TB_DIE_A_CLK            2000 
+          `define TB_DIE_B_BUS_BIT_WIDTH  80 
+          `define TB_DIE_B_CLK            2000
+          `define MASTER_RATE             HALF 
+          `define SLAVE_RATE              HALF 
+  `endif
+`endif //GEN1
+
+`ifdef GEN2
+  `ifdef TX_RATE_F
+          `define MLLPHY_WIDTH            80
+          `define SLLPHY_WIDTH            80
+          `define TB_DIE_A_BUS_BIT_WIDTH  80 
+          `define TB_DIE_A_CLK            500 
+          `define TB_DIE_B_BUS_BIT_WIDTH  80 
+          `define TB_DIE_B_CLK            500
+          `define MASTER_RATE             FULL 
+          `define SLAVE_RATE              FULL 
+  `endif
+  `ifdef TX_RATE_H
+          `define MLLPHY_WIDTH            160
+          `define SLLPHY_WIDTH            160
+          `define TB_DIE_A_BUS_BIT_WIDTH  160 
+          `define TB_DIE_A_CLK            1000 
+          `define TB_DIE_B_BUS_BIT_WIDTH  160
+          `define TB_DIE_B_CLK            1000
+          `define MASTER_RATE             HALF 
+          `define SLAVE_RATE              HALF 
+  `endif
+  `ifdef TX_RATE_Q
+          `define MLLPHY_WIDTH            320
+          `define SLLPHY_WIDTH            320
+          `define TB_DIE_A_BUS_BIT_WIDTH  320 
+          `define TB_DIE_A_CLK            2000 
+          `define TB_DIE_B_BUS_BIT_WIDTH  320
+          `define TB_DIE_B_CLK            2000 
+          `define MASTER_RATE             QUARTER 
+          `define SLAVE_RATE              QUARTER 
+  `endif
+`endif //GEN2
+
+`endif //_ca_GENERATED_defines_

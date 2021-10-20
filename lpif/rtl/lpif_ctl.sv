@@ -52,7 +52,7 @@ module lpif_ctl
 
    output logic [3:0]                   dstrm_state,
    output logic [1:0]                   dstrm_protid,
-   output logic [1023:0]                dstrm_data,
+   output logic [LPIF_DATA_WIDTH*8-1:0] dstrm_data,
    output logic [LPIF_VALID_WIDTH-1:0]  dstrm_dvalid,
    output logic [LPIF_CRC_WIDTH-1:0]    dstrm_crc,
    output logic [LPIF_VALID_WIDTH-1:0]  dstrm_crc_valid,
@@ -232,7 +232,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("protid", "protid_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           protid_ascii;           // Decode of protid
+  reg [111:0] protid_ascii;           // Decode of protid
   always @(protid) begin
     case ({protid})
       PROTID_CACHE:   protid_ascii = "protid_cache  ";
@@ -260,7 +260,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
+  reg [111:0] pl_stream_int_ascii;    // Decode of pl_stream_int
   always @(pl_stream_int) begin
     case ({pl_stream_int})
       PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
@@ -297,7 +297,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("ctl_state", "ctl_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [135:0]           ctl_state_ascii;        // Decode of ctl_state
+  reg [135:0] ctl_state_ascii;        // Decode of ctl_state
   always @(ctl_state) begin
     case ({ctl_state})
       CTL_IDLE:          ctl_state_ascii = "ctl_idle         ";
@@ -377,10 +377,10 @@ module lpif_ctl
         begin
           dstrm_state <= 4'b0;
           dstrm_protid <= 2'b0;
-          dstrm_data <= 1024'b0;
+          dstrm_data <= {LPIF_DATA_WIDTH*8{1'b0}};
           dstrm_dvalid <= {LPIF_VALID_WIDTH{1'b0}};
-          dstrm_crc <= 32'b0;
-          dstrm_crc_valid <= 1'b0;
+          dstrm_crc <= {LPIF_CRC_WIDTH{1'b0}};
+          dstrm_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
           dstrm_valid <= 1'b0;
 
           ns_mac_rdy <= 1'b0;

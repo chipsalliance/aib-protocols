@@ -72,7 +72,7 @@ logic 	[31:0]	m_avmm_wdata_d1;
 
 assign dbg_bus1 = ({{29{1'b0}},cur_st});
 
-assign avbreg_write 	= (cur_st == STATE_WR) ?1'b1 : 1'b0; //m_avmm_write;
+assign avbreg_write 	= (cur_st == STATE_WR) ? 1'b1 : 1'b0; //m_avmm_write;
 assign avbreg_read	= (cur_st == STATE_RD) ? 1'b1 : 1'b0; //m_avmm_read;
 
 

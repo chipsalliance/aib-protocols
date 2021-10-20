@@ -70,16 +70,18 @@ module lpif_txrx_x16_h1_master_top  (
   input  logic [   3:   0]   dstrm_state         ,
   input  logic [   1:   0]   dstrm_protid        ,
   input  logic [1023:   0]   dstrm_data          ,
-  input  logic [   6:   0]   dstrm_bstart        ,
-  input  logic [ 127:   0]   dstrm_bvalid        ,
+  input  logic [   1:   0]   dstrm_dvalid        ,
+  input  logic [  31:   0]   dstrm_crc           ,
+  input  logic [   1:   0]   dstrm_crc_valid     ,
   input  logic [   0:   0]   dstrm_valid         ,
 
   // upstream channel
   output logic [   3:   0]   ustrm_state         ,
   output logic [   1:   0]   ustrm_protid        ,
   output logic [1023:   0]   ustrm_data          ,
-  output logic [   6:   0]   ustrm_bstart        ,
-  output logic [ 127:   0]   ustrm_bvalid        ,
+  output logic [   1:   0]   ustrm_dvalid        ,
+  output logic [  31:   0]   ustrm_crc           ,
+  output logic [   1:   0]   ustrm_crc_valid     ,
   output logic [   0:   0]   ustrm_valid         ,
 
   // Debug Status Outputs
@@ -98,12 +100,12 @@ module lpif_txrx_x16_h1_master_top  (
 
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
-  logic [1165:   0]                              tx_downstream_data            ;
-  logic [1165:   0]                              txfifo_downstream_data        ;
+  logic [1066:   0]                              tx_downstream_data            ;
+  logic [1066:   0]                              txfifo_downstream_data        ;
   logic                                          tx_downstream_pop_ovrd        ;
 
-  logic [1165:   0]                              rx_upstream_data              ;
-  logic [1165:   0]                              rxfifo_upstream_data          ;
+  logic [1066:   0]                              rx_upstream_data              ;
+  logic [1066:   0]                              rxfifo_upstream_data          ;
   logic                                          rx_upstream_push_ovrd         ;
 
   logic [   1:   0]                              tx_auto_mrk_userbit           ;
@@ -147,11 +149,11 @@ module lpif_txrx_x16_h1_master_top  (
 // Logic Link Instantiation
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign tx_downstream_data   [   0 +:1166] = txfifo_downstream_data [   0 +:1166] ;
+  assign tx_downstream_data   [   0 +:1067] = txfifo_downstream_data [   0 +:1067] ;
   assign tx_downstream_debug_status [   0 +:  32] = 32'h0                              ;
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign rxfifo_upstream_data [   0 +:1166] = rx_upstream_data     [   0 +:1166] ;
+  assign rxfifo_upstream_data [   0 +:1067] = rx_upstream_data     [   0 +:1067] ;
   assign rx_upstream_debug_status [   0 +:  32] = 32'h0                              ;
 
 // Logic Link Instantiation
@@ -165,18 +167,20 @@ module lpif_txrx_x16_h1_master_top  (
          .dstrm_state                      (dstrm_state[   3:   0]),
          .dstrm_protid                     (dstrm_protid[   1:   0]),
          .dstrm_data                       (dstrm_data[1023:   0]),
-         .dstrm_bstart                     (dstrm_bstart[   6:   0]),
-         .dstrm_bvalid                     (dstrm_bvalid[ 127:   0]),
+         .dstrm_dvalid                     (dstrm_dvalid[   1:   0]),
+         .dstrm_crc                        (dstrm_crc[  31:   0]),
+         .dstrm_crc_valid                  (dstrm_crc_valid[   1:   0]),
          .dstrm_valid                      (dstrm_valid[   0:   0]),
          .ustrm_state                      (ustrm_state[   3:   0]),
          .ustrm_protid                     (ustrm_protid[   1:   0]),
          .ustrm_data                       (ustrm_data[1023:   0]),
-         .ustrm_bstart                     (ustrm_bstart[   6:   0]),
-         .ustrm_bvalid                     (ustrm_bvalid[ 127:   0]),
+         .ustrm_dvalid                     (ustrm_dvalid[   1:   0]),
+         .ustrm_crc                        (ustrm_crc[  31:   0]),
+         .ustrm_crc_valid                  (ustrm_crc_valid[   1:   0]),
          .ustrm_valid                      (ustrm_valid[   0:   0]),
 
-         .txfifo_downstream_data           (txfifo_downstream_data[1165:   0]),
-         .rxfifo_upstream_data             (rxfifo_upstream_data[1165:   0]),
+         .txfifo_downstream_data           (txfifo_downstream_data[1066:   0]),
+         .rxfifo_upstream_data             (rxfifo_upstream_data[1066:   0]),
 
          .m_gen2_mode                      (m_gen2_mode)
 
@@ -189,9 +193,9 @@ module lpif_txrx_x16_h1_master_top  (
 
       lpif_txrx_x16_h1_master_concat lpif_txrx_x16_h1_master_concat
       (
-         .tx_downstream_data               (tx_downstream_data[   0 +:1166]),
+         .tx_downstream_data               (tx_downstream_data[   0 +:1067]),
          .tx_downstream_pop_ovrd           (tx_downstream_pop_ovrd),
-         .rx_upstream_data                 (rx_upstream_data[   0 +:1166]),
+         .rx_upstream_data                 (rx_upstream_data[   0 +:1067]),
          .rx_upstream_push_ovrd            (rx_upstream_push_ovrd),
 
          .tx_phy0                          (tx_phy0[79:0]),

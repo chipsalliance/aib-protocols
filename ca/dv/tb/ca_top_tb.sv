@@ -33,6 +33,7 @@
 `timescale 1ps/1ps
 
 //.........CONFIG.............
+`include "ca_config_define.svi"
 `include "ca_GENERATED_defines.svh"
 
 ////////////////////////////////////////////////////////////
@@ -40,28 +41,23 @@ module ca_top_tb;
 
     import uvm_pkg::*;
     import ca_pkg::*;
-    //import aximm_aib_mon_pkg::*;
-
     //-----------------------------------
     parameter AVMM_CYCLE = 4000;
     parameter OSC_CYCLE  = 1000;
-    //parameter FWD_CYCLE  = 2000;
-    //parameter WR_CYCLE   = 2000;
-    //parameter RD_CYCLE   = 2000;
     parameter FWD_CYCLE  = `TB_DIE_A_CLK;
     parameter WR_CYCLE   = `TB_DIE_A_CLK;
     parameter RD_CYCLE   = `TB_DIE_A_CLK;
 
-`ifdef MS_AIB_GEN1
-    parameter M_PAD_NUM  = 96;
-`else
-    parameter M_PAD_NUM  = 102;
-`endif
-`ifdef SL_AIB_GEN1
-    parameter S_PAD_NUM  = 96;
-`else
-    parameter S_PAD_NUM  = 102;
-`endif
+//`ifdef MS_AIB_GEN1 //4_OCT
+//    parameter M_PAD_NUM  = 96;
+//`else
+//    parameter M_PAD_NUM  = 102;
+//`endif
+//`ifdef SL_AIB_GEN1
+//    parameter S_PAD_NUM  = 96;
+//`else
+//    parameter S_PAD_NUM  = 102;
+//`endif
 
     // used to communicate w/ AIB network
     logic [(`TB_DIE_A_BUS_BIT_WIDTH*`MAX_NUM_CHANNELS)-1:0] die_a_tx_dout; 
@@ -77,7 +73,7 @@ module ca_top_tb;
     logic [(`TB_DIE_B_BUS_BIT_WIDTH*`MAX_NUM_CHANNELS)-1:0] die_b_dout_delay; 
 
     //-----------------------------------
-    `include "top_tb_declare.inc"  //AIB related
+   // `include "top_tb_declare.inc"  //AIB related old
     //-----------------------------------
     reg    [`MAX_NUM_CHANNELS-1:0]   clk_lane_a;
     reg    [`MAX_NUM_CHANNELS-1:0]   clk_lane_b;
@@ -86,11 +82,13 @@ module ca_top_tb;
     reg    clk_die_b                 = 1'b0;
 
     // AIB clks
-    reg    avmm_clk = 1'b0;
-    reg    osc_clk  = 1'b0;
-    reg    fwd_clk  = 1'b0;
-    reg    rd_clk   = 1'b0;
-    reg    wr_clk   = 1'b0;
+    reg    avmm_clk     = 1'b0;
+    reg    osc_clk      = 1'b0;
+    reg    fwd_clk      = 1'b0;
+    reg    msr_rd_clk   = 1'b0;
+    reg    msr_wr_clk   = 1'b0;
+    reg    slv_rd_clk   = 1'b0;
+    reg    slv_wr_clk   = 1'b0;
 
     // wires
     //--------------------------------------------------------------
@@ -98,8 +96,14 @@ module ca_top_tb;
 
     wire   die_a_align_done;
     wire   die_b_align_done;
+ 
+    wire [`CA_NUM_CHAN-1:0] ms_tx_transfer_en_d, ms_rx_transfer_en_d;
+    wire [`CA_NUM_CHAN-1:0] sl_tx_transfer_en_d, sl_rx_transfer_en_d; //4_OCT
 
-`ifdef P2P_LITE
+    localparam DELAY_X_VALUE         = 8'd10; // Should be greater than DLL_TIME. Indicates when RX CA is ready for Strobe
+    localparam DELAY_XZ_VALUE        = 8'd14; // Should be greater than DELAY_X_VALUE. Indicates when TX CA should send 1shot strobe
+    localparam DELAY_Z_VALUE         = 8'd4;  // Should be greater than DELAY_X_VALUE. Indicates when TX LLINK to stop user strobe
+    localparam DELAY_YZ_VALUE        = 8'd30; // Should be greater than DELAY_XZ_VALUE. Indicates when TX LLINK can use reuse strobes and send data.
     logic [23:0]        master_sl_tx_transfer_en;     
     logic [23:0]        master_ms_tx_transfer_en;     
     logic [23:0]        slave_ms_tx_transfer_en;      
@@ -110,16 +114,10 @@ module ca_top_tb;
     logic               master_rx_stb_pos_coding_err; 
     logic               master_rx_stb_pos_err;        
 
+`ifdef P2P_LITE
     parameter FULL                   = 4'h1;
     parameter HALF                   = 4'h2;
     parameter QUARTER                = 4'h4;
-
-      localparam MASTER_RATE           =  FULL;
-      localparam SLAVE_RATE            =  FULL;
-    //localparam MASTER_RATE           =  HALF;
-    //localparam SLAVE_RATE            =  HALF;
-    //localparam MASTER_RATE           =  QUARTER;
-    //localparam SLAVE_RATE            =  QUARTER;
 
     localparam CHAN_0_M2S_LATENCY    = 8'd2; // This number equates to how many s_wr_clk cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.
     localparam CHAN_1_M2S_LATENCY    = 8'd1; // This number equates to how many s_wr_clk cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.
@@ -131,11 +129,6 @@ module ca_top_tb;
     localparam CHAN_1_M2S_DLL_TIME   = 8'd5;
     localparam CHAN_0_S2M_DLL_TIME   = 8'd5;
     localparam CHAN_1_S2M_DLL_TIME   = 8'd5;
-
-    localparam DELAY_X_VALUE         = 8'd10; // Should be greater than DLL_TIME. Indicates when RX CA is ready for Strobe
-    localparam DELAY_XZ_VALUE        = 8'd14; // Should be greater than DELAY_X_VALUE. Indicates when TX CA should send 1shot strobe
-    localparam DELAY_Z_VALUE         = 8'd4;  // Should be greater than DELAY_X_VALUE. Indicates when TX LLINK to stop user strobe
-    localparam DELAY_YZ_VALUE        = 8'd30; // Should be greater than DELAY_XZ_VALUE. Indicates when TX LLINK can use reuse strobes and send data.
 
     localparam CHAN_M2S_MARKER_LOC   = 8'd39;
     localparam CHAN_S2M_MARKER_LOC   = 8'd39;
@@ -162,47 +155,154 @@ module ca_top_tb;
 /////////// AIB related //////////////
     // Avalon MM Interface instantiation
     //-----------------------------------------------------------------------------------------
-    avalon_mm_if avmm_if_m1  (
-     .clk    (avmm_clk)
-    );
-
-    avalon_mm_if avmm_if_s1  (
-     .clk    (avmm_clk)
-    );
-
-    // Mac Interface instantiation
-    //-----------------------------------------------------------------------------------------
-    dut_if_mac #(.DWIDTH (`MIN_BUS_BIT_WIDTH), .TOTAL_CHNL_NUM(`MAX_NUM_CHANNELS)) 
-        intf_m1 (.wr_clk(wr_clk), .rd_clk(rd_clk), .fwd_clk(fwd_clk), .osc_clk(osc_clk));
-
-    dut_if_mac #(.DWIDTH (`MIN_BUS_BIT_WIDTH), .TOTAL_CHNL_NUM(`MAX_NUM_CHANNELS)) 
-        intf_s1 (.wr_clk(wr_clk), .rd_clk(rd_clk), .fwd_clk(fwd_clk), .osc_clk(osc_clk));
-
-    // Mac Interface instantiation
-    //-----------------------------------------------------------------------------------------
-    aib_model_top  #(.DATAWIDTH(`MIN_BUS_BIT_WIDTH)) dut_master1 (
-        `include "dut_ms1_port.inc"
-    );
-    aib_model_top #(.DATAWIDTH(`MIN_BUS_BIT_WIDTH)) dut_slave1 (
-        `include "dut_sl1_port.inc"
-    );
-
-`ifdef MS_AIB_GEN1
-    emib_m1s2 dut_emib (
-        `include "dut_emib.inc"
-       );
-`elsif SL_AIB_GEN1
-    emib_m2s1 dut_emib (
-        `include "dut_emib.inc"
-       );
-`else
-    emib_m2s2 dut_emib (
-        `include "dut_emib.inc"
-       );
-`endif
+//    avalon_mm_if avmm_if_m1  (
+//     .clk    (avmm_clk)
+//    );
+//
+//    avalon_mm_if avmm_if_s1  (
+//     .clk    (avmm_clk)
+//    );
+//
+//    // Mac Interface instantiation
+//    //-----------------------------------------------------------------------------------------
+//    dut_if_mac #(.DWIDTH (`MIN_BUS_BIT_WIDTH), .TOTAL_CHNL_NUM(`MAX_NUM_CHANNELS)) 
+//        intf_m1 (.wr_clk(wr_clk), .rd_clk(rd_clk), .fwd_clk(fwd_clk), .osc_clk(osc_clk));
+//
+//    dut_if_mac #(.DWIDTH (`MIN_BUS_BIT_WIDTH), .TOTAL_CHNL_NUM(`MAX_NUM_CHANNELS)) 
+//        intf_s1 (.wr_clk(wr_clk), .rd_clk(rd_clk), .fwd_clk(fwd_clk), .osc_clk(osc_clk));
+//
+//    // Mac Interface instantiation
+//    //-----------------------------------------------------------------------------------------
+//    aib_model_top  #(.DATAWIDTH(`MIN_BUS_BIT_WIDTH)) dut_master1 (
+//        `include "dut_ms1_port.inc"
+//    );
+//    aib_model_top #(.DATAWIDTH(`MIN_BUS_BIT_WIDTH)) dut_slave1 (
+//        `include "dut_sl1_port.inc"
+//    );
+//
+//`ifdef MS_AIB_GEN1
+//    emib_m1s2 dut_emib (
+//        `include "dut_emib.inc"
+//       );
+//`elsif SL_AIB_GEN1
+//    emib_m2s1 dut_emib (
+//        `include "dut_emib.inc"
+//       );
+//`else
+//    emib_m2s2 dut_emib (
+//        `include "dut_emib.inc"
+//       );
+//`endif
 /////////// AIB related //////////////
 
+`ifdef CA_YELLOW_OVAL
+	assign ca_die_a_rx_tb_in_if.rx_dout  = ca_m_if.rx_dout;
+	assign ca_die_b_rx_tb_in_if.rx_dout  = ca_s_if.rx_dout;
+        assign ca_m_if.tx_din                = ca_die_a_tx_tb_out_if.tx_din;
+        assign ca_s_if.tx_din           = ca_die_b_tx_tb_out_if.tx_din;
+   `ifdef AIB_DATA_DELAY
+        assign ca_m_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_m_if.rx_online        = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_s_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_s_if.rx_online        = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+   `else
+  	assign ca_m_if.tx_online 	= &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
+  	assign ca_m_if.rx_online 	= &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
+  	assign ca_s_if.tx_online 	= &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
+  	assign ca_s_if.rx_online 	= &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+   `endif
+	assign ca_die_a_tx_tb_out_if.tx_online= ca_m_if.tx_online; 
+  	assign ca_die_a_tx_tb_in_if.tx_online = ca_m_if.tx_online; 
+  	assign ca_die_a_rx_tb_in_if.rx_online = ca_m_if.rx_online; 
+  
+  	assign ca_die_b_tx_tb_out_if.tx_online = ca_s_if.tx_online;  
+   	assign ca_die_b_tx_tb_in_if.tx_online  = ca_s_if.tx_online;  
+   	assign ca_die_b_rx_tb_in_if.rx_online  = ca_s_if.rx_online; 
+  
+   	assign ca_die_a_rx_tb_in_if.align_err              = ca_m_if.align_err;  
+   	assign ca_die_a_tx_tb_in_if.tx_stb_pos_err         = ca_m_if.tx_stb_pos_err;  
+   	assign ca_die_a_tx_tb_in_if.tx_stb_pos_coding_err  = ca_m_if.tx_stb_pos_coding_err;  
+   	assign ca_die_a_rx_tb_in_if.rx_stb_pos_err         = ca_m_if.rx_stb_pos_err;  
+   	assign ca_die_a_rx_tb_in_if.rx_stb_pos_coding_err  = ca_m_if.rx_stb_pos_coding_err; 
+ 
+   	assign ca_die_b_rx_tb_in_if.align_err              = ca_s_if.align_err;  
+   	assign ca_die_b_tx_tb_in_if.tx_stb_pos_err         = ca_s_if.tx_stb_pos_err;  
+   	assign ca_die_b_tx_tb_in_if.tx_stb_pos_coding_err  = ca_s_if.tx_stb_pos_coding_err;  
+   	assign ca_die_b_rx_tb_in_if.rx_stb_pos_err         = ca_s_if.rx_stb_pos_err;  
+   	assign ca_die_b_rx_tb_in_if.rx_stb_pos_coding_err  = ca_s_if.rx_stb_pos_coding_err;  
+            
+	assign ca_m_if.align_fly 	= `CA_ALIGN_FLY;
+	assign ca_s_if.align_fly 	= `CA_ALIGN_FLY;
+	assign ca_m_if.tx_stb_en 	= `CA_TX_STB_EN;
+	assign ca_s_if.tx_stb_en 	= `CA_TX_STB_EN;
+	assign ca_m_if.tx_stb_rcvr 	= 1'b0;
+	assign ca_s_if.tx_stb_rcvr 	= 1'b0;
+	assign ca_m_if.rden_dly 	= `CA_RDEN_DLY;
+	assign ca_s_if.rden_dly 	= `CA_RDEN_DLY;
 
+        assign ca_m_if.count_x 		= DELAY_X_VALUE;
+        assign ca_m_if.count_xz 	= DELAY_XZ_VALUE;
+        assign ca_s_if.count_x 		= DELAY_X_VALUE;
+        assign ca_s_if.count_xz 	= DELAY_XZ_VALUE;
+
+
+	assign ca_m_if.fifo_full_val 	= (`CA_FIFO_FULL)-1; //5_OCT
+	assign ca_m_if.fifo_pfull_val 	= `CA_FIFO_PFULL;
+	assign ca_m_if.fifo_empty_val 	= `CA_FIFO_EMPTY;
+	assign ca_m_if.fifo_pempty_val	= `CA_FIFO_PEMPTY;
+        assign ca_s_if.fifo_full_val 	= (`CA_FIFO_FULL)-1;
+        assign ca_s_if.fifo_pfull_val 	= `CA_FIFO_PFULL;
+        assign ca_s_if.fifo_empty_val 	= `CA_FIFO_EMPTY;
+        assign ca_s_if.fifo_pempty_val	= `CA_FIFO_PEMPTY;
+
+	assign ca_m_if.tx_stb_wd_sel	= `CA_TX_STB_WD_SEL;
+	assign ca_m_if.tx_stb_bit_sel 	= `CA_TX_STB_BIT_SEL;
+	assign ca_m_if.tx_stb_intv 	= `CA_TX_STB_INTV;
+
+        assign ca_m_if.rx_stb_wd_sel  	= `CA_RX_STB_WD_SEL;
+        assign ca_m_if.rx_stb_bit_sel 	= `CA_RX_STB_BIT_SEL;
+        assign ca_m_if.rx_stb_intv	= `CA_RX_STB_INTV;
+
+        assign ca_s_if.tx_stb_wd_sel  	= `CA_TX_STB_WD_SEL;
+        assign ca_s_if.tx_stb_bit_sel 	= `CA_TX_STB_BIT_SEL;
+        assign ca_s_if.tx_stb_intv	= `CA_TX_STB_INTV;
+
+        assign ca_s_if.rx_stb_wd_sel	= `CA_RX_STB_WD_SEL;
+        assign ca_s_if.rx_stb_bit_sel 	= `CA_RX_STB_BIT_SEL;
+        assign ca_s_if.rx_stb_intv 	= `CA_RX_STB_INTV;
+
+/////////////////////////  DUT instantiation started  ////////////////////////////////////////
+
+  ca_if #( .DWIDTH (`TB_DIE_A_BUS_BIT_WIDTH),   .CHNL_NUM (`CA_NUM_CHAN))
+	   ca_m_if();
+  ca_if #( .DWIDTH (`TB_DIE_B_BUS_BIT_WIDTH),   .CHNL_NUM (`CA_NUM_CHAN))
+           ca_s_if();
+
+  ca_DUT_wrapper #(.NUM_CHANNELS      (`TB_DIE_A_NUM_CHANNELS),
+		   .BITS_PER_CHANNEL  (`TB_DIE_A_BUS_BIT_WIDTH),
+		   .AD_WIDTH          (`TB_DIE_A_AD_WIDTH), 
+		   .SYNC_FIFO         (`SYNC_FIFO))
+  ca_DUT_wrapper_m0 (
+  	clk_lane_a,
+        clk_lane_a[0],    //This is com_clk 
+        tb_reset_l, //5_OCT
+        ca_m_if
+  );
+
+  ca_DUT_wrapper #(.NUM_CHANNELS      (`TB_DIE_B_NUM_CHANNELS),
+                   .BITS_PER_CHANNEL  (`TB_DIE_B_BUS_BIT_WIDTH),
+                   .AD_WIDTH          (`TB_DIE_B_AD_WIDTH), 
+		   .SYNC_FIFO         (`SYNC_FIFO))
+  ca_DUT_wrapper_s0 (
+        clk_lane_b,
+        clk_lane_b[0], 
+        tb_reset_l,
+        ca_s_if
+  );
+
+`include "../../../aib/dv/top/phy_to_aib.sv"
+////////////////////////////////////////////////////
+`else
     //--------------------------------------------------------------
     // Channel Alignment DIE A : DUT instance
     //--------------------------------------------------------------
@@ -301,7 +401,9 @@ module ca_top_tb;
              .fifo_empty             (ca_die_b_rx_tb_in_if.fifo_empty),
              .fifo_pempty            (ca_die_b_rx_tb_in_if.fifo_pempty)
          );
+`endif
 
+///////////////////////DUT instantiation completed//////////////////////////////////// 
 `ifdef P2P_LITE
 genvar i;
 generate 
@@ -315,8 +417,8 @@ generate
        .m2s_data_out                 (die_b_rx_din[((i+1)*`TB_DIE_B_BUS_BIT_WIDTH-1):(i*`TB_DIE_B_BUS_BIT_WIDTH)]),
        .fwd_clk                      (fwd_clk),
        .ns_adapter_rstn              (tb_reset_l),
-       .m_wr_clk                     (wr_clk),
-       .s_wr_clk                     (rd_clk),
+       .m_wr_clk                     (msr_wr_clk),
+       .s_wr_clk                     (msr_rd_clk),
        .m2s_data_in                  (die_a_tx_dout[((i+1)*`TB_DIE_A_BUS_BIT_WIDTH-1):(i*`TB_DIE_A_BUS_BIT_WIDTH)]),
        .s2m_data_in                  (die_b_tx_dout[((i+1)*`TB_DIE_B_BUS_BIT_WIDTH-1):(i*`TB_DIE_B_BUS_BIT_WIDTH)]),
        //`ifdef GEN1
@@ -327,8 +429,8 @@ generate
        .tb_m2s_marker_loc            (8'd77),               
        .tb_s2m_marker_loc            (8'd77),               
        //`endif
-       .tb_master_rate               (MASTER_RATE),         
-       .tb_slave_rate                (SLAVE_RATE),          
+       .tb_master_rate               (`MASTER_RATE),         
+       .tb_slave_rate                (`SLAVE_RATE),          
        .m_gen2_mode                  (`MODE_GEN2),  /////0:gen1    1:gen2  in ca_GENERATED_defines
 `ifdef P2P_LITE_CH_DELAY_ENB
        .tb_m2s_latency               (m2s_delay_p2p[i]),  
@@ -353,7 +455,39 @@ endgenerate
     ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_out_if (.clk(clk_die_a), .rst_n(tb_reset_l));
     ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_in_if  (.clk(clk_die_a), .rst_n(tb_reset_l));
     ca_rx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_rx_tb_in_if  (.clk(clk_die_a), .rst_n(tb_reset_l));
+    // ++++++
+    // die b
+    // ++++++
+    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_out_if (.clk(clk_die_b), .rst_n(tb_reset_l));
+    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
+    ca_rx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_rx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
 
+`ifdef CA_YELLOW_OVAL
+    assign ca_die_a_tx_tb_out_if.com_clk         = clk_lane_a[0];
+    assign ca_die_a_tx_tb_in_if.tx_dout          = ca_m_if.tx_dout; 
+  
+    assign ca_die_a_rx_tb_in_if.rx_din           = intf_m1.data_out_f;
+    assign ca_die_a_rx_tb_in_if.ld_rx_align_done = intf_m1.m_rx_align_done;
+    assign ca_die_a_rx_tb_in_if.fl_rx_align_done = intf_s1.m_rx_align_done;
+
+     assign ca_die_a_tx_tb_out_if.align_done     = ca_m_if.align_done & ca_s_if.align_done; //OCT_13
+     assign ca_die_a_tx_tb_in_if.align_done      = ca_m_if.align_done & ca_s_if.align_done;
+     assign ca_die_a_rx_tb_in_if.align_done      = ca_m_if.align_done & ca_s_if.align_done;
+
+    // die b
+    // ......................................
+    assign ca_die_b_tx_tb_out_if.com_clk         = clk_lane_b[0];
+    assign ca_die_b_tx_tb_in_if.tx_dout          = ca_s_if.tx_dout; 
+    assign ca_die_b_rx_tb_in_if.rx_din           = intf_s1.data_out_f;
+    assign ca_die_b_rx_tb_in_if.ld_rx_align_done = intf_m1.m_rx_align_done;
+    assign ca_die_b_rx_tb_in_if.fl_rx_align_done = intf_s1.m_rx_align_done;
+
+
+     assign ca_die_b_tx_tb_out_if.align_done     = ca_m_if.align_done & ca_s_if.align_done; //OCT_13
+     assign ca_die_b_tx_tb_in_if.align_done      = ca_m_if.align_done & ca_s_if.align_done;
+     assign ca_die_b_rx_tb_in_if.align_done      = ca_m_if.align_done & ca_s_if.align_done;
+
+`else
     assign ca_die_a_tx_tb_out_if.com_clk = clk_die_a;
     assign ca_die_a_tx_tb_in_if.tx_dout  = ca_die_a.tx_dout;
 
@@ -381,13 +515,9 @@ endgenerate
      assign ca_die_a_rx_tb_in_if.align_done            = die_a_align_done & die_b_align_done;
 
     // ++++++
-    // die b
+    // die b   //4_OCT moved in common to P2P and CA_YELLOW_OVAL 
     // ++++++
-    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_out_if (.clk(clk_die_b), .rst_n(tb_reset_l));
-    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
-    ca_rx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_rx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
-
-    assign ca_die_b_tx_tb_out_if.com_clk = clk_die_b;
+      assign ca_die_b_tx_tb_out_if.com_clk = clk_die_b;
     assign ca_die_b_tx_tb_in_if.tx_dout  = ca_die_b.tx_dout;
 
   `ifdef P2P_LITE
@@ -412,6 +542,7 @@ endgenerate
     assign ca_die_b_tx_tb_out_if.align_done            = die_a_align_done & die_b_align_done;
     assign ca_die_b_tx_tb_in_if.align_done             = die_a_align_done & die_b_align_done;
     assign ca_die_b_rx_tb_in_if.align_done             = die_a_align_done & die_b_align_done;
+  `endif //of CA_YELLOW_OVAL
 
     chan_delay_if #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH)) chan_delay_die_a_if (.clk(clk_die_a), .rst_n(tb_reset_l));
     chan_delay_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH)) chan_delay_die_b_if (.clk(clk_die_b), .rst_n(tb_reset_l));
@@ -484,21 +615,23 @@ endgenerate
     initial begin
         fwd_clk <= 1'b0;
         forever begin
-            #(FWD_CYCLE/2) fwd_clk <= ~fwd_clk;
+            #(FWD_CYCLE/2) fwd_clk  <= ~fwd_clk;
         end
     end
     
     initial begin
-        rd_clk <= 1'b0;
+        msr_rd_clk <= 1'b0;
+        slv_rd_clk <= 1'b0;
         forever begin
-            #(RD_CYCLE/2) rd_clk <= ~rd_clk;
+            #(RD_CYCLE/2) msr_rd_clk <= ~msr_rd_clk; slv_rd_clk <= ~slv_rd_clk;
         end
     end
     
     initial begin
-        wr_clk <= 1'b0;
+        msr_wr_clk <= 1'b0;
+        slv_wr_clk <= 1'b0;
         forever begin
-            #(WR_CYCLE/2) wr_clk <= ~wr_clk;
+            #(WR_CYCLE/2) msr_wr_clk <= ~msr_wr_clk; slv_wr_clk <= ~slv_wr_clk;
         end
     end
 
@@ -548,7 +681,8 @@ endgenerate
         end // for
     endgenerate
 `endif
-    
+`ifndef CA_YELLOW_OVAL
+   `ifndef P2P_LITE
     // AIB bring up via avmm 
     //--------------------------------------------------------------
     always @(posedge avmm_clk) begin
@@ -575,18 +709,42 @@ endgenerate
             end
         end 
     end
-
+   `endif //P2P_LITE	
+`endif  //CA_YELLOW_OVAL
 
 
     // WAVES
     //--------------------------------------------------------------
+`ifndef CA_YELLOW_OVAL
     initial begin
         $shm_open( , 0, , ); $shm_probe( ca_die_a, "CA_DIE_A");
         $shm_open( , 0, , ); $shm_probe( ca_die_b, "CA_DIE_B");
     end
+`else
+`endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-`include "aib_tb_tasks.svi"
+////`include "aib_tb_tasks.svi" //4_OCT OLD
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+`ifdef CA_YELLOW_OVAL
+`include "../../../aib/dv/top/aib_vip_top.sv"
+
+    genvar i;
+    generate
+       for (i=0; i<`CA_NUM_CHAN; i++) begin
+	assign aib_mac_if_m0.din_ch[i][`TB_DIE_A_BUS_BIT_WIDTH-1:0] = ca_m_if.tx_dout[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i];
+	assign aib_mac_if_s0.din_ch[i][`TB_DIE_B_BUS_BIT_WIDTH-1:0] = ca_s_if.tx_dout[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i];
+        //  delay_unit #(.delay_bits(`MLLPHY_WIDTH)) ca_mdelay_unit (aib_mac_if_m0.dout_ch[i], ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i]);
+        //  delay_unit #(.delay_bits(`SLLPHY_WIDTH)) ca_sdelay_unit (aib_mac_if_s0.dout_ch[i], ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i]);
+	assign ca_m_if.rx_din[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i] = (aib_mac_if_m0.rx_reg_mode == 1) ? aib_mac_if_m0.data_out_reg_mode[80*(i+1)-1:80*i] : aib_mac_if_m0.data_out[320*(i+1)-1:320*i];
+	assign ca_s_if.rx_din[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i] = (aib_mac_if_s0.rx_reg_mode == 1) ? aib_mac_if_s0.data_out_reg_mode[80*(i+1)-1:80*i]: aib_mac_if_s0.data_out[320*(i+1)-1:320*i];
+
+        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_tx_transfer_delay_unit (aib_mac_if_m0.ms_tx_transfer_en, ms_tx_transfer_en_d);
+        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_rx_transfer_delay_unit (aib_mac_if_m0.ms_rx_transfer_en, ms_rx_transfer_en_d);
+        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_tx_transfer_delay_unit (aib_mac_if_s0.sl_tx_transfer_en, sl_tx_transfer_en_d);
+        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_rx_transfer_delay_unit (aib_mac_if_s0.sl_rx_transfer_en, sl_rx_transfer_en_d);
+       end
+    endgenerate
+`else 
    `ifndef P2P_LITE
     logic [`MAX_BUS_BIT_WIDTH-1:0] die_a_ca_chan[`MAX_NUM_CHANNELS];
     logic [`MAX_BUS_BIT_WIDTH-1:0] die_b_ca_chan[`MAX_NUM_CHANNELS];
@@ -663,6 +821,8 @@ endgenerate
         `endif
         initial uvm_config_db #(virtual chan_delay_if #(.BUS_BIT_WIDTH(`TB_DIE_A_BUS_BIT_WIDTH)))::set(uvm_root::get(), $sformatf("*.chan_delay_die_a_agent_%0d.*",k), "chan_delay_vif", chan_delay_die_a_if);
     end // genvar k
+`endif
+
 //////////////////////////////////////////////////////////////////////////////////////////
 endmodule: ca_top_tb
 ///////////////////////////////////////////////////////

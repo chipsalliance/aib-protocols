@@ -128,7 +128,12 @@ task ca_tx_tb_out_drv_c::drv_tx_online();
             tx_online = 0;
         end // reset
         else begin
-          `ifndef P2P_LITE
+          `ifdef CA_YELLOW_OVAL
+               tx_online = vif.tx_online;
+          `elsif P2P_LITE
+               //vif.tx_online <=  cfg.tx_online; ////already driven at tb_top directly
+               tx_online = vif.tx_online;
+          `else 
             if((vif.ld_ms_rx_transfer_en === 24'hff_ffff) &&
                (vif.ld_sl_rx_transfer_en === 24'hff_ffff) &&
                (vif.fl_ms_rx_transfer_en === 24'hff_ffff) && 
@@ -137,9 +142,6 @@ task ca_tx_tb_out_drv_c::drv_tx_online();
                if(tx_online == 0) `uvm_info("drv_tx_online", $sformatf("===>>> %s tx_online == %0d <<<===", my_name, cfg.tx_online), UVM_NONE);
                tx_online = 1;
             end 
-          `else 
-               //vif.tx_online <=  cfg.tx_online; ////already driven at tb_top directly
-               tx_online = vif.tx_online;
           `endif 
         end // non reset
     end // forever clk

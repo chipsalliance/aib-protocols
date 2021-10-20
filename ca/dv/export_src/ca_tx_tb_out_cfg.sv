@@ -40,12 +40,13 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit    has_func_cov  = 0;
 
     string           my_name = "";
-    bit [7:0]        tx_stb_wd_sel  = 'h1;
-    bit [39:0]       tx_stb_bit_sel = 'h1;
+    bit [7:0]        tx_stb_wd_sel  = `CA_TX_STB_WD_SEL;
+    bit [39:0]       tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
     bit              tx_online      = 1;    // default
     bit              tx_stb_en      = 1;    // default
-    bit              tx_stb_rcvr      = 0;    // default
-    rand bit [7:0]   tx_stb_intv ;
+    bit              tx_stb_rcvr    = 0;    // default
+    //rand bit [7:0]   tx_stb_intv ;
+    bit [7:0]        tx_stb_intv    = `CA_TX_STB_INTV ;
     rand int         bit_shift ;
     int              bits_per_channel = 0;
 
@@ -68,8 +69,8 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     //------------------------------------------
     // constraints 
     //------------------------------------------
-    constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
-    constraint c_tx_stb_intv    { tx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
+    //constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
+    //constraint c_tx_stb_intv    { tx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
 
     //------------------------------------------
     // Methods
@@ -107,15 +108,15 @@ function void ca_tx_tb_out_cfg_c::configure( );
     int max_wd_sel = 0 ; 
     int wd_shift   = 0 ;
 
-    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
-    max_wd_sel = bits_per_channel/40;
-    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
-
-    tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
-    tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
-    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0b", 
-        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_MEDIUM);
-
+//    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
+//    max_wd_sel = bits_per_channel/40;
+//    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
+//
+//    tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
+//    tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
+//    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0b", 
+//        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_LOW);//OCT_13
+//
 endfunction: configure 
 ////////////////////////////////////////////////////////////
 `endif

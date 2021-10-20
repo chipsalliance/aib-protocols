@@ -245,7 +245,7 @@ function void ca_seq_item_c::calc_stb_beat();
             else begin
                 stb_wd = 0;
             end
-            `uvm_info("calc_stb_beat", $sformatf("%s %s exp i: %0d stb_wd: 0x%h", my_name, is_tx ? "TX":"RX", i, stb_wd), UVM_NONE);
+            `uvm_info("calc_stb_beat", $sformatf("%s %s exp i: %0d stb_wd: 0x%h,stb_wd_bin : %b", my_name, is_tx ? "TX":"RX", i, stb_wd,stb_wd), UVM_NONE);
 
             for(int j = 0; j < (`MIN_BUS_BIT_WIDTH/8); j++) begin
                 databytes[index] = stb_wd[7:0];

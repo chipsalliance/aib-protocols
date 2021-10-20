@@ -82,14 +82,18 @@ task ca_seq_lib_c::body();
     `uvm_info("body", "START SEQ LIB...", UVM_LOW);
 
     reset_seq.start (p_sequencer.reset_seqr, this);
-
-   `ifndef P2P_LITE
-    while(p_sequencer.gen_vif.aib_ready !== 1'b1) begin
+ 
+   `ifdef CA_YELLOW_OVAL
         wait(100)@(posedge p_sequencer.gen_vif.clk);
-    end
-   `else
-        wait(100)@(posedge p_sequencer.gen_vif.clk);
-   `endif
+   `else 
+        `ifndef P2P_LITE
+         while(p_sequencer.gen_vif.aib_ready !== 1'b1) begin
+             wait(100)@(posedge p_sequencer.gen_vif.clk);
+         end
+        `else
+             wait(100)@(posedge p_sequencer.gen_vif.clk);
+        `endif
+    `endif
     
     fork
         ca_die_a_tx_traffic_seq.start (p_sequencer.ca_die_a_tx_tb_out_seqr, this);
