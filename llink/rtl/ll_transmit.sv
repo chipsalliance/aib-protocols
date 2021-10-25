@@ -93,7 +93,6 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
   /*AUTOWIRE*/
   // Beginning of automatic wires (for undeclared instantiated-module outputs)
   logic [7:0]		dbg_curr_i_credit;	// From ll_tx_cred_ii of ll_tx_cred.v
-  logic    		tx_will_have_credit;	// From ll_tx_cred_ii of ll_tx_cred.v
   wire [FIFO_COUNT_MSB:0] dbg_txfifo_i_numfilled;// From syncfifo_ii of syncfifo_reg.v
   wire			txfifo_i_empty;		// From syncfifo_ii of syncfifo_reg.v
   wire			txfifo_i_full;		// From syncfifo_ii of syncfifo_reg.v
@@ -114,7 +113,6 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
       .user_i_ready			(user_i_ready),		 // Templated
       // Inputs
       .txfifo_i_full			(txfifo_i_full),	 // Templated
-      .tx_will_have_credit		(tx_will_have_credit),	 // Templated
       .txfifo_i_pop			(txfifo_i_pop),		 // Templated
       .user_i_valid			(user_i_valid),		 // Templated
       .tx_online			(tx_online));
@@ -129,7 +127,6 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
       .txfifo_i_pop			(txfifo_i_pop),		 // Templated
       .tx_i_pushbit			(tx_i_pushbit),		 // Templated
       .dbg_curr_i_credit		(dbg_curr_i_credit[7:0]), // Templated
-      .tx_will_have_credit		(tx_will_have_credit),	 // Templated
       // Inputs
       .clk_wr				(clk_wr),
       .rst_wr_n				(rst_wr_n),

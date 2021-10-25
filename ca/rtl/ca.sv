@@ -178,8 +178,8 @@ module ca
        .rx_stb_bit_sel                  (rx_stb_bit_sel[39:0]),
        .rx_stb_intv                     (rx_stb_intv[7:0]),
        .rx_din                          (rx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
-       .fifo_full_val                   (fifo_full_val[4:0]),
-       .fifo_pfull_val                  (fifo_pfull_val[4:0]),
+       .fifo_full_val                   (fifo_full_val[5:0]),
+       .fifo_pfull_val                  (fifo_pfull_val[5:0]),
        .fifo_empty_val                  (fifo_empty_val[2:0]),
        .fifo_pempty_val                 (fifo_pempty_val[2:0]));
 

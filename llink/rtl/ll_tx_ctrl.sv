@@ -31,7 +31,6 @@ module ll_tx_ctrl (
   output logic txfifo_i_push,
   input  logic txfifo_i_full,
   input  logic txfifo_i_pop ,
-  input  logic tx_will_have_credit , // Unused signal, but may be useful for timing closure, so left in place.
 
   input  logic user_i_valid,
   output logic user_i_ready,

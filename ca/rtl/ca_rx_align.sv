@@ -199,8 +199,8 @@ module ca_rx_align
            .fifo_pop                    (fifo_pop),
            .soft_reset                  (fifo_soft_reset),       // Templated
            .rx_din                      (rx_din_ch[i]),          // Templated
-           .fifo_full_val               (fifo_full_val[4:0]),
-           .fifo_pfull_val              (fifo_pfull_val[4:0]),
+           .fifo_full_val               (fifo_full_val[5:0]),
+           .fifo_pfull_val              (fifo_pfull_val[5:0]),
            .fifo_empty_val              (fifo_empty_val[2:0]),
            .fifo_pempty_val             (fifo_pempty_val[2:0]));
       end

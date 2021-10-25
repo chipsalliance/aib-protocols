@@ -190,10 +190,10 @@ module lpif_ctl
   assign align_fly = 1'b1;
   assign tx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign tx_stb_bit_sel = 40'h2;
-  assign tx_stb_intv = 8'h4;
+  assign tx_stb_intv = 8'h8;
   assign rx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign rx_stb_bit_sel = 40'h2;
-  assign rx_stb_intv = 8'h4;
+  assign rx_stb_intv = 8'h8;
   assign fifo_full_val = 5'h1F;
   assign fifo_pfull_val = 5'h10;
   assign fifo_empty_val = 3'h0;

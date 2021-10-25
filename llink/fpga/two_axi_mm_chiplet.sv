@@ -22,7 +22,7 @@
 //
 //Functional Descript:
 //
-// This is a temporary module showing how the two sides (axi_mm_master_top and axi_mm_a32_d128_slave_top) would be in the system.
+// This is a temporary module showing how the two sides (axi_mm_a32_d128_packet_master_top and axi_mm_a32_d128_packet_slave_top) would be in the system.
 // This assumes the PHYs are transparent.
 // Both sides use clk_wr and rst_wr_n
 //
@@ -168,30 +168,18 @@ module two_axi_mm_chiplet (
   /*AUTOWIRE*/
   // Beginning of automatic wires (for undeclared instantiated-module outputs)
   logic [79:0]		rx_phy_master_0;	// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_master_1;	// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_master_2;	// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_master_3;	// From fake_phy of fake_phy.v
   logic [79:0]		rx_phy_slave_0;		// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_slave_1;		// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_slave_2;		// From fake_phy of fake_phy.v
-  logic [79:0]		rx_phy_slave_3;		// From fake_phy of fake_phy.v
-  logic [79:0]		tx_phy_master_0;	// From axi_mm_a32_d128_master_top of axi_mm_a32_d128_master_top.v
-  logic [79:0]		tx_phy_master_1;	// From axi_mm_a32_d128_master_top of axi_mm_a32_d128_master_top.v
-  logic [79:0]		tx_phy_master_2;	// From axi_mm_a32_d128_master_top of axi_mm_a32_d128_master_top.v
-  logic [79:0]		tx_phy_master_3;	// From axi_mm_a32_d128_master_top of axi_mm_a32_d128_master_top.v
-  logic [79:0]		tx_phy_slave_0;		// From axi_mm_a32_d128_slave_top of axi_mm_a32_d128_slave_top.v
-  logic [79:0]		tx_phy_slave_1;		// From axi_mm_a32_d128_slave_top of axi_mm_a32_d128_slave_top.v
-  logic [79:0]		tx_phy_slave_2;		// From axi_mm_a32_d128_slave_top of axi_mm_a32_d128_slave_top.v
-  logic [79:0]		tx_phy_slave_3;		// From axi_mm_a32_d128_slave_top of axi_mm_a32_d128_slave_top.v
+  logic [79:0]		tx_phy_master_0;	// From axi_mm_a32_d128_packet_master_top of axi_mm_a32_d128_packet_master_top.v
+  logic [79:0]		tx_phy_slave_0;		// From axi_mm_a32_d128_packet_slave_top of axi_mm_a32_d128_packet_slave_top.v
   // End of automatics
 
 
-   /* axi_mm_a32_d128_master_top AUTO_TEMPLATE ".*_i\(.+\)"  (
+   /* axi_mm_a32_d128_packet_master_top AUTO_TEMPLATE ".*_i\(.+\)"  (
       .user_\(.*\)			(user1_\1[]),
 
       .rx_mrk_userbit			(),
       .rx_stb_userbit			(),
-      .tx_mrk_userbit			(1'b0),  // No Markers
+      .tx_mrk_userbit			(2'b0),  // No Markers
       .tx_stb_userbit			(1'b0),
 
       .init_ar_credit			(8'd8),
@@ -211,13 +199,10 @@ module two_axi_mm_chiplet (
       .rx_phy\(.\)			(rx_phy_master_\1[]),
     );
     */
-   axi_mm_a32_d128_master_top  axi_mm_a32_d128_master_top
+   axi_mm_a32_d128_packet_master_top  axi_mm_a32_d128_packet_master_top
      (/*AUTOINST*/
       // Outputs
       .tx_phy0				(tx_phy_master_0[79:0]), // Templated
-      .tx_phy1				(tx_phy_master_1[79:0]), // Templated
-      .tx_phy2				(tx_phy_master_2[79:0]), // Templated
-      .tx_phy3				(tx_phy_master_3[79:0]), // Templated
       .user_arready			(user1_arready),	 // Templated
       .user_awready			(user1_awready),	 // Templated
       .user_wready			(user1_wready),		 // Templated
@@ -243,9 +228,6 @@ module two_axi_mm_chiplet (
       .init_aw_credit			(8'd8),			 // Templated
       .init_w_credit			(8'd128),		 // Templated
       .rx_phy0				(rx_phy_master_0[79:0]), // Templated
-      .rx_phy1				(rx_phy_master_1[79:0]), // Templated
-      .rx_phy2				(rx_phy_master_2[79:0]), // Templated
-      .rx_phy3				(rx_phy_master_3[79:0]), // Templated
       .user_arid			(user1_arid[3:0]),	 // Templated
       .user_arsize			(user1_arsize[2:0]),	 // Templated
       .user_arlen			(user1_arlen[7:0]),	 // Templated
@@ -266,7 +248,7 @@ module two_axi_mm_chiplet (
       .user_rready			(user1_rready),		 // Templated
       .user_bready			(user1_bready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b0),			 // Templated
+      .tx_mrk_userbit			(2'b0),			 // Templated
       .tx_stb_userbit			(1'b0),			 // Templated
       .delay_x_value			(8'd20),		 // Templated
       .delay_xz_value			(8'd24),		 // Templated
@@ -274,12 +256,12 @@ module two_axi_mm_chiplet (
 
 
 
-   /* axi_mm_a32_d128_slave_top AUTO_TEMPLATE ".*_i\(.+\)"  (
+   /* axi_mm_a32_d128_packet_slave_top AUTO_TEMPLATE ".*_i\(.+\)"  (
       .user_\(.*\)			(user2_\1[]),
 
       .rx_mrk_userbit			(),
       .rx_stb_userbit			(),
-      .tx_mrk_userbit			(1'b0),  // No Markers
+      .tx_mrk_userbit			(2'b0),  // No Markers
       .tx_stb_userbit			(1'b0),
 
       .init_b_credit			(8'h8),
@@ -298,13 +280,10 @@ module two_axi_mm_chiplet (
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
     );
     */
-   axi_mm_a32_d128_slave_top  axi_mm_a32_d128_slave_top
+   axi_mm_a32_d128_packet_slave_top  axi_mm_a32_d128_packet_slave_top
      (/*AUTOINST*/
       // Outputs
       .tx_phy0				(tx_phy_slave_0[79:0]),	 // Templated
-      .tx_phy1				(tx_phy_slave_1[79:0]),	 // Templated
-      .tx_phy2				(tx_phy_slave_2[79:0]),	 // Templated
-      .tx_phy3				(tx_phy_slave_3[79:0]),	 // Templated
       .user_arid			(user2_arid[3:0]),	 // Templated
       .user_arsize			(user2_arsize[2:0]),	 // Templated
       .user_arlen			(user2_arlen[7:0]),	 // Templated
@@ -337,9 +316,6 @@ module two_axi_mm_chiplet (
       .init_r_credit			(8'd128),		 // Templated
       .init_b_credit			(8'h8),			 // Templated
       .rx_phy0				(rx_phy_slave_0[79:0]),	 // Templated
-      .rx_phy1				(rx_phy_slave_1[79:0]),	 // Templated
-      .rx_phy2				(rx_phy_slave_2[79:0]),	 // Templated
-      .rx_phy3				(rx_phy_slave_3[79:0]),	 // Templated
       .user_arready			(user2_arready),	 // Templated
       .user_awready			(user2_awready),	 // Templated
       .user_wready			(user2_wready),		 // Templated
@@ -352,36 +328,49 @@ module two_axi_mm_chiplet (
       .user_bresp			(user2_bresp[1:0]),	 // Templated
       .user_bvalid			(user2_bvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b0),			 // Templated
+      .tx_mrk_userbit			(2'b0),			 // Templated
       .tx_stb_userbit			(1'b0),			 // Templated
       .delay_x_value			(8'd20),		 // Templated
       .delay_xz_value			(8'd24),		 // Templated
       .delay_yz_value			(8'd48));		 // Templated
 
    /* fake_phy AUTO_TEMPLATE ".*_i\(.+\)"  (
+      .rx_phy_slave_1			(),
+      .rx_phy_slave_2			(),
+      .rx_phy_slave_3			(),
+      .rx_phy_master_1			(),
+      .rx_phy_master_2			(),
+      .rx_phy_master_3			(),
+      // Inputs
+      .tx_phy_master_1			(80'h0),
+      .tx_phy_master_2			(80'h0),
+      .tx_phy_master_3			(80'h0),
+      .tx_phy_slave_1			(80'h0),
+      .tx_phy_slave_2			(80'h0),
+      .tx_phy_slave_3			(80'h0),
     );
     */
    fake_phy  fake_phy
      (/*AUTOINST*/
       // Outputs
       .rx_phy_slave_0			(rx_phy_slave_0[79:0]),
-      .rx_phy_slave_1			(rx_phy_slave_1[79:0]),
-      .rx_phy_slave_2			(rx_phy_slave_2[79:0]),
-      .rx_phy_slave_3			(rx_phy_slave_3[79:0]),
+      .rx_phy_slave_1			(),			 // Templated
+      .rx_phy_slave_2			(),			 // Templated
+      .rx_phy_slave_3			(),			 // Templated
       .rx_phy_master_0			(rx_phy_master_0[79:0]),
-      .rx_phy_master_1			(rx_phy_master_1[79:0]),
-      .rx_phy_master_2			(rx_phy_master_2[79:0]),
-      .rx_phy_master_3			(rx_phy_master_3[79:0]),
+      .rx_phy_master_1			(),			 // Templated
+      .rx_phy_master_2			(),			 // Templated
+      .rx_phy_master_3			(),			 // Templated
       // Inputs
       .clk_wr				(clk_wr),
       .tx_phy_master_0			(tx_phy_master_0[79:0]),
-      .tx_phy_master_1			(tx_phy_master_1[79:0]),
-      .tx_phy_master_2			(tx_phy_master_2[79:0]),
-      .tx_phy_master_3			(tx_phy_master_3[79:0]),
+      .tx_phy_master_1			(80'h0),		 // Templated
+      .tx_phy_master_2			(80'h0),		 // Templated
+      .tx_phy_master_3			(80'h0),		 // Templated
       .tx_phy_slave_0			(tx_phy_slave_0[79:0]),
-      .tx_phy_slave_1			(tx_phy_slave_1[79:0]),
-      .tx_phy_slave_2			(tx_phy_slave_2[79:0]),
-      .tx_phy_slave_3			(tx_phy_slave_3[79:0]));
+      .tx_phy_slave_1			(80'h0),		 // Templated
+      .tx_phy_slave_2			(80'h0),		 // Templated
+      .tx_phy_slave_3			(80'h0));		 // Templated
 
 
 endmodule // two_axi_mm_chiplet //

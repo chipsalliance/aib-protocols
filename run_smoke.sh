@@ -72,7 +72,7 @@ for MODULE in AXI4-MM AXI4-ST CA LPIF SPI; do
     CA)
       DIR=$PROJ_DIR/ca/dv
       SCRIPT=run_smoke.sh
-      LOG=smoke_log.txt
+      LOG=RUN_SMOKE_TEST/smoke_log.txt
       ;;
 
     LPIF)
@@ -82,9 +82,9 @@ for MODULE in AXI4-MM AXI4-ST CA LPIF SPI; do
       ;;
 
     SPI)
-      DIR=$PROJ_DIR/spi
+      DIR=$PROJ_DIR/spi/dv
       SCRIPT=run_smoke.sh
-      LOG=dv/tb/tb_spi_master_slave_2/smoke_log.txt
+      LOG=tb/tb_spi_master_slave_2/smoke_log.txt
       ;;
 
     *)

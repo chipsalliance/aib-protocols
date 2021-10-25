@@ -390,7 +390,7 @@ module lpif_lsm
       d_lsm_exit_lp = lsm_exit_lp;
       d_pl_state_sts = pl_state_sts;
       d_lsm_return_state = lsm_return_state;
-      d_state_req_change = state_req_change ? 1'b1 : (state_req != state_req_del);
+      d_state_req_change = state_req_change ? 1'b1 : ((state_req != state_req_del) & !state_req_nop);
       if (ctl_phy_err)
         begin
           d_pl_state_sts = STS_LinkError;
@@ -473,7 +473,7 @@ module lpif_lsm
                     d_lsm_state = LSM_SB_ACK;
                   end
                 else if (sb_ustrm_link_reset_req)
-                  d_lsm_state = LSM_LinkReset;
+                  d_lsm_state = LSM_LinkReset_a;
                 else if (sb_ustrm_link_retrain_req)
                   d_lsm_state = LSM_RETRAIN;
                 else if (state_req_disable)
@@ -655,7 +655,8 @@ module lpif_lsm
             d_lsm_dstrm_state = SB_LINK_ERROR;
           end
           LSM_RETRAIN_a: begin
-            d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
+            if (!sb_ustrm_active_req)
+              d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
             d_lsm_state = LSM_RETRAIN_b;
           end
           LSM_RETRAIN_b: begin
@@ -663,7 +664,10 @@ module lpif_lsm
           end
           LSM_RETRAIN_c: begin
             if ((sb_ustrm_active_req | coldstart | lsm_exit_lp | sb_ustrm_link_retrain_sts) & ~lp_exit_cg_ack)
-              d_lsm_state = LSM_RETRAIN;
+              begin
+                d_pl_state_sts = STS_RETRAIN;
+                d_lsm_state = LSM_RETRAIN;
+              end
           end
           LSM_RETRAIN: begin
             d_lsm_lnk_cfg = LNK_CFG_X16;
@@ -681,7 +685,7 @@ module lpif_lsm
             else if (sb_ustrm_active_req)
               begin
                 d_lsm_dstrm_state = SB_ACTIVE_STS;
-                d_lsm_state = LSM_ACTIVE;
+                d_lsm_state = LSM_ACTIVE_a;
               end
             else if (state_req_linkreset & state_req_change)
               begin
