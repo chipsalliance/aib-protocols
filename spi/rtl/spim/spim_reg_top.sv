@@ -549,7 +549,6 @@ spim_reg
   i_spim_reg (
 
 	.aclk (m_avmm_clk),
-	.rst_n (rst_n),
 	.arst_n (m_avmm_rst_n),
 	.wdata (wdata_reg),
 	.write (write_reg_quald),

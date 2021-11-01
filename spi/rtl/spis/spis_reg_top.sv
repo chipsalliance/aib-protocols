@@ -49,13 +49,11 @@ input   logic	[31:0]  dbg_bus0,
 input   logic	[31:0]  dbg_bus1,
 
 input 	logic 		cmd_is_read,
-input	logic		cmd_is_write,
 input	logic		bc_zero,
 input   logic           single_read,
 // avmm read/write
 output 	logic	[31:0]	reg2avb_wdata, // write data from spis wr_buf for AVB channel
 input	logic		avb2reg_write, // Write signal for AVB channel data write to s_rbuf
-input	logic		avb2reg_read,  // Read signal for read of wr_buf for data to AVB Channel
 input	logic	[15:0] 	avb2reg_addr,  // Spis reg/buf address  for read wr_buf or write to rd_buf from AVB 
 input	logic	[31:0] 	avb2reg_rdata, // AVB chnl rdata to spis rd_buf
 input	logic		avb2reg_read_pulse,
@@ -135,7 +133,6 @@ logic	read_reg;
 
 
 logic 	spi_write_aclk_pulse; // sync'd to aclk
-logic 	[31:0] 	mosi_data_reg;
 
 logic 	rd_buf_access;
 logic 	wr_buf_access;
@@ -398,8 +395,6 @@ always_ff @(posedge sclk or negedge rst_n)
 
 //instanstiation of spis_reg 
 spis_reg 
- #( // Parameters 
-	.FIFO_ADDR_WIDTH	(FIFO_ADDR_WIDTH))
   i_spis_reg (
 	.aclk (s_avmm_clk),
 	.arst_n (s_avmm_rst_n),

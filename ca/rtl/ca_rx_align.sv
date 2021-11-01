@@ -456,6 +456,11 @@ module ca_rx_align
               stb_intv_count[i] <= 8'b0;
               align_err_stb_intv[i] <= 1'b0;
             end
+          else if (fifo_soft_reset)
+            begin
+              stb_intv_count[i] <= 8'b0;
+              align_err_stb_intv[i] <= 1'b0;
+            end
           else
             begin
               if (stb_det[i])

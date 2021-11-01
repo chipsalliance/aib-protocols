@@ -32,8 +32,8 @@
 module spis_top 
 #( 
 parameter S_FIFO_WIDTH = 32,
-parameter S_FIFO_DEPTH = 64
-//parameter S_FIFO_DEPTH = 2048
+//parameter S_FIFO_DEPTH = 64
+parameter S_FIFO_DEPTH = 512
 ) 
 (
 // SPI Interface
@@ -105,7 +105,6 @@ logic	[31:0]	reg2avb_wdata;
 logic	[31:0]	avb2reg_rdata_q;
 logic	[15:0]	avb2reg_addr;
 logic		avb2reg_write;
-logic		avb2reg_read;
 logic		avb2reg_read_pulse;
 logic		rst_n_avmmclk;
 logic		rst_n_sclk;
@@ -164,7 +163,6 @@ i_spisreg_top (
 	.ss_n                   (ss_n),
 	.reg2avb_wdata 		(reg2avb_wdata), // write data from spis wr_buf for AVB channel
 	.avb2reg_write 		(avb2reg_write),
-	.avb2reg_read 		(avb2reg_read),
 	.avb2reg_read_pulse 	(avb2reg_read_pulse),
 	.avb2reg_addr 		(avb2reg_addr),
 	.avb2reg_rdata 		(avb2reg_rdata_q), // read data from avb channel to slave (rd_buf)
@@ -176,8 +174,7 @@ i_spisreg_top (
 	.avmm_rdnwr 		(avmm_rdnwr),
 	.avmm_transvld  	(avmm_transvld),
 	.bc_zero		(bc_zero),
-	.cmd_is_read		(cmd_is_read),
-	.cmd_is_write		(cmd_is_write)
+	.cmd_is_read		(cmd_is_read)
 
 );
 
@@ -224,8 +221,7 @@ spisavb i_spisavb (
 	.avmm_rdnwr		(avmm_rdnwr),		// rd/wr burst length
 	.avmmtransvld_up	(avmmtransvld_up),
 	.avb2reg_write		(avb2reg_write), 	// write to spis reg rd_buf
-	.avb2reg_read_pulse	(avb2reg_read_pulse),  	// read from spis reg wr_buf
-	.avb2reg_read		(avb2reg_read)  	// read from spis reg wr_buf
+	.avb2reg_read_pulse	(avb2reg_read_pulse)  	// read from spis reg wr_buf
 );
 
 rst_regen_low i_rstsync_rstn

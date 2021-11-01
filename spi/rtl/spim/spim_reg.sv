@@ -33,7 +33,6 @@ parameter FIFO_ADDR_WIDTH = 4'b1100
 )
 (
 input	logic		aclk,
-input	logic		rst_n,
 input	logic		arst_n,
 
 input 	logic	[31:0]	wdata,

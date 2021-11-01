@@ -628,6 +628,7 @@ module lpif_lsm
             if (sb_ustrm_link_reset_req | sb_ustrm_link_reset_sts)
               begin
                 d_pl_state_sts = STS_LinkReset;
+                d_pl_lnk_up = 1'b0;
                 d_lsm_state = LSM_LinkReset;
               end
           end

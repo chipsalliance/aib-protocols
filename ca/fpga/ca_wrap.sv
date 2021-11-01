@@ -68,8 +68,8 @@ module ca_wrap
    output logic                                     rx_stb_pos_err_o,
    output logic                                     rx_stb_pos_coding_err_o,
 
-   input logic [4:0]                                fifo_full_val_i,
-   input logic [4:0]                                fifo_pfull_val_i,
+   input logic [5:0]                                fifo_full_val_i,
+   input logic [5:0]                                fifo_pfull_val_i,
    input logic [2:0]                                fifo_empty_val_i,
    input logic [2:0]                                fifo_pempty_val_i,
 
@@ -109,8 +109,8 @@ module ca_wrap
   logic                                             rx_stb_pos_err;
   logic                                             rx_stb_pos_coding_err;
 
-  logic [4:0]                                       fifo_full_val;
-  logic [4:0]                                       fifo_pfull_val;
+  logic [5:0]                                       fifo_full_val;
+  logic [5:0]                                       fifo_pfull_val;
   logic [2:0]                                       fifo_empty_val;
   logic [2:0]                                       fifo_pempty_val;
 
@@ -210,8 +210,8 @@ module ca_wrap
      .rx_stb_intv                       (rx_stb_intv[7:0]),
      .tx_din                            (tx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
      .rx_din                            (rx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
-     .fifo_full_val                     (fifo_full_val[4:0]),
-     .fifo_pfull_val                    (fifo_pfull_val[4:0]),
+     .fifo_full_val                     (fifo_full_val[5:0]),
+     .fifo_pfull_val                    (fifo_pfull_val[5:0]),
      .fifo_empty_val                    (fifo_empty_val[2:0]),
      .fifo_pempty_val                   (fifo_pempty_val[2:0]));
 

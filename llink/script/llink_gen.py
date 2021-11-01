@@ -3227,7 +3227,7 @@ def main():
 
             make_info_file(configuration)
 
-            make_dv_file(configuration)
+            #make_dv_file(configuration)
 
             print ("Asymmetric Master and Slave with {:10} rate generated with base module name {:30} in this directory {}".format(rate, configuration['MODULE'], args.odir))
 
@@ -3258,7 +3258,7 @@ def main():
 
         make_info_file(configuration)
 
-        make_dv_file(configuration)
+        #make_dv_file(configuration)
 
         print ("Files generated here: {}".format(args.odir))
 

@@ -29,9 +29,6 @@
 
 
 module spis_reg 
-#( 
-parameter FIFO_ADDR_WIDTH = 4'b1100
-)
 (
 input	logic		aclk,
 input	logic		arst_n,
@@ -94,7 +91,6 @@ assign wbuf_rd_soft_reset = buffer_fifo_ctrl[1];
 assign rbuf_wr_soft_reset = buffer_fifo_ctrl[2];
 assign rbuf_rd_soft_reset = buffer_fifo_ctrl[3];
 assign sft_rst_ctrl       = buffer_fifo_ctrl[4];
-//ES: 9/8 assign sft_rst_ctrl = sft_rst_ctrl_reg[0];
 
 //
 // write  
@@ -103,7 +99,6 @@ assign we_cmd    = 	((addr == 16'h0000) & write) ? 1'b1 : 1'b0;
 
 
 assign we_buffer_fifo_ctrl = 	((addr == 16'h0044) & write) ? 1'b1 : 1'b0;	
-//ES: 9/8 assign we_sft_rst_ctrl = 	((addr == 16'h0048) & write) ? 1'b1 : 1'b0;	
 
 assign  rsvd3 = 3'b0;
 assign  rsvd27 = 27'b0;
@@ -185,12 +180,6 @@ always_ff @(posedge aclk or negedge arst_n)
         else if (|sft_reset_d4)
                 buffer_fifo_ctrl[3:0] <= 4'b0;
 
- // wbuf numfilled offset 0x48 
-//ES: 9/8 always_ff @(posedge aclk or negedge arst_n)
-//ES: 9/8 	if (~arst_n) 
-//ES: 9/8 	  	sft_rst_ctrl_reg <= 'b0;
-//ES: 9/8  	else if (we_sft_rst_ctrl) 
-//ES: 9/8 		sft_rst_ctrl_reg <= wdata;
 
 // Read
 always_comb begin

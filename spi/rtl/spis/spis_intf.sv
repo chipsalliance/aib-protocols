@@ -78,12 +78,12 @@ logic	[15:0]	reg_addr;
 logic		sclk_inv;
 logic		ssn_neg;
 logic		ssn_d1;
-logic		ssn_int; // Change for ss_n 8/1
+logic		ssn_d2;   
+logic		ssn_int; 
 
 logic 	[2:0]	cur_st;
 logic	[2:0]	nxt_st;
 logic	[7:0]	burstcount;
-//logic           single_read;
 
 localparam	STATE_IDLE	= 3'h0;
 localparam	STATE_CMD	= 3'h1;
@@ -117,12 +117,29 @@ always_ff @ (posedge sclk_inv or negedge rst_n)
            ssn_neg <= ss_n;
 
 always_ff @ (posedge sclk or negedge rst_n) 
-	if (~rst_n) 
+	if (~rst_n) begin  
 	   ssn_d1	<= 1'b0;
-	else 
-	   ssn_d1	<= ssn_neg;
+	   ssn_d2	<= 1'b0; 
+         end
+	else begin 
+	   ssn_d1	<= ss_n;
+	   ssn_d2	<= ssn_d1;  
+         end
 
-assign ssn_off_pulse = ss_n & ~ssn_d1;
+
+assign ssn_off_pulse = ssn_d1 & ~ssn_d2; 
+
+logic ssn_on_pulse;     
+assign ssn_on_pulse = ~ssn_d1 & ssn_d2;     
+
+logic ss_on_valid;
+always_ff @ (posedge sclk or negedge rst_n) 
+	if (~rst_n) 
+          ss_on_valid <= 1'b0;
+        else if (ss_n) 
+          ss_on_valid <= 1'b0;
+        else if (ssn_on_pulse)
+          ss_on_valid <= 1'b1;
 
 assign ssn_int = ss_n; // Trying this quick change to check impact
 
@@ -346,7 +363,7 @@ always_comb begin
 	nxt_st 		= cur_st;
 	case (cur_st)
 	STATE_IDLE	: begin
-			   nxt_st = (cmd_recvd) ? STATE_CMD : cur_st; 
+			   nxt_st = (cmd_recvd) & ss_on_valid ? STATE_CMD : cur_st; 
 			  end
 
 	STATE_CMD	: begin

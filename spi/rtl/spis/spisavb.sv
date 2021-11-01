@@ -79,8 +79,7 @@ input	logic		avmm_rdnwr,
 output	logic		avmmtransvld_up,
 output  logic		avb2reg_read_pulse,
 
-output  logic		avb2reg_write, 	// to spis reg
-output  logic		avb2reg_read  	// to spis reg
+output  logic		avb2reg_write 	// to spis reg
 );
 
 
@@ -91,8 +90,8 @@ localparam STATE_WR_RDSPIREG		= 4'h2;
 localparam STATE_WR_WAITREQ		= 4'h3;
 localparam STATE_WR_SETNEXT		= 4'h4;
 localparam STATE_WR_ENDWR		= 4'h5;
-localparam STATE_RD_AVBCHNL		= 4'h6;
-localparam STATE_RD_WAITRDVLD		= 4'h7;
+localparam STATE_RD_WAITRDVLD		= 4'h6;
+localparam STATE_RD_WAITRDVLD1		= 4'h7;   
 localparam STATE_RD_SETNEXT		= 4'h8;
 localparam STATE_RD_ENDRD		= 4'h9;
 
@@ -113,10 +112,8 @@ logic [7:0]	burstcount;
 logic [15:0]	wrbuf_addr;
 logic [15:0]	rdbuf_addr;
 logic 		avmm_read;
-logic 		avmm_read_d1;
 logic		avmm_write;
 logic [31:0]	avmm_wdata;
-logic		avmm_write_d1;
 
 
 logic [16:0]	avmm_addr;
@@ -127,6 +124,7 @@ logic		avmmtransvld_up_int;
 //Generate a avmm_transvld pulse to start the state machine
 logic		avmm_transvld_d1;
 logic		avmm_transvld_pulse;
+logic           avb2reg_read;
 
 
 
@@ -153,8 +151,9 @@ assign avb2reg_read_pulse = avb2reg_read & ~avb2reg_read_d1;
 
 
 
-assign avb2reg_write 	= ((cur_st == STATE_RD_WAITRDVLD) & (s_avmm_rdatavld == 1'b1)) 
-			  ? 1'b1 : 1'b0; //m_avmm_write to rd_buf;
+assign avb2reg_write 	= (((cur_st == STATE_RD_WAITRDVLD1) | (cur_st == STATE_RD_WAITRDVLD)) &
+                            (s_avmm_rdatavld == 1'b1)) ? 1'b1 : 1'b0; //m_avmm_write to rd_buf;
+
 assign avb2reg_rdata_q	= s_avmm_rdata;
 
 assign avb2reg_read	= ((cur_st == STATE_WR_RDSPIREG) | 
@@ -165,14 +164,14 @@ assign avmm_read 	= ((cur_st == STATE_RD_WAITRDVLD)) ? 1'b1 : 1'b0; //m_avmm_rea
 
 always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) begin
 	if (~s_avmm_rst_n) begin           
-	   avmm_addr_d1  <= 16'b0;
+	   avmm_addr_d1  <= 17'b0;
 	end
  	else begin
  	   avmm_addr_d1  <= avmm_addr;
   	end
  end
 	
-assign s_avmm_addr	= avmm_addr_d1;
+assign s_avmm_addr	= (avmm_write | avmm_read) ? avmm_addr : 17'b0;
 
 assign s_avmm_wdata	= avmm_wdata;
 assign s_avmm_byte_en	= 4'b1111;
@@ -285,12 +284,15 @@ always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) begin
 	   avmm_wdata		<= 'b0;
 	end
 	else if (cur_st == STATE_CMD) begin
- 	   burstcount 		<= (avmm_brstlen - 1);
 	   avmm_addr		<= avmm_offset;
-	    if (avmm_rdnwr == 1'b0)
+	    if (avmm_rdnwr == 1'b0) begin
 		avb2reg_addr 	<= wrbuf_addr;  // AVB Chnl write, read wbuf for write data
-	    else 
+ 	        burstcount 	<= (avmm_brstlen - 1);
+            end
+	    else begin 
 	        avb2reg_addr	<= rdbuf_addr;	// AVB Chnl Read, write read data to rbuf
+ 	        burstcount 	<= (avmm_brstlen);
+            end
 	end
 	else if (cur_st == STATE_WR_RDSPIREG) begin
 	   avmm_wdata		<= reg2avb_wdata;
@@ -300,8 +302,8 @@ always_ff @(posedge s_avmm_clk or negedge s_avmm_rst_n) begin
 	   burstcount		<= burstcount - 1'b1;
 	   avmm_addr		<= (avmm_addr + 4'b0100);
 	end
-	else if ((cur_st == STATE_RD_SETNEXT)  & 
-                (burstcount != 8'b0)) begin 
+	else if (((cur_st == STATE_RD_WAITRDVLD1) | (cur_st == STATE_RD_WAITRDVLD))  & 
+                (burstcount != 8'b0) & s_avmm_rdatavld) begin 
 	   burstcount		<= burstcount - 1'b1;
 	   avmm_addr		<= (avmm_addr + 4'b0100);
 	end
@@ -328,7 +330,7 @@ always_comb begin
 	STATE_IDLE	: nxt_st = (avmm_transvld_pulse) ?  STATE_CMD : STATE_IDLE ; 
 
 	STATE_CMD	: nxt_st = (avmm_rdnwr == 1'b0) ? STATE_WR_RDSPIREG : 
-				   (avmm_rdnwr == 1'b1) ? STATE_RD_AVBCHNL  :
+				   (avmm_rdnwr == 1'b1) ? STATE_RD_WAITRDVLD  :
 							  STATE_IDLE ;
 
 	STATE_WR_RDSPIREG	: nxt_st = STATE_WR_WAITREQ; 
@@ -336,21 +338,24 @@ always_comb begin
 
 
 	STATE_WR_WAITREQ	: nxt_st = (s_avmm_waitreq == 1'b1) ? STATE_WR_WAITREQ : 
-					                              STATE_WR_SETNEXT;
+					                      STATE_WR_SETNEXT;
 
 	STATE_WR_SETNEXT	: nxt_st = (burstcount == 8'b0) ? STATE_WR_ENDWR : 
 				                                  STATE_WR_RDSPIREG;
 										
 	STATE_WR_ENDWR	: nxt_st = STATE_IDLE;
 
-	STATE_RD_AVBCHNL	: nxt_st =  STATE_RD_WAITRDVLD ;
+
+	STATE_RD_WAITRDVLD	: nxt_st =  (s_avmm_waitreq == 1'b1) ? STATE_RD_WAITRDVLD :
+                                            (s_avmm_rdatavld == 1'b1) ? STATE_RD_SETNEXT  :
+									STATE_RD_WAITRDVLD1 ;
 
 
-	STATE_RD_WAITRDVLD	: nxt_st =  (s_avmm_rdatavld == 1'b0) ? STATE_RD_WAITRDVLD :
+	STATE_RD_WAITRDVLD1	: nxt_st =  (s_avmm_rdatavld == 1'b0) ? STATE_RD_WAITRDVLD1 :
 									STATE_RD_SETNEXT   ;
 
 	STATE_RD_SETNEXT	: nxt_st =  (burstcount == 8'h0) ? STATE_RD_ENDRD :
- 								   STATE_RD_AVBCHNL ;
+ 								   STATE_RD_WAITRDVLD ;
 
 	STATE_RD_ENDRD	: nxt_st = STATE_IDLE;
 

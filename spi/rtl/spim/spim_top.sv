@@ -32,8 +32,8 @@
 module spim_top 
 #( 
 parameter M_FIFO_WIDTH = 32, 
-parameter M_FIFO_DEPTH = 64	
-//parameter M_FIFO_DEPTH = 2048	
+//parameter M_FIFO_DEPTH = 64	
+parameter M_FIFO_DEPTH = 512	
 ) 
 (
 // SPI Interface

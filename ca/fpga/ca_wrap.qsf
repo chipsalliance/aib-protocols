@@ -23,11 +23,11 @@ set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
 set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
 set_global_assignment -name DEVICE 1ST280EY2F55E2VG
 
-set_instance_assignment -name VIRTUAL_PIN ON -to tx_din* -entity ca_wrap
-set_instance_assignment -name VIRTUAL_PIN ON -to tx_dout* -entity ca_wrap
-set_instance_assignment -name VIRTUAL_PIN ON -to rx_din* -entity ca_wrap
-set_instance_assignment -name VIRTUAL_PIN ON -to rx_dout* -entity ca_wrap
+set_instance_assignment -name VIRTUAL_PIN ON -to *_i -entity ca_wrap
+set_instance_assignment -name VIRTUAL_PIN ON -to *_o -entity ca_wrap
+
 set_global_assignment -name SDC_FILE ca_wrap.sdc
+
 set_instance_assignment -name PARTITION_COLOUR 4282777599 -to ca -entity ca_wrap
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100
