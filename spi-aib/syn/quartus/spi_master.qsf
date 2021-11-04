@@ -1,0 +1,29 @@
+set_global_assignment -name TOP_LEVEL_ENTITY spi_master 
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 20.4.0
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:49:25  JULY 21, 2021"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.3.0 Pro Edition"
+set_global_assignment -name FAMILY "Stratix 10"
+set_global_assignment -name MINIMUM_SEU_INTERVAL 0
+set_global_assignment -name PWRMGT_SLAVE_DEVICE_TYPE LTM4677
+set_global_assignment -name ALLOW_REGISTER_RETIMING OFF
+set_global_assignment -name NUM_PARALLEL_PROCESSORS ALL
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name FLOW_ENABLE_EDA_NETLIST_WRITER ON
+set_global_assignment -name EDA_SIMULATION_TOOL "Xcelium-Verilog (Verilog)"
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name DEVICE 1ST280EY2F55E1VG
+set_global_assignment -name SDC_FILE sdc_files/spi_master.sdc
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/mspi_avmm_csr.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/mspi_intf.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/spi_buf_ram.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/spi_rstnsync.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/sspi_avmm_csr.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/sspi_intf.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/mspi_avmm_intf.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/spi_bitsync.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/spi_master.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/spi_slave.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../../rtl/sspi_avmm_intf.sv
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 100

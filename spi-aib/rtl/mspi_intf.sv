@@ -1,0 +1,191 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (C) 2019 Intel Corporation.
+//-----------------------------------------------------------------------------------------------//
+//-----------------------------------------------------------------------------------------------//
+`timescale 1ps / 1ps
+module mspi_intf
+#(
+    parameter SS_WIDTH = 4,
+    parameter BUF_SIZE = 256,
+    parameter BUF_ADWIDTH = $clog2(BUF_SIZE)
+)(
+
+//To TX/RX Buffer
+output reg [31:0]            rx_buf_wdata,
+output reg                   rx_buf_we,
+output reg [BUF_ADWIDTH-1:0] rx_buf_waddr,
+output reg [BUF_ADWIDTH-1:0] tx_buf_raddr,
+input  [31:0]                tx_buf_rdata,
+output                       spi_active,
+
+//Contro from CSR
+input                        avmm_clk,
+input                        rst_n_avmm,
+input  [31:0]                cmd_reg,
+
+//SPI interface signal
+input                        rst_n_sclk,
+input                        sclk,       //Free running SPI clock out
+output reg [SS_WIDTH-1:0]    ss_n,
+output reg                   mosi,
+input                        miso
+);
+////////////////////////////////////////////////////////////////////////
+//cmd_reg is from avmm_clk domain. because avmm_clk and spi clock is 
+//totally async, need to make sure start_trans stretch enough both high
+//and low not to miss the pulse to sclk when sclk is too slow compare to 
+//avmm_clk
+////////////////////////////////////////////////////////////////////////
+parameter ST_ZERO      = 2'b00;
+parameter ST_WT_4_ONE  = 2'b01;
+parameter ST_ONE       = 2'b10;
+parameter ST_WT_4_ZERO = 2'b11;
+
+reg [1:0] cdc_st;
+reg  start_trans, cdc_req;
+wire cdc_req_sclk, cdc_ack_aclk;
+always_ff @(posedge avmm_clk or negedge rst_n_avmm)
+ if (!rst_n_avmm) begin
+      start_trans <= '0;
+      cdc_st <= ST_ZERO;
+      cdc_req <= '0;
+ end else begin
+      case (cdc_st)
+        ST_ZERO:      if (cmd_reg[0] & ~cdc_ack_aclk) begin  
+                           cdc_st <= ST_WT_4_ONE;
+                           cdc_req <= 1'b1;
+                           start_trans <= 1'b0;
+                      end
+        ST_WT_4_ONE:  if (cdc_ack_aclk) begin
+                           cdc_st <= ST_ONE;
+                           cdc_req <= 1'b0;
+                           start_trans <= 1'b1;
+                      end
+        ST_ONE:       if (~cmd_reg[0]  &  ~cdc_ack_aclk) begin
+                           cdc_st <= ST_WT_4_ZERO;
+                           cdc_req <= 1'b1; 
+                           start_trans <= 1'b1;
+                      end
+        ST_WT_4_ZERO: if (cdc_ack_aclk == 1'b1) begin
+                           cdc_st <= ST_ZERO;
+                           cdc_req <= 1'b0;
+                           start_trans <= 1'b0;
+                      end
+      endcase
+ end 
+
+    spi_bitsync sync_req_sclk 
+       (
+        .clk      (sclk),
+        .rst_n    (rst_n_sclk),
+        .data_in  (cdc_req),
+        .data_out (cdc_req_sclk)
+        );
+    spi_bitsync sync_req_aclk 
+       (
+        .clk      (avmm_clk),
+        .rst_n    (rst_n_avmm),
+        .data_in  (cdc_req_sclk),
+        .data_out (cdc_ack_aclk)
+        );
+
+/////////////////////////////////////////////////////////////////////////
+wire start_trans_sync2, start_pulse;
+reg  start_trans_d1, trans_enable, trans_enable_d;
+reg [31:0] cmd_reg_sync;
+reg [31:0] rx_data, tx_data;
+reg [BUF_ADWIDTH+4:0] full_counter;
+///////////////////////////////////////////////////////////
+// Take cmd_reg from avmm_clk domain to sclk domain
+//////////////////////////////////////////////////////////
+    spi_bitsync bitsync2_start_trans
+       (
+        .clk      (sclk),
+        .rst_n    (rst_n_sclk),
+        .data_in  (start_trans),
+        .data_out (start_trans_sync2)
+        );
+//Generate start pulse in sclk domain
+always_ff @(posedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) start_trans_d1 <= '0;
+ else start_trans_d1 <= start_trans_sync2;
+
+assign start_pulse = start_trans_sync2 & !start_trans_d1;
+
+//Use start_pusle as enable to latch cmd_reg from avmm clock domain
+always_ff @(posedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) cmd_reg_sync <= '0;
+ else if (start_pulse) cmd_reg_sync <= cmd_reg;
+
+wire [BUF_ADWIDTH-1:0] burst_len_wd = cmd_reg_sync[BUF_ADWIDTH+1:2];
+wire [1:0] cs_sel = cmd_reg_sync[31:30];
+
+///////////////////////////////////////////////////////////
+// Generate mosi from transfer buffer
+// User are responsible for the format.
+//////////////////////////////////////////////////////////
+wire [BUF_ADWIDTH-1:0] wd_count = full_counter[BUF_ADWIDTH+4:5];
+wire [4:0] bit_count = full_counter[4:0];
+wire [BUF_ADWIDTH-1:0] last_wd   = burst_len_wd;
+wire       last_bit  = (&bit_count);
+
+assign spi_active = trans_enable | trans_enable_d;
+
+always_ff @(posedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) begin
+       trans_enable <= '0;
+       trans_enable_d <= '0;
+       full_counter <= '0;
+       tx_buf_raddr <= '0;
+       tx_data      <= '0;
+ end
+ else begin
+ 
+       if (start_pulse) trans_enable <= 1'b1;
+       else if ((wd_count == last_wd) && last_bit)  trans_enable <= '0;
+       trans_enable_d <= trans_enable;
+
+       if (trans_enable) full_counter <= full_counter + 1'b1;
+       else full_counter <= '0;
+
+       if (start_pulse) tx_buf_raddr <= tx_buf_raddr + 1'b1;
+       else if (last_bit) tx_buf_raddr <= tx_buf_raddr + 1'b1; 
+       else if (~spi_active) tx_buf_raddr <= '0;
+
+       if (start_pulse) tx_data <= tx_buf_rdata;
+       else if (&full_counter[4:0]) tx_data <= tx_buf_rdata;
+       else tx_data <= {tx_data[30:0], 1'b0};
+ end
+
+always_ff @(negedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) begin
+    mosi <= '0;
+    ss_n <= 4'b1111;
+ end
+ else begin
+    if (trans_enable) mosi <= tx_data[31];
+    else              mosi <= 1'b0;
+    case (cs_sel) 
+      2'b00: ss_n <= {3'b111, ~trans_enable};
+      2'b01: ss_n <= {2'b11, ~trans_enable, 1'b1};
+      2'b10: ss_n <= {1'b1, ~trans_enable, 2'b11};
+      2'b11: ss_n <= {~trans_enable, 3'b111};
+    endcase
+ end
+///////////////////////////////////////////////////////////
+// Convert miso to receiver buffer
+///////////////////////////////////////////////////////////
+assign rx_buf_wdata = rx_data;
+always_ff @(posedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) begin
+    rx_data <= '0;
+    rx_buf_we <= '0;
+    rx_buf_waddr <= '0;
+ end
+ else begin
+    if (&ss_n == 1'b0) rx_data[31:0] <= {rx_data[30:0], miso};
+    rx_buf_we <= &full_counter[4:0];
+    rx_buf_waddr <= full_counter[BUF_ADWIDTH+4:5];
+ end
+
+endmodule

@@ -1,0 +1,17 @@
+# ####################################################################
+# tb files 
+# ####################################################################
++incdir+../tb
++incdir+../interface
++incdir+../test/task
+$AIB_DV/emib/aliasv.sv
+$AIB_DV/emib/emib_ch_m1s2.sv
+$AIB_DV/emib/emib_ch_m2s1.sv
+$AIB_DV/emib/emib_ch_m2s2.sv
+$AIB_DV/emib/emib_m1s2.sv
+$AIB_DV/emib/emib_m2s1.sv
+$AIB_DV/emib/emib_m2s2.sv
+../interface/dut_if_mac.sv
+../interface/spi_if.sv
+../interface/avalon_mm_if.sv
+../tb/top_tb.sv

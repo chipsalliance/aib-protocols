@@ -1,0 +1,33 @@
+    .sclk(spi_if.sclk),
+    .ss_n(spi_if.ss_n[1]),
+    .mosi(spi_if.mosi),
+    .miso(spi_if.miso),
+    .rst_n(avmm_rstn),   //Terry:Make sure you drive this signal. 
+                                  //
+    //AVMM interface
+    .avmm_clk(avmm_if_sspi0.clk),
+    .avmm0_addr(),
+    .avmm0_byte_en(),
+    .avmm0_read(),
+    .avmm0_write(),
+    .avmm0_wdata(),
+    .avmm0_rdatavld(1'b0),
+    .avmm0_rdata(32'h0),
+    .avmm0_waitreq(1'b0),
+    .avmm1_addr(),
+    .avmm1_byte_en(),
+    .avmm1_read(),
+    .avmm1_write(),
+    .avmm1_wdata(),
+    .avmm1_rdatavld(1'b0),
+    .avmm1_rdata(32'h0),
+    .avmm1_waitreq(1'b0),
+    .avmm2_addr(),
+    .avmm2_byte_en(),
+    .avmm2_read(),
+    .avmm2_write(),
+    .avmm2_wdata(),
+    .avmm2_rdatavld(1'b0),
+    .avmm2_rdata(32'h0),
+    .avmm2_waitreq(1'b0)
+

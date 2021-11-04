@@ -1,0 +1,33 @@
+    .sclk(spi_if.sclk),
+    .ss_n(spi_if.ss_n[0]),
+    .mosi(spi_if.mosi),
+    .miso(spi_if.miso),
+    .rst_n(avmm_rstn),   //Terry:Make sure you drive this signal. 
+                                  //
+    //AVMM interface
+    .avmm_clk(avmm_if_sspi0.clk),
+    .avmm0_addr(avmm_if_sspi0.address),
+    .avmm0_byte_en(avmm_if_sspi0.byteenable),
+    .avmm0_read(avmm_if_sspi0.read),
+    .avmm0_write(avmm_if_sspi0.write),
+    .avmm0_wdata(avmm_if_sspi0.writedata),
+    .avmm0_rdatavld(avmm_if_sspi0.readdatavalid),
+    .avmm0_rdata(avmm_if_sspi0.readdata),
+    .avmm0_waitreq(avmm_if_sspi0.waitrequest),
+    .avmm1_addr(avmm_if_sspi1.address),
+    .avmm1_byte_en(avmm_if_sspi1.byteenable),
+    .avmm1_read(avmm_if_sspi1.read),
+    .avmm1_write(avmm_if_sspi1.write),
+    .avmm1_wdata(avmm_if_sspi1.writedata),
+    .avmm1_rdatavld(avmm_if_sspi1.readdatavalid),
+    .avmm1_rdata(avmm_if_sspi1.readdata),
+    .avmm1_waitreq(avmm_if_sspi1.waitrequest),
+    .avmm2_addr(avmm_if_sspi2.address),
+    .avmm2_byte_en(avmm_if_sspi2.byteenable),
+    .avmm2_read(avmm_if_sspi2.read),
+    .avmm2_write(avmm_if_sspi2.write),
+    .avmm2_wdata(avmm_if_sspi2.writedata),
+    .avmm2_rdatavld(avmm_if_sspi2.readdatavalid),
+    .avmm2_rdata(avmm_if_sspi2.readdata),
+    .avmm2_waitreq(avmm_if_sspi2.waitrequest)
+

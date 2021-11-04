@@ -1,0 +1,12 @@
++incdir+${SPI_ROOT}
+${SPI_ROOT}/mspi_avmm_csr.sv   
+${SPI_ROOT}/mspi_intf.sv   
+${SPI_ROOT}/spi_buf_ram.sv  
+${SPI_ROOT}/spi_rstnsync.sv
+${SPI_ROOT}/mspi_avmm_intf.sv  
+${SPI_ROOT}/spi_bitsync.sv  
+${SPI_ROOT}/spi_master.sv
+${SPI_ROOT}/sspi_intf.sv
+${SPI_ROOT}/sspi_avmm_intf.sv
+${SPI_ROOT}/sspi_avmm_csr.sv
+${SPI_ROOT}/spi_slave.sv

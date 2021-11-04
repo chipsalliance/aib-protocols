@@ -1,0 +1,34 @@
+README.txt
+Nov. 4th, 2021
+
+===========================================================
+Revision history:
+Revision 1.0: Initial release
+===========================================================
+
+============================================================
+Included in this package are :
+
+spi-aib
+├── doc              --User guide and HAS specification
+├── dv               --DV For Design Example
+│   ├── flist
+│   ├── interface
+│   ├── sims         --Run directory for design example
+│   ├── tb           --Top level testbench
+│   └── test
+│       ├── data
+│       ├── task
+│       └── test_cases -- test cases
+├── rtl              -- RTL for spi_master and spi_slave RTL
+└── syn              -- Synthesis dir
+    └── quartus
+        └── sdc_files -- Time constraint
+
+User can download from github:
+https://github.com/chipsalliance/aib-phy-hardware
+
+After download, the file structure on top level should looks like this:
+
+drwxr-s--- 5 xxxxxxxx xxxxxx 4096 Sep 26 22:37 aib-phy-hardware-master
+drwxr-s--- 6 xxxxxxxx xxxxxx 4096 Oct 26 22:43 spi-aib
