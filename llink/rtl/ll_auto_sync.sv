@@ -29,15 +29,15 @@
 //
 ////////////////////////////////////////////////////////////
 
-module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTENT_STROBE=1'b1) (
+module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTENT_STROBE=1'b1, NO_MARKER=1'b0) (
     // clk, reset
     input logic                                 clk_wr              ,
     input logic                                 rst_wr_n            ,
 
     // Transmit Control
     input logic                                 tx_online           ,
-    input logic [7:0]                           delay_xz_value      ,
-    input logic [7:0]                           delay_yz_value      ,
+    input logic [15:0]                          delay_z_value      ,
+    input logic [15:0]                          delay_y_value      ,
     output logic                                tx_online_delay     ,
 
     input  logic [MARKER_WIDTH-1:0]             tx_mrk_userbit      ,
@@ -47,7 +47,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 
     // Receive Control
     input logic                                 rx_online           ,
-    input logic [7:0]                           delay_x_value       ,
+    input logic [15:0]                          delay_x_value       ,
     output logic                                rx_online_delay
 
   );
@@ -55,27 +55,28 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
   parameter DISABLE_TX_AUTOSYNC = 1'b0;
   parameter DISABLE_RX_AUTOSYNC = 1'b0;
 
+  logic tx_online_delay_z_w_strobe;
 ////////////////////////////////////////////////////////////
-// Delay Online by X+Z
-// This delays online by X (time for Word Marker to Sync) plus a little (Z)
+// Delay Online by Z
+// This delays online by Z
 // At this point we should stop sending the USER inserted marker
 // We should also allow exactly one USER Strobe.
 // For the latter, we gate off the USER Strobe for all but one word as defined
 // by the USER Marker. This is needed for asymmetric gearboxing.
 
-  logic                 tx_online_delayxz;
+  logic                 tx_online_delay_z;
 
-   level_delay level_delay_ixzvalue
+   level_delay level_delay_i_zvalue
      (/*AUTOINST*/
       // Outputs
-      .delayed_en			(tx_online_delayxz),
+      .delayed_en			(tx_online_delay_z),
       // Inputs
       .rst_core_n			(rst_wr_n),
       .clk_core				(clk_wr),
       .enable				(tx_online),
-      .delay_value			(delay_xz_value[7:0]));
+      .delay_value			(delay_z_value[15:0]));
 
-// Delay Online by X+Z
+// Delay Online by Z
 ////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////
@@ -83,17 +84,17 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 // This delays online from the Word Alignment until the Channel Alignment
 // is complete. At this point we begin real transmisson.
 
-  logic                 tx_delayed_online;
+  logic                 tx_online_delay_yz;
 
-   level_delay level_delay_iyzvalue
+   level_delay level_delay_i_yvalue
      (/*AUTOINST*/
       // Outputs
-      .delayed_en			(tx_delayed_online),
+      .delayed_en			(tx_online_delay_yz),
       // Inputs
       .rst_core_n			(rst_wr_n),
       .clk_core				(clk_wr),
-      .enable				(tx_online_delayxz),
-      .delay_value			(delay_yz_value[7:0]));
+      .enable				(tx_online_delay_z_w_strobe),
+      .delay_value			(delay_y_value[15:0]));
 
 // Further Delay Online by Y+Z
 ////////////////////////////////////////////////////////////
@@ -103,25 +104,30 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 // synchronization USER strobe for a one shot Strobe.
 // Also determines when to disable USER Marker.
 
-  logic                 delayxz_1st_marker;
-  logic                 delayxz_2nd_marker;
+  logic                 delay_z_1st_marker;
+  logic                 delay_z_2nd_marker;
 
   always @(posedge clk_wr or negedge rst_wr_n)
   if (!rst_wr_n)
-    delayxz_1st_marker <= 1'h0;
-  else if (tx_online_delayxz == 1'b0)
-    delayxz_1st_marker <= 1'h0;
-  else if (|tx_mrk_userbit)
-    delayxz_1st_marker <= 1'b1;
+    delay_z_1st_marker <= 1'h0;
+  else if (tx_online_delay_z == 1'b0)
+    delay_z_1st_marker <= 1'h0;
+  else if ((NO_MARKER == 1'b0) & (|tx_mrk_userbit))
+    delay_z_1st_marker <= 1'b1;
+  else if ((NO_MARKER == 1'b1) & (tx_stb_userbit))
+    delay_z_1st_marker <= 1'b1;
 
   always @(posedge clk_wr or negedge rst_wr_n)
   if (!rst_wr_n)
-    delayxz_2nd_marker <= 1'h0;
-  else if (delayxz_1st_marker == 1'b0)
-    delayxz_2nd_marker <= 1'h0;
-  else if (|tx_mrk_userbit)
-    delayxz_2nd_marker <= 1'b1;
+    delay_z_2nd_marker <= 1'h0;
+  else if (delay_z_1st_marker == 1'b0)
+    delay_z_2nd_marker <= 1'h0;
+  else if ((NO_MARKER == 1'b0) & (|tx_mrk_userbit))
+    delay_z_2nd_marker <= 1'b1;
+  else if ((NO_MARKER == 1'b1) & (tx_stb_userbit))
+    delay_z_2nd_marker <= 1'b1;
 
+  assign tx_online_delay_z_w_strobe = delay_z_2nd_marker & tx_online_delay_z;
 // Sample incomming USER Marker
 ////////////////////////////////////////////////////////////
 
@@ -136,7 +142,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
   always @(posedge clk_wr or negedge rst_wr_n)
   if (!rst_wr_n)
     marker_replay_reg <= {(4*MARKER_WIDTH){1'b1}};
-  else if (delayxz_2nd_marker == 1'b0)
+  else if (delay_z_2nd_marker == 1'b0)
     marker_replay_reg <= {tx_mrk_userbit, marker_replay_reg[(4*MARKER_WIDTH)-1:MARKER_WIDTH]};
   else
     marker_replay_reg <= {marker_replay_reg[0], marker_replay_reg[3:1]};
@@ -147,13 +153,13 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 // Gate off signals
 
 // Disable USER Marker after X+Z
-  assign tx_auto_mrk_userbit = DISABLE_TX_AUTOSYNC ? tx_mrk_userbit : PERSISTENT_MARKER ? tx_mrk_userbit : (tx_mrk_userbit & {MARKER_WIDTH{(~delayxz_1st_marker)}}) ;
+  assign tx_auto_mrk_userbit = DISABLE_TX_AUTOSYNC ? tx_mrk_userbit : PERSISTENT_MARKER ? tx_mrk_userbit : (tx_mrk_userbit & {MARKER_WIDTH{(~delay_z_1st_marker)}}) ;
 
 // Allow one Word of Strobe
-  assign tx_auto_stb_userbit = DISABLE_TX_AUTOSYNC ? tx_stb_userbit : PERSISTENT_STROBE ? tx_stb_userbit : (tx_stb_userbit & delayxz_1st_marker & (~delayxz_2nd_marker)) ;
+  assign tx_auto_stb_userbit = DISABLE_TX_AUTOSYNC ? tx_stb_userbit : PERSISTENT_STROBE ? tx_stb_userbit : (tx_stb_userbit & delay_z_1st_marker & (~delay_z_2nd_marker)) ;
 
 // Test rst of logic we're good to begin transmission
-  assign tx_online_delay     = DISABLE_TX_AUTOSYNC ? tx_online      : tx_delayed_online ;
+  assign tx_online_delay     = DISABLE_TX_AUTOSYNC ? tx_online      : tx_online_delay_yz ;
 
 // Gate off signals
 ////////////////////////////////////////////////////////////
@@ -163,7 +169,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 
   logic                 rx_delayed_online;
 
-   level_delay level_delay_ixvalue
+   level_delay level_delay_i_xvalue
      (/*AUTOINST*/
       // Outputs
       .delayed_en			(rx_delayed_online),	 // Templated
@@ -171,7 +177,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
       .rst_core_n			(rst_wr_n),		 // Templated
       .clk_core				(clk_wr),		 // Templated
       .enable				(rx_online),		 // Templated
-      .delay_value			(delay_x_value[7:0]));	 // Templated
+      .delay_value			(delay_x_value[15:0]));	 // Templated
 
 // Test rst of logic we're good to begin transmission
   assign rx_online_delay     = DISABLE_RX_AUTOSYNC ? rx_online : rx_delayed_online ;

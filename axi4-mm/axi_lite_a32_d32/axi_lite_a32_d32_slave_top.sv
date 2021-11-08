@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file
@@ -73,12 +74,10 @@ module axi_lite_a32_d32_slave_top  (
   // Configuration
   input  logic               m_gen2_mode         ,
 
-  input  logic [   1:   0]   tx_mrk_userbit      ,
-  input  logic               tx_stb_userbit      ,
 
-  input  logic [7:0]         delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
-  input  logic [7:0]         delay_xz_value      ,
-  input  logic [7:0]         delay_yz_value      
+  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_y_value       ,
+  input  logic [15:0]        delay_z_value       
 
 );
 
@@ -128,6 +127,10 @@ module axi_lite_a32_d32_slave_top  (
   logic                                          tx_auto_stb_userbit           ;
   logic                                          tx_online_delay               ;
   logic                                          rx_online_delay               ;
+  logic [   1:   0]                              tx_mrk_userbit                ; // No TX User Marker, so tie off
+  logic                                          tx_stb_userbit                ; // No TX User Strobe, so tie off
+  assign tx_mrk_userbit                     = '0                                 ;
+  assign tx_stb_userbit                     = '1                                 ;
 
 // Interconnect Wires
 //////////////////////////////////////////////////////////////////
@@ -137,6 +140,7 @@ module axi_lite_a32_d32_slave_top  (
 
    ll_auto_sync #(.MARKER_WIDTH(2),
                   .PERSISTENT_MARKER(1'b1),
+                  .NO_MARKER(1'b1),
                   .PERSISTENT_STROBE(1'b1)) ll_auto_sync_i
      (// Outputs
       .tx_online_delay                  (tx_online_delay),
@@ -147,12 +151,12 @@ module axi_lite_a32_d32_slave_top  (
       .clk_wr                           (clk_wr),
       .rst_wr_n                         (rst_wr_n),
       .tx_online                        (tx_online),
-      .delay_xz_value                   (delay_xz_value[7:0]),
-      .delay_yz_value                   (delay_yz_value[7:0]),
+      .delay_z_value                    (delay_z_value[15:0]),
+      .delay_y_value                    (delay_y_value[15:0]),
       .tx_mrk_userbit                   (tx_mrk_userbit),
       .tx_stb_userbit                   (tx_stb_userbit),
       .rx_online                        (rx_online),
-      .delay_x_value                    (delay_x_value[7:0]));
+      .delay_x_value                    (delay_x_value[15:0]));
 
 // Auto Sync
 //////////////////////////////////////////////////////////////////

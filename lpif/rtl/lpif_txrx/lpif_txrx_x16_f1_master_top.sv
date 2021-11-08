@@ -92,9 +92,9 @@ module lpif_txrx_x16_f1_master_top  (
   input  logic               m_gen2_mode         ,
 
 
-  input  logic [7:0]         delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
-  input  logic [7:0]         delay_xz_value      ,
-  input  logic [7:0]         delay_yz_value      
+  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_y_value       ,
+  input  logic [15:0]        delay_z_value       
 
 );
 
@@ -135,12 +135,12 @@ module lpif_txrx_x16_f1_master_top  (
       .clk_wr                           (clk_wr),
       .rst_wr_n                         (rst_wr_n),
       .tx_online                        (tx_online),
-      .delay_xz_value                   (delay_xz_value[7:0]),
-      .delay_yz_value                   (delay_yz_value[7:0]),
+      .delay_z_value                    (delay_z_value[15:0]),
+      .delay_y_value                    (delay_y_value[15:0]),
       .tx_mrk_userbit                   (tx_mrk_userbit),
       .tx_stb_userbit                   (tx_stb_userbit),
       .rx_online                        (rx_online),
-      .delay_x_value                    (delay_x_value[7:0]));
+      .delay_x_value                    (delay_x_value[15:0]));
 
 // Auto Sync
 //////////////////////////////////////////////////////////////////

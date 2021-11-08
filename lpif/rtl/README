@@ -7,3 +7,26 @@ The LPIF Adapter uses datapaths generated from the Logic Link IP. The config fil
 For example, to generate a datapath, execute this from this directory:
 
   python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_f2.cfg --odir lpif_txrx
+
+
+  Or generate the entire suite by running these commands:
+
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_f1.cfg --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_f2.cfg --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_h1.cfg --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_h2.cfg --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x16_q2.cfg --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x1_f1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x1_h1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x2_f1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x2_h1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x4_f1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x4_f2.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x4_h1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x4_h2.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x4_q2.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x8_f1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x8_f2.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x8_h1.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x8_h2.cfg  --odir lpif_txrx
+  python ../../llink/script/llink_gen.py --cfg cfg/lpif_x8_q2.cfg  --odir lpif_txrx

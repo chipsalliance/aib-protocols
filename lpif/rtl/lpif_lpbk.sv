@@ -33,8 +33,7 @@ module lpif_lpbk
     )
   (
    // AIB Interface
-   input logic                                      m_wr_clk,
-   input logic                                      com_clk,
+   input logic                                      lclk,
    input logic                                      rst_n,
 
    input                                            lpbk_en,
@@ -44,7 +43,7 @@ module lpif_lpbk
    output logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0] dout_lpbk
    );
 
-  always_ff @(posedge com_clk or negedge rst_n)
+  always_ff @(posedge lclk or negedge rst_n)
     if (~rst_n)
       dout_lpbk <= {AIB_LANES*AIB_BITS_PER_LANE{1'b0}};
     else

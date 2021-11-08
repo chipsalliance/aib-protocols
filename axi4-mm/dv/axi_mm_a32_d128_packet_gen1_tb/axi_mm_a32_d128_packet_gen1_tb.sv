@@ -59,10 +59,17 @@ localparam CHAN_1_M2S_DLL_TIME = 8'd5;
 localparam CHAN_0_S2M_DLL_TIME = 8'd5;
 localparam CHAN_1_S2M_DLL_TIME = 8'd5;
 
-localparam DELAY_X_VALUE  = 8'd10; // Should be greater than DLL_TIME. Indicates when RX CA is ready for Strobe
-localparam DELAY_XZ_VALUE = 8'd14; // Should be greater than DELAY_X_VALUE. Indicates when TX CA should send 1shot strobe
-localparam DELAY_Z_VALUE  = 8'd4;  // Should be greater than DELAY_X_VALUE. Indicates when TX LLINK to stop user strobe
-localparam DELAY_YZ_VALUE = 8'd30; // Should be greater than DELAY_XZ_VALUE. Indicates when TX LLINK can use reuse strobes and send data.
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / MASTER_RATE;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / MASTER_RATE;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / MASTER_RATE;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / SLAVE_RATE;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / SLAVE_RATE;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / SLAVE_RATE;
 
 localparam CHAN_M2S_MARKER_LOC = 8'd39;
 localparam CHAN_S2M_MARKER_LOC = 8'd39;
@@ -313,9 +320,6 @@ end
    /* axi_mm_a32_d128_packet_gen1_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .tx_mrk_userbit			('0),
-      .tx_stb_userbit			('0),
-
       .init_ar_credit			(8'h0),
       .init_aw_credit			(8'h0),
       .init_w_credit			(8'h0),
@@ -323,9 +327,9 @@ end
       .rx_online			(master_align_done), // Tied ONLINE high
       .tx_online			(&{master_sl_tx_transfer_en,master_ms_tx_transfer_en}),
 
-      .delay_x_value                    (8'h0), // Because CA Is here, we set these to 0.
-      .delay_xz_value                   (DELAY_Z_VALUE),
-      .delay_yz_value                   (DELAY_YZ_VALUE),
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (ll2ca_master_\1[]),
       .rx_phy\(.\)			(ca2ll_master_\1[]),
@@ -385,11 +389,9 @@ end
       .user_rready			(user1_rready),		 // Templated
       .user_bready			(user1_bready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			('0),			 // Templated
-      .tx_stb_userbit			('0),			 // Templated
-      .delay_x_value			(8'h0),			 // Templated
-      .delay_xz_value			(DELAY_Z_VALUE),	 // Templated
-      .delay_yz_value			(DELAY_YZ_VALUE));	 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
    /* ca AUTO_TEMPLATE (
       .lane_clk				({2{m_wr_clk}}),
@@ -410,8 +412,9 @@ end
       .tx_stb_rcvr			(1'b1),                 // recover strobes
       .align_fly			('0),                   // Only look for strobe once
       .rden_dly				('0),                   // No delay before outputting data
-      .count_x				(DELAY_X_VALUE),
-      .count_xz				(DELAY_XZ_VALUE),
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
+
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
       .tx_stb_intv			(8'd20),                // Strobe repeats every 20 cycles
@@ -425,8 +428,8 @@ end
       .rx_dout				({ca2ll_master_1[79:0], ca2ll_master_0[79:0]}),
 
 
-      .fifo_full_val			(5'd16),      // Status
-      .fifo_pfull_val			(5'd12),      // Status
+      .fifo_full_val			(6'd16),      // Status
+      .fifo_pfull_val			(6'd12),      // Status
       .fifo_empty_val			(3'd0),       // Status
       .fifo_pempty_val			(3'd4),       // Status
       .fifo_full			(),          // Status
@@ -465,8 +468,8 @@ end
       .tx_stb_rcvr			(1'b1),			 // Templated
       .align_fly			('0),			 // Templated
       .rden_dly				('0),			 // Templated
-      .count_x				(DELAY_X_VALUE),	 // Templated
-      .count_xz				(DELAY_XZ_VALUE),	 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),  // Templated
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),  // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
       .tx_stb_intv			(8'd20),			 // Templated
@@ -475,8 +478,8 @@ end
       .rx_stb_intv			(8'd20),			 // Templated
       .tx_din				({ll2ca_master_1[79:0], ll2ca_master_0[79:0]}), // Templated
       .rx_din				({phy2ca_master_1[79:0], phy2ca_master_0[79:0]}), // Templated
-      .fifo_full_val			(5'd16),		 // Templated
-      .fifo_pfull_val			(5'd12),		 // Templated
+      .fifo_full_val			(6'd16),		 // Templated
+      .fifo_pfull_val			(6'd12),		 // Templated
       .fifo_empty_val			(3'd0),			 // Templated
       .fifo_pempty_val			(3'd4));			 // Templated
 
@@ -605,8 +608,8 @@ end
       .tx_stb_rcvr			(1'b1),                 // recover strobes
       .align_fly			('0),                   // Only look for strobe once
       .rden_dly				('0),                   // No delay before outputting data
-      .count_x				(DELAY_X_VALUE),
-      .count_xz				(DELAY_XZ_VALUE),
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
       .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
@@ -619,8 +622,8 @@ end
       .tx_dout				({ca2phy_slave_1[79:0], ca2phy_slave_0[79:0]}),
       .rx_dout				({ca2ll_slave_1[79:0], ca2ll_slave_0[79:0]}),
 
-      .fifo_full_val			(5'd16),      // Status
-      .fifo_pfull_val			(5'd12),      // Status
+      .fifo_full_val			(6'd16),      // Status
+      .fifo_pfull_val			(6'd12),      // Status
       .fifo_empty_val			(3'd0),       // Status
       .fifo_pempty_val			(3'd4),       // Status
       .fifo_full			(),          // Status
@@ -659,8 +662,8 @@ end
       .tx_stb_rcvr			(1'b1),			 // Templated
       .align_fly			('0),			 // Templated
       .rden_dly				('0),			 // Templated
-      .count_x				(DELAY_X_VALUE),	 // Templated
-      .count_xz				(DELAY_XZ_VALUE),	 // Templated
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),   // Templated
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),   // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
       .tx_stb_intv			(8'd20),			 // Templated
@@ -669,8 +672,8 @@ end
       .rx_stb_intv			(8'd20),			 // Templated
       .tx_din				({ll2ca_slave_1[79:0], ll2ca_slave_0[79:0]}), // Templated
       .rx_din				({phy2ca_slave_1[79:0], phy2ca_slave_0[79:0]}), // Templated
-      .fifo_full_val			(5'd16),		 // Templated
-      .fifo_pfull_val			(5'd12),		 // Templated
+      .fifo_full_val			(6'd16),		 // Templated
+      .fifo_pfull_val			(6'd12),		 // Templated
       .fifo_empty_val			(3'd0),			 // Templated
       .fifo_pempty_val			(3'd4));			 // Templated
 
@@ -686,9 +689,9 @@ end
       .rx_online			(slave_align_done),
       .tx_online			(&{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en}),
 
-      .delay_x_value                    (8'h0), // Because CA Is here, we set these to 0.
-      .delay_xz_value                   (DELAY_Z_VALUE),
-      .delay_yz_value                   (DELAY_YZ_VALUE),
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (ll2ca_slave_\1[]),
       .rx_phy\(.\)			(ca2ll_slave_\1[]),
@@ -750,11 +753,9 @@ end
       .user_bresp			(user2_bresp[1:0]),	 // Templated
       .user_bvalid			(user2_bvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			('0),			 // Templated
-      .tx_stb_userbit			('0),			 // Templated
-      .delay_x_value			(8'h0),			 // Templated
-      .delay_xz_value			(DELAY_Z_VALUE),	 // Templated
-      .delay_yz_value			(DELAY_YZ_VALUE));	 // Templated
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE) );        // Templated
 
 
 // logic [79:0] tx_master_phy0_delay_array [$];

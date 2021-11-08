@@ -38,7 +38,7 @@ module ca_tx_strb
    input logic                                      tx_online,
    input logic                                      tx_stb_en,
    input logic                                      tx_stb_rcvr,
-   input logic [7:0]                                count_xz,
+   input logic [15:0]                               delay_z_value,
 
    input logic [7:0]                                tx_stb_wd_sel,
    input logic [39:0]                               tx_stb_bit_sel,
@@ -52,7 +52,6 @@ module ca_tx_strb
    );
 
   logic                                             tx_online_del;
-  logic [7:0]                                       timer_xz;
   logic [7:0]                                       stb_intv_count;
   logic                                             tx_userbit;
   logic                                             tx_state_gen_stb;
@@ -113,20 +112,24 @@ module ca_tx_strb
       end
   endgenerate
 
-  always_ff @(posedge com_clk or negedge rst_n)
-    if (~rst_n)
-      begin
-        timer_xz <= 8'b0;
-        tx_online_del <= 1'b0;
-      end
-    else
-      begin
-        tx_online_del <= tx_online;
-        if (tx_online & ~tx_online_del)
-          timer_xz <= count_xz;
-        else if (|timer_xz)
-          timer_xz <= timer_xz - 1'b1;
-      end
+
+  /* level_delay AUTO_TEMPLATE (
+      .delayed_en   (tx_online_del),
+      .rst_core_n   (rst_com_n),
+      .clk_core	    (com_clk),
+      .enable	    (rx_online),
+      .delay_value  (delay_z_value[]));
+   ); */
+
+   level_delay level_delay_i_zvalue
+     (/*AUTOINST*/
+      // Outputs
+      .delayed_en			(tx_online_del),
+      // Inputs
+      .rst_core_n			(rst_n),
+      .clk_core				(com_clk),
+      .enable				(tx_online),
+      .delay_value			(delay_z_value[15:0]));
 
   /* strobe interval counters */
 
@@ -193,7 +196,7 @@ module ca_tx_strb
             d_tx_state = TX_ONLINE;
         end
         TX_ONLINE: begin
-          if (tx_stb_en & ~|timer_xz)
+          if (tx_stb_en & tx_online_del)
             d_tx_state = TX_GEN_STB;
         end
         TX_GEN_STB: begin

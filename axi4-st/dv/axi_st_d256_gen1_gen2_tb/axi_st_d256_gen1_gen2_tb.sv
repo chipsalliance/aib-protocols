@@ -52,6 +52,18 @@ module axi_st_d256_gen1_gen2_tb ();
 
 `define PHY_LATENCY 0
 
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
 parameter CLK_HALF_CYCLE = 0.25 * 2;
@@ -171,19 +183,14 @@ end
    /* axi_st_d256_gen1_gen2_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(2'b0),
-      .tx_stb_userbit			(1'b0),
-
-      .init_st_credit			(8'd64),
+      .init_st_credit			(8'd0),
 
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
@@ -209,27 +216,20 @@ end
       .user_tlast			(user1_tlast),		 // Templated
       .user_tvalid			(user1_tvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(2'b0),			 // Templated
-      .tx_stb_userbit			(1'b0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
 
    /* axi_st_d256_gen1_gen2_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(2'b0),
-      .tx_stb_userbit			(1'b0),
-
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
@@ -254,11 +254,9 @@ end
       .rx_phy1				(rx_phy_slave_1[159:0]), // Templated
       .user_tready			(user2_tready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(2'b0),			 // Templated
-      .tx_stb_userbit			(1'b0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE));
 
 
 localparam TX_PHY_LATENCY = `PHY_LATENCY; // This number equates to how many clk_wr cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.

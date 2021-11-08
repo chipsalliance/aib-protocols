@@ -40,7 +40,7 @@ module lpif_ctl
   (
    // LPIF Interface
    input logic                          lclk,
-   input logic                          reset,
+   input logic                          rst_n,
 
    input logic                          lp_irdy,
    input logic [LPIF_DATA_WIDTH*8-1:0]  lp_data,
@@ -103,9 +103,6 @@ module lpif_ctl
    output logic                         pl_cfg_vld,
 
    // AIB Interface
-   input logic                          com_clk,
-   input logic                          rst_n,
-
    output logic                         ns_mac_rdy,
    input logic                          fs_mac_rdy,
    output logic [AIB_LANES-1:0]         ns_adapter_rstn,
@@ -135,8 +132,8 @@ module lpif_ctl
    output logic [7:0]                   rx_stb_wd_sel,
    output logic [39:0]                  rx_stb_bit_sel,
    output logic [7:0]                   rx_stb_intv,
-   output logic [4:0]                   fifo_full_val,
-   output logic [4:0]                   fifo_pfull_val,
+   output logic [5:0]                   fifo_full_val,
+   output logic [5:0]                   fifo_pfull_val,
    output logic [2:0]                   fifo_empty_val,
    output logic [2:0]                   fifo_pempty_val,
    output logic [2:0]                   rden_dly,
@@ -194,8 +191,8 @@ module lpif_ctl
   assign rx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign rx_stb_bit_sel = 40'h2;
   assign rx_stb_intv = 8'h8;
-  assign fifo_full_val = 5'h1F;
-  assign fifo_pfull_val = 5'h10;
+  assign fifo_full_val = 6'h1F;
+  assign fifo_pfull_val = 6'h10;
   assign fifo_empty_val = 3'h0;
   assign fifo_pempty_val = 3'h4;
   assign rden_dly = 3'h0;
@@ -211,7 +208,7 @@ module lpif_ctl
   logic                                 d_rx_online;
 
   wire                                  phy_err = ~&{ms_tx_transfer_en, sl_tx_transfer_en} |
-                                        |wa_error |
+                                        (|wa_error) |
                                         lp_linkerror;
 
   always_comb
@@ -232,7 +229,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("protid", "protid_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0] protid_ascii;           // Decode of protid
+  reg [111:0]           protid_ascii;           // Decode of protid
   always @(protid) begin
     case ({protid})
       PROTID_CACHE:   protid_ascii = "protid_cache  ";
@@ -260,7 +257,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0] pl_stream_int_ascii;    // Decode of pl_stream_int
+  reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
   always @(pl_stream_int) begin
     case ({pl_stream_int})
       PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
@@ -297,7 +294,7 @@ module lpif_ctl
 
   /*AUTOASCIIENUM("ctl_state", "ctl_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [135:0] ctl_state_ascii;        // Decode of ctl_state
+  reg [135:0]           ctl_state_ascii;        // Decode of ctl_state
   always @(ctl_state) begin
     case ({ctl_state})
       CTL_IDLE:          ctl_state_ascii = "ctl_idle         ";
@@ -371,7 +368,7 @@ module lpif_ctl
       endcase // case (ctl_state)
     end // block: ctl_state_next
 
-  always_ff @(posedge  com_clk or negedge rst_n)
+  always_ff @(posedge lclk or negedge rst_n)
     begin
       if (~rst_n)
         begin
@@ -423,7 +420,7 @@ module lpif_ctl
           tx_online <= d_tx_online;
           rx_online <= d_rx_online;
         end // else: !if(~rst_n)
-    end // always_ff @ (posedge  com_clk or negedge rst_n)
+    end // always_ff @ (posedge lclk or negedge rst_n)
 
 endmodule // lpif_ctl
 

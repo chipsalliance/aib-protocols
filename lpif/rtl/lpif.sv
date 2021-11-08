@@ -27,21 +27,21 @@
 ////////////////////////////////////////////////////////////
 
 module lpif
-    #(
-      parameter AIB_VERSION = 2,
-      parameter AIB_GENERATION = 2,
-      parameter AIB_LANES = 4,
-      parameter AIB_BITS_PER_LANE = 320,
-      parameter AIB_CLOCK_RATE = 2000,
-      parameter LPIF_CLOCK_RATE = 2000,
-      parameter LPIF_DATA_WIDTH = 32,
-      parameter LPIF_PIPELINE_STAGES = 1,
-      parameter MEM_CACHE_STREAM_ID = 8'h1,
-      parameter IO_STREAM_ID = 8'h2,
-      parameter ARB_MUX_STREAM_ID = 8'h3,
-      localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
-      localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
-      )
+  #(
+    parameter AIB_VERSION = 2,
+    parameter AIB_GENERATION = 2,
+    parameter AIB_LANES = 4,
+    parameter AIB_BITS_PER_LANE = 320,
+    parameter AIB_CLOCK_RATE = 2000,
+    parameter LPIF_CLOCK_RATE = 2000,
+    parameter LPIF_DATA_WIDTH = 32,
+    parameter LPIF_PIPELINE_STAGES = 1,
+    parameter MEM_CACHE_STREAM_ID = 8'h1,
+    parameter IO_STREAM_ID = 8'h2,
+    parameter ARB_MUX_STREAM_ID = 8'h3,
+    localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
+    localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
+    )
   (
    // LPIF Interface
    input logic                                      lclk,
@@ -143,17 +143,17 @@ module lpif
    output logic [7:0]                               rx_stb_wd_sel,
    output logic [39:0]                              rx_stb_bit_sel,
    output logic [7:0]                               rx_stb_intv,
-   output logic [4:0]                               fifo_full_val,
-   output logic [4:0]                               fifo_pfull_val,
+   output logic [5:0]                               fifo_full_val,
+   output logic [5:0]                               fifo_pfull_val,
    output logic [2:0]                               fifo_empty_val,
    output logic [2:0]                               fifo_pempty_val,
    output logic [2:0]                               rden_dly,
 
    output logic                                     tx_online,
    output logic                                     rx_online,
-   input logic [7:0]                                delay_x_value,
-   input logic [7:0]                                delay_xz_value,
-   input logic [7:0]                                delay_yz_value,
+   input logic [15:0]                               delay_x_value,
+   input logic [15:0]                               delay_y_value,
+   input logic [15:0]                               delay_z_value,
 
    input logic                                      lpbk_en
    );
@@ -279,8 +279,8 @@ module lpif
   /* TX & RX datapath */
 
   /* lpif_txrx AUTO_TEMPLATE (
-   .clk_wr                 (com_clk),
-   .rst_wr_n               (~reset),
+   .com_clk                (lclk),
+   .rst_n                  (reset),
    .init_downstream_credit (8'hff),
    ); */
 
@@ -320,14 +320,14 @@ module lpif
      .rx_upstream_debug_status          (rx_upstream_debug_status[31:0]),
      .tx_downstream_debug_status        (tx_downstream_debug_status[31:0]),
      // Inputs
-     .com_clk                           (com_clk),
-     .rst_n                             (rst_n),
+     .com_clk                           (lclk),                  // Templated
+     .rst_n                             (reset),                 // Templated
      .tx_online                         (tx_online),
      .rx_online                         (rx_online),
      .m_gen2_mode                       (m_gen2_mode),
-     .delay_x_value                     (delay_x_value[7:0]),
-     .delay_xz_value                    (delay_xz_value[7:0]),
-     .delay_yz_value                    (delay_yz_value[7:0]),
+     .delay_x_value                     (delay_x_value[15:0]),
+     .delay_y_value                     (delay_y_value[15:0]),
+     .delay_z_value                     (delay_z_value[15:0]),
      .rx_phy0                           (rx_phy0[319:0]),
      .rx_phy1                           (rx_phy1[319:0]),
      .rx_phy2                           (rx_phy2[319:0]),
@@ -355,6 +355,7 @@ module lpif
   /* Loopback */
 
   /* lpif_lpbk AUTO_TEMPLATE (
+   .rst_n (reset),
    ); */
 
   lpif_lpbk
@@ -367,9 +368,8 @@ module lpif
      // Outputs
      .dout_lpbk                         (dout_lpbk[(AIB_LANES*AIB_BITS_PER_LANE)-1:0]),
      // Inputs
-     .m_wr_clk                          (m_wr_clk),
-     .com_clk                           (com_clk),
-     .rst_n                             (rst_n),
+     .lclk                              (lclk),
+     .rst_n                             (reset),                 // Templated
      .lpbk_en                           (lpbk_en),
      .data_in_f                         (data_in_f[(AIB_LANES*AIB_BITS_PER_LANE)-1:0]),
      .dout                              (dout[(AIB_LANES*AIB_BITS_PER_LANE)-1:0]));
@@ -377,6 +377,7 @@ module lpif
   /* Control */
 
   /* lpif_ctl AUTO_TEMPLATE (
+   .rst_n (reset),
    ); */
 
   lpif_ctl
@@ -436,8 +437,8 @@ module lpif
      .rx_stb_wd_sel                     (rx_stb_wd_sel[7:0]),
      .rx_stb_bit_sel                    (rx_stb_bit_sel[39:0]),
      .rx_stb_intv                       (rx_stb_intv[7:0]),
-     .fifo_full_val                     (fifo_full_val[4:0]),
-     .fifo_pfull_val                    (fifo_pfull_val[4:0]),
+     .fifo_full_val                     (fifo_full_val[5:0]),
+     .fifo_pfull_val                    (fifo_pfull_val[5:0]),
      .fifo_empty_val                    (fifo_empty_val[2:0]),
      .fifo_pempty_val                   (fifo_pempty_val[2:0]),
      .rden_dly                          (rden_dly[2:0]),
@@ -447,7 +448,7 @@ module lpif
      .ctl_phy_err                       (ctl_phy_err),
      // Inputs
      .lclk                              (lclk),
-     .reset                             (reset),
+     .rst_n                             (reset),                 // Templated
      .lp_irdy                           (lp_irdy),
      .lp_data                           (lp_data[LPIF_DATA_WIDTH*8-1:0]),
      .lp_crc                            (lp_crc[LPIF_CRC_WIDTH-1:0]),
@@ -466,8 +467,6 @@ module lpif
      .lp_flushed_all                    (lp_flushed_all),
      .lp_rcvd_crc_err                   (lp_rcvd_crc_err),
      .lp_force_detect                   (lp_force_detect),
-     .com_clk                           (com_clk),
-     .rst_n                             (rst_n),
      .fs_mac_rdy                        (fs_mac_rdy),
      .sl_rx_transfer_en                 (sl_rx_transfer_en[AIB_LANES-1:0]),
      .ms_tx_transfer_en                 (ms_tx_transfer_en[AIB_LANES-1:0]),
@@ -494,6 +493,7 @@ module lpif
   /* Link State Machine */
 
   /* lpif_lsm AUTO_TEMPLATE (
+   .rst_n (reset),
    ); */
 
   lpif_lsm
@@ -515,7 +515,7 @@ module lpif
      .lsm_speedmode                     (lsm_speedmode[2:0]),
      // Inputs
      .lclk                              (lclk),
-     .rst_n                             (rst_n),
+     .rst_n                             (reset),                 // Templated
      .lp_state_req                      (lp_state_req[3:0]),
      .ustrm_state                       (ustrm_state[3:0]),
      .ctl_link_up                       (ctl_link_up),

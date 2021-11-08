@@ -47,6 +47,18 @@ module axi_st_d64_nordy_tb ();
 
 `define DATA_DEBUG 1            // If 1, data is less random, more incrementing patterns.
 
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
 parameter CLK_HALF_CYCLE = 0.25;
@@ -172,10 +184,7 @@ end
    /* axi_st_d64_nordy_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
-
-      .init_st_credit			(8'd128),
+      .init_st_credit			(8'd0),
 
       .rx_online			(master_rx_online),
       .tx_online			(master_tx_online),
@@ -183,9 +192,9 @@ end
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
 
-      // This is X so I can see it.
-      .tx_mrk_userbit			(1'b1),
-      .tx_stb_userbit			(1'b1),
+      .delay_x_value			(MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
     );
     */
    axi_st_d64_nordy_master_top axi_st_master_top_i
@@ -207,16 +216,13 @@ end
       .m_gen2_mode			(m_gen2_mode),
       .tx_mrk_userbit			(1'b1),			 // Templated
       .tx_stb_userbit			(1'b1),			 // Templated
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
 
    /* axi_st_d64_nordy_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
-
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
 
       .rx_online			(slave_rx_online),
       .tx_online			(slave_tx_online),
@@ -224,9 +230,9 @@ end
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
 
-      // This is X so I can see it.
-      .tx_mrk_userbit			(1'b1),
-      .tx_stb_userbit			(1'b1),
+      .delay_x_value			(SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
     );
     */
    axi_st_d64_nordy_slave_top axi_st_slave_top_i
@@ -247,9 +253,9 @@ end
       .m_gen2_mode			(m_gen2_mode),
       .tx_mrk_userbit			(1'b1),			 // Templated
       .tx_stb_userbit			(1'b1),			 // Templated
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE));
 
 
 localparam TX_PHY_LATENCY = 0; // This number equates to how many clk_wr cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.
@@ -303,9 +309,6 @@ begin
   wait (rst_wr_n === 1'b1);
   repeat (10) @(posedge clk_wr);
 
-  delay_x_value  = 8'd5;               // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-  delay_xz_value = 8'd5  + 8'd2;       // Word Alignment Time + a little
-  delay_yz_value = 8'd10 + 8'd2;       // Channel Alignment Time + a little
 
   TestPhase = 99 ;
   fork
@@ -316,10 +319,14 @@ begin
       master_tx_online <= 1;
       slave_rx_online  <= 1;
 
+      // No ready, so we need to make sure the system is stable before we send anything.
+      repeat (10_000) @(posedge clk_wr);
+
       repeat (4) @(posedge clk_wr); // Word is Aligned
       m2s_word_align <= 1;
       repeat (8) @(posedge clk_wr); // CA is Aligned
       m2s_ca_align <= 1;
+      repeat (2_000) @(posedge clk_wr);
     end
 
     // Slave to Master
@@ -329,10 +336,14 @@ begin
       slave_tx_online <= 1;
       master_rx_online  <= 1;
 
+      // No ready, so we need to make sure the system is stable before we send anything.
+      repeat (10_000) @(posedge clk_wr);
+
       repeat (2) @(posedge clk_wr); // Word is Aligned
       s2m_word_align <= 1;
       repeat (4) @(posedge clk_wr); // CA is Aligned
       s2m_ca_align <= 1;
+      repeat (2_000) @(posedge clk_wr);
     end
   join
 

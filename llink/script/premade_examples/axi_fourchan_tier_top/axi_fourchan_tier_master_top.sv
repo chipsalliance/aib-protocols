@@ -23,26 +23,26 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
    ch0_rx_b_debug_status,
    // Inputs
    tx_stb_userbit, tx_online, tx_mrk_userbit, rx_phy0, rx_online,
-   rst_wr_n, m_gen2_mode, delay_yz_value, delay_xz_value,
-   delay_x_value, clk_wr, ch3_user_wvalid, ch3_user_wlast,
-   ch3_user_wid, ch3_user_wdata, ch3_user_rready, ch3_user_bready,
-   ch3_user_awvalid, ch3_user_awsize, ch3_user_awlen, ch3_user_awid,
-   ch3_user_awburst, ch3_user_awaddr, ch3_user_arvalid,
-   ch3_user_arsize, ch3_user_arlen, ch3_user_arid, ch3_user_arburst,
-   ch3_user_araddr, ch2_user_wvalid, ch2_user_wlast, ch2_user_wid,
-   ch2_user_wdata, ch2_user_rready, ch2_user_bready, ch2_user_awvalid,
-   ch2_user_awsize, ch2_user_awlen, ch2_user_awid, ch2_user_awburst,
-   ch2_user_awaddr, ch2_user_arvalid, ch2_user_arsize, ch2_user_arlen,
-   ch2_user_arid, ch2_user_arburst, ch2_user_araddr, ch1_user_wvalid,
-   ch1_user_wlast, ch1_user_wid, ch1_user_wdata, ch1_user_rready,
-   ch1_user_bready, ch1_user_awvalid, ch1_user_awsize, ch1_user_awlen,
-   ch1_user_awid, ch1_user_awburst, ch1_user_awaddr, ch1_user_arvalid,
-   ch1_user_arsize, ch1_user_arlen, ch1_user_arid, ch1_user_arburst,
-   ch1_user_araddr, ch0_user_wvalid, ch0_user_wlast, ch0_user_wid,
-   ch0_user_wdata, ch0_user_rready, ch0_user_bready, ch0_user_awvalid,
-   ch0_user_awsize, ch0_user_awlen, ch0_user_awid, ch0_user_awburst,
-   ch0_user_awaddr, ch0_user_arvalid, ch0_user_arsize, ch0_user_arlen,
-   ch0_user_arid, ch0_user_arburst, ch0_user_araddr
+   rst_wr_n, m_gen2_mode, delay_z_value, delay_y_value, delay_x_value,
+   clk_wr, ch3_user_wvalid, ch3_user_wlast, ch3_user_wid,
+   ch3_user_wdata, ch3_user_rready, ch3_user_bready, ch3_user_awvalid,
+   ch3_user_awsize, ch3_user_awlen, ch3_user_awid, ch3_user_awburst,
+   ch3_user_awaddr, ch3_user_arvalid, ch3_user_arsize, ch3_user_arlen,
+   ch3_user_arid, ch3_user_arburst, ch3_user_araddr, ch2_user_wvalid,
+   ch2_user_wlast, ch2_user_wid, ch2_user_wdata, ch2_user_rready,
+   ch2_user_bready, ch2_user_awvalid, ch2_user_awsize, ch2_user_awlen,
+   ch2_user_awid, ch2_user_awburst, ch2_user_awaddr, ch2_user_arvalid,
+   ch2_user_arsize, ch2_user_arlen, ch2_user_arid, ch2_user_arburst,
+   ch2_user_araddr, ch1_user_wvalid, ch1_user_wlast, ch1_user_wid,
+   ch1_user_wdata, ch1_user_rready, ch1_user_bready, ch1_user_awvalid,
+   ch1_user_awsize, ch1_user_awlen, ch1_user_awid, ch1_user_awburst,
+   ch1_user_awaddr, ch1_user_arvalid, ch1_user_arsize, ch1_user_arlen,
+   ch1_user_arid, ch1_user_arburst, ch1_user_araddr, ch0_user_wvalid,
+   ch0_user_wlast, ch0_user_wid, ch0_user_wdata, ch0_user_rready,
+   ch0_user_bready, ch0_user_awvalid, ch0_user_awsize, ch0_user_awlen,
+   ch0_user_awid, ch0_user_awburst, ch0_user_awaddr, ch0_user_arvalid,
+   ch0_user_arsize, ch0_user_arlen, ch0_user_arid, ch0_user_arburst,
+   ch0_user_araddr
    );
 
   /*AUTOOUTPUT*/
@@ -189,9 +189,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
   input logic		ch3_user_wlast;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i3 of axi_fourchan_tier1_a32_d32_packet_master_top.v
   input logic		ch3_user_wvalid;	// To axi_fourchan_tier1_a32_d32_packet_master_top_i3 of axi_fourchan_tier1_a32_d32_packet_master_top.v
   input logic		clk_wr;			// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
-  input logic [7:0]	delay_x_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
-  input logic [7:0]	delay_xz_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
-  input logic [7:0]	delay_yz_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
+  input logic [15:0]	delay_x_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
+  input logic [15:0]	delay_y_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
+  input logic [15:0]	delay_z_value;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
   input logic		m_gen2_mode;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
   input logic		rst_wr_n;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
   input logic		rx_online;		// To axi_fourchan_tier1_a32_d32_packet_master_top_i0 of axi_fourchan_tier1_a32_d32_packet_master_top.v, ...
@@ -273,9 +273,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
       .user_rready			(ch0_user_rready),	 // Templated
       .user_bready			(ch0_user_bready),	 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(delay_x_value[15:0]),
+      .delay_y_value			(delay_y_value[15:0]),
+      .delay_z_value			(delay_z_value[15:0]));
 
    axi_fourchan_tier1_a32_d32_packet_master_top axi_fourchan_tier1_a32_d32_packet_master_top_i1
      (/*AUTOINST*/
@@ -325,9 +325,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
       .user_rready			(ch1_user_rready),	 // Templated
       .user_bready			(ch1_user_bready),	 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(delay_x_value[15:0]),
+      .delay_y_value			(delay_y_value[15:0]),
+      .delay_z_value			(delay_z_value[15:0]));
 
    axi_fourchan_tier1_a32_d32_packet_master_top axi_fourchan_tier1_a32_d32_packet_master_top_i2
      (/*AUTOINST*/
@@ -377,9 +377,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
       .user_rready			(ch2_user_rready),	 // Templated
       .user_bready			(ch2_user_bready),	 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(delay_x_value[15:0]),
+      .delay_y_value			(delay_y_value[15:0]),
+      .delay_z_value			(delay_z_value[15:0]));
 
    axi_fourchan_tier1_a32_d32_packet_master_top axi_fourchan_tier1_a32_d32_packet_master_top_i3
      (/*AUTOINST*/
@@ -429,9 +429,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
       .user_rready			(ch3_user_rready),	 // Templated
       .user_bready			(ch3_user_bready),	 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(delay_x_value[15:0]),
+      .delay_y_value			(delay_y_value[15:0]),
+      .delay_z_value			(delay_z_value[15:0]));
 
 
    /* axi_fourchan_tier2_master_top AUTO_TEMPLATE ".*_i\(.+\)"  (
@@ -464,9 +464,9 @@ module axi_fourchan_tier_master_top (/*AUTOARG*/
       .m_gen2_mode			(m_gen2_mode),
       .tx_mrk_userbit			(tx_mrk_userbit[3:0]),
       .tx_stb_userbit			(tx_stb_userbit),
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(delay_x_value[15:0]),
+      .delay_y_value			(delay_y_value[15:0]),
+      .delay_z_value			(delay_z_value[15:0]));
 
 
 endmodule
