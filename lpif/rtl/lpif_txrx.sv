@@ -43,9 +43,9 @@ module lpif_txrx
    input logic                          rx_online,
    input logic                          m_gen2_mode,
 
-   input logic [7:0]                    delay_x_value,
-   input logic [7:0]                    delay_xz_value,
-   input logic [7:0]                    delay_yz_value,
+   input logic [15:0]                   delay_x_value,
+   input logic [15:0]                   delay_y_value,
+   input logic [15:0]                   delay_z_value,
 
    input logic [319:0]                  rx_phy0,
    input logic [319:0]                  rx_phy1,
@@ -443,9 +443,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X16_Q2)
     else if (X16_H2) // half rate
       begin
@@ -486,9 +486,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X16_H2)
     else if (X16_F2) // full rate
       begin
@@ -529,9 +529,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X16_F2)
     else if (X8_Q2) // quarter rate
       begin
@@ -568,9 +568,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X8_H2) // half rate
       begin
@@ -607,9 +607,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X8_F2) // full rate
       begin
@@ -646,9 +646,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X4_Q2) // quarter rate
       begin
@@ -683,9 +683,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X4_H2) // half rate
       begin
@@ -720,9 +720,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X4_F2) // full rate
       begin
@@ -759,9 +759,9 @@ module lpif_txrx
              .m_gen2_mode               (m_gen2_mode),
              .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
              .tx_stb_userbit            (tx_stb_userbit),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X16_H1) // half rate
       begin
@@ -824,9 +824,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[1:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X16_H1)
     else if (X16_F1) // full rate
       begin
@@ -889,9 +889,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X16_F1)
     else if (X8_H1) // half rate
       begin
@@ -938,9 +938,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X8_H1)
     else if (X8_F1) // full rate
       begin
@@ -987,9 +987,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X8_F1)
     else if (X4_H1) // half rate
       begin
@@ -1028,9 +1028,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X4_H1)
     else if (X4_F1) // full rate
       begin
@@ -1077,9 +1077,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end // if (X4_F1)
     else if (X2_H1) // half rate
       begin
@@ -1114,9 +1114,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X2_F1) // full rate
       begin
@@ -1153,9 +1153,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X1_H1) // half rate
       begin
@@ -1190,9 +1190,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
     else if (X1_F1) // full rate
       begin
@@ -1227,9 +1227,9 @@ module lpif_txrx
              .dstrm_crc_valid           (dstrm_crc_valid[0:0]),
              .dstrm_valid               (dstrm_valid),           // Templated
              .m_gen2_mode               (m_gen2_mode),
-             .delay_x_value             (delay_x_value[7:0]),
-             .delay_xz_value            (delay_xz_value[7:0]),
-             .delay_yz_value            (delay_yz_value[7:0]));
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
       end
   endgenerate
 

@@ -42,7 +42,7 @@ module ca_rx_align
    input logic                                      rx_online,
    input logic                                      align_fly,
    input logic [2:0]                                rden_dly,
-   input logic [7:0]                                count_x,
+   input logic [15:0]                               delay_x_value,
 
    input logic [7:0]                                rx_stb_wd_sel,
    input logic [39:0]                               rx_stb_bit_sel,
@@ -82,7 +82,8 @@ module ca_rx_align
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv_com;
   logic [NUM_CHANNELS-1:0]                          fifo_wr;
-  logic [7:0]                                       timer_x [NUM_CHANNELS-1:0];
+//   logic [7:0]                                       timer_x [NUM_CHANNELS-1:0];
+  logic                                             rx_online_delay_x;
 
   logic [39:0]                                      word [NUM_CHANNELS-1:0];
 
@@ -112,11 +113,31 @@ module ca_rx_align
   logic [5:0]                                       rx_stb_bit_sel_ones;
   logic [5:0]                                       rx_stb_bit_sel_pos;
 
+
+
+  /* level_delay AUTO_TEMPLATE (
+      .delayed_en   (rx_online_delay_x),
+      .rst_core_n   (rst_com_n),
+      .clk_core	    (com_clk),
+      .enable	    (rx_online),
+      .delay_value  (delay_x_value[]));
+   ); */
+
+   level_delay level_delay_i_xvalue
+     (/*AUTOINST*/
+      // Outputs
+      .delayed_en			(rx_online_delay_x),
+      // Inputs
+      .rst_core_n			(rst_com_n),
+      .clk_core				(com_clk),
+      .enable				(rx_online),
+      .delay_value			(delay_x_value[15:0]));
+
   /* levelsync AUTO_TEMPLATE (
    .RESET_VALUE (1'b0),
    .clk_dest    (lane_clk[i]),
    .rst_dest_n  (rst_lane_n[i]),
-   .src_data    (rx_online),
+   .src_data    (rx_online_delay_x),
    .dest_data   (rx_online_sync[i]),
    ); */
 
@@ -141,7 +162,7 @@ module ca_rx_align
                // Inputs
                .rst_dest_n              (rst_lane_n[i]),         // Templated
                .clk_dest                (lane_clk[i]),           // Templated
-               .src_data                (rx_online));             // Templated
+               .src_data                (rx_online_delay_x));             // Templated
           end
       end
   endgenerate
@@ -220,6 +241,9 @@ module ca_rx_align
         end
     end
 
+
+
+
   generate
     for (i = 0; i < NUM_CHANNELS; i++)
       begin : stb_dets
@@ -244,7 +268,7 @@ module ca_rx_align
         always_ff @(posedge lane_clk[i] or negedge rst_lane_n[i])
           if (~rst_lane_n[i])
             begin
-              timer_x[i] <= 8'b0;
+//               timer_x[i] <= 8'b0;
               stb_det[i] <= 1'b0;
               first_stb_det[i] <= 1'b0;
               fifo_wr[i] <= 1'b0;
@@ -263,18 +287,11 @@ module ca_rx_align
                     end
                   else
                     begin
-                      if (~|timer_x[i])
-                        begin
-                          stb_det[i] <= d_stb_det[i];
-                          first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
-                          fifo_wr[i] <= fifo_wr[i] ? 1'b1 : d_stb_det[i];
-                        end
+                      stb_det[i] <= d_stb_det[i];
+                        first_stb_det[i] <= first_stb_det[i] ? 1'b1 : stb_det[i];
+                      fifo_wr[i] <= fifo_wr[i] ? 1'b1 : d_stb_det[i];
                     end
                 end
-              if (rx_online_sync[i] & ~rx_online_sync_del[i])
-                timer_x[i] <= count_x;
-              else if (|timer_x[i])
-                timer_x[i] <= timer_x[i] - 1'b1;
             end
       end // block: stb_dets
   endgenerate

@@ -1832,7 +1832,10 @@ def make_concat_file(configuration):
                         rx_element_dict = dict()
                         if packet_chunk['HASVALID']:
                             string = ""
-                            if delay_value == -1: # -1 means live value
+                            if (configuration['TX_PACKET_ID_WIDTH'] if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH']) == 0:
+                                string += " ((rx_grant_enc_data == {}'d{}) &&".format(1, packet_chunk['LAST_PKT_ENC'])
+                                string += " ({} [{}] == 1'b1))".format("rx_packet_data", packet_chunk['PUSHBIT_LOC'] )
+                            elif delay_value == -1: # -1 means live value
                                 string += " ((rx_grant_enc_data == {}'d{}) &&".format(configuration['TX_PACKET_ID_WIDTH']  if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH'], packet_chunk['LAST_PKT_ENC'])
                                 string += " ({} [{}] == 1'b1))".format("rx_packet_data", packet_chunk['PUSHBIT_LOC'] )
                             else:
@@ -2331,9 +2334,9 @@ def make_top_file(configuration):
 
         file_name.write("\n")
 
-        print_verilog_io_line(file_name, "input",  "delay_x_value",  "[7:0]", "In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done")
-        print_verilog_io_line(file_name, "input",  "delay_xz_value", "[7:0]")
-        print_verilog_io_line(file_name, "input",  "delay_yz_value", "[7:0]",comma=False)
+        print_verilog_io_line(file_name, "input",  "delay_x_value", "[15:0]", "In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done")
+        print_verilog_io_line(file_name, "input",  "delay_y_value", "[15:0]")
+        print_verilog_io_line(file_name, "input",  "delay_z_value", "[15:0]",comma=False)
         file_name.write("\n);\n")
         file_name.write("\n")
         file_name.write("//////////////////////////////////////////////////////////////////\n")
@@ -2391,10 +2394,15 @@ def make_top_file(configuration):
         else:
             file_name.write("                  .PERSISTENT_MARKER(1'b0),\n")
 
+        if ((not configuration['TX_USER_MARKER'] and direction == 'master') or
+            (not configuration['RX_USER_MARKER'] and direction != 'master') ) :
+            file_name.write("                  .NO_MARKER(1'b1),\n")
+
         if configuration['TX_PERSISTENT_STROBE'] if direction == 'master' else configuration['RX_PERSISTENT_STROBE']:
             file_name.write("                  .PERSISTENT_STROBE(1'b1)) ll_auto_sync_i\n")
         else:
             file_name.write("                  .PERSISTENT_STROBE(1'b0)) ll_auto_sync_i\n")
+
         file_name.write("     (// Outputs\n")
         file_name.write("      .tx_online_delay                  (tx_online_delay),\n")
         file_name.write("      .tx_auto_mrk_userbit              (tx_auto_mrk_userbit),\n")
@@ -2404,12 +2412,12 @@ def make_top_file(configuration):
         file_name.write("      .clk_wr                           (clk_wr),\n")
         file_name.write("      .rst_wr_n                         (rst_wr_n),\n")
         file_name.write("      .tx_online                        (tx_online),\n")
-        file_name.write("      .delay_xz_value                   (delay_xz_value[7:0]),\n")
-        file_name.write("      .delay_yz_value                   (delay_yz_value[7:0]),\n")
+        file_name.write("      .delay_z_value                    (delay_z_value[15:0]),\n")
+        file_name.write("      .delay_y_value                    (delay_y_value[15:0]),\n")
         file_name.write("      .tx_mrk_userbit                   (tx_mrk_userbit),\n")
         file_name.write("      .tx_stb_userbit                   (tx_stb_userbit),\n")
         file_name.write("      .rx_online                        (rx_online),\n")
-        file_name.write("      .delay_x_value                    (delay_x_value[7:0]));\n")
+        file_name.write("      .delay_x_value                    (delay_x_value[15:0]));\n")
         file_name.write("\n")
         file_name.write("// Auto Sync\n")
         file_name.write("//////////////////////////////////////////////////////////////////\n")

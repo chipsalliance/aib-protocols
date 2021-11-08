@@ -1,6 +1,7 @@
 ////////////////////////////////////////////////////////////
+// Proprietary Information of Eximius Design
 //
-//        Copyright (C) 2021 Eximius Design
+//        (C) Copyright 2021 Eximius Design
 //                All Rights Reserved
 //
 // This entire notice must be reproduced on all copies of this file

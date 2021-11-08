@@ -47,6 +47,18 @@ module axi_st_d64_tb ();
 
 `define DATA_DEBUG 1            // If 1, data is less random, more incrementing patterns.
 
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
 parameter CLK_HALF_CYCLE = 0.25;
@@ -169,10 +181,7 @@ end
    /* axi_st_d64_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
-
-      .init_st_credit			(8'd128),
+      .init_st_credit			(8'd0),
 
       .rx_online			(master_rx_online),
       .tx_online			(master_tx_online),
@@ -180,9 +189,9 @@ end
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
 
-      // This is X so I can see it.
-      .tx_mrk_userbit			(1'b1),
-      .tx_stb_userbit			(1'b1),
+      .delay_x_value			(MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
     );
     */
    axi_st_d64_master_top axi_st_master_top_i
@@ -203,18 +212,13 @@ end
       .user_tlast			(user1_tlast),		 // Templated
       .user_tvalid			(user1_tvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b1),			 // Templated
-      .tx_stb_userbit			(1'b1),			 // Templated
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
 
    /* axi_st_d64_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
-
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
 
       .rx_online			(slave_rx_online),
       .tx_online			(slave_tx_online),
@@ -222,9 +226,9 @@ end
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
 
-      // This is X so I can see it.
-      .tx_mrk_userbit			(1'b1),
-      .tx_stb_userbit			(1'b1),
+      .delay_x_value			(SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
     );
     */
    axi_st_d64_slave_top axi_st_slave_top_i
@@ -244,11 +248,9 @@ end
       .rx_phy0				(rx_phy_slave_0[79:0]),	 // Templated
       .user_tready			(user2_tready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b1),			 // Templated
-      .tx_stb_userbit			(1'b1),			 // Templated
-      .delay_x_value			(delay_x_value[7:0]),
-      .delay_xz_value			(delay_xz_value[7:0]),
-      .delay_yz_value			(delay_yz_value[7:0]));
+      .delay_x_value			(SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE));
 
 
 localparam TX_PHY_LATENCY = 0; // This number equates to how many clk_wr cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.

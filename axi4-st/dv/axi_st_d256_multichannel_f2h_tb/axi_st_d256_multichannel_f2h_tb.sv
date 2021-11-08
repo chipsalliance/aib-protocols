@@ -100,15 +100,18 @@ localparam CHAN_5_S2M_LATENCY = 8'd08 ;
 localparam CHAN_6_S2M_LATENCY = 8'd09 ;
 
 
-localparam DELAY_X_VALUE_SLAVE  = 8'd10; // Should be greater than DLL_TIME. Indicates when RX CA is ready for Strobe
-localparam DELAY_XZ_VALUE_SLAVE = 8'd18; // Should be greater than DELAY_X_VALUE. Indicates when TX CA should send 1shot strobe
-localparam DELAY_Z_VALUE_SLAVE  = 8'd8;  // Should be greater than DELAY_X_VALUE. Indicates when TX LLINK to stop user strobe
-localparam DELAY_YZ_VALUE_SLAVE = 8'd40; // Should be greater than DELAY_XZ_VALUE. Indicates when TX LLINK can use reuse strobes and send data.
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
 
-localparam DELAY_X_VALUE_MASTER  = DELAY_X_VALUE_SLAVE  << 1 ; // Slave is Half, so Master Full side should wait 2x as long
-localparam DELAY_XZ_VALUE_MASTER = DELAY_XZ_VALUE_SLAVE << 1 ;
-localparam DELAY_Z_VALUE_MASTER  = DELAY_Z_VALUE_SLAVE  << 1 ;
-localparam DELAY_YZ_VALUE_MASTER = DELAY_YZ_VALUE_SLAVE << 1 ;
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / MASTER_RATE;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / MASTER_RATE;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / MASTER_RATE;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / SLAVE_RATE;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / SLAVE_RATE;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / SLAVE_RATE;
+
 
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
@@ -474,9 +477,9 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rx_online			(master_align_done),
       .tx_online			(&{master_sl_tx_transfer_en,master_ms_tx_transfer_en}),
 
-      .delay_x_value                    (8'h0), // Because CA Is here, we set these to 0.
-      .delay_xz_value                   (DELAY_Z_VALUE_MASTER ),
-      .delay_yz_value                   (DELAY_YZ_VALUE_MASTER),
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (master_ll2ca_\1[]),
       .rx_phy\(.\)		        (master_ca2ll_\1[]),
@@ -515,9 +518,9 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .m_gen2_mode			(m_gen2_mode),
       .tx_mrk_userbit			(tx_mrk_userbit_master[0:0]), // Templated
       .tx_stb_userbit			(tx_stb_userbit_master), // Templated
-      .delay_x_value			(8'h0),			 // Templated
-      .delay_xz_value			(DELAY_Z_VALUE_MASTER ), // Templated
-      .delay_yz_value			(DELAY_YZ_VALUE_MASTER)); // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
    /* axi_st_d256_multichannel_half_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
@@ -528,9 +531,9 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rx_online			(slave_align_done),
       .tx_online			(&{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en}),
 
-      .delay_x_value                    (8'h0), // Because CA Is here, we set these to 0.
-      .delay_xz_value                   (DELAY_Z_VALUE_SLAVE),
-      .delay_yz_value                   (DELAY_YZ_VALUE_SLAVE),
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (slave_ll2ca_\1[]),
       .rx_phy\(.\)			(slave_ca2ll_\1[]),
@@ -569,11 +572,9 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
      .m_gen2_mode			(m_gen2_mode),
      .tx_mrk_userbit			(tx_mrk_userbit_slave[1:0]), // Templated
      .tx_stb_userbit			(tx_stb_userbit_slave),	 // Templated
-     .delay_x_value			(8'h0),			 // Templated
-     .delay_xz_value			(DELAY_Z_VALUE_SLAVE),	 // Templated
-     .delay_yz_value			(DELAY_YZ_VALUE_SLAVE));	 // Templated
-
-
+     .delay_x_value                     (SLAVE_DELAY_X_VALUE),
+     .delay_y_value                     (SLAVE_DELAY_Y_VALUE),
+     .delay_z_value                     (SLAVE_DELAY_Z_VALUE));
 
 
    /* ca AUTO_TEMPLATE (
@@ -595,8 +596,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_stb_rcvr			(1'b1),                 // recover strobes
       .align_fly			('0),                   // Only look for strobe once
       .rden_dly				('0),                   // No delay before outputting data
-      .count_x				(DELAY_X_VALUE_MASTER),
-      .count_xz				(DELAY_XZ_VALUE_MASTER),
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
       .tx_stb_wd_sel                    (8'h01),                 // Strobe is at LOC [1]
       .tx_stb_bit_sel                   (40'h0000000002),
       .tx_stb_intv                      (8'd20),                 // Strobe repeats every 20 cycles
@@ -609,8 +610,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_dout				 ({master_ca2phy_6[39:0] , master_ca2phy_5[39:0] , master_ca2phy_4[39:0] , master_ca2phy_3[39:0] , master_ca2phy_2[39:0] , master_ca2phy_1[39:0] , master_ca2phy_0[39:0]}) ,
       .rx_dout				 ({master_ca2ll_6[39:0]  , master_ca2ll_5[39:0]  , master_ca2ll_4[39:0]  , master_ca2ll_3[39:0]  , master_ca2ll_2[39:0]  , master_ca2ll_1[39:0]  , master_ca2ll_0[39:0]})  ,
 
-      .fifo_full_val			(5'd16),      // Status
-      .fifo_pfull_val			(5'd12),      // Status
+      .fifo_full_val			(6'd16),      // Status
+      .fifo_pfull_val			(6'd12),      // Status
       .fifo_empty_val			(3'd0),       // Status
       .fifo_pempty_val			(3'd4),       // Status
       .fifo_full			(),          // Status
@@ -649,8 +650,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_stb_rcvr			(1'b1),			 // Templated
       .align_fly			('0),			 // Templated
       .rden_dly				('0),			 // Templated
-      .count_x				(DELAY_X_VALUE_MASTER),	 // Templated
-      .count_xz				(DELAY_XZ_VALUE_MASTER), // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
       .tx_stb_intv			(8'd20),		 // Templated
@@ -659,8 +660,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rx_stb_intv			(8'd20),		 // Templated
       .tx_din				({master_ll2ca_6[39:0]  , master_ll2ca_5[39:0]  , master_ll2ca_4[39:0]  , master_ll2ca_3[39:0]  , master_ll2ca_2[39:0]  , master_ll2ca_1[39:0]  , master_ll2ca_0[39:0]}), // Templated
       .rx_din				({master_phy2ca_6[39:0] , master_phy2ca_5[39:0] , master_phy2ca_4[39:0] , master_phy2ca_3[39:0] , master_phy2ca_2[39:0] , master_phy2ca_1[39:0] , master_phy2ca_0[39:0]}), // Templated
-      .fifo_full_val			(5'd16),		 // Templated
-      .fifo_pfull_val			(5'd12),		 // Templated
+      .fifo_full_val			(6'd16),		 // Templated
+      .fifo_pfull_val			(6'd12),		 // Templated
       .fifo_empty_val			(3'd0),			 // Templated
       .fifo_pempty_val			(3'd4));			 // Templated
 
@@ -683,8 +684,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_stb_rcvr			(1'b1),                 // recover strobes
       .align_fly			('0),                   // Only look for strobe once
       .rden_dly				('0),                   // No delay before outputting data
-      .count_x				(DELAY_X_VALUE_SLAVE),
-      .count_xz				(DELAY_XZ_VALUE_SLAVE),
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC [1]
       .tx_stb_bit_sel			(40'h0000000002),
       .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
@@ -697,8 +698,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_dout			        ({slave_ca2phy_6[79:0] , slave_ca2phy_5[79:0] , slave_ca2phy_4[79:0] , slave_ca2phy_3[79:0] , slave_ca2phy_2[79:0] , slave_ca2phy_1[79:0] , slave_ca2phy_0[79:0]}) ,
       .rx_dout			        ({slave_ca2ll_6[79:0]  , slave_ca2ll_5[79:0]  , slave_ca2ll_4[79:0]  , slave_ca2ll_3[79:0]  , slave_ca2ll_2[79:0]  , slave_ca2ll_1[79:0]  , slave_ca2ll_0[79:0]})  ,
 
-      .fifo_full_val			(5'd16),      // Status
-      .fifo_pfull_val			(5'd12),      // Status
+      .fifo_full_val			(6'd16),      // Status
+      .fifo_pfull_val			(6'd12),      // Status
       .fifo_empty_val			(3'd0),       // Status
       .fifo_pempty_val			(3'd4),       // Status
       .fifo_full			(),          // Status
@@ -737,8 +738,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .tx_stb_rcvr			(1'b1),			 // Templated
       .align_fly			('0),			 // Templated
       .rden_dly				('0),			 // Templated
-      .count_x				(DELAY_X_VALUE_SLAVE),	 // Templated
-      .count_xz				(DELAY_XZ_VALUE_SLAVE),	 // Templated
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
       .tx_stb_intv			(8'd20),		 // Templated
@@ -747,8 +748,8 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .rx_stb_intv			(8'd20),		 // Templated
       .tx_din				({slave_ll2ca_6[79:0]  , slave_ll2ca_5[79:0]  , slave_ll2ca_4[79:0]  , slave_ll2ca_3[79:0]  , slave_ll2ca_2[79:0]  , slave_ll2ca_1[79:0]  , slave_ll2ca_0[79:0]}), // Templated
       .rx_din				({slave_phy2ca_6[79:0] , slave_phy2ca_5[79:0] , slave_phy2ca_4[79:0] , slave_phy2ca_3[79:0] , slave_phy2ca_2[79:0] , slave_phy2ca_1[79:0] , slave_phy2ca_0[79:0]}), // Templated
-      .fifo_full_val			(5'd16),		 // Templated
-      .fifo_pfull_val			(5'd12),		 // Templated
+      .fifo_full_val			(6'd16),		 // Templated
+      .fifo_pfull_val			(6'd12),		 // Templated
       .fifo_empty_val			(3'd0),			 // Templated
       .fifo_pempty_val			(3'd4));			 // Templated
 

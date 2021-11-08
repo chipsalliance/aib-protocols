@@ -47,20 +47,20 @@ module level_delay
 input           rst_core_n;
 input           clk_core;
 input           enable;
-input [7:0]     delay_value;
+input [15:0]    delay_value;
 
 output          delayed_en;
 
-reg  [7:0]      count_reg;
+reg  [15:0]     count_reg;
 reg             count_eq_dlyval_reg;
 
 always_ff @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
-  count_reg <= 8'h0;
+  count_reg <= 16'h0;
 else if (~enable)
-  count_reg <= 8'h0;
+  count_reg <= 16'h0;
 else if (count_reg != delay_value)
-  count_reg <= (count_reg + 8'h1);
+  count_reg <= (count_reg + 16'h1);
 
 always_ff @(posedge clk_core or negedge rst_core_n)
 if (!rst_core_n)
@@ -72,7 +72,7 @@ else
 
 // Note: delay_value == 0 in the following should resolve as a constant
 // So the logic below should result in either enable (top level IO) or a register.
-assign delayed_en = (delay_value == 8'h0) ? enable : count_eq_dlyval_reg ;
+assign delayed_en = (delay_value == 16'h0) ? enable : count_eq_dlyval_reg ;
 
 endmodule // level_delay //
 

@@ -78,7 +78,7 @@ for MODULE in AXI4-MM AXI4-ST CA LPIF SPI; do
     LPIF)
       DIR=$PROJ_DIR/lpif/dv
       SCRIPT=run_smoke.sh
-      LOG=smoke_log.txt
+      LOG=RUN_SMOKE_TEST/smoke_log.txt
       ;;
 
     SPI)

@@ -33,7 +33,7 @@
 `include "uvm_macros.svh"
 
 interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk, rst_n);
-   
+
     // signal declaration...
     //---------------------------------------------------
     logic  [((NUM_CHANNELS*BUS_BIT_WIDTH)-1):0]   rx_dout;
@@ -50,8 +50,8 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic [7:0]                                   rx_stb_wd_sel;
     logic [39:0]                                  rx_stb_bit_sel;
     logic [7:0]                                   rx_stb_intv;
-    logic [4:0]                                   fifo_full_val;
-    logic [4:0]                                   fifo_pfull_val;
+    logic [5:0]                                   fifo_full_val;
+    logic [5:0]                                   fifo_pfull_val;
     logic [2:0]                                   fifo_empty_val;
     logic [2:0]                                   fifo_pempty_val;
     logic [NUM_CHANNELS-1:0]                      fifo_full;
@@ -63,7 +63,7 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic [24-1:0]                                fl_ms_rx_transfer_en;
     logic [24-1:0]                                fl_sl_rx_transfer_en;
 
-    // modports... 
+    // modports...
     //---------------------------------------------------
     modport mon (
         input     clk,
@@ -91,7 +91,7 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
         input     fifo_pfull,
         input     fifo_empty,
         input     fifo_pempty
-    ); 
+    );
     //---------------------------------------------------
     modport drv (
         input     clk,
@@ -119,8 +119,8 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
         input     fifo_pfull,
         input     fifo_empty,
         input     fifo_pempty
-    ); 
-    
+    );
+
 endinterface : ca_rx_tb_in_if
 /////////////////////////////////////////////////////////
 `endif

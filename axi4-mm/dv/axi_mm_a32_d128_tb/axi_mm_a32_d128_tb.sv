@@ -47,6 +47,18 @@ module axi_mm_a32_d128_tb ();
 
 //`define DATA_DEBUG 1
 
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
 parameter CLK_HALF_CYCLE = 0.25;
@@ -249,21 +261,16 @@ end
    /* axi_mm_a32_d128_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .tx_mrk_userbit			('0),
-      .tx_stb_userbit			('0),
-
       .init_ar_credit			(8'd8),
       .init_aw_credit			(8'd8),
       .init_w_credit			(8'd128),
 
-      .disable_dbi			(1'b0),
-
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
@@ -324,29 +331,22 @@ end
       .user_rready			(user1_rready),		 // Templated
       .user_bready			(user1_bready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			('0),			 // Templated
-      .tx_stb_userbit			('0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
    /* axi_mm_a32_d128_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
 
-      .tx_mrk_userbit			('0),
-      .tx_stb_userbit			('0),
-
       .init_b_credit			(8'd8),
       .init_r_credit			(8'd128),
-
-      .disable_dbi			(1'b0),
 
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (slave_DELAY_X_VALUE),
+      .delay_y_value                    (slave_DELAY_Y_VALUE),
+      .delay_z_value                    (slave_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
@@ -355,10 +355,10 @@ end
    axi_mm_a32_d128_slave_top axi_mm_slave_top_i
      (/*AUTOINST*/
       // Outputs
-      .tx_phy0				(tx_phy_slave_0[79:0]),	 // Templated
-      .tx_phy1				(tx_phy_slave_1[79:0]),	 // Templated
-      .tx_phy2				(tx_phy_slave_2[79:0]),	 // Templated
-      .tx_phy3				(tx_phy_slave_3[79:0]),	 // Templated
+      .tx_phy0				(tx_phy_slave_0[79:0]),         // Templated
+      .tx_phy1				(tx_phy_slave_1[79:0]),         // Templated
+      .tx_phy2				(tx_phy_slave_2[79:0]),         // Templated
+      .tx_phy3				(tx_phy_slave_3[79:0]),         // Templated
       .user_arid			(user2_arid[3:0]),	 // Templated
       .user_arsize			(user2_arsize[2:0]),	 // Templated
       .user_arlen			(user2_arlen[7:0]),	 // Templated
@@ -390,11 +390,11 @@ end
       .rx_online			(1'b1),			 // Templated
       .init_r_credit			(8'd128),		 // Templated
       .init_b_credit			(8'd8),			 // Templated
-      .rx_phy0				(rx_phy_slave_0[79:0]),	 // Templated
-      .rx_phy1				(rx_phy_slave_1[79:0]),	 // Templated
-      .rx_phy2				(rx_phy_slave_2[79:0]),	 // Templated
-      .rx_phy3				(rx_phy_slave_3[79:0]),	 // Templated
-      .user_arready			(user2_arready),	 // Templated
+      .rx_phy0				(rx_phy_slave_0[79:0]),         // Templated
+      .rx_phy1				(rx_phy_slave_1[79:0]),         // Templated
+      .rx_phy2				(rx_phy_slave_2[79:0]),         // Templated
+      .rx_phy3				(rx_phy_slave_3[79:0]),         // Templated
+      .user_arready			(user2_arready),         // Templated
       .user_awready			(user2_awready),	 // Templated
       .user_wready			(user2_wready),		 // Templated
       .user_rid				(user2_rid[3:0]),	 // Templated
@@ -406,11 +406,9 @@ end
       .user_bresp			(user2_bresp[1:0]),	 // Templated
       .user_bvalid			(user2_bvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			('0),			 // Templated
-      .tx_stb_userbit			('0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
 
 localparam TX_PHY_LATENCY = 30; // This number equates to how many clk_wr cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.

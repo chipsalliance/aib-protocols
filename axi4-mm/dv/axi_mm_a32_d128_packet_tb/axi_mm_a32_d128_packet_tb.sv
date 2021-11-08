@@ -47,6 +47,18 @@ module axi_mm_packet_a32_d128_tb ();
 
 //`define DATA_DEBUG 1
 
+localparam GENERIC_DELAY_X_VALUE = 16'd12 ;  // Word Alignment Time
+localparam GENERIC_DELAY_Y_VALUE = 16'd32 ;  // CA Alignment Time
+localparam GENERIC_DELAY_Z_VALUE = 16'd8000 ;  // AIB Alignment Time
+
+localparam MASTER_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam MASTER_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam MASTER_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
+localparam SLAVE_DELAY_X_VALUE = GENERIC_DELAY_X_VALUE / 4'h1;
+localparam SLAVE_DELAY_Y_VALUE = GENERIC_DELAY_Y_VALUE / 4'h1;
+localparam SLAVE_DELAY_Z_VALUE = GENERIC_DELAY_Z_VALUE / 4'h1;
+
 //////////////////////////////////////////////////////////////////////
 // Clock and reset
 parameter CLK_HALF_CYCLE = 0.25;
@@ -183,7 +195,6 @@ end
    logic		m_gen2_mode=0;		// To axi_mm_packet_master_top_i of axi_mm_a32_d128_packet_master_top.v, ...
    logic [79:0]		rx_phy_master_0=0;	// To axi_mm_packet_master_top_i of axi_mm_a32_d128_packet_master_top.v
    logic [79:0]		rx_phy_slave_0=0;		// To axi_mm_packet_slave_top_i of axi_mm_a32_d128_packet_slave_top.v
-   logic		tx_stb_userbit=0;		// To axi_mm_packet_slave_top_i of axi_mm_a32_d128_packet_slave_top.v
    logic [31:0]		user1_araddr=0;		// To axi_mm_packet_master_top_i of axi_mm_a32_d128_packet_master_top.v
    logic [1:0]		user1_arburst=0;		// To axi_mm_packet_master_top_i of axi_mm_a32_d128_packet_master_top.v
    logic [3:0]		user1_arid=0;		// To axi_mm_packet_master_top_i of axi_mm_a32_d128_packet_master_top.v
@@ -222,23 +233,16 @@ end
    /* axi_mm_a32_d128_packet_master_top AUTO_TEMPLATE (
       .user_\(.*\)			(user1_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
-
       .init_ar_credit			(8'd8),
       .init_aw_credit			(8'd8),
       .init_w_credit			(8'd128),
 
-      .disable_dbi			(1'b0),
-
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
@@ -293,31 +297,22 @@ end
       .user_rready			(user1_rready),		 // Templated
       .user_bready			(user1_bready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b0),			 // Templated
-      .tx_stb_userbit			(1'b0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (MASTER_DELAY_X_VALUE),
+      .delay_y_value                    (MASTER_DELAY_Y_VALUE),
+      .delay_z_value                    (MASTER_DELAY_Z_VALUE));
 
    /* axi_mm_a32_d128_packet_slave_top AUTO_TEMPLATE (
       .user_\(.*\)			(user2_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(1'b0),  // No Markers
-      .tx_stb_bit_sel		        (40'h2), // Strobe in bit position [1]
-
       .init_b_credit			(8'd8),
       .init_r_credit			(8'd128),
-
-      .disable_dbi			(1'b0),
 
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
 
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
@@ -371,11 +366,9 @@ end
       .user_bresp			(user2_bresp[1:0]),	 // Templated
       .user_bvalid			(user2_bvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(1'b0),			 // Templated
-      .tx_stb_userbit			(tx_stb_userbit),
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value                    (SLAVE_DELAY_X_VALUE),
+      .delay_y_value                    (SLAVE_DELAY_Y_VALUE),
+      .delay_z_value                    (SLAVE_DELAY_Z_VALUE));
 
 
 localparam TX_PHY_LATENCY = 30; // This number equates to how many clk_wr cycles it takes to go from the data (MAC) input of one PHY to the data (MAC) output of the other PHY.

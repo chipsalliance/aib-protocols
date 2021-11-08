@@ -26,13 +26,13 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-module ca_DUT_wrapper 
+module ca_DUT_wrapper
     #(
         parameter NUM_CHANNELS      = 2,
         parameter BITS_PER_CHANNEL  = 80,
         parameter AD_WIDTH          = 4,
         parameter SYNC_FIFO         = 1
-    ) 
+    )
     (input [NUM_CHANNELS-1:0] clk_lane , input clk_com, input tb_reset_l,
      ca_if     ca_if
     );
@@ -57,8 +57,8 @@ module ca_DUT_wrapper
              .align_fly              (ca_if.align_fly),
              .rden_dly               (ca_if.rden_dly),
 
-             .count_x                (ca_if.count_x), // FIXME
-             .count_xz               (ca_if.count_xz), // FIXME
+             .delay_x_value          (ca_if.delay_x_value),
+             .delay_z_value          (ca_if.delay_z_value),
 
              .tx_stb_wd_sel          (ca_if.tx_stb_wd_sel),
              .tx_stb_bit_sel         (ca_if.tx_stb_bit_sel),
