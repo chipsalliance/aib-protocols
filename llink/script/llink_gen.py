@@ -330,6 +330,7 @@ def parse_config_file(cfgfile):
                          'WIDTH_MAIN':0,
                          'WIDTH_GALT':0,
                          'HASVALID':False,
+                         'HASVALID_NOREADY':False,
                          'HASREADY':False,
                          'SIGNALLIST_MAIN':[],
                          'SIGNALLIST_GALT':[] }
@@ -354,18 +355,21 @@ def parse_config_file(cfgfile):
         if key == '}': ## End of a Logic LInk
             ## Create enables as the last entry of rep struct LL
             if configuration['REPLICATED_STRUCT']:
-                onesignal = {'NAME':"user_enable",
-                             'DIR':logiclink['DIR'],
-                             'TYPE':'rstruct_enable',
-                             'SIGWID':1,
-                             'MSB':0,
-                             'LSB':0 }
-                logiclink['WIDTH_RX_RSTRUCT'] = logiclink['WIDTH_MAIN'] + onesignal['SIGWID']   #WIDTH_MAIN WIDTH_GALT assigned here
+                if logiclink['HASVALID']:
+                    onesignal = {'NAME':"user_enable",
+                                 'DIR':logiclink['DIR'],
+                                 'TYPE':'rstruct_enable',
+                                 'SIGWID':1,
+                                 'MSB':0,
+                                 'LSB':0 }
+                    logiclink['WIDTH_RX_RSTRUCT'] = logiclink['WIDTH_MAIN'] + onesignal['SIGWID']   #WIDTH_MAIN WIDTH_GALT assigned here
 
-                onesignal['LLINDEX_MAIN_LSB'] = ll_sig_lsb * configuration['RSTRUCT_MULTIPLY_FACTOR']
-                onesignal['LLINDEX_GALT_LSB'] = ll_sig_lsb ## Fixme, maybe we can comibine?
-                ll_sig_lsb += onesignal['SIGWID']
-                logiclink['SIGNALLIST_'+mux_mode].append(onesignal) # SIGNALLIST_GALT and SIGNALLIST_MAIN assigned here
+                    onesignal['LLINDEX_MAIN_LSB'] = ll_sig_lsb * configuration['RSTRUCT_MULTIPLY_FACTOR']
+                    onesignal['LLINDEX_GALT_LSB'] = ll_sig_lsb ## Fixme, maybe we can comibine?
+                    ll_sig_lsb += onesignal['SIGWID']
+                    logiclink['SIGNALLIST_'+mux_mode].append(onesignal) # SIGNALLIST_GALT and SIGNALLIST_MAIN assigned here
+                else:
+                    logiclink['WIDTH_RX_RSTRUCT'] = logiclink['WIDTH_MAIN']
 
             list_logic_links.append(logiclink);
             continue
@@ -1015,20 +1019,28 @@ def calculate_channel_parameters(configuration):
     # Reduce No Ready case to data only
     for llink in configuration['LL_LIST']:
         if llink['HASVALID'] and not llink['HASREADY']:
-            llink['HASVALID'] = False
+            if configuration['REPLICATED_STRUCT']:
+                llink['HASVALID_NOREADY'] = True
 
-            ## First, lets find the LLINDEX of the last data bit
-            ll_sig_lsb = 0
-            for sig in llink['SIGNALLIST_MAIN']:
-                if sig['LLINDEX_MAIN_LSB'] > ll_sig_lsb:
-                    ll_sig_lsb = sig['LLINDEX_MAIN_LSB']
+#               ## Then lets turn the Valid into data
+#               for sig in llink['SIGNALLIST_MAIN']:
+#                   if sig['TYPE'] == 'valid':
+#                      sig['TYPE'] = 'valid_nordy'
+            else:
+                llink['HASVALID'] = False
 
-            ## Then lets turn the Valid into data
-            for sig in llink['SIGNALLIST_MAIN']:
-                if sig['TYPE'] == 'valid':
-                   sig['TYPE'] = 'signal'
-                   llink['WIDTH_MAIN'] += 1
-                   sig['LLINDEX_MAIN_LSB'] = ll_sig_lsb+1
+                ## First, lets find the LLINDEX of the last data bit
+                ll_sig_lsb = 0
+                for sig in llink['SIGNALLIST_MAIN']:
+                    if sig['LLINDEX_MAIN_LSB'] > ll_sig_lsb:
+                        ll_sig_lsb = sig['LLINDEX_MAIN_LSB']
+
+                ## Then lets turn the Valid into data
+                for sig in llink['SIGNALLIST_MAIN']:
+                    if sig['TYPE'] == 'valid':
+                       sig['TYPE'] = 'signal'
+                       llink['WIDTH_MAIN'] += 1
+                       sig['LLINDEX_MAIN_LSB'] = ll_sig_lsb+1
 
     # Reduce No Ready case to data only
     ############################################################
@@ -1471,8 +1483,8 @@ def make_name_file(configuration):
                   for sig in llink['SIGNALLIST_MAIN']:
                       if sig['TYPE'] == 'ready':
                           print_verilog_assign(file_name, sig['NAME'], gen_llink_user_ready (llink['NAME']))
-              else:
-                  file_name.write("  // "+ gen_llink_user_ready (llink['NAME']) +" is unused\n")
+              #else:
+              #    file_name.write("  // "+ gen_llink_user_ready (llink['NAME']) +" is unused\n")
 
               for rstruct_iteration in list (range (0, configuration['RSTRUCT_MULTIPLY_FACTOR'])):
                   for sig in llink['SIGNALLIST_MAIN']:
@@ -1497,8 +1509,8 @@ def make_name_file(configuration):
                     for sig in llink['SIGNALLIST_MAIN']:
                        if sig['TYPE'] == 'ready':
                             print_verilog_assign(file_name, gen_llink_user_ready (llink['NAME']), sig['NAME'])
-              else:
-                  print_verilog_assign(file_name, gen_llink_user_ready (llink['NAME']), "1'b1", comment=gen_llink_user_ready (llink['NAME'])  + " is unused" )
+              #else:
+              #    print_verilog_assign(file_name, gen_llink_user_ready (llink['NAME']), "1'b1", comment=gen_llink_user_ready (llink['NAME'])  + " is unused" )
 
               for rstruct_iteration in list (range (0, configuration['RSTRUCT_MULTIPLY_FACTOR'])):
                   for sig in llink['SIGNALLIST_MAIN']:
@@ -2432,16 +2444,33 @@ def make_top_file(configuration):
             localdir = 'input';
 
         for llink in configuration['LL_LIST']:
-            if not llink['HASREADY'] and not llink['HASVALID']:
+            if llink['HASVALID_NOREADY']:
+                file_name.write("  // No AXI Ready, so bypassing main Logic Link FIFO and Credit logic.\n")
+                if llink['DIR'] == localdir:
+                    print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+
+                    print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
+                    print_verilog_assign(file_name, "tx_{0}_pushbit".format(llink['NAME']), "user_{0}_valid".format(llink['NAME']))
+                else:
+                    print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+
+                    print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
+                    print_verilog_assign(file_name, "user_{0}_valid".format(llink['NAME']), "rx_{0}_pushbit".format(llink['NAME']))
+
+            elif not llink['HASREADY'] and not llink['HASVALID']:
                 file_name.write("  // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.\n")
                 if llink['DIR'] == localdir:
-                    print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']) * configuration['RSTRUCT_MULTIPLY_FACTOR'], index2=gen_index_msb (llink['WIDTH_MAIN']))
+                    if configuration['REPLICATED_STRUCT']:
+                        print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+                    else:
+                        print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+
                     print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
                 else:
                     if configuration['REPLICATED_STRUCT']:
-                        print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN']))
+                        print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
                     else:
-                        print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN']))
+                        print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
                     print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
             else:
                 if llink['DIR'] == localdir:

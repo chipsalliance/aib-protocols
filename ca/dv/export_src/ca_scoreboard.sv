@@ -54,12 +54,15 @@ class ca_scoreboard_c extends uvm_scoreboard;
 
     bit  do_compare_rx_dout = 1'b1;
 
-    int  tx_xfer_cnt  = 0; // number of xfers from TB into RTL on the TX side
-
+    int  tx_xfer_cnt        = 0; // number of xfers from TB into RTL on the TX side
+    int  xfer_cnt           = 0;
     int  tx_out_cnt_die_a   = 0;
     int  tx_out_cnt_die_b   = 0;
-    int  rx_out_cnt_die_a   = 0;
-    int  rx_out_cnt_die_b   = 0;
+    real rx_out_cnt_die_a   = 0;
+    real rx_out_cnt_die_b   = 0;
+
+    real  beat_cnt_a, beat_cnt_b;
+    int   beat_cnt;
 
     ca_data_pkg::ca_seq_item_c  die_a_tx_din_q[$];    
     ca_data_pkg::ca_seq_item_c  die_b_tx_din_q[$]; 
@@ -169,6 +172,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_a_tx_stb_item.stb_wd_sel     = ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_wd_sel;
     die_a_tx_stb_item.stb_bit_sel    = ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_bit_sel;
     die_a_tx_stb_item.stb_intv       = ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_intv;
+    die_a_tx_stb_item.stb_en         = ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en;   
     die_a_tx_stb_item.calc_stb_beat();
     die_a_tx_stb_item.dprint();
     
@@ -179,6 +183,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_b_tx_stb_item.stb_wd_sel     = ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_wd_sel;
     die_b_tx_stb_item.stb_bit_sel    = ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_bit_sel;
     die_b_tx_stb_item.stb_intv       = ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_intv;
+    die_b_tx_stb_item.stb_en         = ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en; 
     die_b_tx_stb_item.calc_stb_beat();
     die_b_tx_stb_item.dprint();
 
@@ -189,6 +194,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_a_rx_stb_item.stb_wd_sel     = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_wd_sel;
     die_a_rx_stb_item.stb_bit_sel    = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_bit_sel;
     die_a_rx_stb_item.stb_intv       = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_intv;
+    die_a_rx_stb_item.stb_en         = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_en;
     die_a_rx_stb_item.calc_stb_beat();
     die_a_rx_stb_item.dprint();
 
@@ -199,6 +205,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_b_rx_stb_item.stb_wd_sel     = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_wd_sel;
     die_b_rx_stb_item.stb_bit_sel    = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_bit_sel;
     die_b_rx_stb_item.stb_intv       = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_intv;
+    die_b_rx_stb_item.stb_en         = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_en;
     die_b_rx_stb_item.calc_stb_beat();
     die_b_rx_stb_item.dprint();
     
@@ -246,7 +253,6 @@ endfunction : write_tx_tb_in
 //------------------------------------------
 function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
 
-    int  beat_cnt = 0;
     `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing from RTL: %s --> TB rx_dout \n", rx_tb_in_item.my_name), UVM_MEDIUM);
 
     if((rx_tb_in_item.stb_pos_err == 1) || (rx_tb_in_item.stb_pos_coding_err == 1) || (rx_tb_in_item.align_err == 1)) begin
@@ -254,13 +260,34 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
     end
     else begin // non error taffic
         case(rx_tb_in_item.my_name)
-            "DIE_A": beat_cnt = ++rx_out_cnt_die_a;
-            "DIE_B": beat_cnt = ++rx_out_cnt_die_b;
+            "DIE_A": begin
+                      `ifndef CA_ASYMMETRIC
+                        beat_cnt = ++rx_out_cnt_die_a;
+                      `else
+                        beat_cnt_a += 1;
+                        rx_out_cnt_die_a = beat_cnt_a *  rx_tb_in_item.cnt_mul;
+                        ///if(beat_cnt == rx_tb_in_item.last_tx_cnt_a) rx_out_cnt_die_a = beat_cnt * rx_tb_in_item.cnt_mul;
+                      `endif
+                     end
+            "DIE_B": begin
+                      `ifndef CA_ASYMMETRIC
+                        beat_cnt = ++rx_out_cnt_die_b;
+                      `else
+                        beat_cnt_b += 1;
+                        rx_out_cnt_die_b = beat_cnt_b *  rx_tb_in_item.cnt_mul;
+                        //if(beat_cnt == rx_tb_in_item.last_tx_cnt_b) rx_out_cnt_die_b = beat_cnt * rx_tb_in_item.cnt_mul;
+                      `endif
+                     end
             default: begin
                 `uvm_fatal("write_rx_tb_in", "BAD case in my_name");
             end
         endcase
+       `ifdef CA_ASYMMETRIC
+        //$display("cnt_mul = %0f,beat %0f,rx_die_a %0f,rx_die_b %0f,last_tx_cnt_a %0d,last_tx_cnt_b %0d,my_name  %s",rx_tb_in_item.cnt_mul,(rx_tb_in_item.my_name=="DIE_A")?beat_cnt_a:beat_cnt_b,rx_out_cnt_die_a,rx_out_cnt_die_b,rx_tb_in_item.last_tx_cnt_a,rx_tb_in_item.last_tx_cnt_b,rx_tb_in_item.my_name);
+        `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing %0d item from RTL: %s --> TB rx_dout \n", (rx_tb_in_item.my_name=="DIE_A")?beat_cnt_a:beat_cnt_b, rx_tb_in_item.my_name), UVM_MEDIUM);
+        `else
         `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing %0d item from RTL: %s --> TB rx_dout \n", beat_cnt, rx_tb_in_item.my_name), UVM_MEDIUM);
+        `endif
         rx_tb_in_item.dprint();
         verify_rx_dout(rx_tb_in_item);
     end
@@ -288,7 +315,7 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
 
     ca_data_pkg::ca_seq_item_c   src_item;
     bit                          do_compare = 1;
-    int                          xfer_cnt = 0;
+    int                          size_mul;
 
     // get expect pkt from tx_din
     case(act_item.my_name)
@@ -310,6 +337,7 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
             else begin
                 xfer_cnt = tx_out_cnt_die_b;
                 src_item = die_b_tx_din_q.pop_front();
+
             end
         end
         default: begin
@@ -319,51 +347,65 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
 
     // if is_stb, add the stb bits into the expect / src data
     if(act_item.add_stb == 1) begin
-        `uvm_info("verify_tx_dout", $sformatf("%s is_stb detected, added stb bits into expect data...", act_item.my_name), UVM_LOW);
+        `uvm_info("verify_tx_dout", $sformatf("%s is_stb detected, added stb bits into expect data...", act_item.my_name), UVM_MEDIUM);
         if(act_item.my_name == "DIE_A") begin
-            src_item.add_stb_beat(die_a_tx_stb_item);
+            if(die_a_tx_stb_item.stb_en == 1) begin 
+               src_item.add_stb_beat(die_a_tx_stb_item);
+            end
         end
         else begin
-            src_item.add_stb_beat(die_b_tx_stb_item);
+            if(die_b_tx_stb_item.stb_en == 1) begin
+               src_item.add_stb_beat(die_b_tx_stb_item);
+            end
         end // b
     end // stb
     else begin
-        `uvm_info("verify_tx_dout", $sformatf("%s is_stb not detected, clear stb bits into expect data...", act_item.my_name), UVM_LOW);
+        `uvm_info("verify_tx_dout", $sformatf("%s is_stb not detected, clear stb bits into expect data...", act_item.my_name), UVM_MEDIUM);
         if(act_item.my_name == "DIE_A") begin
-            src_item.clr_stb_beat(die_a_tx_stb_item);
+            if(die_a_tx_stb_item.stb_en == 1) begin 
+               src_item.clr_stb_beat(die_a_tx_stb_item);
+            end
         end
         else begin
-            src_item.clr_stb_beat(die_b_tx_stb_item);
+            if(die_b_tx_stb_item.stb_en == 1) begin
+               src_item.clr_stb_beat(die_b_tx_stb_item);
+            end
         end // b
     end
 
     if(do_compare == 1) begin
-        if(src_item.compare_beat(act_item) == 1) begin
-            `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout pass",
-                act_item.my_name, xfer_cnt), UVM_LOW);
-            // store act_item for rx rtl out / rx tb in checking
-            if(act_item.my_name == "DIE_A") begin
-                `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_B rx_dout",
-                    act_item.my_name, xfer_cnt), UVM_MEDIUM);
-                die_b_exp_rx_dout_q.push_back(act_item);    
-            end
-            else begin
-                `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_A rx_dout",
-                    act_item.my_name, xfer_cnt), UVM_MEDIUM);
-                die_a_exp_rx_dout_q.push_back(act_item);    
-            end
-        end
-        else begin
-            `uvm_warning("verify_tx_dout", $sformatf("%s EXPECTED beat TX_DIN data:", act_item.my_name));
-            src_item.dprint();
-            `uvm_warning("verify_tx_dout", $sformatf("%s ACTUAL beat TX_DOUT data:", act_item.my_name));
-            act_item.dprint();
-            `uvm_warning("verify_tx_dout", $sformatf("%s stb mask:", act_item.my_name));
-            if(act_item.my_name == "DIE_A") die_a_tx_stb_item.dprint();
-            else die_b_tx_stb_item.dprint();
-            `uvm_error("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout MISMATCH see above for error",
-                act_item.my_name, xfer_cnt));
-        end
+        if(src_item.compare_beat(act_item,1'b0) == 1) begin
+        
+             `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout pass", act_item.my_name, xfer_cnt), UVM_MEDIUM);
+             // store act_item for rx rtl out / rx tb in checking
+              `ifdef CA_ASYMMETRIC 
+                if(act_item.tx_data_rdy == 1)begin
+                    act_item.databytes = act_item.tx_data_fin;
+              `endif
+                    if(act_item.my_name == "DIE_A") begin 
+                        `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_B rx_dout", act_item.my_name, xfer_cnt), UVM_MEDIUM);
+                        die_b_exp_rx_dout_q.push_back(act_item);    
+                    end
+                    else begin
+                        `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_A rx_dout", act_item.my_name, xfer_cnt), UVM_MEDIUM);
+                        die_a_exp_rx_dout_q.push_back(act_item);    
+                    end
+           `ifdef CA_ASYMMETRIC
+                end //of tx_data_rdy
+           `endif
+            
+         end
+         else begin
+             `uvm_warning("verify_tx_dout", $sformatf("%s EXPECTED beat TX_DIN data:", act_item.my_name));
+             src_item.dprint();
+             `uvm_warning("verify_tx_dout", $sformatf("%s ACTUAL beat TX_DOUT data:", act_item.my_name));
+             act_item.dprint();
+             `uvm_warning("verify_tx_dout", $sformatf("%s stb mask:", act_item.my_name));
+             if(act_item.my_name == "DIE_A") die_a_tx_stb_item.dprint();
+             else die_b_tx_stb_item.dprint();
+             `uvm_error("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout MISMATCH see above for error",
+                 act_item.my_name, xfer_cnt));
+         end
     end
 
 endfunction : verify_tx_dout
@@ -380,8 +422,8 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_A": begin // came from die_B
             if(die_a_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
-                this.do_compare_rx_dout = 1'b0; //SK
-                `uvm_error("verify_rx_dout", $sformatf("DIE_A NO expect src pkt: %0d from rx_dout",rx_out_cnt_die_a));
+                this.do_compare_rx_dout = 1'b0;
+                `uvm_error("verify_rx_dout", $sformatf("DIE_A NO expect src pkt: %0f from rx_dout",rx_out_cnt_die_a));
             end  
             else begin
                 src_item = die_a_exp_rx_dout_q.pop_front();   
@@ -391,8 +433,8 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_B": begin // came from die_A
             if(die_b_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
-                this.do_compare_rx_dout = 1'b0; //SK
-                `uvm_error("verify_rx_dout", $sformatf("DIE_B NO expect src pkt: %0d from rx_dout",rx_out_cnt_die_b));
+                this.do_compare_rx_dout = 1'b0;
+                `uvm_error("verify_rx_dout", $sformatf("DIE_B NO expect src pkt: %0f from rx_dout",rx_out_cnt_die_b));
             end  
             else begin
                 src_item = die_b_exp_rx_dout_q.pop_front();   
@@ -405,10 +447,11 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
     endcase
     
     if(do_compare == 1) begin
-    //if (this.do_compare_rx_dout == 1'b1) begin  //SK
-        if(src_item.compare_beat(act_item) == 1) begin
+    //if (this.do_compare_rx_dout == 1'b1) begin
+
+        if(src_item.compare_beat(act_item,1'b1) == 1) begin
             `uvm_info("verify_rx_dout", $sformatf("xfer_cnt: %0d %s tx_din -- > AIB --> %s rx_dout Pass",
-                xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);
+            xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);
         end
         else begin
             `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", act_item.my_name));
@@ -419,10 +462,9 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
             if(act_item.my_name == "DIE_A") die_a_rx_stb_item.dprint();
             else die_b_rx_stb_item.dprint();
             `uvm_error("verify_tx_dout", $sformatf("xfer_cnt: %0d %s tx_din --> AIB --> %s rx_dout MISMATCH see above for error",
-                xfer_cnt, src_item.my_name, act_item.my_name));
+            xfer_cnt, src_item.my_name, act_item.my_name));
         end
     end
-
 endfunction : verify_rx_dout
 
 //------------------------------------------------------

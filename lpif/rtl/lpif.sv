@@ -289,6 +289,7 @@ module lpif
       // Parameters
       .AIB_VERSION                      (AIB_VERSION),
       .AIB_GENERATION                   (AIB_GENERATION),
+      .AIB_LANES                        (AIB_LANES),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
       .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE))
   lpif_txrx_i

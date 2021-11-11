@@ -41,6 +41,8 @@ interface ca_tx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic  [((NUM_CHANNELS*BUS_BIT_WIDTH)-1):0]   tx_dout;
     logic                                         tx_stb_pos_err;
     logic                                         tx_stb_pos_coding_err;
+    logic[3:0]                                    user_marker;
+    logic                                         user_stb;
 
     // modports... 
     //---------------------------------------------------

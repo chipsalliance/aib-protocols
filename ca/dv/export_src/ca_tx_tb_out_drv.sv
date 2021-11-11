@@ -45,6 +45,7 @@ class ca_tx_tb_out_drv_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm
     bit                         got_tx = 0;
     bit                         tx_online = 0;
     int                         tx_cnt = 0;
+    bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  idle_data = 0; 
 
     // queues for holding seq items for injection into RTL
     ca_data_pkg::ca_seq_item_c    tx_q[$];
@@ -173,11 +174,13 @@ endfunction : gen_stb_beat
 
 //----------------------------------------------
 task  ca_tx_tb_out_drv_c::drv_tx();
-    ca_data_pkg::ca_seq_item_c     tx_item;      
-    bit [7:0]	                   count = 0;
-    bit                            calc_stb = 1;
-    
-    bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  tx_data = 0; 
+    ca_data_pkg::ca_seq_item_c                tx_item;      
+    bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  tx_data; 
+    bit [7:0]                                 count;
+    bit                                       calc_stb = 1;
+    bit                                       marker_b4_data_done, marker_b4_data_done_p;
+    int                                       index, stb_bit_pos; 
+    int                                       ch; 
     
     forever begin @(posedge vif.clk)
         if(vif.rst_n === 1'b0) begin // reset state
@@ -190,9 +193,8 @@ task  ca_tx_tb_out_drv_c::drv_tx();
             while(tx_q.size() > 0) tx_item = tx_q.pop_front(); 
         end // reset
         else begin // non reset state
-
             calc_stb = 1;
-            if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin            
+            if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin
                 tx_item = tx_q.pop_front();
                 set_item(tx_item);
                 tx_item.build_tx_beat(stb_item);
@@ -200,27 +202,225 @@ task  ca_tx_tb_out_drv_c::drv_tx();
             end
         
             if(got_tx == 1)  begin
-                if(tx_item.inj_delay > 0) begin
-                    tx_item.inj_delay--;
-                    drv_tx_idle();
-                end // delay
-                else begin
-                    // send data
-                    tx_data = 0;
-                    for(int i = 0; i < (BUS_BIT_WIDTH*NUM_CHANNELS)/8; i++) begin
-                        tx_data = tx_data << 8;
-                        tx_data[7:0] = tx_item.databytes[i];
-                    end // for
-                    tx_cnt++;
-                    vif.tx_din <= tx_data;
-                    `uvm_info("drv_tx", $sformatf("%s Driving transfer %0d TB ---> tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
-                    got_tx = 0;
-                end // no delay
-            end // got pkt
-            else begin
-                drv_tx_idle();
-            end
+                idle_data = 0;
+               `ifndef CA_ASYMMETRIC
+                    marker_b4_data_done = 1'b1;
+               `endif 
+                if (((marker_b4_data_done == 1'b0)&&(tx_item.inj_delay==0)) || (tx_item.inj_delay > 0)) begin
+                    if (tx_item.inj_delay > 0) tx_item.inj_delay--;
+                   `ifdef CA_ASYMMETRIC
+                    for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                        if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
 
+                        if ((i == `CA_TX_MARKER_LOC) || (i == ((ch*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC))) begin
+                        `ifdef GEN2
+                            if(BUS_BIT_WIDTH == 80) begin //FULL
+                                idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                                if ((tx_item.inj_delay<=1)&&(vif.user_marker[0] == 1'b1)) marker_b4_data_done = 1'b1;
+                            end
+                            if(BUS_BIT_WIDTH == 160)begin //HALF
+                               idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                               idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                                if ((tx_item.inj_delay<=1)&&(vif.user_marker[1] == 1'b1)) marker_b4_data_done = 1'b1;
+                            end
+                            if(BUS_BIT_WIDTH == 320) begin //QUARTER
+                               idle_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                               idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                               idle_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                               idle_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                               if ((tx_item.inj_delay<=1)&&(vif.user_marker[3] == 1'b1)) marker_b4_data_done = 1'b1;
+                            end
+
+                        `else //GEN1 //FULL=40,HALF=80 //Always marker location has fixed value as 39
+                            if(BUS_BIT_WIDTH == 40) begin
+                               idle_data[(ch*BUS_BIT_WIDTH) + 39] = vif.user_marker[0];
+                               if ((tx_item.inj_delay<=1)&&(vif.user_marker[0] == 1'b1)) marker_b4_data_done = 1'b1;
+                            end
+                            else if(BUS_BIT_WIDTH == 80) begin
+                               idle_data[(ch*BUS_BIT_WIDTH) + 39] = vif.user_marker[0];
+                               idle_data[(ch*BUS_BIT_WIDTH) + 79] = vif.user_marker[1];
+                               if ((tx_item.inj_delay<=1)&&(vif.user_marker[1:0] == 2'b11)) marker_b4_data_done = 1'b1;
+                            end
+                        `endif
+                        end //of marker_loc
+                    end //for loop (i, ch)
+
+                    if (cfg.tx_stb_en == 1'b0) begin //mainly with asymmetrical modes
+                        if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin ///Strobe position in First 39:0 bits
+                            stb_bit_pos = index;
+                        end else begin
+                            stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                        end
+                        for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                            if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
+
+                            if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                                idle_data[i] = vif.user_stb;
+                            end
+                        end //for
+                    end //if
+                  `else //SYMMETRIC (GEN2 H2H and Q2Q only considered)
+                    for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                        if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+                        if(BUS_BIT_WIDTH == 160)begin //HALF
+                            idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                            idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                        end
+                        if(BUS_BIT_WIDTH == 320) begin //QUARTER
+                            idle_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                            idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                            idle_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                            idle_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                        end
+                    end //for
+                  `endif //CA_ASYMMETRIC
+                  drv_tx_idle();
+                end else begin // no delay case (inj_delay==0)
+                        // send data
+                        tx_data = 0;
+                        for(int i = 0; i < (BUS_BIT_WIDTH*NUM_CHANNELS)/8; i++) begin //320*2/8=>80//160*2/8 =>40//80*2/8=>20
+                            tx_data = tx_data << 8;
+                            tx_data[7:0] = tx_item.databytes[i];
+                        end // for
+                        `ifdef CA_ASYMMETRIC
+                            ////Insert Markers + Strobes(when tx_stb_en=0)
+                            ////39(Gen1) OR 76/77/78/79 (Gen2) + Rate dependent insertion in every 80-bits
+                            for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                                if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+                                if ((i == `CA_TX_MARKER_LOC) || (i == ((ch*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC))) begin
+                                  `ifdef GEN2//Full=80,HAlf=160,Quarter=320
+                                    if(BUS_BIT_WIDTH == 80) begin
+                                        tx_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                                    end
+                                    if(BUS_BIT_WIDTH == 160)begin
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 0 +  `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                                    end
+                                    if(BUS_BIT_WIDTH == 320) begin 
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                                       tx_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                                       tx_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                                    end
+                                  `else //GEN1 //bus-width FULL=40,HALF=80 : marker always @39
+                                    if(BUS_BIT_WIDTH == 40) begin
+                                       tx_data[(ch*BUS_BIT_WIDTH)+39] = vif.user_marker[0];
+                                    end
+                                    else if(BUS_BIT_WIDTH == 80) begin
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 39] = vif.user_marker[0];
+                                       tx_data[(ch*BUS_BIT_WIDTH) + 79] = vif.user_marker[1];
+                                    end
+                                  `endif
+                                end //of marker_loc
+                            end //of for loop
+                            ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
+                            if (cfg.tx_stb_en == 1'b0) begin
+                                if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin
+                                    stb_bit_pos = index; //int'(cfg.tx_stb_bit_sel[39:0]);
+                                end else begin
+                                    stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                                end
+                                for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                                    if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
+
+                                    if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                                        tx_data[i] = vif.user_stb;
+                                    end
+                                end //for
+                            end //if
+                        `else
+                            for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                                if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+                                if(BUS_BIT_WIDTH == 160)begin //HALF
+                                    tx_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                                    tx_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                                end
+                                if(BUS_BIT_WIDTH == 320) begin //QUARTER
+                                    tx_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                                    tx_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                                    tx_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                                    tx_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                                end
+                            end //for
+                        `endif //CA_ASYMMETRIC
+                        tx_cnt++;
+                        vif.tx_din = tx_data;
+                        `uvm_info("drv_tx", $sformatf("%s Driving transfer %0d TB ---> tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
+                        got_tx = 0;
+                end // no delay
+            end // got pkt == 1
+            else begin //Send IDLE
+                idle_data = 0 ;
+             `ifdef CA_ASYMMETRIC
+                for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+
+                    if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+
+                    if ((i == `CA_TX_MARKER_LOC) || (i == ((ch*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC))) begin
+                    `ifdef GEN2//Full=80,HAlf=160,Quarter=320
+                        if(BUS_BIT_WIDTH == 80) begin
+                            idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                        end
+                        if(BUS_BIT_WIDTH == 160)begin
+                           idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                           idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                        end
+                        if(BUS_BIT_WIDTH == 320) begin 
+                           idle_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                           idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                           idle_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                           idle_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                        end
+                    `else //GEN1 //FULL=40,HALF=80
+                        if(BUS_BIT_WIDTH == 40) begin
+                           idle_data[(ch*BUS_BIT_WIDTH) +39] = vif.user_marker[0];
+                        end else if(BUS_BIT_WIDTH == 80) begin
+                            idle_data[(ch*80)+39]  = vif.user_marker[0];
+                            idle_data[(ch*80)+79]  = vif.user_marker[1];
+                        end
+                    `endif
+                    end //of marker_loc
+                end //of for loop
+ 
+                ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
+                if (cfg.tx_stb_en == 1'b0) begin
+                    index = 0;
+                    for (int i=0; i<40; i+=1) begin
+                        if (cfg.tx_stb_bit_sel[i]) begin
+                            index = i;
+                            break;
+                        end
+                    end
+                    if (cfg.tx_stb_wd_sel[7:0]  == 8'b1) begin
+                        stb_bit_pos = index;  ///Strobe position in First 39:0 bits
+                    end else begin
+                        stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                    end
+                    for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                        if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
+
+                        if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                            idle_data[i] = vif.user_stb;
+                        end
+                    end //for
+                end //if (ca_cfg.tx_stb_en == 0)
+             `else
+                for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                    if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+                    if(BUS_BIT_WIDTH == 160)begin //HALF
+                        idle_data[(ch*BUS_BIT_WIDTH) + 0 + `CA_TX_MARKER_LOC]  = vif.user_marker[0];
+                        idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                    end
+                    if(BUS_BIT_WIDTH == 320) begin //QUARTER
+                        idle_data[(ch*BUS_BIT_WIDTH) + 0  + `CA_TX_MARKER_LOC] = vif.user_marker[0];
+                        idle_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC] = vif.user_marker[1];
+                        idle_data[(ch*BUS_BIT_WIDTH) +160 + `CA_TX_MARKER_LOC] = vif.user_marker[2];
+                        idle_data[(ch*BUS_BIT_WIDTH) +240 + `CA_TX_MARKER_LOC] = vif.user_marker[3];
+                    end
+                end //for
+             `endif //CA_ASYMMETRIC
+                drv_tx_idle();
+            end //send IDLE
         end // non reset
     end // forever clk
 endtask: drv_tx
@@ -228,16 +428,6 @@ endtask: drv_tx
 //----------------------------------------------
 function void ca_tx_tb_out_drv_c::drv_tx_idle();
         
-    bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  idle_data = 0; 
-
-    /*
-    if(vif.align_done === 1'b0) begin;
-        for(int i = 0; i < (BUS_BIT_WIDTH*NUM_CHANNELS)/8; i++) begin
-            idle_data = idle_data << 8;
-            idle_data[7:0] = $urandom();
-        end
-    end
-    */
     vif.tx_din           <=  idle_data;
     vif.tx_stb_en        <=  cfg.tx_stb_en;
     vif.tx_stb_rcvr      <=  cfg.tx_stb_rcvr;

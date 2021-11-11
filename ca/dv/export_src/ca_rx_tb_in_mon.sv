@@ -52,7 +52,6 @@ class ca_rx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     bit                      stb_sync = 0;
     
     bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  exp_stb_data = 0; 
-
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -134,9 +133,20 @@ endfunction : gen_stb_beat
 //----------------------------------------------
 task ca_rx_tb_in_mon_c::mon_rx(); 
 
-    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  rx_data = 0; 
-    ca_data_pkg::ca_seq_item_c                  ca_item;
-    bit                                         calc_stb = 1;
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    rx_data_prev[4]; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    rx_data      = 0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS*4)-1):0]  rx_data_fin  = 0; 
+    ca_data_pkg::ca_seq_item_c                    ca_item;
+    bit                                           calc_stb     = 1;
+    bit[1:0]                                      is_stb_mark  = 0;
+    int                                           i_max;
+    bit [2:0]                                     clk_cnt;
+    bit                                           rx_data_rdy  = 0;
+    bit                                           rx_compare_start=0;
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlymark_data=0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlystb_data=0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    markstb_data=0; 
+    int                                           index, stb_bit_pos;
 
     forever begin @(posedge vif.clk)
         
@@ -150,16 +160,60 @@ task ca_rx_tb_in_mon_c::mon_rx();
                 calc_stb = 0;
                 gen_stb_beat();
             end
+     //`ifdef CA_ASYMMETRIC
+             index = 0;
+             for (int i=0; i<40; i+=1) begin
+                 if (cfg.tx_stb_bit_sel[i]) begin
+                     index = i;
+                     break;
+                 end
+             end
+             if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin
+                 stb_bit_pos = index;
+             end else begin
+                 stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+             end
+          for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                 if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+           `ifdef GEN2
+                if (BUS_BIT_WIDTH == 320) begin //Q2Q
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + 240 + `CA_TX_MARKER_LOC]    = 1'b1; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]     = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
+                end
+           `else
+              if(BUS_BIT_WIDTH == 40) begin
+                  onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = 1'b1; 
+                  markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = 1'b1;
+                  markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
+                  onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
+              end
+              else if(BUS_BIT_WIDTH == 80) begin //40,80 => 80-160, 160-80
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = 1'b0; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]    = 1'b0;
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = 1'b1; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
+              end
+           `endif
+          end
+    //`endif //CA_ASYMMETRIC
         end
         else if((vif.rx_online === 1'b1) && (vif.align_done === 1'b1)) begin // non reset state
-            
             calc_stb = 1; 
-
-            stb_cnt++; 
+            stb_cnt++;
             rx_data = vif.rx_dout;
-            if((|rx_data !== 1'b0) && ((^rx_data) !== 1'bx)) begin 
-                rx_cnt++;
+            rx_data_prev[3] = rx_data_prev[2];             
+            rx_data_prev[2] = rx_data_prev[1];             
+            rx_data_prev[1] = rx_data_prev[0];             
+            rx_data_prev[0] = rx_data;             
+
+`ifndef CA_ASYMMETRIC
+ if((|rx_data !== 1'b0) && ((^rx_data) !== 1'bx)) begin 
                 ca_item = ca_data_pkg::ca_seq_item_c::type_id::create("ca_item");
+                rx_cnt=rx_cnt+1;
                 set_item(ca_item);
                 ca_item.init_xfer((BUS_BIT_WIDTH*NUM_CHANNELS) / 8);
                 `uvm_info("mon_rx_tb_in", $sformatf("%s rx-ing rxRTL --> TB xfer: %0d rx_din: 0x%h", my_name, rx_cnt, rx_data), UVM_MEDIUM);
@@ -170,15 +224,33 @@ task ca_rx_tb_in_mon_c::mon_rx();
                  case(ca_item.is_stb_beat(stb_item))
                      2'b01: begin
                          ca_item.add_stb = 0;
-                         aport.write(ca_item); // data only
+                         if(((`TB_DIE_A_BUS_BIT_WIDTH == 160) && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) || 
+                            ((`TB_DIE_A_BUS_BIT_WIDTH == 320) && (`TB_DIE_B_BUS_BIT_WIDTH == 320)))begin
+                             //$display("tx_tb_in_mon.sv inside H2H,Q2Q loop,time %0t",$time);
+                             if(onlymark_data != rx_data_prev[0]) begin
+                                 aport.write(ca_item);
+                             end
+                         end else begin
+                              aport.write(ca_item); // data only
+                        end
                      end
                      2'b10: begin
                          verify_rx_stb();  // stb only
                      end
-                     3'b11: begin // both data and stb
-                         verify_rx_stb();  
-                         ca_item.add_stb = 1;
-                         aport.write(ca_item);
+                     2'b11: begin // both data and stb
+                         if(((`TB_DIE_A_BUS_BIT_WIDTH == 160) && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) || 
+                            ((`TB_DIE_A_BUS_BIT_WIDTH == 320) && (`TB_DIE_B_BUS_BIT_WIDTH == 320)))begin
+                             //$display("rx_tb_in_mon.sv inside H2H,Q2Q loop,time %0t",$time);
+                             if(markstb_data != rx_data_prev[0]) begin
+                                 verify_rx_stb();  
+                                 ca_item.add_stb = 1;
+                                 aport.write(ca_item);
+                             end
+                          end else begin
+                                 verify_rx_stb();  
+                                 ca_item.add_stb = 1;
+                                 aport.write(ca_item);
+                          end
                      end
                      default: begin
                          ca_item.dprint();
@@ -187,18 +259,111 @@ task ca_rx_tb_in_mon_c::mon_rx();
                      end
                  endcase
             end // if        
+`else
+            //$display("ca_rx_tb_in_mon_c ::: onlystb_data = %h onlymark_data = %h markstb_data %h,rx_data %h,time %0t,my_name %s",onlystb_data,onlymark_data,markstb_data,rx_data,$time,my_name);
+           
+           if((rx_compare_start == 1'b1) && ((onlystb_data == rx_data) || (onlymark_data == rx_data) || (markstb_data == rx_data) || (rx_data == 0)) )begin 
+               rx_compare_start = 0; ///marks end-of actual Rx data out from DUT
+           end else if((rx_compare_start == 1'b0) && ((onlystb_data != rx_data) && (onlymark_data != rx_data) && (markstb_data != rx_data) && (rx_data != 0))) begin
+               rx_compare_start = 1; ///marks start-of actual Rx data out from DUT
+           end
+
+            if(((rx_compare_start ==1)) && ((^rx_data) !== 1'bx)) begin 
+                ca_item = ca_data_pkg::ca_seq_item_c::type_id::create("ca_item");
+                if((onlystb_data != rx_data) && (onlymark_data != rx_data) && (markstb_data != rx_data) && (rx_data != 0))  rx_cnt = rx_cnt+1;
+                clk_cnt += 1'b1; 
+                set_item(ca_item);
+                ca_item.init_xfer((BUS_BIT_WIDTH*NUM_CHANNELS) / 8);
+                `uvm_info("mon_rx_tb_in", $sformatf("%s rx-ing rxRTL --> TB xfer: %0d rx_din: 0x%h", my_name, rx_cnt, rx_data), UVM_MEDIUM);
+                if(my_name == "DIE_A") `uvm_info("mon_rx_tb_in", $sformatf("%s rx-ing rxRTL --> TB xfer: %0d rx_din: 0x%h", my_name, rx_cnt, rx_data), UVM_MEDIUM);
+                i_max = (BUS_BIT_WIDTH*NUM_CHANNELS*cfg.slave_rate)/8; //40*2*2/8
+                  
+                ///////////////////////////////////////////////////////////////////
+                if ((cfg.master_rate == 4) && (cfg.slave_rate == 1)) begin //Q2F
+                        rx_data_fin  = rx_data;
+                        rx_data_rdy = 1;
+                        ca_item.cnt_mul= cfg.master_rate/cfg.slave_rate;
+                        //rx_cnt++;
+                end
+
+                if ((cfg.master_rate == 2) && (cfg.slave_rate == 1)) begin //H2F
+                          rx_data_fin    = rx_data;
+                          rx_data_rdy    = 1;
+                          ca_item.cnt_mul     = cfg.master_rate/cfg.slave_rate; //cfg.master_rate;
+                          //rx_cnt++;
+                end
+ 
+                if ((cfg.master_rate == 4) && (cfg.slave_rate == 2)) begin //Q2H 
+                      if(clk_cnt == cfg.slave_rate)  begin
+                       for (int i=0; i< NUM_CHANNELS; i++) begin
+                        rx_data_fin[2*(i*BUS_BIT_WIDTH) +: 2*BUS_BIT_WIDTH]  = {rx_data_prev[0][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH],rx_data_prev[1][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH]};
+                        rx_data_rdy = 1;  
+                        //rx_cnt++;
+                        clk_cnt=0;
+                        ca_item.cnt_mul= cfg.master_rate/cfg.slave_rate;
+                       end
+                      end
+                end
+
+                if ((cfg.master_rate == 1) && (cfg.slave_rate == 2)) begin //F2H
+                        if(clk_cnt == cfg.slave_rate)  begin
+                            for (int i=0; i< NUM_CHANNELS; i++) begin
+                                rx_data_fin[2*(i*BUS_BIT_WIDTH) +: 2*BUS_BIT_WIDTH]  = {rx_data_prev[0][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH],rx_data_prev[1][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH]};
+                            end
+                            rx_data_rdy = 1;
+                            //rx_cnt++;
+                            clk_cnt     = 0;
+                            ca_item.cnt_mul     = 1;
+                        end
+                end
+
+                if ((cfg.master_rate == 2) && (cfg.slave_rate == 4)) begin //Q2H
+                        rx_data_fin  = rx_data;
+                        rx_data_rdy = 1;
+                        ca_item.cnt_mul     = cfg.master_rate/cfg.slave_rate;
+                        //rx_cnt++;
+                end
+
+                if ((cfg.master_rate == 1) && (cfg.slave_rate == 4)) begin //Q2F 
+                      if(clk_cnt == cfg.slave_rate)  begin
+                       for (int i=0; i< NUM_CHANNELS; i++) begin
+                        rx_data_fin[4*(i*BUS_BIT_WIDTH) +: 4*BUS_BIT_WIDTH]  = {rx_data_prev[0][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH],rx_data_prev[1][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH],rx_data_prev[2][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH],rx_data_prev[3][(i*BUS_BIT_WIDTH) +: BUS_BIT_WIDTH]};
+                       end
+                        rx_data_rdy = 1;  
+                        //rx_cnt++;
+                        clk_cnt=0;
+                        ca_item.cnt_mul     = cfg.master_rate/cfg.slave_rate;
+                      end
+                end
+                ///////////////////////////////////////////////////////////////////
+                if(rx_data_rdy == 1 ) begin
+                    for(int i = 0; i < i_max; i++) begin
+                        ca_item.databytes[i] = rx_data_fin[7:0];
+                        rx_data_fin = rx_data_fin >> 8;
+                    end //// for
+                    clk_cnt = 0; //clearing clk_Cnt 
+                    rx_data_rdy = 0 ;
+                    ca_item.last_tx_cnt_a = cfg.last_tx_cnt_a;
+                    ca_item.last_tx_cnt_b = cfg.last_tx_cnt_b;
+                    if(my_name == "DIE_A") begin
+                        if(rx_cnt <= (cfg.last_tx_cnt_a)) begin  //rx_cnt = 50, <= last= 100
+                           //$display("ca_item.rx_cnt %0d,cfg.last_tx_cnt_a  %0d",rx_cnt,cfg.last_tx_cnt_a);
+                        end
+                    end else begin 
+                        if(rx_cnt <= (cfg.last_tx_cnt_b)) begin
+                           //$display("ca_item.rx_cnt %0d,cfg.last_tx_cnt_b  %0d",rx_cnt,cfg.last_tx_cnt_b); 
+                        end
+                    end
+                    aport.write(ca_item); // data only
+                end//rx_data_rdy
+            end // if rx_data!=x   
+`endif //CA_ASYMMETRIC
         end // non reset 
     end // clk
-
 endtask : mon_rx
 
 //---------------------------------------------
 function void ca_rx_tb_in_mon_c::verify_rx_stb();
-
-
-    if(cfg.rx_stb_en == 0) begin
-        `uvm_error("verify_rx_stb", $sformatf("%s rx stb rx-ed with rx_stb_en: %0d", my_name, cfg.rx_stb_en));
-    end
 
     stb_beat_cnt++;
     if(stb_sync == 0) begin

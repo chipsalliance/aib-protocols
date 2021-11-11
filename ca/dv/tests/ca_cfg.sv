@@ -116,6 +116,11 @@ function ca_cfg_c::new(string name = "ca_cfg");
     if(!(reset_cfg.randomize())) `uvm_fatal("CA_CFG", $sformatf("reset_cfg randomize FAILED !!"));
     if(!(ca_knobs.randomize())) `uvm_fatal("CA_CFG", $sformatf("ca_knobs randomize FAILED !!"));
 
+    ca_die_a_rx_tb_in_cfg.last_tx_cnt_a = ca_knobs.tx_xfer_cnt_die_a ;  
+    ca_die_b_rx_tb_in_cfg.last_tx_cnt_b = ca_knobs.tx_xfer_cnt_die_b ; 
+    ca_die_a_tx_tb_in_cfg.last_tx_cnt_a = ca_knobs.tx_xfer_cnt_die_a; 
+    ca_die_b_tx_tb_in_cfg.last_tx_cnt_b = ca_knobs.tx_xfer_cnt_die_b;
+
 endfunction
  
 //------------------------------------------
@@ -137,8 +142,14 @@ function void ca_cfg_c::configure( );
 
     // randomize the bit/wd select
     ca_die_a_tx_tb_out_cfg.configure(); 
-    ca_die_b_tx_tb_out_cfg.configure(); 
+    ca_die_b_tx_tb_out_cfg.configure();
+ 
+    ca_die_a_tx_tb_in_cfg.configure(); 
+    ca_die_b_tx_tb_in_cfg.configure(); 
 
+    ca_die_a_rx_tb_in_cfg.configure(); 
+    ca_die_b_rx_tb_in_cfg.configure();
+ 
     // copy same configs from tx_out to tx_in
     ca_die_a_tx_tb_in_cfg.cp(ca_die_a_tx_tb_out_cfg); 
     ca_die_b_tx_tb_in_cfg.cp(ca_die_b_tx_tb_out_cfg); 

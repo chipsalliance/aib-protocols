@@ -59,21 +59,32 @@ class ca_seq_item_c extends uvm_sequence_item ;
     bit                            add_stb = 0;
     rand int                       inj_delay;
     int                            bcnt = 0;
+    int                            size_mul= 0;
     bit [7:0]                      databytes[];
-
+    bit [7:0]                      tx_data_fin[]; 
+    int                            die_a_exp_rx_dout_q[$];    
+    int                            die_b_exp_rx_dout_q[$];  
+    bit                            tx_data_rdy=0;  
+    int                            clk_cnt=0;
+    bit [639:0]                    tx_mark_din = 0; 
+    bit [3:0]                      user_marker; 
+    int                            user_marker_loc; 
+    real                           cnt_mul;
+    int                            last_tx_cnt_a;
+    int                            last_tx_cnt_b;
     `uvm_object_utils_begin(ca_seq_item_c)
-        `uvm_field_int(fbyte, UVM_DEFAULT);
-        `uvm_field_int(inj_delay, UVM_DEFAULT);
+    `uvm_field_int(fbyte, UVM_DEFAULT);
+    `uvm_field_int(inj_delay, UVM_DEFAULT);
     `uvm_object_utils_end
 
     //------------------------------------------
     // constraints 
     //------------------------------------------
-    constraint c_inj_delay { inj_delay >= 0 ; inj_delay <= 2; }
+    constraint c_inj_delay { inj_delay >= 0 ; inj_delay <= 0; }
    
     // Standard UVM Methods:
     extern function new(string name = "ca_seq_item");
-    extern function void init_xfer(int size);
+    extern function void init_xfer(int size_l);
     extern function void dprint(int bytes_per_line = 5);
     extern function void build_tx_beat(ca_seq_item_c  stb_beat);
     extern function bit [1:0] is_stb_beat(ca_seq_item_c  stb_beat);
@@ -81,7 +92,7 @@ class ca_seq_item_c extends uvm_sequence_item ;
     extern function void add_stb_beat(ca_seq_item_c  stb_beat);
     extern function void clr_stb_beat(ca_seq_item_c  stb_beat);
     extern function void check_input();
-    extern function bit  compare_beat(ca_seq_item_c  act_beat);
+    extern function bit  compare_beat(ca_seq_item_c  act_beat,bit tx_or_rx_compare_chk=1'b0);
 
 endclass : ca_seq_item_c
 
@@ -94,11 +105,17 @@ function ca_seq_item_c::new (string name = "ca_seq_item");
 endfunction : new
 
 //--------------------------------------------------
-function void ca_seq_item_c::init_xfer(int size);
+function void ca_seq_item_c::init_xfer(int size_l);
 
-    databytes = new[size];
-    bcnt = size;
-
+  `ifndef CA_ASYMMETRIC
+     databytes = new[size_l];
+     bcnt      = size_l;
+  `else
+     databytes   = new[size_l*4]; //*4    to accommodate F2Q
+     tx_data_fin = new[size_l*4];
+     bcnt        = size_l;
+  `endif
+   //$display("bcnt %0d,size_l %0d,bus_bit_width %0d,time %0t",bcnt, size_l,bus_bit_width,$time);
 endfunction : init_xfer
 
 //--------------------------------------------------
@@ -108,11 +125,14 @@ function void ca_seq_item_c::dprint(int bytes_per_line = 5);
     string  sout = "";
     string  sbyte = "";
 
-    if(bcnt == 0) `uvm_warning("dprint", "bcnt == 0  NOTHING to print!")
-    else `uvm_info("dprint", $sformatf("displaying bytes: %0d", bcnt), UVM_MEDIUM);
-
-    for(i = 0; i < bcnt ; i++) begin
-
+   if(bcnt == 0) `uvm_warning("dprint", "bcnt == 0  NOTHING to print!")
+   else `uvm_info("dprint", $sformatf("displaying bytes: %0d", bcnt), UVM_MEDIUM);  
+ 
+   `ifndef CA_ASYMMETRIC
+    for(i = 0; i < (bcnt) ; i++) begin
+   `else
+    for(i = 0; i < (bcnt*4) ; i++) begin
+   `endif
         sbyte.hextoa(databytes[i]);
 
         if(databytes[i] <= 'hf) sbyte = { "0", sbyte };
@@ -121,8 +141,8 @@ function void ca_seq_item_c::dprint(int bytes_per_line = 5);
         sout = { sbyte, " ", sout };  
 
         if((i + 1) % bytes_per_line == 0) begin 
-            //`uvm_info("dprint", $sformatf("%6d: %s :%6d", (i/bytes_per_line) * bytes_per_line ,sout, i), UVM_MEDIUM);
-            `uvm_info("dprint", $sformatf("%6d: %s :%6d", i, sout, (i/bytes_per_line) * bytes_per_line), UVM_MEDIUM);
+           //`uvm_info("dprint", $sformatf("%6d: %s :%6d", (i/bytes_per_line) * bytes_per_line ,sout, i), UVM_MEDIUM);
+           `uvm_info("dprint", $sformatf("%6d: %s :%6d", i, sout, (i/bytes_per_line) * bytes_per_line), UVM_MEDIUM);
             sout = "";
             end
         end
@@ -205,7 +225,7 @@ function void ca_seq_item_c::build_tx_beat(ca_seq_item_c  stb_beat);
     
     check_input();
     init_xfer((bus_bit_width*num_channels) / 8);
-
+    //$display("bus_bit_width %0d,num_channels %0d,time %0t",bus_bit_width,num_channels,$time);
     if(stb_beat.bcnt != bcnt) `uvm_fatal("build_tx_beat", $sformatf("stb_bcnt: %0d != bcnt: %0d", stb_beat, bcnt));
 
     for(int i = 0; i < bcnt; i++) begin
@@ -220,8 +240,10 @@ function void ca_seq_item_c::build_tx_beat(ca_seq_item_c  stb_beat);
     for(int i = 0; i < bcnt; i++) begin
         //`uvm_info("build_tx_beat", $sformatf("byte: %0d data: 0x%h stb: 0x%h == 0x%h", 
         //    i, databytes[i], stb_beat.databytes[i], (databytes[i] & (stb_beat.databytes[i] ^ 8'hff))), UVM_MEDIUM);
-        databytes[i] = databytes[i] & (stb_beat.databytes[i] ^ 8'hff);
-    end
+    `ifndef CA_ASYMMETRIC 
+      databytes[i] = databytes[i] & (stb_beat.databytes[i] ^ 8'hff);
+    `endif
+   end
 
 endfunction : build_tx_beat
 
@@ -264,11 +286,35 @@ function void ca_seq_item_c::calc_stb_beat();
 endfunction : calc_stb_beat
 
 //--------------------------------------------------
-function bit  ca_seq_item_c::compare_beat(ca_seq_item_c  act_beat);
+function bit  ca_seq_item_c::compare_beat(ca_seq_item_c  act_beat, bit tx_or_rx_compare_chk=1'b0);
 
     bit [7:0] dbyte = 0; 
+    int size_mul;
 
-    compare_beat = 1;
+               compare_beat = 1;
+               if(tx_or_rx_compare_chk == 1) begin  //RX comparison
+                  `ifdef CA_ASYMMETRIC
+                    `ifdef GEN1
+                       //die_a to die_b busbitwidth check 40,80  *2  f2h/h2f ,f2f,h2h =same bcnt
+                       //if((act_item.my_name == "DIE_A" ) && ((act_item.bus_bit_width == 40)  && act_item.bus_bit_width == 80))) size_mul = 2;
+                       if((my_name == "DIE_A" ) && (bus_bit_width == 40)) size_mul = 2; //ASYM,F2H
+                       if((my_name == "DIE_B" ) && (bus_bit_width == 80)) size_mul = 2; //ASYM H2F
+                    `else
+                       if((my_name == "DIE_A" ) && ((bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 160))) size_mul = 2;//F2H
+                       if((my_name == "DIE_B" ) && ((bus_bit_width == 160)  && (`TB_DIE_A_BUS_BIT_WIDTH ==  80))) size_mul = 1;//H2F
+                       if((my_name == "DIE_A" ) && ((bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 320))) size_mul = 4;//F2Q
+                       if((my_name == "DIE_B" ) && ((bus_bit_width == 320)  && (`TB_DIE_A_BUS_BIT_WIDTH ==  80))) size_mul = 1;//Q2F
+                       //Update need to be done for all combinations 
+                     `endif
+                        if(my_name == "DIE_A") begin
+                           bcnt = bcnt * size_mul ;
+                        end
+                        if(my_name == "DIE_B") begin
+                           act_beat.bcnt = act_beat.bcnt * size_mul ;
+                        end
+                        //$display("SCBD src_BCNT = %0d,act_BCNT = %0d,size_mul %0d,my_name %s,bus_bit_width %0d",bcnt,act_beat.bcnt ,size_mul,my_name,bus_bit_width);
+                  `endif //CA_ASYMMETRIC
+               end
 
     if(bcnt != act_beat.bcnt) begin
         compare_beat = 0;

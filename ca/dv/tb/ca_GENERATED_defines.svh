@@ -65,22 +65,26 @@ parameter osc_period  = 1000;
 `ifdef GEN1
   `ifdef TX_RATE_F
           `define MLLPHY_WIDTH            40
-          `define SLLPHY_WIDTH            40
           `define TB_DIE_A_BUS_BIT_WIDTH  40 
           `define TB_DIE_A_CLK            1000 
+          `define MASTER_RATE             FULL 
+  `endif
+  `ifdef RX_RATE_F
+          `define SLLPHY_WIDTH            40
           `define TB_DIE_B_BUS_BIT_WIDTH  40 
           `define TB_DIE_B_CLK            1000 
-          `define MASTER_RATE             FULL 
           `define SLAVE_RATE              FULL 
   `endif
   `ifdef TX_RATE_H
           `define MLLPHY_WIDTH            80
-          `define SLLPHY_WIDTH            80
           `define TB_DIE_A_BUS_BIT_WIDTH  80 
           `define TB_DIE_A_CLK            2000 
+          `define MASTER_RATE             HALF 
+  `endif
+  `ifdef RX_RATE_H
+          `define SLLPHY_WIDTH            80
           `define TB_DIE_B_BUS_BIT_WIDTH  80 
           `define TB_DIE_B_CLK            2000
-          `define MASTER_RATE             HALF 
           `define SLAVE_RATE              HALF 
   `endif
 `endif //GEN1
@@ -88,34 +92,39 @@ parameter osc_period  = 1000;
 `ifdef GEN2
   `ifdef TX_RATE_F
           `define MLLPHY_WIDTH            80
-          `define SLLPHY_WIDTH            80
           `define TB_DIE_A_BUS_BIT_WIDTH  80 
           `define TB_DIE_A_CLK            500 
+          `define MASTER_RATE             FULL 
+  `endif
+  `ifdef RX_RATE_F
+          `define SLLPHY_WIDTH            80
           `define TB_DIE_B_BUS_BIT_WIDTH  80 
           `define TB_DIE_B_CLK            500
-          `define MASTER_RATE             FULL 
           `define SLAVE_RATE              FULL 
   `endif
   `ifdef TX_RATE_H
           `define MLLPHY_WIDTH            160
-          `define SLLPHY_WIDTH            160
           `define TB_DIE_A_BUS_BIT_WIDTH  160 
           `define TB_DIE_A_CLK            1000 
+          `define MASTER_RATE             HALF 
+  `endif
+  `ifdef RX_RATE_H
+          `define SLLPHY_WIDTH            160
           `define TB_DIE_B_BUS_BIT_WIDTH  160
           `define TB_DIE_B_CLK            1000
-          `define MASTER_RATE             HALF 
           `define SLAVE_RATE              HALF 
   `endif
   `ifdef TX_RATE_Q
           `define MLLPHY_WIDTH            320
-          `define SLLPHY_WIDTH            320
           `define TB_DIE_A_BUS_BIT_WIDTH  320 
           `define TB_DIE_A_CLK            2000 
+          `define MASTER_RATE             QUARTER 
+  `endif
+  `ifdef RX_RATE_Q
+          `define SLLPHY_WIDTH            320
           `define TB_DIE_B_BUS_BIT_WIDTH  320
           `define TB_DIE_B_CLK            2000 
-          `define MASTER_RATE             QUARTER 
           `define SLAVE_RATE              QUARTER 
   `endif
 `endif //GEN2
-
 `endif //_ca_GENERATED_defines_

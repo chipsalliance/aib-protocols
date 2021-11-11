@@ -199,7 +199,7 @@ sub printRandVal {
 
 my %masterHash, %slaveHash;
 
-print "i/p file is: $filename\n";
+print "i/p file is: $filename :::: output file is: ca_config_define.svi\n";
 open(FH, '<', $filename) or die $!; #opening a file in read mode.
 open (OP4, '>', "ca_config_define.svi") or die $!;
 while(<FH>) {    
@@ -322,10 +322,12 @@ if(exists($masterHash{"CA_RX_STB_LOC"})){
 
 if(exists($masterHash{"GLOBAL_TX_MARKER_LOC"})){
     $TxMarkerGenLoc= $masterHash{"GLOBAL_TX_MARKER_LOC"};
-}
+    print OP4 "`define CA_TX_MARKER_LOC  \t$TxMarkerGenLoc\n";
+}                                        
 
 if(exists($masterHash{"GLOBAL_RX_MARKER_LOC"})){
     $RxMarkerGenLoc= $masterHash{"GLOBAL_RX_MARKER_LOC"};
+    print OP4 "`define CA_RX_MARKER_LOC  \t$TxMarkerGenLoc\n";
 }
 
 
@@ -379,6 +381,13 @@ else  {
 
     print OP4 "Not Defined\n";
 }
+
+ if(exists($masterHash{"ASYMMETRIC_CA"})) {
+     $ca_asym= $masterHash{"ASYMMETRIC_CA"} ;
+     if ($ca_asym == 1){
+         print OP4 "`define CA_ASYMMETRIC \n";
+     }
+ }
 
 ## Printing CA calculated values
 $CaTxStbWdSel  = (1 << ($CaTxStrobeGenLoc/40));

@@ -39,12 +39,16 @@ class ca_tx_tb_in_cfg_c extends uvm_object;
     bit         agent_active  = UVM_PASSIVE;
     bit         has_func_cov  = 0;
     bit [7:0]   tx_stb_intv = 0;
-    bit [7:0]   tx_stb_wd_sel  = 0;
-    bit [39:0]  tx_stb_bit_sel = 0;
-    bit [39:0]  tx_stb_en = 0;
-    bit         tx_en_stb_check   = 1;
-
+    bit              tx_stb_en         = `CA_TX_STB_EN;    // default
+    bit [7:0]        tx_stb_wd_sel     = `CA_TX_STB_WD_SEL;
+    bit [39:0]       tx_stb_bit_sel    = `CA_TX_STB_BIT_SEL;
+    bit              tx_en_stb_check   = 1;
+    logic [3:0]      user_marker;
+    bit [1:0]        master_rate       = `MSR_GEAR;
+    bit [1:0]        slave_rate        = `SLV_GEAR;
     string           my_name = "";
+    int              last_tx_cnt_a;
+    int              last_tx_cnt_b;
 
     //------------------------------------------
     // UVM Factory Registration Macro
@@ -99,7 +103,13 @@ endfunction : cp
 
 //------------------------------------------
 function void ca_tx_tb_in_cfg_c::configure( );
-   
+    if(my_name == "DIE_A" )begin
+        master_rate = `MSR_GEAR ;
+        slave_rate  = `SLV_GEAR ;
+    end else begin
+        master_rate = `SLV_GEAR ;
+        slave_rate  = `MSR_GEAR ;
+    end
 
 endfunction: configure 
 ////////////////////////////////////////////////////////////

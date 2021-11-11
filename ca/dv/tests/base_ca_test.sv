@@ -239,6 +239,7 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
         repeat (10) @(posedge vif.clk);
     end
     `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
+    repeat (10) @(posedge vif.clk);
     phase.drop_objection(this);
 
    uvm_test_done.set_drain_time(this, 10ps);

@@ -36,6 +36,8 @@ interface ca_tx_tb_out_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk
    
     // signal declaration...
     //---------------------------------------------------
+    logic[3:0]                                    user_marker;
+    logic                                         user_stb;
     logic  [((NUM_CHANNELS*BUS_BIT_WIDTH)-1):0]   tx_din;
     logic                                         com_clk;
     logic                                         tx_online;

@@ -47,6 +47,13 @@ class ca_tx_tb_out_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm
     string                   my_name = "";
     int                      tx_cnt = 0;
     
+    int                      stb_bit_pos, index;
+    bit                      start_tx_din_to_scbd;
+
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]   onlymark_data=0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]   onlystb_data=0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]   markstb_data=0; 
+
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -100,22 +107,72 @@ task ca_tx_tb_out_mon_c::mon_tx();
 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  tx_data = 0; 
     ca_data_pkg::ca_seq_item_c                  ca_item;
-
+    int                                         clk_cnt; 
     forever begin @(posedge vif.clk)
         
         if(vif.rst_n === 1'b0) begin 
             // reset state
             tx_active = 0;
             tx_cnt = 0;
-            end
+//`ifdef CA_ASYMMETRIC
+             index = 0;
+             for (int i=0; i<40; i+=1) begin
+                 if (cfg.tx_stb_bit_sel[i]) begin
+                     index = i;
+                     break;
+                 end
+             end
+             if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin
+                 stb_bit_pos = index;
+             end else begin
+                 stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+             end
+            for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                 if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
+             `ifdef GEN2
+                if (BUS_BIT_WIDTH == 320) begin //Q2Q
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + 240 + `CA_TX_MARKER_LOC]    = 1'b1; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]     = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
+                end
+             `else
+                if (BUS_BIT_WIDTH == 40) begin
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = 1'b1; 
+                    markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
+                end else if (BUS_BIT_WIDTH == 80) begin
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = 1'b1; 
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = 1'b1; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = 1'b1;
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
+                end
+             `endif
+            end  //of NUM_CHANNELS
+//`endif
+        end
         else if((vif.align_done === 1'b1) && (vif.tx_online === 1'b1)) begin // non reset state
      
             // check strb
 
             //-------------------- 
-            if((|vif.tx_din !== 'h0) && (^vif.tx_din !== 'hx)) begin 
+    `ifndef CA_ASYMMETRIC
+         if((|vif.tx_din !== 'h0) && (^vif.tx_din !== 'hx)) begin 
+            //if ((BUS_BIT_WIDTH != 80)&& ((vif.tx_din != 0) && (vif.tx_din != onlystb_data) && (vif.tx_din != onlymark_data) && (vif.tx_din != markstb_data))) begin
+    `else 
+            if ((start_tx_din_to_scbd == 1'b1) && ((vif.tx_din == 0) || (vif.tx_din == onlystb_data) || (vif.tx_din == onlymark_data) || (vif.tx_din == markstb_data))) begin
+               start_tx_din_to_scbd = 1'b0; ///marks end-of actual Tx data from driver
+            end else if ((start_tx_din_to_scbd == 1'b0) && (vif.tx_din != 0) && (vif.tx_din != onlystb_data) && (vif.tx_din != onlymark_data) && (vif.tx_din != markstb_data)) begin
+               start_tx_din_to_scbd = 1'b1; ///marks start-of actual Tx data from driver
+            end
+
+            if ( (start_tx_din_to_scbd == 1'b1) && ((^vif.tx_din) !== 'hx) ) begin 
+     `endif 
                 ca_item = ca_data_pkg::ca_seq_item_c::type_id::create("ca_item");
-                ca_item.init_xfer((BUS_BIT_WIDTH*NUM_CHANNELS) / 8);
+                ca_item.init_xfer((BUS_BIT_WIDTH*NUM_CHANNELS) / 8); 
                 tx_data = vif.tx_din;
                 tx_cnt++;
                 `uvm_info("mon_tx_tb_out", $sformatf("%s rx-ing TB --> tx_din RTL xfer: %0d tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
@@ -130,6 +187,9 @@ task ca_tx_tb_out_mon_c::mon_tx();
                 ca_item.stb_intv    = vif.tx_stb_intv;
                 aport.write(ca_item); 
             end // if not 0
+    `ifndef CA_ASYMMETRIC
+          //end // BUS_BIT_WIDTH !=80
+    `endif
         end // non reset 
     
     end // clk
