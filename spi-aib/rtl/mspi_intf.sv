@@ -28,7 +28,7 @@ input                        rst_n_sclk,
 input                        sclk,       //Free running SPI clock out
 output reg [SS_WIDTH-1:0]    ss_n,
 output reg                   mosi,
-input                        miso
+input      [SS_WIDTH-1:0]    miso
 );
 ////////////////////////////////////////////////////////////////////////
 //cmd_reg is from avmm_clk domain. because avmm_clk and spi clock is 
@@ -41,9 +41,11 @@ parameter ST_WT_4_ONE  = 2'b01;
 parameter ST_ONE       = 2'b10;
 parameter ST_WT_4_ZERO = 2'b11;
 
-reg [1:0] cdc_st;
-reg  start_trans, cdc_req;
-wire cdc_req_sclk, cdc_ack_aclk;
+logic [1:0] cdc_st;
+logic  start_trans, cdc_req;
+logic cdc_req_sclk, cdc_ack_aclk;
+logic mux_miso;
+
 always_ff @(posedge avmm_clk or negedge rst_n_avmm)
  if (!rst_n_avmm) begin
       start_trans <= '0;
@@ -157,6 +159,10 @@ always_ff @(posedge sclk or negedge rst_n_sclk)
        else tx_data <= {tx_data[30:0], 1'b0};
  end
 
+//4:1 mux to select miso from multiple slave.
+//If pin is limited, miso line can be shared with tristate in slave miso output buffer.
+assign mux_miso = cs_sel[1]? (cs_sel[0]? miso[3] : miso[2]) : (cs_sel[0] ? miso[1] : miso[0]);
+
 always_ff @(negedge sclk or negedge rst_n_sclk)
  if (!rst_n_sclk) begin
     mosi <= '0;
@@ -183,7 +189,7 @@ always_ff @(posedge sclk or negedge rst_n_sclk)
     rx_buf_waddr <= '0;
  end
  else begin
-    if (&ss_n == 1'b0) rx_data[31:0] <= {rx_data[30:0], miso};
+    if (&ss_n == 1'b0) rx_data[31:0] <= {rx_data[30:0], mux_miso};
     rx_buf_we <= &full_counter[4:0];
     rx_buf_waddr <= full_counter[BUF_ADWIDTH+4:5];
  end

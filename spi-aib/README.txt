@@ -5,7 +5,12 @@ Nov. 4th, 2021
 Revision history:
 Revision 1.0: Initial release
 ===========================================================
-
+Revision 1.1 11/19/2021:
+1) Modify SPI master and SPI slave core so that miso pins are seperated 
+   instead of shared and tristated. If package pins are not limited, this
+   can be easy for debugging. 
+2) Changed spi clock to 100MHz. (User can specify accordingly base on application)
+3) Correct some typo in user guide CSR.
 ============================================================
 Included in this package are :
 

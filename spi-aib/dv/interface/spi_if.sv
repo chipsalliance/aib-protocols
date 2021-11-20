@@ -7,6 +7,6 @@ interface spi_if;
     logic                        sclk;
     logic [3:0]                  ss_n;
     logic                        mosi;
-    wire                         miso;
+    wire  [3:0]                  miso;  //Sepearte miso pin, get rid of tristate.
 
 endinterface : spi_if

@@ -8,7 +8,7 @@ module top_tb;
 
 parameter TOTAL_CHNL_NUM = 24;
 parameter AVMM_CYCLE = 5000;
-parameter SPI_CYCLE = 1000;
+parameter SPI_CYCLE = 10000;
 parameter OSC_CYCLE  = 1000;
 //parameter FWD_CYCLE  = 500;
 

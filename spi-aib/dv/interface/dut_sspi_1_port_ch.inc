@@ -1,7 +1,7 @@
     .sclk(spi_if.sclk),
     .ss_n(spi_if.ss_n[1]),
     .mosi(spi_if.mosi),
-    .miso(spi_if.miso),
+    .miso(spi_if.miso[1]),
     .rst_n(avmm_rstn),   //Terry:Make sure you drive this signal. 
                                   //
     //AVMM interface

@@ -7,6 +7,7 @@
 //
 // Change log
 // 08/09/2021
+// 11/19/2021 Remove tristate buffer.
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -217,7 +218,8 @@ sspi_intf
     .sclk(sclk),
     .ss_n(ss_n),
     .mosi(mosi),
-    .miso(miso_int)
+//  .miso(miso_int)
+    .miso(miso)
 );
-assign miso = (~ss_n) ? miso_int : 1'bz;
+//assign miso = (~ss_n) ? miso_int : 1'bz;
 endmodule

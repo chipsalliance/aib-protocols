@@ -7,6 +7,7 @@
 //
 // Change log
 // 08/09/2021
+// 11/19/2021 Add seperate misos so that it is easier for debugging if pins are available
 /////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -24,7 +25,7 @@ module spi_master #(
     output                sclk,       //Free running SPI clock out 
     output [SS_WIDTH-1:0] ss_n,
     output                mosi,
-    input                 miso,
+    input  [SS_WIDTH-1:0] miso,
     //avalon interface
     input                 avmm_clk,   //Free running clock
     input [16:0]          avmm_addr,
