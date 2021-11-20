@@ -43,7 +43,7 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit [7:0]        tx_stb_wd_sel  = `CA_TX_STB_WD_SEL;
     bit [39:0]       tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
     bit              tx_online      = 1;    // default
-    bit              tx_stb_en      = 1;    // default
+    bit              tx_stb_en      = `CA_TX_STB_EN;    // default
     bit              tx_stb_rcvr    = 0;    // default
     //rand bit [7:0]   tx_stb_intv ;
     bit [7:0]        tx_stb_intv    = `CA_TX_STB_INTV ;
@@ -115,7 +115,7 @@ function void ca_tx_tb_out_cfg_c::configure( );
 //    tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
 //    tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
 //    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0b", 
-//        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_LOW);//OCT_13
+//        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_LOW);
 //
 endfunction: configure 
 ////////////////////////////////////////////////////////////

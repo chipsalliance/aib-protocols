@@ -30,6 +30,7 @@ module lpif_txrx
   #(
     parameter AIB_VERSION = 2,
     parameter AIB_GENERATION = 2,
+    parameter AIB_LANES = 4,
     parameter LPIF_DATA_WIDTH = 128,
     parameter LPIF_CLOCK_RATE = 2000,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
@@ -108,32 +109,38 @@ module lpif_txrx
 
   /* TX & RX datapath */
 
-  localparam X16_Q2 = ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128));
-  localparam X16_H2 = ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64));
-  localparam X16_F2 = ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==  32));
+  wire [15:0]                           lpif_clock_rate = LPIF_CLOCK_RATE;
+  wire [15:0]                           lpif_data_width = LPIF_DATA_WIDTH;
+  wire [15:0]                           aib_version = AIB_VERSION;
+  wire [15:0]                           aib_generation = AIB_GENERATION;
+  wire [15:0]                           aib_lanes = AIB_LANES;
 
-  localparam X8_Q2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==  64));
-  localparam X8_H2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  32));
-  localparam X8_F2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==  16));
+  localparam X16_Q2 = ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  4));
+  localparam X16_H2 = ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  4));
+  localparam X16_F2 = ((LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==  32) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  4));
 
-  localparam X4_Q2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==  32));
-  localparam X4_H2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  16));
-  localparam X4_F2 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 2) && (LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==   8));
+  localparam X8_Q2 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  2));
+  localparam X8_H2 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  2));
+  localparam X8_F2 =  ((LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==  32) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  2));
 
-  localparam X16_H1 = ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128));
-  localparam X16_F1 = ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64));
+  localparam X4_Q2 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  1));
+  localparam X4_H2 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  1));
+  localparam X4_F2 =  ((LPIF_CLOCK_RATE == 2000) && (LPIF_DATA_WIDTH ==  32) && (AIB_VERSION == 2) && (AIB_GENERATION == 2) && (AIB_LANES ==  1));
 
-  localparam X8_H1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==  64));
-  localparam X8_F1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  32));
+  localparam X16_H1 = ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES == 16));
+  localparam X16_F1 = ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES == 16));
 
-  localparam X4_H1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==  32));
-  localparam X4_F1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  16));
+  localparam X8_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  8));
+  localparam X8_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  8));
 
-  localparam X2_H1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==  16));
-  localparam X2_F1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==   8));
+  localparam X4_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  4));
+  localparam X4_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  4));
 
-  localparam X1_H1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH ==   8));
-  localparam X1_F1 =  ((AIB_VERSION == 2) && (AIB_GENERATION == 1) && (LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==   4));
+  localparam X2_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  2));
+  localparam X2_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  2));
+
+  localparam X1_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  1));
+  localparam X1_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (AIB_VERSION == 2) && (AIB_GENERATION == 1) && (AIB_LANES ==  1));
 
   wire                                  x16_q2 = X16_Q2;
   wire                                  x16_h2 = X16_H2;
@@ -402,7 +409,6 @@ module lpif_txrx
    .tx_phy\([0-9]+\)       (ll_tx_phy\1[]),
    ); */
 
-  genvar                     i;
   generate
     if (X16_Q2) // quarter rate
       begin
@@ -446,7 +452,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X16_Q2)
+      end
     else if (X16_H2) // half rate
       begin
         lpif_txrx_x16_h2_master_top
@@ -489,7 +495,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X16_H2)
+      end
     else if (X16_F2) // full rate
       begin
         lpif_txrx_x16_f2_master_top
@@ -532,7 +538,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X16_F2)
+      end
     else if (X8_Q2) // quarter rate
       begin
         lpif_txrx_x8_q2_master_top
@@ -827,7 +833,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X16_H1)
+      end
     else if (X16_F1) // full rate
       begin
         lpif_txrx_x16_f1_master_top
@@ -892,7 +898,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X16_F1)
+      end
     else if (X8_H1) // half rate
       begin
         lpif_txrx_x8_h1_master_top
@@ -941,7 +947,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X8_H1)
+      end
     else if (X8_F1) // full rate
       begin
         lpif_txrx_x8_f1_master_top
@@ -990,7 +996,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X8_F1)
+      end
     else if (X4_H1) // half rate
       begin
         lpif_txrx_x4_h1_master_top
@@ -1031,7 +1037,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X4_H1)
+      end
     else if (X4_F1) // full rate
       begin
         lpif_txrx_x4_f1_master_top
@@ -1080,7 +1086,7 @@ module lpif_txrx
              .delay_x_value             (delay_x_value[15:0]),
              .delay_y_value             (delay_y_value[15:0]),
              .delay_z_value             (delay_z_value[15:0]));
-      end // if (X4_F1)
+      end
     else if (X2_H1) // half rate
       begin
         lpif_txrx_x2_h1_master_top

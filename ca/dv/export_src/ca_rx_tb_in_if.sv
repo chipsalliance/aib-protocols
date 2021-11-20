@@ -62,6 +62,8 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic [24-1:0]                                ld_sl_rx_transfer_en;
     logic [24-1:0]                                fl_ms_rx_transfer_en;
     logic [24-1:0]                                fl_sl_rx_transfer_en;
+    logic[3:0]                                    user_marker;
+    logic                                         user_stb;
 
     // modports...
     //---------------------------------------------------

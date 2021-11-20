@@ -36,14 +36,17 @@ cmd to run test:
 4. Use command:  ./run_sim
 
    This will run 'ca_basic_test_c' test-sequence
-   At present, Full-to-Full  AIB2-Gen1 and AIB2-Gen2 are clean
+   At present, Full-to-Full with  AIB2-Gen1 and AIB2-Gen2 are clean
+               Full2Half AIB2Gen1 (Leader-DIE_A) -- AIB1.0 (Follower DIE_B) is clean
+                  |
+                  +--> (scripts/sailrock_cfg_m2s1_f2h.txt  to be renamed as sailrock_cfg.txt and used in MY_TEST1)
 
-   {Yet to be supported}
+   {Rest yet to be supported}
 5. The +define+P2P_LITE when uncommented, runs set-up with P2P Lite (SV)model instead of AIB model 
    Uncommenting +define+P2P_LITE_CH_DELAY_ENB will enable the P2P_LITE model to introduce random delay between active channels
    +define+CHAN_DELAY_ENB is optional with use of +define+P2P_LITE_CH_DELAY_ENB.
    (It will further introduce random channel delays in the set-up thereby incresing or decreasing inter-channel delays effectively)
-6. Regression mode
+6. Regression mode (TBD)
 ------------------------------------------------------------------------------------------
 
 --------------------

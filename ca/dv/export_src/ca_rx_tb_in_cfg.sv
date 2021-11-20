@@ -53,8 +53,15 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     rand bit [7:0]   rx_stb_intv;
     rand int         bit_shift;
     int              bits_per_channel = 0;
+    real             master_rate = `MSR_GEAR;
+    real             slave_rate  = `SLV_GEAR;
 
     bit              en_rx_stb_check = 1;
+    bit              tx_stb_en      = `CA_TX_STB_EN;    // default
+    bit [7:0]        tx_stb_wd_sel  = `CA_TX_STB_WD_SEL;
+    bit [39:0]       tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
+    int              last_tx_cnt_a;
+    int              last_tx_cnt_b;
 
     //------------------------------------------
     // UVM Factory Registration Macro
@@ -120,14 +127,24 @@ function void ca_rx_tb_in_cfg_c::configure( );
     int max_wd_sel = 0 ; 
     int wd_shift   = 0 ;
 
-    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
-    max_wd_sel = bits_per_channel/40;
-    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
+    if(my_name == "DIE_A" )begin
+        master_rate = `MSR_GEAR ;
+        slave_rate  = `SLV_GEAR ;
+    end else begin
+        master_rate = `SLV_GEAR ;
+        slave_rate  = `MSR_GEAR ;
+    end
 
-    rx_stb_bit_sel = rx_stb_bit_sel << bit_shift;
-    rx_stb_wd_sel  = rx_stb_wd_sel << wd_shift;
-    `uvm_info("ca_rx_tb_in_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d rx_stb_bit_sel: %0h  rx_stb_wd_sel: %0d", 
-        my_name, bit_shift, wd_shift, rx_stb_bit_sel, rx_stb_wd_sel), UVM_MEDIUM);
+//    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
+
+//    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
+//    max_wd_sel = bits_per_channel/40;
+//    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
+//
+//    rx_stb_bit_sel = rx_stb_bit_sel << bit_shift;
+//    rx_stb_wd_sel  = rx_stb_wd_sel << wd_shift;
+//    `uvm_info("ca_rx_tb_in_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d rx_stb_bit_sel: %0h  rx_stb_wd_sel: %0d", 
+//        my_name, bit_shift, wd_shift, rx_stb_bit_sel, rx_stb_wd_sel), UVM_MEDIUM);
 
 endfunction: configure 
 ////////////////////////////////////////////////////////////
