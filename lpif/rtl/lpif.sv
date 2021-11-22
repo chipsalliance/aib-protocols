@@ -39,6 +39,7 @@ module lpif
     parameter MEM_CACHE_STREAM_ID = 8'h1,
     parameter IO_STREAM_ID = 8'h2,
     parameter ARB_MUX_STREAM_ID = 8'h3,
+    parameter ASYM = 0,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
     localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
@@ -291,7 +292,8 @@ module lpif
       .AIB_GENERATION                   (AIB_GENERATION),
       .AIB_LANES                        (AIB_LANES),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
-      .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE))
+      .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE),
+      .ASYM                             (ASYM))
   lpif_txrx_i
     (/*AUTOINST*/
      // Outputs
@@ -384,8 +386,11 @@ module lpif
   lpif_ctl
     #(/*AUTOINSTPARAM*/
       // Parameters
+      .AIB_VERSION                      (AIB_VERSION),
+      .AIB_GENERATION                   (AIB_GENERATION),
       .AIB_LANES                        (AIB_LANES),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
+      .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE),
       .LPIF_PIPELINE_STAGES             (LPIF_PIPELINE_STAGES),
       .MEM_CACHE_STREAM_ID              (MEM_CACHE_STREAM_ID),
       .IO_STREAM_ID                     (IO_STREAM_ID),

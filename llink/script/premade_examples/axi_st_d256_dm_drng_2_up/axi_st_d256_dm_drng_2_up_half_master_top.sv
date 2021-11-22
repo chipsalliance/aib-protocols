@@ -71,7 +71,7 @@ module axi_st_d256_dm_drng_2_up_half_master_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          tx_st_pushbit                 ;
-  logic                                          user_st_valid                 ;
+  logic                                          user_st_vld                   ;
   logic [ 511:   0]                              tx_st_data                    ;
   logic [ 511:   0]                              txfifo_st_data                ;
   logic [   3:   0]                              rx_st_credit                  ;
@@ -128,7 +128,7 @@ module axi_st_d256_dm_drng_2_up_half_master_top  (
          .init_i_credit                    (init_st_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_st_pop_ovrd),
          .txfifo_i_data                    (txfifo_st_data[511:0]),
-         .user_i_valid                     (user_st_valid),
+         .user_i_valid                     (user_st_vld),
          .rx_i_credit                      (rx_st_credit[3:0]));
 
 // Logic Link Instantiation
@@ -143,7 +143,7 @@ module axi_st_d256_dm_drng_2_up_half_master_top  (
          .user_tvalid                      (user_tvalid),
          .user_tready                      (user_tready),
 
-         .user_st_valid                    (user_st_valid),
+         .user_st_vld                      (user_st_vld),
          .txfifo_st_data                   (txfifo_st_data[ 511:   0]),
          .user_st_ready                    (user_st_ready),
 

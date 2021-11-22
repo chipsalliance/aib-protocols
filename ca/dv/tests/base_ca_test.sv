@@ -70,7 +70,8 @@ class base_ca_test_c extends uvm_test;
     //------------------------------------------
     extern task global_timer( );
     extern function void ck_global_err_cnt( );
-    extern function bit ck_xfer_cnt(bit show);
+    extern function bit ck_xfer_cnt_a(bit show);
+    extern function bit ck_xfer_cnt_b(bit show);
     extern task ck_eot( uvm_phase phase );
  
 endclass: base_ca_test_c
@@ -163,7 +164,8 @@ task base_ca_test_c::global_timer();
 
     
     int local_cnt = 0;
-    bit result = 0;
+    bit result_a = 0;
+    bit result_b = 0;
 
     `uvm_info("GLOBAL_TIMER", "Global timer START!\n", UVM_LOW);       
      
@@ -172,12 +174,22 @@ task base_ca_test_c::global_timer();
         ck_global_err_cnt();
         local_cnt++;
         if(local_cnt % 5000 == 0) begin
-            result = ck_xfer_cnt(1);
+           if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+              result_a = ck_xfer_cnt_a(1);
+           end
+           if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+              result_b = ck_xfer_cnt_b(1);
+           end
             `uvm_info("GLOBAL_TIMER", $sformatf("....sim heartbeat %0d cycles....",local_cnt), UVM_NONE);
         end
          
     if(local_cnt >= ca_cfg.ca_knobs.GLOBAL_TIMEOUT) begin 
-        result = ck_xfer_cnt(1);
+          if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+            result_a = ck_xfer_cnt_a(1);
+          end
+          if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+            result_b = ck_xfer_cnt_b(1);
+          end
        // `uvm_fatal("GLOBAL_TIMER", $sformatf("\n ***> TIMEOUT EXCEEDED %0d cycles <***\n", local_cnt));
     end
          
@@ -186,12 +198,11 @@ end
 endtask : global_timer 
 
 //------------------------------------------
-function bit base_ca_test_c::ck_xfer_cnt(bit show);
+function bit base_ca_test_c::ck_xfer_cnt_a(bit show);
 
-    ck_xfer_cnt = 1;
+    ck_xfer_cnt_a = 1;
 
-    if(ca_cfg.ca_knobs.tx_xfer_cnt_die_a != ca_top_env.ca_scoreboard.rx_out_cnt_die_b) ck_xfer_cnt = 0; 
-    if(ca_cfg.ca_knobs.tx_xfer_cnt_die_b != ca_top_env.ca_scoreboard.rx_out_cnt_die_a) ck_xfer_cnt = 0; 
+      if(ca_cfg.ca_knobs.tx_xfer_cnt_die_a != ca_top_env.ca_scoreboard.rx_out_cnt_die_b) ck_xfer_cnt_a = 0; 
 
     if(show == 1) begin
         if(ca_cfg.ca_knobs.tx_xfer_cnt_die_a != ca_top_env.ca_scoreboard.rx_out_cnt_die_b) begin
@@ -202,7 +213,20 @@ function bit base_ca_test_c::ck_xfer_cnt(bit show);
             `uvm_info("ck_xfer_cnt", $sformatf("DIE_A tx_din: %0d == DIE_B rx_dout: %0d",
                 ca_cfg.ca_knobs.tx_xfer_cnt_die_a, ca_top_env.ca_scoreboard.rx_out_cnt_die_b), UVM_NONE);
         end
-        //
+    end
+
+    return ck_xfer_cnt_a;
+
+endfunction : ck_xfer_cnt_a
+
+//------------------------------------------
+function bit base_ca_test_c::ck_xfer_cnt_b(bit show);
+
+    ck_xfer_cnt_b = 1;
+
+    if(ca_cfg.ca_knobs.tx_xfer_cnt_die_b != ca_top_env.ca_scoreboard.rx_out_cnt_die_a) ck_xfer_cnt_b = 0; 
+
+    if(show == 1) begin
         if(ca_cfg.ca_knobs.tx_xfer_cnt_die_b != ca_top_env.ca_scoreboard.rx_out_cnt_die_a) begin
             `uvm_info("ck_xfer_cnt", $sformatf(">>> DIE_B tx_din: %0d != DIE_A rx_dout: %0d <<<",
                 ca_cfg.ca_knobs.tx_xfer_cnt_die_b, ca_top_env.ca_scoreboard.rx_out_cnt_die_a), UVM_NONE);
@@ -212,18 +236,24 @@ function bit base_ca_test_c::ck_xfer_cnt(bit show);
                 ca_cfg.ca_knobs.tx_xfer_cnt_die_b, ca_top_env.ca_scoreboard.rx_out_cnt_die_a), UVM_NONE);
         end
     end
+    
+    return ck_xfer_cnt_b;
 
-    return ck_xfer_cnt;
-
-endfunction : ck_xfer_cnt
+endfunction : ck_xfer_cnt_b
 
 //------------------------------------------
 function void base_ca_test_c::ck_global_err_cnt( );
 
-    bit result = 0;
+    bit result_a = 0;
+    bit result_b = 0;
 
     if(server.get_severity_count(UVM_ERROR) >= ca_cfg.ca_knobs.stop_err_cnt) begin
-        result = ck_xfer_cnt(1);
+          if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+             result_a = ck_xfer_cnt_a(1);
+          end
+          if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+             result_b = ck_xfer_cnt_b(1);
+          end
         `uvm_fatal("STOP_ERROR_CNT", $sformatf("base test: MAX error %0d reached.  Ending sim...", ca_cfg.ca_knobs.stop_err_cnt));
     end
 
@@ -232,18 +262,31 @@ endfunction : ck_global_err_cnt
 //------------------------------------------
 task base_ca_test_c::ck_eot( uvm_phase phase );
 
-    bit result = 0;
+    bit result_a = 0;
+    bit result_b = 0;
 
     phase.raise_objection(this);
-    while(ck_xfer_cnt(0) == 0) begin
-        repeat (10) @(posedge vif.clk);
-    end
+     if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+        while(ck_xfer_cnt_a(0) == 0) begin
+            repeat (10) @(posedge vif.clk);
+        end
+     end 
+     if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+        while(ck_xfer_cnt_b(0) == 0) begin
+            repeat (10) @(posedge vif.clk);
+        end
+     end
     `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
     repeat (10) @(posedge vif.clk);
     phase.drop_objection(this);
 
    uvm_test_done.set_drain_time(this, 10ps);
-   result = ck_xfer_cnt(1);
+           if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+              result_a = ck_xfer_cnt_a(1);
+           end
+           if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+              result_b = ck_xfer_cnt_b(1);
+           end
 
 endtask : ck_eot
 

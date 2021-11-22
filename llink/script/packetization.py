@@ -449,17 +449,25 @@ def calculate_bit_loc_packet(this_is_tx, configuration):
     current_enc_width = 0
     current_max_data_width = (configuration['TX_PACKET_MAX_SIZE'] if this_is_tx else configuration['RX_PACKET_MAX_SIZE']) - return_credit - current_enc_width
 
+    if current_max_data_width <= 0:
+         print("ERROR: Internal Error 2: current_max_data_width is {}. This is a possible artifact of over constraining PACKET_MAX_SIZE\n".format(current_max_data_width))
+         sys.exit(1)
+
     while (current_enc_width != prev_enc_width) :
         if global_struct.g_PACKET_DEBUG:
-           print (" Split #{}".format(iteration))
+           print (" Split #{}  current_enc_width:{}  current_max_data_width:{}".format(iteration,current_enc_width,current_max_data_width))
         prev_enc_width = current_enc_width
         packet_size_optimized_list = split_packets(packet_raw_list,current_max_data_width)
         current_enc_width = int.bit_length(len(packet_size_optimized_list)- 1)
         current_max_data_width = (configuration['TX_PACKET_MAX_SIZE'] if this_is_tx else configuration['RX_PACKET_MAX_SIZE']) - return_credit - current_enc_width
 
+        if current_max_data_width <= 0:
+            print("ERROR: Internal Error 3: current_max_data_width is {}. This is a possible artifact of over constraining PACKET_MAX_SIZE\n".format(current_max_data_width))
+            sys.exit(1)
+
         iteration += 1
         if iteration > 100:
-           print("ERROR: Internal Error 1: packet_packing_lsb:{} != signal_packing_lsb:{}\n".format(packet_packing_lsb, signal_packing_lsb))
+           print("ERROR: Internal Error 1: packet_packing_lsb:{} != signal_packing_lsb:{}. This is a possible artifact of over constraining PACKET_MAX_SIZE\n".format(packet_packing_lsb, signal_packing_lsb))
            sys.exit(1)
 
         if global_struct.g_PACKET_DEBUG:
@@ -605,11 +613,12 @@ def calculate_bit_loc_packet(this_is_tx, configuration):
                         curr_llink_index += sig_width
                         chunk_wid -= sig_width
 
-            packet_code_data_tx.append (sprint_verilog_assign ("tx_packet_data"+str(entire_packet['ENC']), gen_llink_concat_fifoname(chunk['NAME'],'input'), gen_index_msb(chunk['WIDTH'], packet_packing_lsb, sysv=global_struct.g_USE_SYSTEMV_INDEXING), gen_index_msb(chunk['WIDTH'], int (chunk['LLINK_LSB']), sysv=global_struct.g_USE_SYSTEMV_INDEXING), comment="Llink Data"))
-            if global_struct.g_PACKET_DEBUG:
-                print (sprint_verilog_assign ("tx_packet_data"+str(entire_packet['ENC']), gen_llink_concat_fifoname(chunk['NAME'],'input'), gen_index_msb(chunk['WIDTH'], packet_packing_lsb, sysv=global_struct.g_USE_SYSTEMV_INDEXING), gen_index_msb(chunk['WIDTH'], int (chunk['LLINK_LSB']), sysv=global_struct.g_USE_SYSTEMV_INDEXING), comment="Llink Data"))
             chunk['FIFODATA_LOC']=packet_packing_lsb
-            packet_packing_lsb += chunk['WIDTH']
+            if chunk['WIDTH'] > 0:
+                packet_code_data_tx.append (sprint_verilog_assign ("tx_packet_data"+str(entire_packet['ENC']), gen_llink_concat_fifoname(chunk['NAME'],'input'), gen_index_msb(chunk['WIDTH'], packet_packing_lsb, sysv=global_struct.g_USE_SYSTEMV_INDEXING), gen_index_msb(chunk['WIDTH'], int (chunk['LLINK_LSB']), sysv=global_struct.g_USE_SYSTEMV_INDEXING), comment="Llink Data"))
+                if global_struct.g_PACKET_DEBUG:
+                    print (sprint_verilog_assign ("tx_packet_data"+str(entire_packet['ENC']), gen_llink_concat_fifoname(chunk['NAME'],'input'), gen_index_msb(chunk['WIDTH'], packet_packing_lsb, sysv=global_struct.g_USE_SYSTEMV_INDEXING), gen_index_msb(chunk['WIDTH'], int (chunk['LLINK_LSB']), sysv=global_struct.g_USE_SYSTEMV_INDEXING), comment="Llink Data"))
+                packet_packing_lsb += chunk['WIDTH']
 
             #if chunk['PKT_INDEX'] == '0': ## Push bits go at bit 0 of LLINK data
             if chunk['HASVALID']:

@@ -25,10 +25,10 @@
 module lpif_txrx_x4_q2_slave_concat  (
 
 // Data from Logic Links
-  output logic [ 280:   0]   rx_downstream_data  ,
+  output logic [ 268:   0]   rx_downstream_data  ,
   output logic               rx_downstream_push_ovrd,
 
-  input  logic [ 280:   0]   tx_upstream_data    ,
+  input  logic [ 268:   0]   tx_upstream_data    ,
   output logic               tx_upstream_pop_ovrd,
 
 // PHY Interconnect
@@ -360,18 +360,18 @@ module lpif_txrx_x4_q2_slave_concat  (
   assign tx_phy_preflop_0 [ 270] = tx_upstream_data    [ 266] ;
   assign tx_phy_preflop_0 [ 271] = tx_upstream_data    [ 267] ;
   assign tx_phy_preflop_0 [ 272] = tx_upstream_data    [ 268] ;
-  assign tx_phy_preflop_0 [ 273] = tx_upstream_data    [ 269] ;
-  assign tx_phy_preflop_0 [ 274] = tx_upstream_data    [ 270] ;
-  assign tx_phy_preflop_0 [ 275] = tx_upstream_data    [ 271] ;
-  assign tx_phy_preflop_0 [ 276] = tx_upstream_data    [ 272] ;
-  assign tx_phy_preflop_0 [ 277] = tx_upstream_data    [ 273] ;
-  assign tx_phy_preflop_0 [ 278] = tx_upstream_data    [ 274] ;
-  assign tx_phy_preflop_0 [ 279] = tx_upstream_data    [ 275] ;
-  assign tx_phy_preflop_0 [ 280] = tx_upstream_data    [ 276] ;
-  assign tx_phy_preflop_0 [ 281] = tx_upstream_data    [ 277] ;
-  assign tx_phy_preflop_0 [ 282] = tx_upstream_data    [ 278] ;
-  assign tx_phy_preflop_0 [ 283] = tx_upstream_data    [ 279] ;
-  assign tx_phy_preflop_0 [ 284] = tx_upstream_data    [ 280] ;
+  assign tx_phy_preflop_0 [ 273] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 274] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 275] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 276] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 277] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 278] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 279] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 280] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 281] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 282] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 283] = 1'b0                       ;
+  assign tx_phy_preflop_0 [ 284] = 1'b0                       ;
   assign tx_phy_preflop_0 [ 285] = 1'b0                       ;
   assign tx_phy_preflop_0 [ 286] = 1'b0                       ;
   assign tx_phy_preflop_0 [ 287] = 1'b0                       ;
@@ -717,18 +717,18 @@ module lpif_txrx_x4_q2_slave_concat  (
   assign rx_downstream_data  [ 266] = rx_phy_postflop_0 [ 270];
   assign rx_downstream_data  [ 267] = rx_phy_postflop_0 [ 271];
   assign rx_downstream_data  [ 268] = rx_phy_postflop_0 [ 272];
-  assign rx_downstream_data  [ 269] = rx_phy_postflop_0 [ 273];
-  assign rx_downstream_data  [ 270] = rx_phy_postflop_0 [ 274];
-  assign rx_downstream_data  [ 271] = rx_phy_postflop_0 [ 275];
-  assign rx_downstream_data  [ 272] = rx_phy_postflop_0 [ 276];
-  assign rx_downstream_data  [ 273] = rx_phy_postflop_0 [ 277];
-  assign rx_downstream_data  [ 274] = rx_phy_postflop_0 [ 278];
-  assign rx_downstream_data  [ 275] = rx_phy_postflop_0 [ 279];
-  assign rx_downstream_data  [ 276] = rx_phy_postflop_0 [ 280];
-  assign rx_downstream_data  [ 277] = rx_phy_postflop_0 [ 281];
-  assign rx_downstream_data  [ 278] = rx_phy_postflop_0 [ 282];
-  assign rx_downstream_data  [ 279] = rx_phy_postflop_0 [ 283];
-  assign rx_downstream_data  [ 280] = rx_phy_postflop_0 [ 284];
+//       nc                         = rx_phy_postflop_0 [ 273];
+//       nc                         = rx_phy_postflop_0 [ 274];
+//       nc                         = rx_phy_postflop_0 [ 275];
+//       nc                         = rx_phy_postflop_0 [ 276];
+//       nc                         = rx_phy_postflop_0 [ 277];
+//       nc                         = rx_phy_postflop_0 [ 278];
+//       nc                         = rx_phy_postflop_0 [ 279];
+//       nc                         = rx_phy_postflop_0 [ 280];
+//       nc                         = rx_phy_postflop_0 [ 281];
+//       nc                         = rx_phy_postflop_0 [ 282];
+//       nc                         = rx_phy_postflop_0 [ 283];
+//       nc                         = rx_phy_postflop_0 [ 284];
 //       nc                         = rx_phy_postflop_0 [ 285];
 //       nc                         = rx_phy_postflop_0 [ 286];
 //       nc                         = rx_phy_postflop_0 [ 287];

@@ -33,7 +33,7 @@ module axi_st_d128_asym_quarter_slave_name  (
   output logic [   3:   0]   user_enable         ,
 
   // Logic Link Interfaces
-  input  logic               user_st_valid       ,
+  input  logic               user_st_vld         ,
   input  logic [ 583:   0]   rxfifo_st_data      ,
   output logic               user_st_ready       ,
 
@@ -43,7 +43,7 @@ module axi_st_d128_asym_quarter_slave_name  (
 
   // Connect Data
 
-  assign user_tvalid                        = user_st_valid                      ;
+  assign user_tvalid                        = user_st_vld                        ;
   assign user_st_ready                      = user_tready                        ;
   assign user_tkeep           [   0 +:  16] = rxfifo_st_data       [   0 +:  16] ;
   assign user_tdata           [   0 +: 128] = rxfifo_st_data       [  16 +: 128] ;

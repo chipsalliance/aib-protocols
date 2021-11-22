@@ -33,29 +33,29 @@ module lpif_txrx_x8_f1_slave_top  (
   input  logic [7:0]         init_upstream_credit,
 
   // PHY Interconnect
-  output logic [  79:   0]   tx_phy0             ,
-  input  logic [  79:   0]   rx_phy0             ,
-  output logic [  79:   0]   tx_phy1             ,
-  input  logic [  79:   0]   rx_phy1             ,
-  output logic [  79:   0]   tx_phy2             ,
-  input  logic [  79:   0]   rx_phy2             ,
-  output logic [  79:   0]   tx_phy3             ,
-  input  logic [  79:   0]   rx_phy3             ,
-  output logic [  79:   0]   tx_phy4             ,
-  input  logic [  79:   0]   rx_phy4             ,
-  output logic [  79:   0]   tx_phy5             ,
-  input  logic [  79:   0]   rx_phy5             ,
-  output logic [  79:   0]   tx_phy6             ,
-  input  logic [  79:   0]   rx_phy6             ,
-  output logic [  79:   0]   tx_phy7             ,
-  input  logic [  79:   0]   rx_phy7             ,
+  output logic [  39:   0]   tx_phy0             ,
+  input  logic [  39:   0]   rx_phy0             ,
+  output logic [  39:   0]   tx_phy1             ,
+  input  logic [  39:   0]   rx_phy1             ,
+  output logic [  39:   0]   tx_phy2             ,
+  input  logic [  39:   0]   rx_phy2             ,
+  output logic [  39:   0]   tx_phy3             ,
+  input  logic [  39:   0]   rx_phy3             ,
+  output logic [  39:   0]   tx_phy4             ,
+  input  logic [  39:   0]   rx_phy4             ,
+  output logic [  39:   0]   tx_phy5             ,
+  input  logic [  39:   0]   rx_phy5             ,
+  output logic [  39:   0]   tx_phy6             ,
+  input  logic [  39:   0]   rx_phy6             ,
+  output logic [  39:   0]   tx_phy7             ,
+  input  logic [  39:   0]   rx_phy7             ,
 
   // downstream channel
   output logic [   3:   0]   dstrm_state         ,
   output logic [   1:   0]   dstrm_protid        ,
   output logic [ 255:   0]   dstrm_data          ,
   output logic [   0:   0]   dstrm_dvalid        ,
-  output logic [  15:   0]   dstrm_crc           ,
+  output logic [   7:   0]   dstrm_crc           ,
   output logic [   0:   0]   dstrm_crc_valid     ,
   output logic [   0:   0]   dstrm_valid         ,
 
@@ -64,7 +64,7 @@ module lpif_txrx_x8_f1_slave_top  (
   input  logic [   1:   0]   ustrm_protid        ,
   input  logic [ 255:   0]   ustrm_data          ,
   input  logic [   0:   0]   ustrm_dvalid        ,
-  input  logic [  15:   0]   ustrm_crc           ,
+  input  logic [   7:   0]   ustrm_crc           ,
   input  logic [   0:   0]   ustrm_crc_valid     ,
   input  logic [   0:   0]   ustrm_valid         ,
 
@@ -84,19 +84,19 @@ module lpif_txrx_x8_f1_slave_top  (
 
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
-  logic [ 280:   0]                              rx_downstream_data            ;
-  logic [ 280:   0]                              rxfifo_downstream_data        ;
+  logic [ 272:   0]                              rx_downstream_data            ;
+  logic [ 272:   0]                              rxfifo_downstream_data        ;
   logic                                          rx_downstream_push_ovrd       ;
 
-  logic [ 280:   0]                              tx_upstream_data              ;
-  logic [ 280:   0]                              txfifo_upstream_data          ;
+  logic [ 272:   0]                              tx_upstream_data              ;
+  logic [ 272:   0]                              txfifo_upstream_data          ;
   logic                                          tx_upstream_pop_ovrd          ;
 
-  logic [   1:   0]                              tx_auto_mrk_userbit           ;
+  logic [   0:   0]                              tx_auto_mrk_userbit           ;
   logic                                          tx_auto_stb_userbit           ;
   logic                                          tx_online_delay               ;
   logic                                          rx_online_delay               ;
-  logic [   1:   0]                              tx_mrk_userbit                ; // No TX User Marker, so tie off
+  logic [   0:   0]                              tx_mrk_userbit                ; // No TX User Marker, so tie off
   logic                                          tx_stb_userbit                ; // No TX User Strobe, so tie off
   assign tx_mrk_userbit                     = '0                                 ;
   assign tx_stb_userbit                     = '1                                 ;
@@ -107,8 +107,9 @@ module lpif_txrx_x8_f1_slave_top  (
 //////////////////////////////////////////////////////////////////
 // Auto Sync
 
-   ll_auto_sync #(.MARKER_WIDTH(2),
+   ll_auto_sync #(.MARKER_WIDTH(1),
                   .PERSISTENT_MARKER(1'b1),
+                  .NO_MARKER(1'b1),
                   .PERSISTENT_STROBE(1'b1)) ll_auto_sync_i
      (// Outputs
       .tx_online_delay                  (tx_online_delay),
@@ -133,11 +134,11 @@ module lpif_txrx_x8_f1_slave_top  (
 // Logic Link Instantiation
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign rxfifo_downstream_data [   0 +: 281] = rx_downstream_data   [   0 +: 281] ;
+  assign rxfifo_downstream_data [   0 +: 273] = rx_downstream_data   [   0 +: 273] ;
   assign rx_downstream_debug_status [   0 +:  32] = 32'h0                              ;
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign tx_upstream_data     [   0 +: 281] = txfifo_upstream_data [   0 +: 281] ;
+  assign tx_upstream_data     [   0 +: 273] = txfifo_upstream_data [   0 +: 273] ;
   assign tx_upstream_debug_status [   0 +:  32] = 32'h0                              ;
 
 // Logic Link Instantiation
@@ -152,19 +153,19 @@ module lpif_txrx_x8_f1_slave_top  (
          .dstrm_protid                     (dstrm_protid[   1:   0]),
          .dstrm_data                       (dstrm_data[ 255:   0]),
          .dstrm_dvalid                     (dstrm_dvalid[   0:   0]),
-         .dstrm_crc                        (dstrm_crc[  15:   0]),
+         .dstrm_crc                        (dstrm_crc[   7:   0]),
          .dstrm_crc_valid                  (dstrm_crc_valid[   0:   0]),
          .dstrm_valid                      (dstrm_valid[   0:   0]),
          .ustrm_state                      (ustrm_state[   3:   0]),
          .ustrm_protid                     (ustrm_protid[   1:   0]),
          .ustrm_data                       (ustrm_data[ 255:   0]),
          .ustrm_dvalid                     (ustrm_dvalid[   0:   0]),
-         .ustrm_crc                        (ustrm_crc[  15:   0]),
+         .ustrm_crc                        (ustrm_crc[   7:   0]),
          .ustrm_crc_valid                  (ustrm_crc_valid[   0:   0]),
          .ustrm_valid                      (ustrm_valid[   0:   0]),
 
-         .rxfifo_downstream_data           (rxfifo_downstream_data[ 280:   0]),
-         .txfifo_upstream_data             (txfifo_upstream_data[ 280:   0]),
+         .rxfifo_downstream_data           (rxfifo_downstream_data[ 272:   0]),
+         .txfifo_upstream_data             (txfifo_upstream_data[ 272:   0]),
 
          .m_gen2_mode                      (m_gen2_mode)
 
@@ -177,27 +178,27 @@ module lpif_txrx_x8_f1_slave_top  (
 
       lpif_txrx_x8_f1_slave_concat lpif_txrx_x8_f1_slave_concat
       (
-         .rx_downstream_data               (rx_downstream_data[   0 +: 281]),
+         .rx_downstream_data               (rx_downstream_data[   0 +: 273]),
          .rx_downstream_push_ovrd          (rx_downstream_push_ovrd),
-         .tx_upstream_data                 (tx_upstream_data[   0 +: 281]),
+         .tx_upstream_data                 (tx_upstream_data[   0 +: 273]),
          .tx_upstream_pop_ovrd             (tx_upstream_pop_ovrd),
 
-         .tx_phy0                          (tx_phy0[79:0]),
-         .rx_phy0                          (rx_phy0[79:0]),
-         .tx_phy1                          (tx_phy1[79:0]),
-         .rx_phy1                          (rx_phy1[79:0]),
-         .tx_phy2                          (tx_phy2[79:0]),
-         .rx_phy2                          (rx_phy2[79:0]),
-         .tx_phy3                          (tx_phy3[79:0]),
-         .rx_phy3                          (rx_phy3[79:0]),
-         .tx_phy4                          (tx_phy4[79:0]),
-         .rx_phy4                          (rx_phy4[79:0]),
-         .tx_phy5                          (tx_phy5[79:0]),
-         .rx_phy5                          (rx_phy5[79:0]),
-         .tx_phy6                          (tx_phy6[79:0]),
-         .rx_phy6                          (rx_phy6[79:0]),
-         .tx_phy7                          (tx_phy7[79:0]),
-         .rx_phy7                          (rx_phy7[79:0]),
+         .tx_phy0                          (tx_phy0[39:0]),
+         .rx_phy0                          (rx_phy0[39:0]),
+         .tx_phy1                          (tx_phy1[39:0]),
+         .rx_phy1                          (rx_phy1[39:0]),
+         .tx_phy2                          (tx_phy2[39:0]),
+         .rx_phy2                          (rx_phy2[39:0]),
+         .tx_phy3                          (tx_phy3[39:0]),
+         .rx_phy3                          (rx_phy3[39:0]),
+         .tx_phy4                          (tx_phy4[39:0]),
+         .rx_phy4                          (rx_phy4[39:0]),
+         .tx_phy5                          (tx_phy5[39:0]),
+         .rx_phy5                          (rx_phy5[39:0]),
+         .tx_phy6                          (tx_phy6[39:0]),
+         .rx_phy6                          (rx_phy6[39:0]),
+         .tx_phy7                          (tx_phy7[39:0]),
+         .rx_phy7                          (rx_phy7[39:0]),
 
          .clk_wr                           (clk_wr),
          .clk_rd                           (clk_wr),

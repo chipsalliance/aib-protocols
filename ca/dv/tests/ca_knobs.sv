@@ -61,7 +61,7 @@ class ca_knobs_c extends uvm_object;
     int              fifo_pempty_val  = -1;  
     int              rden_dly         = -1;
     int              rx_stb_intv      = -1;
-
+    bit[1:0]         traffic_enb_ab   =  3;
 
     
     //------------------------------------------
@@ -86,14 +86,20 @@ class ca_knobs_c extends uvm_object;
         `uvm_field_int(fifo_pempty_val,   UVM_DEFAULT);
         `uvm_field_int(rden_dly,          UVM_DEFAULT);
         `uvm_field_int(rx_stb_intv,       UVM_DEFAULT);
+        `uvm_field_int(traffic_enb_ab,    UVM_DEFAULT);
     `uvm_object_utils_end
 
     //------------------------------------------
     // Contraints
     //------------------------------------------
-    constraint c_tx_xfer_cnt_die_a {tx_xfer_cnt_die_a >= 100; tx_xfer_cnt_die_a <=500; (tx_xfer_cnt_die_a%2 ==0);}
-    constraint c_tx_xfer_cnt_die_b {tx_xfer_cnt_die_b >= 100; tx_xfer_cnt_die_b <=500; (tx_xfer_cnt_die_b%2 ==0);}
-
+       //constraint c_tx_xfer_cnt_die_a {tx_xfer_cnt_die_a >= 100; tx_xfer_cnt_die_a <=500; (tx_xfer_cnt_die_a%2 ==0);}
+       //constraint c_tx_xfer_cnt_die_b {tx_xfer_cnt_die_b >= 100; tx_xfer_cnt_die_b <=500; (tx_xfer_cnt_die_b%2 ==0);}
+       constraint c_tx_xfer_cnt_die_a {tx_xfer_cnt_die_a >= 100; tx_xfer_cnt_die_a <=500;
+                                      ((`TB_DIE_A_BUS_BIT_WIDTH == 320) || (`TB_DIE_B_BUS_BIT_WIDTH == 320 )) ?
+                                      (tx_xfer_cnt_die_a%4 == 0) : (tx_xfer_cnt_die_a%2 ==0);}
+       constraint c_tx_xfer_cnt_die_b {tx_xfer_cnt_die_b >= 100; tx_xfer_cnt_die_b <=500;
+                                      ((`TB_DIE_A_BUS_BIT_WIDTH == 320) || (`TB_DIE_B_BUS_BIT_WIDTH == 320)) ? 
+                                      (tx_xfer_cnt_die_b%4 == 0) : (tx_xfer_cnt_die_b%2 ==0);}
     //------------------------------------------
     // Methods
     //------------------------------------------
@@ -192,6 +198,10 @@ function ca_knobs_c::new (string name = "ca_knobs");
  
     if($value$plusargs("rx_stb_intv=%0d", rx_stb_intv)) begin
         `uvm_info("KNOBS", $sformatf("*** cmd line set ***> rx_stb_intv == %0d", rx_stb_intv), UVM_NONE);
+    end
+
+    if($value$plusargs("traffic_enb_ab=%0d", traffic_enb_ab)) begin
+        `uvm_info("KNOBS", $sformatf("*** cmd line set ***> traffic_enb_ab== %0d", traffic_enb_ab), UVM_NONE);
     end
 
 endfunction : new

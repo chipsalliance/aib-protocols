@@ -28,8 +28,11 @@
 
 module lpif_ctl
   #(
+    parameter AIB_VERSION = 2,
+    parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
     parameter LPIF_DATA_WIDTH = 64,
+    parameter LPIF_CLOCK_RATE = 2000,
     parameter LPIF_PIPELINE_STAGES = 1,
     parameter MEM_CACHE_STREAM_ID = 8'h1,
     parameter IO_STREAM_ID = 8'h2,
@@ -211,10 +214,429 @@ module lpif_ctl
                                         (|wa_error) |
                                         lp_linkerror;
 
+`include "lpif_configs.svh"
+
+  // multi-cycle data transfers
+
+  logic [3:0]                           num_xfr_beats;
+
+  generate
+    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+      assign num_xfr_beats = 4'h0;
+    else if (X8_Q2 | X8_H2 | X8_F2 | X8_H1 | X8_F1)
+      assign num_xfr_beats = 4'h1;
+    else if (X4_Q2 | X4_H2 | X4_F2 | X4_H1 | X4_F1)
+      assign num_xfr_beats = 4'h3;
+    else if (X2_H1 | X2_F1)
+      assign num_xfr_beats = 4'h7;
+    else if (X1_H1 | X1_F1)
+      assign num_xfr_beats = 4'hF;
+  endgenerate
+
+  // handle lp -> dstrm multi-cycle transfers
+
+  logic [3:0]                           lp_data_beat, d_lp_data_beat;
+  logic                                 lp_data_xfr_done;
+  logic [3:0]                           lp_data_max_beat;
+  logic                                 lp_data_xfr_flg, d_lp_data_xfr_flg;
+  logic                                 lp_data_count_en;
+
+  localparam STRM_DATA_WIDTH1  = (LPIF_DATA_WIDTH*8)/1;
+  localparam STRM_DATA_WIDTH2  = (LPIF_DATA_WIDTH*8)/2;
+  localparam STRM_DATA_WIDTH4  = (LPIF_DATA_WIDTH*8)/4;
+  localparam STRM_DATA_WIDTH8  = (LPIF_DATA_WIDTH*8)/8;
+  localparam STRM_DATA_WIDTH16 = (LPIF_DATA_WIDTH*8)/16;
+
+  logic [LPIF_DATA_WIDTH*8-1:0]         d_dstrm_data;
+
+  assign pl_trdy = lsm_state_active | (lp_irdy & lp_data_xfr_done);
+  assign d_dstrm_valid = lp_data_count_en;
+
   always_comb
     begin
-      pl_trdy = lsm_state_active;
+      lp_data_max_beat = num_xfr_beats;
+      lp_data_xfr_done = ~|lp_data_beat;
+      d_lp_data_xfr_flg = lp_data_xfr_flg;
+      d_lp_data_beat = lp_data_beat;
+      lp_data_count_en = lp_irdy | lp_data_xfr_flg;
+      if (lp_data_xfr_done)
+        d_lp_data_xfr_flg = 1'b0;
+      else if (lp_irdy)
+        d_lp_data_xfr_flg = 1'b1;
+      if (lp_data_xfr_done)
+        d_lp_data_beat = lp_data_max_beat;
+      else if (lp_data_count_en & !lp_data_xfr_done)
+        d_lp_data_beat = lp_data_beat - 1'b1;
     end
+
+  generate
+    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+      always_comb
+        begin
+          d_dstrm_data = lp_data;
+        end
+    if (X8_Q2 | X8_H1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*512+:512];
+            4'h1: d_dstrm_data = lp_data[1*512+:512];
+            default: d_dstrm_data = lp_data[0*512+:512];
+          endcase // case (lp_data_beat)
+        end
+    if (X8_H2 | X8_F1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*256+:256];
+            4'h1: d_dstrm_data = lp_data[1*256+:256];
+            default: d_dstrm_data = lp_data[0*256+:256];
+          endcase // case (lp_data_beat)
+        end
+    if (X8_F2)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*128+:128];
+            4'h1: d_dstrm_data = lp_data[1*128+:128];
+            default: d_dstrm_data = lp_data[0*128+:128];
+          endcase // case (lp_data_beat)
+        end
+    if (X4_Q2 | X4_H1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*256+:256];
+            4'h1: d_dstrm_data = lp_data[1*256+:256];
+            4'h2: d_dstrm_data = lp_data[2*256+:256];
+            4'h3: d_dstrm_data = lp_data[3*256+:256];
+            default: d_dstrm_data = lp_data[0*256+:256];
+          endcase // case (lp_data_beat)
+        end
+    if (X4_H2 | X4_F1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*128+:128];
+            4'h1: d_dstrm_data = lp_data[1*128+:128];
+            4'h2: d_dstrm_data = lp_data[2*128+:128];
+            4'h3: d_dstrm_data = lp_data[3*128+:128];
+            default: d_dstrm_data = lp_data[0*128+:128];
+          endcase // case (lp_data_beat)
+        end
+    if (X4_F2)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*64+:64];
+            4'h1: d_dstrm_data = lp_data[1*64+:64];
+            4'h2: d_dstrm_data = lp_data[2*64+:64];
+            4'h3: d_dstrm_data = lp_data[3*64+:64];
+            default: d_dstrm_data = lp_data[0*64+:64];
+          endcase // case (lp_data_beat)
+        end
+    if (X2_H1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*128+:128];
+            4'h1: d_dstrm_data = lp_data[1*128+:128];
+            4'h2: d_dstrm_data = lp_data[2*128+:128];
+            4'h3: d_dstrm_data = lp_data[3*128+:128];
+            4'h4: d_dstrm_data = lp_data[4*128+:128];
+            4'h5: d_dstrm_data = lp_data[5*128+:128];
+            4'h6: d_dstrm_data = lp_data[6*128+:128];
+            4'h7: d_dstrm_data = lp_data[7*128+:128];
+            default: d_dstrm_data = lp_data[0*128+:128];
+          endcase // case (lp_data_beat)
+        end
+    if (X2_F1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*64+:64];
+            4'h1: d_dstrm_data = lp_data[1*64+:64];
+            4'h2: d_dstrm_data = lp_data[2*64+:64];
+            4'h3: d_dstrm_data = lp_data[3*64+:64];
+            4'h4: d_dstrm_data = lp_data[4*64+:64];
+            4'h5: d_dstrm_data = lp_data[5*64+:64];
+            4'h6: d_dstrm_data = lp_data[6*64+:64];
+            4'h7: d_dstrm_data = lp_data[7*64+:64];
+            default: d_dstrm_data = lp_data[0*64+:64];
+          endcase // case (lp_data_beat)
+        end
+    if (X1_H1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*64+:64];
+            4'h1: d_dstrm_data = lp_data[1*64+:64];
+            4'h2: d_dstrm_data = lp_data[2*64+:64];
+            4'h3: d_dstrm_data = lp_data[3*64+:64];
+            4'h4: d_dstrm_data = lp_data[4*64+:64];
+            4'h5: d_dstrm_data = lp_data[5*64+:64];
+            4'h6: d_dstrm_data = lp_data[6*64+:64];
+            4'h7: d_dstrm_data = lp_data[7*64+:64];
+            4'h8: d_dstrm_data = lp_data[8*64+:64];
+            4'h9: d_dstrm_data = lp_data[9*64+:64];
+            4'hA: d_dstrm_data = lp_data[10*64+:64];
+            4'hB: d_dstrm_data = lp_data[11*64+:64];
+            4'hC: d_dstrm_data = lp_data[12*64+:64];
+            4'hD: d_dstrm_data = lp_data[13*64+:64];
+            4'hE: d_dstrm_data = lp_data[14*64+:64];
+            4'hF: d_dstrm_data = lp_data[15*64+:64];
+            default: d_dstrm_data = lp_data[0*64+:64];
+          endcase // case (lp_data_beat)
+        end
+    if (X1_F1)
+      always_comb
+        begin
+          d_dstrm_data = dstrm_data;
+          case (lp_data_beat)
+            4'h0: d_dstrm_data = lp_data[0*32+:32];
+            4'h1: d_dstrm_data = lp_data[1*32+:32];
+            4'h2: d_dstrm_data = lp_data[2*32+:32];
+            4'h3: d_dstrm_data = lp_data[3*32+:32];
+            4'h4: d_dstrm_data = lp_data[4*32+:32];
+            4'h5: d_dstrm_data = lp_data[5*32+:32];
+            4'h6: d_dstrm_data = lp_data[6*32+:32];
+            4'h7: d_dstrm_data = lp_data[7*32+:32];
+            4'h8: d_dstrm_data = lp_data[8*32+:32];
+            4'h9: d_dstrm_data = lp_data[9*32+:32];
+            4'hA: d_dstrm_data = lp_data[10*32+:32];
+            4'hB: d_dstrm_data = lp_data[11*32+:32];
+            4'hC: d_dstrm_data = lp_data[12*32+:32];
+            4'hD: d_dstrm_data = lp_data[13*32+:32];
+            4'hE: d_dstrm_data = lp_data[14*32+:32];
+            4'hF: d_dstrm_data = lp_data[15*32+:32];
+            default: d_dstrm_data = lp_data[0*32+:32];
+          endcase // case (lp_data_beat)
+        end
+  endgenerate
+
+  always_ff @(posedge lclk or negedge rst_n)
+    if (~rst_n)
+      begin
+        lp_data_beat <= lp_data_max_beat;
+        lp_data_xfr_flg <= 1'b0;
+      end
+    else
+      begin
+        lp_data_beat <= d_lp_data_beat;
+        lp_data_xfr_flg <= d_lp_data_xfr_flg;
+      end
+
+  // handle ustrm -> pl multi-cycle transfers
+
+  logic [3:0]                           ustrm_data_beat, d_ustrm_data_beat;
+  logic                                 ustrm_data_xfr_done;
+  logic [3:0]                           ustrm_data_max_beat;
+  logic                                 ustrm_data_xfr_flg, d_ustrm_data_xfr_flg;
+  logic                                 ustrm_data_count_en;
+
+  logic [LPIF_DATA_WIDTH*8-1:0]         d_pl_data;
+  logic [LPIF_CRC_WIDTH-1:0]            d_pl_crc;
+  logic [LPIF_VALID_WIDTH-1:0]          d_pl_crc_valid;
+  logic [LPIF_VALID_WIDTH-1:0]          d_pl_valid;
+
+  always_comb
+    begin
+      ustrm_data_max_beat = num_xfr_beats;
+      ustrm_data_xfr_done = ~|ustrm_data_beat;
+      d_ustrm_data_xfr_flg = ustrm_data_xfr_flg;
+      d_ustrm_data_beat = ustrm_data_beat;
+      ustrm_data_count_en = ustrm_valid | ustrm_data_xfr_flg;
+      if (ustrm_data_xfr_done)
+        d_ustrm_data_xfr_flg = 1'b0;
+      else if (ustrm_valid)
+        d_ustrm_data_xfr_flg = 1'b1;
+      if (ustrm_data_xfr_done)
+        d_ustrm_data_beat = ustrm_data_max_beat;
+      else if (ustrm_data_count_en & !ustrm_data_xfr_done)
+        d_ustrm_data_beat = ustrm_data_beat - 1'b1;
+    end
+
+  always_comb
+    begin
+      d_pl_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_dvalid;
+      d_pl_crc_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_crc_valid;
+      d_pl_crc = ustrm_crc;
+    end
+
+  generate
+    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+      always_comb
+        begin
+          d_pl_data = ustrm_data;
+        end
+    if (X8_Q2 | X8_H1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*512+:512] = ustrm_data;
+            4'h1: d_pl_data[1*512+:512] = ustrm_data;
+            default: d_pl_data[0*512+:512] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X8_H2 | X8_F1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*256+:256] = ustrm_data;
+            4'h1: d_pl_data[1*256+:256] = ustrm_data;
+            default: d_pl_data[0*256+:256] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X8_F2)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*128+:128] = ustrm_data;
+            4'h1: d_pl_data[1*128+:128] = ustrm_data;
+            default: d_pl_data[0*128+:128] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X4_Q2 | X4_H1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*256+:256] = ustrm_data;
+            4'h1: d_pl_data[1*256+:256] = ustrm_data;
+            4'h2: d_pl_data[2*256+:256] = ustrm_data;
+            4'h3: d_pl_data[3*256+:256] = ustrm_data;
+            default: d_pl_data[0*256+:256] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X4_H2 | X4_F1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*128+:128] = ustrm_data;
+            4'h1: d_pl_data[1*128+:128] = ustrm_data;
+            4'h2: d_pl_data[2*128+:128] = ustrm_data;
+            4'h3: d_pl_data[3*128+:128] = ustrm_data;
+            default: d_pl_data[0*128+:128] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X4_F2)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*64+:64] = ustrm_data;
+            4'h1: d_pl_data[1*64+:64] = ustrm_data;
+            4'h2: d_pl_data[2*64+:64] = ustrm_data;
+            4'h3: d_pl_data[3*64+:64] = ustrm_data;
+            default: d_pl_data[0*64+:64] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X2_H1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*128+:128] = ustrm_data;
+            4'h1: d_pl_data[1*128+:128] = ustrm_data;
+            4'h2: d_pl_data[2*128+:128] = ustrm_data;
+            4'h3: d_pl_data[3*128+:128] = ustrm_data;
+            4'h4: d_pl_data[4*128+:128] = ustrm_data;
+            4'h5: d_pl_data[5*128+:128] = ustrm_data;
+            4'h6: d_pl_data[6*128+:128] = ustrm_data;
+            4'h7: d_pl_data[7*128+:128] = ustrm_data;
+            default: d_pl_data[0*128+:128] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X2_F1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*64+:64] = ustrm_data;
+            4'h1: d_pl_data[1*64+:64] = ustrm_data;
+            4'h2: d_pl_data[2*64+:64] = ustrm_data;
+            4'h3: d_pl_data[3*64+:64] = ustrm_data;
+            4'h4: d_pl_data[4*64+:64] = ustrm_data;
+            4'h5: d_pl_data[5*64+:64] = ustrm_data;
+            4'h6: d_pl_data[6*64+:64] = ustrm_data;
+            4'h7: d_pl_data[7*64+:64] = ustrm_data;
+            default: d_pl_data[0*64+:64] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X1_H1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*64+:64] = ustrm_data;
+            4'h1: d_pl_data[1*64+:64] = ustrm_data;
+            4'h2: d_pl_data[2*64+:64] = ustrm_data;
+            4'h3: d_pl_data[3*64+:64] = ustrm_data;
+            4'h4: d_pl_data[4*64+:64] = ustrm_data;
+            4'h5: d_pl_data[5*64+:64] = ustrm_data;
+            4'h6: d_pl_data[6*64+:64] = ustrm_data;
+            4'h7: d_pl_data[7*64+:64] = ustrm_data;
+            4'h8: d_pl_data[8*64+:64] = ustrm_data;
+            4'h9: d_pl_data[9*64+:64] = ustrm_data;
+            4'hA: d_pl_data[10*64+:64] = ustrm_data;
+            4'hB: d_pl_data[11*64+:64] = ustrm_data;
+            4'hC: d_pl_data[12*64+:64] = ustrm_data;
+            4'hD: d_pl_data[13*64+:64] = ustrm_data;
+            4'hE: d_pl_data[14*64+:64] = ustrm_data;
+            4'hF: d_pl_data[15*64+:64] = ustrm_data;
+            default: d_pl_data[0*64+:64] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+    if (X1_F1)
+      always_comb
+        begin
+          d_pl_data = pl_data;
+          case (ustrm_data_beat)
+            4'h0: d_pl_data[0*32+:32] = ustrm_data;
+            4'h1: d_pl_data[1*32+:32] = ustrm_data;
+            4'h2: d_pl_data[2*32+:32] = ustrm_data;
+            4'h3: d_pl_data[3*32+:32] = ustrm_data;
+            4'h4: d_pl_data[4*32+:32] = ustrm_data;
+            4'h5: d_pl_data[5*32+:32] = ustrm_data;
+            4'h6: d_pl_data[6*32+:32] = ustrm_data;
+            4'h7: d_pl_data[7*32+:32] = ustrm_data;
+            4'h8: d_pl_data[8*32+:32] = ustrm_data;
+            4'h9: d_pl_data[9*32+:32] = ustrm_data;
+            4'hA: d_pl_data[10*32+:32] = ustrm_data;
+            4'hB: d_pl_data[11*32+:32] = ustrm_data;
+            4'hC: d_pl_data[12*32+:32] = ustrm_data;
+            4'hD: d_pl_data[13*32+:32] = ustrm_data;
+            4'hE: d_pl_data[14*32+:32] = ustrm_data;
+            4'hF: d_pl_data[15*32+:32] = ustrm_data;
+            default: d_pl_data[0*32+:32] = ustrm_data;
+          endcase // case (ustrm_data_beat)
+        end
+  endgenerate
+
+  always_ff @(posedge lclk or negedge rst_n)
+    if (~rst_n)
+      begin
+        ustrm_data_beat <= ustrm_data_max_beat;
+        ustrm_data_xfr_flg <= 1'b0;
+      end
+    else
+      begin
+        ustrm_data_beat <= d_ustrm_data_beat;
+        ustrm_data_xfr_flg <= d_ustrm_data_xfr_flg;
+      end
 
   localparam [7:0] /* auto enum protid_info */
     PROTID_CACHE	= 8'h0,
@@ -323,7 +745,6 @@ module lpif_ctl
       d_ctl_state = ctl_state;
       d_ns_mac_rdy = ns_mac_rdy;
       d_ns_adapter_rstn = ns_adapter_rstn;
-      d_dstrm_valid = dstrm_valid;
       d_tx_online = tx_online;
       d_rx_online = rx_online;
       ctl_phy_err = 1'b0;
@@ -386,10 +807,10 @@ module lpif_ctl
           pl_lnk_cfg <= 3'b0;
           pl_speedmode <= 3'b0;
 
-          pl_data <= {LPIF_DATA_WIDTH*8{1'b0}};
           pl_valid <= {LPIF_VALID_WIDTH{1'b0}};
-          pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
+          pl_data <= {LPIF_DATA_WIDTH*8{1'b0}};
           pl_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
+          pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
           pl_stream <= 8'b0;
 
           tx_online <= 1'b0;
@@ -399,7 +820,7 @@ module lpif_ctl
         begin
           dstrm_state <= lsm_dstrm_state;
           dstrm_protid <= d_dstrm_protid[1:0];
-          dstrm_data <= lp_data;
+          dstrm_data <= d_dstrm_data;
           dstrm_dvalid <= lp_valid;
           dstrm_crc <= lp_crc;
           dstrm_crc_valid <= lp_crc_valid;
@@ -411,10 +832,10 @@ module lpif_ctl
           pl_lnk_cfg <= lsm_lnk_cfg;
           pl_speedmode <= lsm_speedmode;
 
-          pl_data <= ustrm_data;
-          pl_valid <= ustrm_dvalid;
-          pl_crc <= ustrm_crc;
-          pl_crc_valid <= ustrm_crc_valid;
+          pl_valid <= d_pl_valid;
+          pl_data <= d_pl_data;
+          pl_crc_valid <= d_pl_crc_valid;
+          pl_crc <= d_pl_crc;
           pl_stream <= d_pl_stream;
 
           tx_online <= d_tx_online;

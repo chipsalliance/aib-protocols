@@ -102,7 +102,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          tx_ar_pushbit                 ;
-  logic                                          user_ar_valid                 ;
+  logic                                          user_ar_vld                   ;
   logic [  48:   0]                              tx_ar_data                    ;
   logic [  48:   0]                              txfifo_ar_data                ;
   logic                                          rx_ar_credit                  ;
@@ -110,7 +110,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
   logic                                          tx_ar_pop_ovrd                ;
 
   logic                                          tx_aw_pushbit                 ;
-  logic                                          user_aw_valid                 ;
+  logic                                          user_aw_vld                   ;
   logic [  48:   0]                              tx_aw_data                    ;
   logic [  48:   0]                              txfifo_aw_data                ;
   logic                                          rx_aw_credit                  ;
@@ -118,7 +118,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
   logic                                          tx_aw_pop_ovrd                ;
 
   logic                                          tx_w_pushbit                  ;
-  logic                                          user_w_valid                  ;
+  logic                                          user_w_vld                    ;
   logic [ 148:   0]                              tx_w_data                     ;
   logic [ 148:   0]                              txfifo_w_data                 ;
   logic                                          rx_w_credit                   ;
@@ -126,7 +126,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
   logic                                          tx_w_pop_ovrd                 ;
 
   logic                                          rx_r_pushbit                  ;
-  logic                                          user_r_valid                  ;
+  logic                                          user_r_vld                    ;
   logic [ 134:   0]                              rx_r_data                     ;
   logic [ 134:   0]                              rxfifo_r_data                 ;
   logic                                          tx_r_credit                   ;
@@ -134,7 +134,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
   logic                                          rx_r_push_ovrd                ;
 
   logic                                          rx_b_pushbit                  ;
-  logic                                          user_b_valid                  ;
+  logic                                          user_b_vld                    ;
   logic [   5:   0]                              rx_b_data                     ;
   logic [   5:   0]                              rxfifo_b_data                 ;
   logic                                          tx_b_credit                   ;
@@ -191,7 +191,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
          .init_i_credit                    (init_ar_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_ar_pop_ovrd),
          .txfifo_i_data                    (txfifo_ar_data[48:0]),
-         .user_i_valid                     (user_ar_valid),
+         .user_i_valid                     (user_ar_vld),
          .rx_i_credit                      ({3'b0,rx_ar_credit}));
 
       ll_transmit #(.WIDTH(49), .DEPTH(8'd1), .TX_CRED_SIZE(3'h1), .ASYMMETRIC_CREDIT(1'b0), .DEFAULT_TX_CRED(8'd8)) ll_transmit_iaw
@@ -208,7 +208,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
          .init_i_credit                    (init_aw_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_aw_pop_ovrd),
          .txfifo_i_data                    (txfifo_aw_data[48:0]),
-         .user_i_valid                     (user_aw_valid),
+         .user_i_valid                     (user_aw_vld),
          .rx_i_credit                      ({3'b0,rx_aw_credit}));
 
       ll_transmit #(.WIDTH(149), .DEPTH(8'd1), .TX_CRED_SIZE(3'h1), .ASYMMETRIC_CREDIT(1'b0), .DEFAULT_TX_CRED(8'd128)) ll_transmit_iw
@@ -225,13 +225,13 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
          .init_i_credit                    (init_w_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_w_pop_ovrd),
          .txfifo_i_data                    (txfifo_w_data[148:0]),
-         .user_i_valid                     (user_w_valid),
+         .user_i_valid                     (user_w_vld),
          .rx_i_credit                      ({3'b0,rx_w_credit}));
 
       ll_receive #(.WIDTH(135), .DEPTH(8'd128)) ll_receive_ir
         (// Outputs
          .rxfifo_i_data                    (rxfifo_r_data[134:0]),
-         .user_i_valid                     (user_r_valid),
+         .user_i_valid                     (user_r_vld),
          .tx_i_credit                      (tx_r_credit),
          .rx_i_debug_status                (rx_r_debug_status[31:0]),
          // Inputs
@@ -246,7 +246,7 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
       ll_receive #(.WIDTH(6), .DEPTH(8'd8)) ll_receive_ib
         (// Outputs
          .rxfifo_i_data                    (rxfifo_b_data[5:0]),
-         .user_i_valid                     (user_b_valid),
+         .user_i_valid                     (user_b_vld),
          .tx_i_credit                      (tx_b_credit),
          .rx_i_debug_status                (rx_b_debug_status[31:0]),
          // Inputs
@@ -297,19 +297,19 @@ module axi_mm_a32_d128_packet_up_rv_2_mem_master_top  (
          .user_bvalid                      (user_bvalid),
          .user_bready                      (user_bready),
 
-         .user_ar_valid                    (user_ar_valid),
+         .user_ar_vld                      (user_ar_vld),
          .txfifo_ar_data                   (txfifo_ar_data[  48:   0]),
          .user_ar_ready                    (user_ar_ready),
-         .user_aw_valid                    (user_aw_valid),
+         .user_aw_vld                      (user_aw_vld),
          .txfifo_aw_data                   (txfifo_aw_data[  48:   0]),
          .user_aw_ready                    (user_aw_ready),
-         .user_w_valid                     (user_w_valid),
+         .user_w_vld                       (user_w_vld),
          .txfifo_w_data                    (txfifo_w_data[ 148:   0]),
          .user_w_ready                     (user_w_ready),
-         .user_r_valid                     (user_r_valid),
+         .user_r_vld                       (user_r_vld),
          .rxfifo_r_data                    (rxfifo_r_data[ 134:   0]),
          .user_r_ready                     (user_r_ready),
-         .user_b_valid                     (user_b_valid),
+         .user_b_vld                       (user_b_vld),
          .rxfifo_b_data                    (rxfifo_b_data[   5:   0]),
          .user_b_ready                     (user_b_ready),
 

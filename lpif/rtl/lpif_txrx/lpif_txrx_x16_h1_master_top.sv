@@ -125,6 +125,7 @@ module lpif_txrx_x16_h1_master_top  (
 
    ll_auto_sync #(.MARKER_WIDTH(2),
                   .PERSISTENT_MARKER(1'b1),
+                  .NO_MARKER(1'b1),
                   .PERSISTENT_STROBE(1'b1)) ll_auto_sync_i
      (// Outputs
       .tx_online_delay                  (tx_online_delay),

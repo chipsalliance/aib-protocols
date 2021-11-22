@@ -60,7 +60,7 @@ module axi_st_d64_slave_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          rx_st_pushbit                 ;
-  logic                                          user_st_valid                 ;
+  logic                                          user_st_vld                   ;
   logic [  72:   0]                              rx_st_data                    ;
   logic [  72:   0]                              rxfifo_st_data                ;
   logic                                          tx_st_credit                  ;
@@ -106,7 +106,7 @@ module axi_st_d64_slave_top  (
       ll_receive #(.WIDTH(73), .DEPTH(8'd128)) ll_receive_ist
         (// Outputs
          .rxfifo_i_data                    (rxfifo_st_data[72:0]),
-         .user_i_valid                     (user_st_valid),
+         .user_i_valid                     (user_st_vld),
          .tx_i_credit                      (tx_st_credit),
          .rx_i_debug_status                (rx_st_debug_status[31:0]),
          // Inputs
@@ -132,7 +132,7 @@ module axi_st_d64_slave_top  (
          .user_tvalid                      (user_tvalid),
          .user_tready                      (user_tready),
 
-         .user_st_valid                    (user_st_valid),
+         .user_st_vld                      (user_st_vld),
          .rxfifo_st_data                   (rxfifo_st_data[  72:   0]),
          .user_st_ready                    (user_st_ready),
 

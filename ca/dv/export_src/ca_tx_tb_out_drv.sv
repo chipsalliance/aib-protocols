@@ -404,7 +404,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                         end
                     end //for
                 end //if (ca_cfg.tx_stb_en == 0)
-             `else
+             `else //SYMMETRIC
                 for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                     if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
                     if(BUS_BIT_WIDTH == 160)begin //HALF

@@ -71,7 +71,7 @@ module axi_st_d256_dm_drng_2_up_full_slave_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          rx_st_pushbit                 ;
-  logic                                          user_st_valid                 ;
+  logic                                          user_st_vld                   ;
   logic [ 256:   0]                              rx_st_data                    ;
   logic [ 256:   0]                              rxfifo_st_data                ;
   logic                                          tx_st_credit                  ;
@@ -117,7 +117,7 @@ module axi_st_d256_dm_drng_2_up_full_slave_top  (
       ll_receive #(.WIDTH(257), .DEPTH(8'd128)) ll_receive_ist
         (// Outputs
          .rxfifo_i_data                    (rxfifo_st_data[256:0]),
-         .user_i_valid                     (user_st_valid),
+         .user_i_valid                     (user_st_vld),
          .tx_i_credit                      (tx_st_credit),
          .rx_i_debug_status                (rx_st_debug_status[31:0]),
          // Inputs
@@ -142,7 +142,7 @@ module axi_st_d256_dm_drng_2_up_full_slave_top  (
          .user_tready                      (user_tready),
          .user_enable                      (user_enable[   0:   0]),
 
-         .user_st_valid                    (user_st_valid),
+         .user_st_vld                      (user_st_vld),
          .rxfifo_st_data                   (rxfifo_st_data[ 256:   0]),
          .user_st_ready                    (user_st_ready),
 

@@ -43,7 +43,7 @@ module lpif_txrx_x8_h2_slave_top  (
   output logic [   1:   0]   dstrm_protid        ,
   output logic [ 255:   0]   dstrm_data          ,
   output logic [   0:   0]   dstrm_dvalid        ,
-  output logic [  15:   0]   dstrm_crc           ,
+  output logic [   7:   0]   dstrm_crc           ,
   output logic [   0:   0]   dstrm_crc_valid     ,
   output logic [   0:   0]   dstrm_valid         ,
 
@@ -52,7 +52,7 @@ module lpif_txrx_x8_h2_slave_top  (
   input  logic [   1:   0]   ustrm_protid        ,
   input  logic [ 255:   0]   ustrm_data          ,
   input  logic [   0:   0]   ustrm_dvalid        ,
-  input  logic [  15:   0]   ustrm_crc           ,
+  input  logic [   7:   0]   ustrm_crc           ,
   input  logic [   0:   0]   ustrm_crc_valid     ,
   input  logic [   0:   0]   ustrm_valid         ,
 
@@ -74,12 +74,12 @@ module lpif_txrx_x8_h2_slave_top  (
 
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
-  logic [ 280:   0]                              rx_downstream_data            ;
-  logic [ 280:   0]                              rxfifo_downstream_data        ;
+  logic [ 272:   0]                              rx_downstream_data            ;
+  logic [ 272:   0]                              rxfifo_downstream_data        ;
   logic                                          rx_downstream_push_ovrd       ;
 
-  logic [ 280:   0]                              tx_upstream_data              ;
-  logic [ 280:   0]                              txfifo_upstream_data          ;
+  logic [ 272:   0]                              tx_upstream_data              ;
+  logic [ 272:   0]                              txfifo_upstream_data          ;
   logic                                          tx_upstream_pop_ovrd          ;
 
   logic [   1:   0]                              tx_auto_mrk_userbit           ;
@@ -119,11 +119,11 @@ module lpif_txrx_x8_h2_slave_top  (
 // Logic Link Instantiation
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign rxfifo_downstream_data [   0 +: 281] = rx_downstream_data   [   0 +: 281] ;
+  assign rxfifo_downstream_data [   0 +: 273] = rx_downstream_data   [   0 +: 273] ;
   assign rx_downstream_debug_status [   0 +:  32] = 32'h0                              ;
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
-  assign tx_upstream_data     [   0 +: 281] = txfifo_upstream_data [   0 +: 281] ;
+  assign tx_upstream_data     [   0 +: 273] = txfifo_upstream_data [   0 +: 273] ;
   assign tx_upstream_debug_status [   0 +:  32] = 32'h0                              ;
 
 // Logic Link Instantiation
@@ -138,19 +138,19 @@ module lpif_txrx_x8_h2_slave_top  (
          .dstrm_protid                     (dstrm_protid[   1:   0]),
          .dstrm_data                       (dstrm_data[ 255:   0]),
          .dstrm_dvalid                     (dstrm_dvalid[   0:   0]),
-         .dstrm_crc                        (dstrm_crc[  15:   0]),
+         .dstrm_crc                        (dstrm_crc[   7:   0]),
          .dstrm_crc_valid                  (dstrm_crc_valid[   0:   0]),
          .dstrm_valid                      (dstrm_valid[   0:   0]),
          .ustrm_state                      (ustrm_state[   3:   0]),
          .ustrm_protid                     (ustrm_protid[   1:   0]),
          .ustrm_data                       (ustrm_data[ 255:   0]),
          .ustrm_dvalid                     (ustrm_dvalid[   0:   0]),
-         .ustrm_crc                        (ustrm_crc[  15:   0]),
+         .ustrm_crc                        (ustrm_crc[   7:   0]),
          .ustrm_crc_valid                  (ustrm_crc_valid[   0:   0]),
          .ustrm_valid                      (ustrm_valid[   0:   0]),
 
-         .rxfifo_downstream_data           (rxfifo_downstream_data[ 280:   0]),
-         .txfifo_upstream_data             (txfifo_upstream_data[ 280:   0]),
+         .rxfifo_downstream_data           (rxfifo_downstream_data[ 272:   0]),
+         .txfifo_upstream_data             (txfifo_upstream_data[ 272:   0]),
 
          .m_gen2_mode                      (m_gen2_mode)
 
@@ -163,9 +163,9 @@ module lpif_txrx_x8_h2_slave_top  (
 
       lpif_txrx_x8_h2_slave_concat lpif_txrx_x8_h2_slave_concat
       (
-         .rx_downstream_data               (rx_downstream_data[   0 +: 281]),
+         .rx_downstream_data               (rx_downstream_data[   0 +: 273]),
          .rx_downstream_push_ovrd          (rx_downstream_push_ovrd),
-         .tx_upstream_data                 (tx_upstream_data[   0 +: 281]),
+         .tx_upstream_data                 (tx_upstream_data[   0 +: 273]),
          .tx_upstream_pop_ovrd             (tx_upstream_pop_ovrd),
 
          .tx_phy0                          (tx_phy0[159:0]),

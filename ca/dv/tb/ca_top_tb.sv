@@ -149,23 +149,23 @@ module ca_top_tb;
 marker_gen marker_gen_im
      (/*AUTOINST*/
       // Outputs
-      //.user_marker			(tx_mrk_userbit_master[3:0]), // Templated
-      .user_marker			(ca_die_a_tx_tb_out_if.user_marker), // Templated
+      //.user_marker                      (tx_mrk_userbit_master[3:0]), // Templated
+      .user_marker                      (ca_die_a_tx_tb_out_if.user_marker), // Templated
       // Inputs
-      .clk				(msr_wr_clk),		 // Templated
-      .rst_n				(tb_reset_l),		 // Templated
-      .local_rate			(`MSR_GEAR),		 // Templated
-      .remote_rate			(`SLV_GEAR));		 // Templated
+      .clk                              (msr_wr_clk),            // Templated
+      .rst_n                            (tb_reset_l),            // Templated
+      .local_rate                       (`MSR_GEAR),             // Templated
+      .remote_rate                      (`SLV_GEAR));            // Templated
 
  marker_gen marker_gen_is
      (/*AUTOINST*/
       // Outputs
-     .user_marker			(ca_die_b_tx_tb_out_if.user_marker), // Templated
+     .user_marker                       (ca_die_b_tx_tb_out_if.user_marker), // Templated
       // Inputs
-      .clk				(slv_wr_clk),		 // Templated
-      .rst_n				(tb_reset_l),		 // Templated
-      .local_rate			(`SLV_GEAR),		 // Templated
-      .remote_rate			(`MSR_GEAR));		 // Templated
+      .clk                              (slv_wr_clk),                        // Templated
+      .rst_n                            (tb_reset_l),                        // Templated
+      .local_rate                       (`SLV_GEAR),                         // Templated
+      .remote_rate                      (`MSR_GEAR));                        // Templated
 
    logic [7:0] strobe_gen_m_interval;
    logic [7:0] strobe_gen_s_interval;
@@ -201,94 +201,94 @@ assign ca_die_a_rx_tb_in_if.user_stb    = ca_die_a_tx_tb_out_if.user_stb;
 assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
 
 `ifdef CA_YELLOW_OVAL
-	assign ca_die_a_rx_tb_in_if.rx_dout  = ca_m_if.rx_dout;
-	assign ca_die_b_rx_tb_in_if.rx_dout  = ca_s_if.rx_dout;
+        assign ca_die_a_rx_tb_in_if.rx_dout  = ca_m_if.rx_dout;
+        assign ca_die_b_rx_tb_in_if.rx_dout  = ca_s_if.rx_dout;
         assign ca_m_if.tx_din                = ca_die_a_tx_tb_out_if.tx_din;
-        assign ca_s_if.tx_din           = ca_die_b_tx_tb_out_if.tx_din;
+        assign ca_s_if.tx_din                = ca_die_b_tx_tb_out_if.tx_din;
    `ifdef AIB_DATA_DELAY
         assign ca_m_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
         assign ca_m_if.rx_online        = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
         assign ca_s_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
         assign ca_s_if.rx_online        = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
    `else
-  	assign ca_m_if.tx_online 	= &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
-  	assign ca_m_if.rx_online 	= &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
-  	assign ca_s_if.tx_online 	= &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
-  	assign ca_s_if.rx_online 	= &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+        assign ca_m_if.tx_online        = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
+        assign ca_m_if.rx_online        = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
+        assign ca_s_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
+        assign ca_s_if.rx_online        = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
    `endif
-	assign ca_die_a_tx_tb_out_if.tx_online= ca_m_if.tx_online; 
-  	assign ca_die_a_tx_tb_in_if.tx_online = ca_m_if.tx_online; 
-  	assign ca_die_a_rx_tb_in_if.rx_online = ca_m_if.rx_online; 
+        assign ca_die_a_tx_tb_out_if.tx_online= ca_m_if.tx_online; 
+        assign ca_die_a_tx_tb_in_if.tx_online = ca_m_if.tx_online; 
+        assign ca_die_a_rx_tb_in_if.rx_online = ca_m_if.rx_online; 
+         
+        assign ca_die_b_tx_tb_out_if.tx_online = ca_s_if.tx_online;  
+        assign ca_die_b_tx_tb_in_if.tx_online  = ca_s_if.tx_online;  
+        assign ca_die_b_rx_tb_in_if.rx_online  = ca_s_if.rx_online; 
   
-  	assign ca_die_b_tx_tb_out_if.tx_online = ca_s_if.tx_online;  
-   	assign ca_die_b_tx_tb_in_if.tx_online  = ca_s_if.tx_online;  
-   	assign ca_die_b_rx_tb_in_if.rx_online  = ca_s_if.rx_online; 
-  
-   	assign ca_die_a_rx_tb_in_if.align_err              = ca_m_if.align_err;  
-   	assign ca_die_a_tx_tb_in_if.tx_stb_pos_err         = ca_m_if.tx_stb_pos_err;  
-   	assign ca_die_a_tx_tb_in_if.tx_stb_pos_coding_err  = ca_m_if.tx_stb_pos_coding_err;  
-   	assign ca_die_a_rx_tb_in_if.rx_stb_pos_err         = ca_m_if.rx_stb_pos_err;  
-   	assign ca_die_a_rx_tb_in_if.rx_stb_pos_coding_err  = ca_m_if.rx_stb_pos_coding_err; 
+        assign ca_die_a_rx_tb_in_if.align_err              = ca_m_if.align_err;  
+        assign ca_die_a_tx_tb_in_if.tx_stb_pos_err         = ca_m_if.tx_stb_pos_err;  
+        assign ca_die_a_tx_tb_in_if.tx_stb_pos_coding_err  = ca_m_if.tx_stb_pos_coding_err;  
+        assign ca_die_a_rx_tb_in_if.rx_stb_pos_err         = ca_m_if.rx_stb_pos_err;  
+        assign ca_die_a_rx_tb_in_if.rx_stb_pos_coding_err  = ca_m_if.rx_stb_pos_coding_err; 
  
-   	assign ca_die_b_rx_tb_in_if.align_err              = ca_s_if.align_err;  
-   	assign ca_die_b_tx_tb_in_if.tx_stb_pos_err         = ca_s_if.tx_stb_pos_err;  
-   	assign ca_die_b_tx_tb_in_if.tx_stb_pos_coding_err  = ca_s_if.tx_stb_pos_coding_err;  
-   	assign ca_die_b_rx_tb_in_if.rx_stb_pos_err         = ca_s_if.rx_stb_pos_err;  
-   	assign ca_die_b_rx_tb_in_if.rx_stb_pos_coding_err  = ca_s_if.rx_stb_pos_coding_err;  
+        assign ca_die_b_rx_tb_in_if.align_err              = ca_s_if.align_err;  
+        assign ca_die_b_tx_tb_in_if.tx_stb_pos_err         = ca_s_if.tx_stb_pos_err;  
+        assign ca_die_b_tx_tb_in_if.tx_stb_pos_coding_err  = ca_s_if.tx_stb_pos_coding_err;  
+        assign ca_die_b_rx_tb_in_if.rx_stb_pos_err         = ca_s_if.rx_stb_pos_err;  
+        assign ca_die_b_rx_tb_in_if.rx_stb_pos_coding_err  = ca_s_if.rx_stb_pos_coding_err;  
             
-	assign ca_m_if.align_fly 	= `CA_ALIGN_FLY;
-	assign ca_s_if.align_fly 	= `CA_ALIGN_FLY;
-	assign ca_m_if.tx_stb_en 	= `CA_TX_STB_EN;
-	assign ca_s_if.tx_stb_en 	= `CA_TX_STB_EN;
-	assign ca_m_if.tx_stb_rcvr 	= 1'b0;
-	assign ca_s_if.tx_stb_rcvr 	= 1'b0;
-	assign ca_m_if.rden_dly 	= `CA_RDEN_DLY;
-	assign ca_s_if.rden_dly 	= `CA_RDEN_DLY;
+        assign ca_m_if.align_fly        = `CA_ALIGN_FLY;
+        assign ca_s_if.align_fly        = `CA_ALIGN_FLY;
+        assign ca_m_if.tx_stb_en        = `CA_TX_STB_EN;
+        assign ca_s_if.tx_stb_en        = `CA_TX_STB_EN;
+        assign ca_m_if.tx_stb_rcvr      = 1'b0;
+        assign ca_s_if.tx_stb_rcvr      = 1'b0;
+        assign ca_m_if.rden_dly         = `CA_RDEN_DLY;
+        assign ca_s_if.rden_dly         = `CA_RDEN_DLY;
 
-        assign ca_m_if.delay_x_value	= DELAY_X_VALUE; 
-        assign ca_m_if.delay_z_value 	= DELAY_XZ_VALUE;
+        assign ca_m_if.delay_x_value    = DELAY_X_VALUE; 
+        assign ca_m_if.delay_z_value    = DELAY_XZ_VALUE;
         assign ca_s_if.delay_x_value    = DELAY_X_VALUE; 
-        assign ca_s_if.delay_z_value 	= DELAY_XZ_VALUE;
+        assign ca_s_if.delay_z_value    = DELAY_XZ_VALUE;
 
 
-	assign ca_m_if.fifo_full_val 	= (`CA_FIFO_FULL)-1;
-	assign ca_m_if.fifo_pfull_val 	= `CA_FIFO_PFULL;
-	assign ca_m_if.fifo_empty_val 	= `CA_FIFO_EMPTY;
-	assign ca_m_if.fifo_pempty_val	= `CA_FIFO_PEMPTY;
-        assign ca_s_if.fifo_full_val 	= (`CA_FIFO_FULL)-1;
-        assign ca_s_if.fifo_pfull_val 	= `CA_FIFO_PFULL;
-        assign ca_s_if.fifo_empty_val 	= `CA_FIFO_EMPTY;
-        assign ca_s_if.fifo_pempty_val	= `CA_FIFO_PEMPTY;
+        assign ca_m_if.fifo_full_val    = (`CA_FIFO_FULL)-1;
+        assign ca_m_if.fifo_pfull_val   = `CA_FIFO_PFULL;
+        assign ca_m_if.fifo_empty_val   = `CA_FIFO_EMPTY;
+        assign ca_m_if.fifo_pempty_val  = `CA_FIFO_PEMPTY;
+        assign ca_s_if.fifo_full_val    = (`CA_FIFO_FULL)-1;
+        assign ca_s_if.fifo_pfull_val   = `CA_FIFO_PFULL;
+        assign ca_s_if.fifo_empty_val   = `CA_FIFO_EMPTY;
+        assign ca_s_if.fifo_pempty_val  = `CA_FIFO_PEMPTY;
 
-	assign ca_m_if.tx_stb_wd_sel	= `CA_TX_STB_WD_SEL;
-	assign ca_m_if.tx_stb_bit_sel 	= `CA_TX_STB_BIT_SEL;
-	assign ca_m_if.tx_stb_intv 	= `CA_TX_STB_INTV;
+        assign ca_m_if.tx_stb_wd_sel    = `CA_TX_STB_WD_SEL;
+        assign ca_m_if.tx_stb_bit_sel   = `CA_TX_STB_BIT_SEL;
+        assign ca_m_if.tx_stb_intv      = `CA_TX_STB_INTV;
 
-        assign ca_m_if.rx_stb_wd_sel  	= `CA_RX_STB_WD_SEL;
-        assign ca_m_if.rx_stb_bit_sel 	= `CA_RX_STB_BIT_SEL;
-        assign ca_m_if.rx_stb_intv	= `CA_RX_STB_INTV;
+        assign ca_m_if.rx_stb_wd_sel    = `CA_RX_STB_WD_SEL;
+        assign ca_m_if.rx_stb_bit_sel   = `CA_RX_STB_BIT_SEL;
+        assign ca_m_if.rx_stb_intv      = `CA_RX_STB_INTV;
 
-        assign ca_s_if.tx_stb_wd_sel  	= `CA_TX_STB_WD_SEL;
-        assign ca_s_if.tx_stb_bit_sel 	= `CA_TX_STB_BIT_SEL;
-        assign ca_s_if.tx_stb_intv	= `CA_TX_STB_INTV;
+        assign ca_s_if.tx_stb_wd_sel    = `CA_TX_STB_WD_SEL;
+        assign ca_s_if.tx_stb_bit_sel   = `CA_TX_STB_BIT_SEL;
+        assign ca_s_if.tx_stb_intv      = `CA_TX_STB_INTV;
 
-        assign ca_s_if.rx_stb_wd_sel	= `CA_RX_STB_WD_SEL;
-        assign ca_s_if.rx_stb_bit_sel 	= `CA_RX_STB_BIT_SEL;
-        assign ca_s_if.rx_stb_intv 	= `CA_RX_STB_INTV;
+        assign ca_s_if.rx_stb_wd_sel    = `CA_RX_STB_WD_SEL;
+        assign ca_s_if.rx_stb_bit_sel   = `CA_RX_STB_BIT_SEL;
+        assign ca_s_if.rx_stb_intv      = `CA_RX_STB_INTV;
 
 /////////////////////////  DUT instantiation started  ////////////////////////////////////////
 
   ca_if #( .DWIDTH (`TB_DIE_A_BUS_BIT_WIDTH),   .CHNL_NUM (`CA_NUM_CHAN))
-	   ca_m_if();
+           ca_m_if();
   ca_if #( .DWIDTH (`TB_DIE_B_BUS_BIT_WIDTH),   .CHNL_NUM (`CA_NUM_CHAN))
            ca_s_if();
 
   ca_DUT_wrapper #(.NUM_CHANNELS      (`TB_DIE_A_NUM_CHANNELS),
-		   .BITS_PER_CHANNEL  (`TB_DIE_A_BUS_BIT_WIDTH),
-		   .AD_WIDTH          (`TB_DIE_A_AD_WIDTH),
-		   .SYNC_FIFO         (`SYNC_FIFO))
+                   .BITS_PER_CHANNEL  (`TB_DIE_A_BUS_BIT_WIDTH),
+                   .AD_WIDTH          (`TB_DIE_A_AD_WIDTH),
+                   .SYNC_FIFO         (`SYNC_FIFO))
   ca_DUT_wrapper_m0 (
-  	clk_lane_a,
+        clk_lane_a,
         clk_lane_a[0],    //This is com_clk
         tb_reset_l,
         ca_m_if
@@ -297,7 +297,7 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
   ca_DUT_wrapper #(.NUM_CHANNELS      (`TB_DIE_B_NUM_CHANNELS),
                    .BITS_PER_CHANNEL  (`TB_DIE_B_BUS_BIT_WIDTH),
                    .AD_WIDTH          (`TB_DIE_B_AD_WIDTH),
-		   .SYNC_FIFO         (`SYNC_FIFO))
+                   .SYNC_FIFO         (`SYNC_FIFO))
   ca_DUT_wrapper_s0 (
         clk_lane_b,
         clk_lane_b[0],
@@ -675,33 +675,130 @@ endgenerate
 `ifdef CA_YELLOW_OVAL
 `include "../../../aib/dv/top/aib_vip_top.sv"
 
-    genvar i;
+////int aib_delay_mem [`MAX_AIB_IF_CNT*2]; ///MAX_AIB_IF_CNT in AIB model limited to 8
+int aib_delay_mem[`MAX_NUM_CHANNELS*2];
+
+     initial begin
+         for(int j=0; j<`CA_NUM_CHAN; j++) begin
+            `ifdef INTER_CHAN_SKEW_S2M
+               aib_delay_mem[2*j + 0] = (`INTER_CHAN_SKEW_S2M >> (8*j)) & 8'hff; // S2M aka M RX
+            `elsif GLOBAL_MAX_INTER_CH_SKEW
+               aib_delay_mem[2*j + 0] = $urandom_range (0, `GLOBAL_MAX_INTER_CH_SKEW); // S2M aka M RX
+            `else
+               aib_delay_mem[2*j + 0] = 0; // NO SKEW
+            `endif
+
+            `ifdef INTER_CHAN_SKEW_M2S
+               aib_delay_mem[2*j + 1] = (`INTER_CHAN_SKEW_M2S >> (8*j)) & 8'hff; // M2S aka S Rx
+            `elsif GLOBAL_MAX_INTER_CH_SKEW
+               aib_delay_mem[2*j + 1] = $urandom_range (0, `GLOBAL_MAX_INTER_CH_SKEW); // M2S aka S Rx
+            `else
+               aib_delay_mem[2*j + 1] = 0 ; // M2S aka S Rx
+            `endif
+
+             $display(" Channel %d Delay Value [Master_RX, Slave_RX] = [%0d,%0d]",
+                     j,aib_delay_mem[2*j],aib_delay_mem[2*j + 1]);
+         end //for j
+     end
+
+    reg [`MLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_m,   aib_ddelay_out_m,  aib_no_ddelay_out_m;
+    reg [`SLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_s,   aib_ddelay_out_s,  aib_no_ddelay_out_s;
+    reg [`CA_NUM_CHAN-1:0]                s_rx_align_done_d, m_rx_align_done_d, fs_mac_rdy_d;
+///////////////////////////////////////////N////////////////////////////////////////////////
+
+genvar i;
     generate
-       for (i=0; i<`CA_NUM_CHAN; i++) begin
-	assign aib_mac_if_m0.din_ch[i][`TB_DIE_A_BUS_BIT_WIDTH-1:0] = ca_m_if.tx_dout[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i];
-	assign aib_mac_if_s0.din_ch[i][`TB_DIE_B_BUS_BIT_WIDTH-1:0] = ca_s_if.tx_dout[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i];
-        //  delay_unit #(.delay_bits(`MLLPHY_WIDTH)) ca_mdelay_unit (aib_mac_if_m0.dout_ch[i], ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i]);
-        //  delay_unit #(.delay_bits(`SLLPHY_WIDTH)) ca_sdelay_unit (aib_mac_if_s0.dout_ch[i], ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i]);
+      for (i=0; i<`CA_NUM_CHAN; i++) begin
+        assign aib_mac_if_m0.din_ch[i][`MLLPHY_WIDTH :0] = ca_m_if.tx_dout[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i];
+        assign aib_mac_if_s0.din_ch[i][`SLLPHY_WIDTH :0] = ca_s_if.tx_dout[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i];
+        // delay_unit #(.delay_bits(`MLLPHY_WIDTH)) ca_mdelay_unit (aib_mac_if_m0.dout_ch[i], ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i]);
+        // delay_unit #(.delay_bits(`SLLPHY_WIDTH)) ca_sdelay_unit (aib_mac_if_s0.dout_ch[i], ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i]);
 
-     `ifdef MS_AIB_GEN1	// Gen1 40 bits
-	assign ca_m_if.rx_din[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i] = aib_mac_if_m0.dout_ch[i];
-     `else	// AIB2.0 model always 320 bit
-	assign ca_m_if.rx_din[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i] = (aib_mac_if_m0.rx_reg_mode == 1) ? aib_mac_if_m0.data_out_reg_mode[80*(i+1)-1:80*i] : aib_mac_if_m0.data_out[320*(i+1)-1:320*i];
-      `endif
-
+     `ifdef MS_AIB_GEN1 // Gen1 40 bits
+         assign aib_no_ddelay_out_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = aib_mac_if_m0.dout_ch[i];
+         assign aib_ddelay_in_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = aib_mac_if_m0.dout_ch[i];
+     `else // AIB2.0 model always 320 bit
+         assign aib_no_ddelay_out_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = (aib_mac_if_m0.rx_reg_mode == 1) ?
+         aib_mac_if_m0.data_out_reg_mode[80*(i+1)-1:80*i] : aib_mac_if_m0.data_out[320*(i+1)-1:320*i];
+         assign aib_ddelay_in_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = (aib_mac_if_m0.rx_reg_mode == 1) ?
+         aib_mac_if_m0.data_out_reg_mode[80*(i+1)-1:80*i] : aib_mac_if_m0.data_out[320*(i+1)-1:320*i];
+     `endif
      `ifdef SL_AIB_GEN1 // Gen1 80 bits
-	assign ca_s_if.rx_din[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i] = aib_mac_if_s0.dout_ch[i];
-     `else	
-	assign ca_s_if.rx_din[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i] = (aib_mac_if_s0.rx_reg_mode == 1) ? aib_mac_if_s0.data_out_reg_mode[80*(i+1)-1:80*i]: aib_mac_if_s0.data_out[320*(i+1)-1:320*i];
+         assign aib_no_ddelay_out_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = aib_mac_if_s0.dout_ch[i];
+         assign aib_ddelay_in_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = aib_mac_if_s0.dout_ch[i];
+     `else
+         assign aib_no_ddelay_out_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = (aib_mac_if_s0.rx_reg_mode == 1) ?
+         aib_mac_if_s0.data_out_reg_mode[80*(i+1)-1:80*i]: aib_mac_if_s0.data_out[320*(i+1)-1:320*i];
+
+         assign aib_ddelay_in_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = (aib_mac_if_s0.rx_reg_mode == 1) ?
+         aib_mac_if_s0.data_out_reg_mode[80*(i+1)-1:80*i]: aib_mac_if_s0.data_out[320*(i+1)-1:320*i];
      `endif
 
-        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_tx_transfer_delay_unit (aib_mac_if_m0.ms_tx_transfer_en, ms_tx_transfer_en_d);
-        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_rx_transfer_delay_unit (aib_mac_if_m0.ms_rx_transfer_en, ms_rx_transfer_en_d);
-        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_tx_transfer_delay_unit (aib_mac_if_s0.sl_tx_transfer_en, sl_tx_transfer_en_d);
-        delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_rx_transfer_delay_unit (aib_mac_if_s0.sl_rx_transfer_en, sl_rx_transfer_en_d);
-       end
+        delay_clk_unit #(`MLLPHY_WIDTH) aib_ddely_m (.clk(aib_mac_if_m0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i]),
+                        .ax(aib_ddelay_in_m[`MLLPHY_WIDTH*(i+1)-1: `MLLPHY_WIDTH*i]), .ax_o(aib_ddelay_out_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i]));
+        delay_clk_unit #(`SLLPHY_WIDTH) aib_ddely_s (.clk(aib_mac_if_s0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i+1]),
+                        .ax(aib_ddelay_in_s[`SLLPHY_WIDTH*(i+1)-1: `SLLPHY_WIDTH*i]), .ax_o(aib_ddelay_out_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i]));
+
+     `ifdef AIB_DATA_DELAY // Enable AIB to CA delay unit
+        assign ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = aib_ddelay_out_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i];
+        assign ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = aib_ddelay_out_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i];
+     `else
+        assign ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i] = aib_no_ddelay_out_m[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i];
+        assign ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i] = aib_no_ddelay_out_s[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i];
+     `endif
+
+
+        delay_clk_unit #(.delay_bits(1)) ca_ms_tx_transfer_delay_unit (.clk(aib_mac_if_m0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i]),
+                .ax(aib_mac_if_m0.ms_tx_transfer_en[i]), .ax_o(ms_tx_transfer_en_d[i]));
+        delay_clk_unit #(.delay_bits(1)) ca_ms_rx_transfer_delay_unit (.clk(aib_mac_if_m0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i]),
+                .ax(aib_mac_if_m0.ms_rx_transfer_en[i]), .ax_o(ms_rx_transfer_en_d[i]));
+        delay_clk_unit #(.delay_bits(1)) ca_sl_tx_transfer_delay_unit (.clk(aib_mac_if_s0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i+1]),
+                .ax(aib_mac_if_s0.sl_tx_transfer_en[i]), .ax_o(sl_tx_transfer_en_d[i]));
+        delay_clk_unit #(.delay_bits(1)) ca_sl_rx_transfer_delay_unit (.clk(aib_mac_if_s0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i+1]),
+                .ax(aib_mac_if_s0.sl_rx_transfer_en[i]), .ax_o(sl_rx_transfer_en_d[i]));
+
+
+        delay_clk_unit #(.delay_bits(1)) ca_ms_mac_rdy_delay_unit (.clk(aib_mac_if_m0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i]),
+                .ax(aib_mac_if_m0.fs_mac_rdy[i]), .ax_o(fs_mac_rdy_d[i]));
+        delay_clk_unit #(.delay_bits(1)) ca_ms_rx_align_done_delay_unit (.clk(aib_mac_if_m0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i]),
+                .ax(aib_mac_if_m0.m_rx_align_done[i]), .ax_o(m_rx_align_done_d[i]));
+        delay_clk_unit #(.delay_bits(1)) ca_sl_rx_align_done_delay_unit (.clk(aib_mac_if_s0.rd_clk[i]), .clk_delay(aib_delay_mem[2*i+1]),
+                .ax(aib_mac_if_s0.m_rx_align_done[i]), .ax_o(s_rx_align_done_d[i]));
+      end //for
     endgenerate
-`else 
+
+//////////////////////////////////////////N////////////////////////////////////////////////
+
+//// ///////////////////////////////////////////N-1////////////////////////////////////////////////
+////      genvar i;
+////     generate
+////        for (i=0; i<`CA_NUM_CHAN; i++) begin
+////            assign aib_mac_if_m0.din_ch[i][`TB_DIE_A_BUS_BIT_WIDTH-1:0] = ca_m_if.tx_dout[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i];
+////            assign aib_mac_if_s0.din_ch[i][`TB_DIE_B_BUS_BIT_WIDTH-1:0] = ca_s_if.tx_dout[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i];
+////         //  delay_unit #(.delay_bits(`MLLPHY_WIDTH)) ca_mdelay_unit (aib_mac_if_m0.dout_ch[i], ca_m_if.rx_din[`MLLPHY_WIDTH*(i+1)-1:`MLLPHY_WIDTH*i]);
+////         //  delay_unit #(.delay_bits(`SLLPHY_WIDTH)) ca_sdelay_unit (aib_mac_if_s0.dout_ch[i], ca_s_if.rx_din[`SLLPHY_WIDTH*(i+1)-1:`SLLPHY_WIDTH*i]);
+//// 
+////      `ifdef MS_AIB_GEN1 // Gen1 40 bits
+////  assign ca_m_if.rx_din[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i] = aib_mac_if_m0.dout_ch[i];
+////      `else   // AIB2.0 model always 320 bit
+////  assign ca_m_if.rx_din[`TB_DIE_A_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_A_BUS_BIT_WIDTH*i] = (aib_mac_if_m0.rx_reg_mode == 1) ? aib_mac_if_m0.data_out_reg_mode[80*(i+1)-1:80*i] : aib_mac_if_m0.data_out[320*(i+1)-1:320*i];
+////       `endif
+//// 
+////      `ifdef SL_AIB_GEN1 // Gen1 80 bits
+////  assign ca_s_if.rx_din[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i] = aib_mac_if_s0.dout_ch[i];
+////      `else
+////  assign ca_s_if.rx_din[`TB_DIE_B_BUS_BIT_WIDTH*(i+1)-1:`TB_DIE_B_BUS_BIT_WIDTH*i] = (aib_mac_if_s0.rx_reg_mode == 1) ? aib_mac_if_s0.data_out_reg_mode[80*(i+1)-1:80*i]: aib_mac_if_s0.data_out[320*(i+1)-1:320*i];
+////      `endif
+//// 
+////         delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_tx_transfer_delay_unit (aib_mac_if_m0.ms_tx_transfer_en, ms_tx_transfer_en_d);
+////         delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_ms_rx_transfer_delay_unit (aib_mac_if_m0.ms_rx_transfer_en, ms_rx_transfer_en_d);
+////         delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_tx_transfer_delay_unit (aib_mac_if_s0.sl_tx_transfer_en, sl_tx_transfer_en_d);
+////         delay_unit #(.delay_bits(`CA_NUM_CHAN-1)) ca_sl_rx_transfer_delay_unit (aib_mac_if_s0.sl_rx_transfer_en, sl_rx_transfer_en_d);
+////        end
+////     endgenerate
+//// ///////////////////////////////////////////N-1////////////////////////////////////////////////
+`else   ///// not CA_YELLOW_OVAL
+
     genvar dout_a;
     for(dout_a = 0; dout_a < `MAX_NUM_CHANNELS; dout_a++) begin : dout_a_inst 
       assign die_a_dout_delay[(`TB_DIE_A_BUS_BIT_WIDTH+(`TB_DIE_A_BUS_BIT_WIDTH*dout_a))-1:`TB_DIE_A_BUS_BIT_WIDTH*dout_a]   = chan_delay_die_a_inst[dout_a].chan_delay_die_a_if.dout[(`TB_DIE_A_BUS_BIT_WIDTH-1):0];

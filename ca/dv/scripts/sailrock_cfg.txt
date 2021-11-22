@@ -9,7 +9,15 @@ GLOBAL_RX_DBI_EN	0               0		0,1
 GLOBAL_TX_WMARKER_EN	1               1		0,1				In Asymmtric mode set0.AIB marker must reverse of LLINK USER marker. 
 GLOBAL_TX_MARKER_LOC	79	        79		39,76,77,78,79			must set to 39 in Gen1
 GLOBAL_RX_MARKER_LOC	79	        79		39,76,77,78,79
-GLOBAL_MAX_INTER_CH_SKEW
+
+///Interchannel delays (0-GLOBAL_MAX_INTER_CH_SKEW)
+GLOBAL_MAX_INTER_CH_SKEW 8              8
+///// OR .... as directed in each direction (2-digits per channel with CH#0 being at LSB)
+//GLOBAL_INTER_CH_SKEW_S2M 0x0807060504030201
+//GLOBAL_INTER_CH_SKEW_M2S 0x0102030405060708
+///// any of these 2 above when used find priority over GLOBAL_MAX_INTER_CH_SKEW for that path (M2S / S2M)
+///// When none of these are used, AIB offers no inter-channel skew
+
 // aib setting
 aib_ver			2		2		1,2
 aib_channel_enable	0x0000ff	0x0000ff	0x000000-0xffffff		enable bit for 24 channels		

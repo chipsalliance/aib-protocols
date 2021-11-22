@@ -1278,18 +1278,20 @@ def calculate_bit_loc_repstruct(this_is_tx, configuration):
             if (tx_print_index_lsb % config_raw1phy_beat) == 0:
                 tx_print_index_lsb += config_raw1phy_data - config_raw1phy_beat
 
-        ## This fills in the empty space after the data but before the end of the channel (e.g. DBI)
-        local_index_wid = config_raw1phy_beat - tx_local_index_lsb
-        tx_local_index_lsb += local_index_wid
-
-        for unused1 in list (range (0, local_index_wid)):
-            print ("HELLO {}".format(unused1))
-            tx_local_index_lsb += 1
-            tx_print_index_lsb= print_aib_mapping_text(configuration, localdir,"1'b0", wid1=1, lsb1=tx_print_index_lsb, lsb2=-1)
-            if (tx_print_index_lsb % config_raw1phy_beat) == 0:
-                tx_print_index_lsb += config_raw1phy_data - config_raw1phy_beat
-
-         #   local_lsb1 = print_aib_assign_text_check_for_aib_bit (configuration, local_lsb1, use_tx, sysv)
+# This is unused for rep struct
+#       ## This fills in the empty space after the data but before the end of the channel (e.g. DBI)
+#       local_index_wid = config_raw1phy_beat - tx_local_index_lsb
+#       tx_local_index_lsb += local_index_wid
+#
+#       for unused1 in list (range (0, local_index_wid)):
+#           if global_struct.g_SIGNAL_DEBUG:
+#               print ("Fill in iteration {} for index_lsb {}".format(unused1, tx_local_index_lsb))
+#           tx_local_index_lsb += 1
+#           tx_print_index_lsb= print_aib_mapping_text(configuration, localdir,"1'b0", wid1=1, lsb1=tx_print_index_lsb, lsb2=-1)
+#           if (tx_print_index_lsb % config_raw1phy_beat) == 0:
+#               tx_print_index_lsb += config_raw1phy_data - config_raw1phy_beat
+#
+#        #   local_lsb1 = print_aib_assign_text_check_for_aib_bit (configuration, local_lsb1, use_tx, sysv)
 
 
     ## The print vectors were messed up by bit blasting. We'll correct it here
@@ -1857,6 +1859,7 @@ def make_concat_file(configuration):
                             rx_pushbit_dict [packet_chunk['NAME']] = string
 
             if global_struct.g_PACKET_DEBUG:
+                print ("before // This is RX Push Bit")
                 pprint.pprint (rx_pushbit_dict)
 
 
@@ -1944,6 +1947,7 @@ def make_concat_file(configuration):
                         rx_data_dict[rx_data_key] = rx_element_dict
 
             if global_struct.g_PACKET_DEBUG:
+                print ("before // This is RX Data")
                 pprint.pprint (rx_data_dict)
 
 
@@ -1957,29 +1961,30 @@ def make_concat_file(configuration):
                 enc_index = len(enc_list)
                 total_encoding = len(enc_list)-1
 
-                file_name.write("  assign {:20} {:13} =".format(gen_llink_concat_fifoname (rx_data_dict[rx_data_key]['NAME'],"output") , gen_index_msb  (rx_data_dict[rx_data_key]['WIDTH'], rx_data_dict[rx_data_key]['LLINK_LSB']) ))
-                for encoding_index, encoding in enumerate(enc_list):
-                    if total_encoding > 0:
-                        if encoding_index != total_encoding:
-                            if (rx_data_dict[rx_data_key]['DELAY'] == -1):
-                                file_name.write(" (rx_grant_enc_data == {}'d{}) ?".format(configuration['TX_PACKET_ID_WIDTH']  if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH'], encoding))
+                if rx_data_dict[rx_data_key]['WIDTH'] > 0:
+                    file_name.write("  assign {:20} {:13} =".format(gen_llink_concat_fifoname (rx_data_dict[rx_data_key]['NAME'],"output") , gen_index_msb  (rx_data_dict[rx_data_key]['WIDTH'], rx_data_dict[rx_data_key]['LLINK_LSB']) ))
+                    for encoding_index, encoding in enumerate(enc_list):
+                        if total_encoding > 0:
+                            if encoding_index != total_encoding:
+                                if (rx_data_dict[rx_data_key]['DELAY'] == -1):
+                                    file_name.write(" (rx_grant_enc_data == {}'d{}) ?".format(configuration['TX_PACKET_ID_WIDTH']  if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH'], encoding))
+                                else:
+                                    file_name.write(" (rx_grant_enc_dly{}_reg == {}'d{}) ?".format(rx_data_dict[rx_data_key]['DELAY'], configuration['TX_PACKET_ID_WIDTH']  if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH'], encoding))
                             else:
-                                file_name.write(" (rx_grant_enc_dly{}_reg == {}'d{}) ?".format(rx_data_dict[rx_data_key]['DELAY'], configuration['TX_PACKET_ID_WIDTH']  if direction == 'slave' else configuration['RX_PACKET_ID_WIDTH'], encoding))
+                                file_name.write("                                  ")
+                        if rx_data_dict[rx_data_key]['DELAY'] == -1: # -1 means live value
+                            file_name.write(" {:20} ".format("rx_packet_data" ))
                         else:
-                            file_name.write("                                  ")
-                    if rx_data_dict[rx_data_key]['DELAY'] == -1: # -1 means live value
-                        file_name.write(" {:20} ".format("rx_packet_data" ))
-                    else:
-                        file_name.write(" {:20} ".format("rx_buffer_dly{}_reg".format(rx_data_dict[rx_data_key]['DELAY']) ))
-                    file_name.write("{:13}".format(gen_index_msb(rx_data_dict[rx_data_key]['WIDTH'], rx_data_dict[rx_data_key]['FIFODATA_LOC']) ))
+                            file_name.write(" {:20} ".format("rx_buffer_dly{}_reg".format(rx_data_dict[rx_data_key]['DELAY']) ))
+                        file_name.write("{:13}".format(gen_index_msb(rx_data_dict[rx_data_key]['WIDTH'], rx_data_dict[rx_data_key]['FIFODATA_LOC']) ))
 
-                    if total_encoding > 0:
-                        if encoding_index != total_encoding:
-                            file_name.write(" :\n                                           ")
+                        if total_encoding > 0:
+                            if encoding_index != total_encoding:
+                                file_name.write(" :\n                                           ")
+                            else:
+                                file_name.write(" ;\n")
                         else:
-                            file_name.write(" ;\n")
-                    else:
-                        file_name.write(";\n")
+                            file_name.write(";\n")
 
 
             if rx_buffer_size != 0:
@@ -2100,24 +2105,26 @@ def make_concat_file(configuration):
         file_name.write("\n")
 
         if use_recov_strobe:
+            loc_strobe_loc = configuration['TX_STROBE_GEN2_LOC'] if direction == 'master' else configuration['RX_STROBE_GEN2_LOC']
             for phy in range(configuration['NUM_CHAN']):
-                if configuration['TX_STROBE_GEN2_LOC'] != 0:
+                if loc_strobe_loc != 0:
                     print_verilog_assign(file_name, "tx_phy_preflop_recov_strobe_{0}".format(phy), "                                tx_phy_preflop_{0}".format(phy),
-                                                                                                                              index1=gen_index_msb (configuration['TX_STROBE_GEN2_LOC'], 0) ,
-                                                                                                                              index2=gen_index_msb (configuration['TX_STROBE_GEN2_LOC'], 0) )
+                                                                                                                              index1=gen_index_msb (loc_strobe_loc, 0) ,
+                                                                                                                              index2=gen_index_msb (loc_strobe_loc, 0) )
                 print_verilog_assign(file_name, "tx_phy_preflop_recov_strobe_{0}".format(phy), "(~tx_online) ? tx_stb_userbit : tx_phy_preflop_{0}".format(phy),
-                                                                                                                              index1=gen_index_msb (1, configuration['TX_STROBE_GEN2_LOC']),
-                                                                                                                              index2=gen_index_msb (1, configuration['TX_STROBE_GEN2_LOC']))
+                                                                                                                              index1=gen_index_msb (1, loc_strobe_loc),
+                                                                                                                              index2=gen_index_msb (1, loc_strobe_loc))
 
-                if configuration['TX_STROBE_GEN2_LOC'] != configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN']:
+                if loc_strobe_loc != configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN']:
                     print_verilog_assign(file_name, "tx_phy_preflop_recov_strobe_{0}".format(phy), "                                tx_phy_preflop_{0}".format(phy),
-                                                                        index1=gen_index_msb ((configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN'])-configuration['TX_STROBE_GEN2_LOC']-1, configuration['TX_STROBE_GEN2_LOC']+1) ,
-                                                                        index2=gen_index_msb ((configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN'])-configuration['TX_STROBE_GEN2_LOC']-1, configuration['TX_STROBE_GEN2_LOC']+1) )
+                                                                        index1=gen_index_msb ((configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN'])-loc_strobe_loc-1, loc_strobe_loc+1) ,
+                                                                        index2=gen_index_msb ((configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_DATA_MAIN'])-loc_strobe_loc-1, loc_strobe_loc+1) )
 
             file_name.write("\n")
 
         ##Note, this is intended to be if, not elif
         if use_recov_marker and not use_recov_strobe:
+            loc_marker_loc = configuration['TX_MARKER_GEN2_LOC'] if direction == 'master' else configuration['RX_MARKER_GEN2_LOC']
             marker_count = 1
             if (configuration['TX_RATE'] if direction == 'master' else configuration['RX_RATE']) == 'Half':
                 marker_count = 2
@@ -2128,23 +2135,24 @@ def make_concat_file(configuration):
                 for bus_index in range(marker_count):
                     beat_size  = (configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_BEAT_MAIN']) * bus_index
                     beat_msb   = ((configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_BEAT_MAIN']) * (bus_index+1)) - 1
-                    if configuration['TX_MARKER_GEN2_LOC'] != 0:
+                    if loc_marker_loc != 0:
                         print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "                                   tx_phy_preflop_{0}".format(phy),
-                                                                                                                                  index1=gen_index_msb (configuration['TX_MARKER_GEN2_LOC'] , beat_size) ,
-                                                                                                                                  index2=gen_index_msb (configuration['TX_MARKER_GEN2_LOC'] , beat_size) )
+                                                                                                                                  index1=gen_index_msb (loc_marker_loc , beat_size) ,
+                                                                                                                                  index2=gen_index_msb (loc_marker_loc , beat_size) )
 
                     print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "(~tx_online) ? tx_mrk_userbit[{1}] : tx_phy_preflop_{0}".format(phy, bus_index),
-                                                                                                                                  index1=gen_index_msb (1, configuration['TX_MARKER_GEN2_LOC'] + beat_size) ,
-                                                                                                                                  index2=gen_index_msb (1, configuration['TX_MARKER_GEN2_LOC'] + beat_size) )
+                                                                                                                                  index1=gen_index_msb (1, loc_marker_loc + beat_size) ,
+                                                                                                                                  index2=gen_index_msb (1, loc_marker_loc + beat_size) )
 
-                    if configuration['TX_MARKER_GEN2_LOC'] != (beat_msb - beat_size):
+                    if loc_marker_loc != (beat_msb - beat_size):
                         print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "                                   tx_phy_preflop_{0}".format(phy),
-                                                                            index1=gen_index_msb (beat_msb - (configuration['TX_MARKER_GEN2_LOC'] + beat_size), configuration['TX_MARKER_GEN2_LOC'] + beat_size + 1) ,
-                                                                            index2=gen_index_msb (beat_msb - (configuration['TX_MARKER_GEN2_LOC'] + beat_size), configuration['TX_MARKER_GEN2_LOC'] + beat_size + 1) )
+                                                                            index1=gen_index_msb (beat_msb - (loc_marker_loc + beat_size), loc_marker_loc + beat_size + 1) ,
+                                                                            index2=gen_index_msb (beat_msb - (loc_marker_loc + beat_size), loc_marker_loc + beat_size + 1) )
 
             file_name.write("\n")
 
         elif use_recov_marker and use_recov_strobe:
+            loc_marker_loc = configuration['TX_MARKER_GEN2_LOC'] if direction == 'master' else configuration['RX_MARKER_GEN2_LOC']
             marker_count = 1
             if (configuration['TX_RATE'] if direction == 'master' else configuration['RX_RATE']) == 'Half':
                 marker_count = 2
@@ -2155,19 +2163,19 @@ def make_concat_file(configuration):
                 for bus_index in range(marker_count):
                     beat_size  = (configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_BEAT_MAIN']) * bus_index
                     beat_msb   = ((configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] if direction == 'master' else configuration['CHAN_RX_RAW1PHY_BEAT_MAIN']) * (bus_index+1)) - 1
-                    if configuration['TX_MARKER_GEN2_LOC'] != 0:
+                    if loc_marker_loc != 0:
                         print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "                                   tx_phy_preflop_recov_strobe_{0}".format(phy),
-                                                                                                                                  index1=gen_index_msb (configuration['TX_MARKER_GEN2_LOC'] , beat_size) ,
-                                                                                                                                  index2=gen_index_msb (configuration['TX_MARKER_GEN2_LOC'] , beat_size) )
+                                                                                                                                  index1=gen_index_msb (loc_marker_loc , beat_size) ,
+                                                                                                                                  index2=gen_index_msb (loc_marker_loc , beat_size) )
 
                     print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "(~tx_online) ? tx_mrk_userbit[{1}] : tx_phy_preflop_recov_strobe_{0}".format(phy, bus_index),
-                                                                                                                                  index1=gen_index_msb (1, configuration['TX_MARKER_GEN2_LOC'] + beat_size) ,
-                                                                                                                                  index2=gen_index_msb (1, configuration['TX_MARKER_GEN2_LOC'] + beat_size) )
+                                                                                                                                  index1=gen_index_msb (1, loc_marker_loc + beat_size) ,
+                                                                                                                                  index2=gen_index_msb (1, loc_marker_loc + beat_size) )
 
-                    if configuration['TX_MARKER_GEN2_LOC'] != (beat_msb - beat_size):
+                    if loc_marker_loc != (beat_msb - beat_size):
                         print_verilog_assign(file_name, "tx_phy_preflop_recov_marker_{0}".format(phy), "                                   tx_phy_preflop_recov_strobe_{0}".format(phy),
-                                                                            index1=gen_index_msb (beat_msb - (configuration['TX_MARKER_GEN2_LOC'] + beat_size), configuration['TX_MARKER_GEN2_LOC'] + beat_size + 1) ,
-                                                                            index2=gen_index_msb (beat_msb - (configuration['TX_MARKER_GEN2_LOC'] + beat_size), configuration['TX_MARKER_GEN2_LOC'] + beat_size + 1) )
+                                                                            index1=gen_index_msb (beat_msb - (loc_marker_loc + beat_size), loc_marker_loc + beat_size + 1) ,
+                                                                            index2=gen_index_msb (beat_msb - (loc_marker_loc + beat_size), loc_marker_loc + beat_size + 1) )
 
             file_name.write("\n")
 
@@ -2450,12 +2458,12 @@ def make_top_file(configuration):
                     print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
                     print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
-                    print_verilog_assign(file_name, "tx_{0}_pushbit".format(llink['NAME']), "user_{0}_valid".format(llink['NAME']))
+                    print_verilog_assign(file_name, "tx_{0}_pushbit".format(llink['NAME']), "user_{0}_vld".format(llink['NAME']))
                 else:
                     print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
                     print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "32'h0", index1=gen_index_msb (32))
-                    print_verilog_assign(file_name, "user_{0}_valid".format(llink['NAME']), "rx_{0}_pushbit".format(llink['NAME']))
+                    print_verilog_assign(file_name, "user_{0}_vld".format(llink['NAME']), "rx_{0}_pushbit".format(llink['NAME']))
 
             elif not llink['HASREADY'] and not llink['HASVALID']:
                 file_name.write("  // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.\n")
@@ -2497,7 +2505,7 @@ def make_top_file(configuration):
                     file_name.write("         .init_i_credit                    (init_{0}_credit[7:0]),\n".format(llink['NAME']))
                     file_name.write("         .tx_i_pop_ovrd                    (tx_{0}_pop_ovrd),\n".format(llink['NAME']))
                     file_name.write("         .txfifo_i_data                    (txfifo_{0}_data[{1}:0]),\n".format(llink['NAME'], (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR'])-1))
-                    file_name.write("         .user_i_valid                     (user_{0}_valid),\n".format(llink['NAME']))
+                    file_name.write("         .user_i_valid                     (user_{0}_vld),\n".format(llink['NAME']))
                     if llink['HASREADY']:
                         if configuration['REPLICATED_STRUCT'] and gen_direction(name_file_name, llink['DIR'], False) == "input":
                             file_name.write("         .rx_i_credit                      (rx_{0}_credit[3:0]));\n".format(llink['NAME']))
@@ -2514,7 +2522,7 @@ def make_top_file(configuration):
                         file_name.write("      ll_receive #(.WIDTH({1}), .DEPTH(8'd{2})) ll_receive_i{0}\n".format(llink['NAME'], llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR'], llink['RX_FIFO_DEPTH']))
                         file_name.write("        (// Outputs\n")
                         file_name.write("         .rxfifo_i_data                    (rxfifo_{0}_data[{1}:0]),\n".format(llink['NAME'], (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR'])-1))
-                    file_name.write("         .user_i_valid                     (user_{0}_valid),\n".format(llink['NAME']))
+                    file_name.write("         .user_i_valid                     (user_{0}_vld),\n".format(llink['NAME']))
                     if llink['HASREADY']:
                         file_name.write("         .tx_i_credit                      (tx_{0}_credit),\n".format(llink['NAME']))
                     else:
@@ -2564,7 +2572,7 @@ def make_top_file(configuration):
                 prefix = 'tx';
 
             if llink['HASVALID']:
-                file_name.write("         .{0:30}   ({0}),\n".format("user_{}_valid".format(llink['NAME'])))
+                file_name.write("         .{0:30}   ({0}),\n".format("user_{}_vld".format(llink['NAME'])))
             if configuration['REPLICATED_STRUCT'] and localdir == "input":
                 file_name.write("         .{0:30}   ({0}{1}),\n".format("{}fifo_{}_data".format(prefix,llink['NAME']), gen_index_msb(llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR'], sysv=False)))
             else:

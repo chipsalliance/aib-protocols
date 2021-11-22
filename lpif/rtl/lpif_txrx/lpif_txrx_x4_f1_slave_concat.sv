@@ -25,10 +25,10 @@
 module lpif_txrx_x4_f1_slave_concat  (
 
 // Data from Logic Links
-  output logic [ 152:   0]   rx_downstream_data  ,
+  output logic [ 140:   0]   rx_downstream_data  ,
   output logic               rx_downstream_push_ovrd,
 
-  input  logic [ 152:   0]   tx_upstream_data    ,
+  input  logic [ 140:   0]   tx_upstream_data    ,
   output logic               tx_upstream_pop_ovrd,
 
 // PHY Interconnect
@@ -40,14 +40,6 @@ module lpif_txrx_x4_f1_slave_concat  (
   input  logic [  39:   0]   rx_phy2             ,
   output logic [  39:   0]   tx_phy3             ,
   input  logic [  39:   0]   rx_phy3             ,
-  output logic [  39:   0]   tx_phy4             ,
-  input  logic [  39:   0]   rx_phy4             ,
-  output logic [  39:   0]   tx_phy5             ,
-  input  logic [  39:   0]   rx_phy5             ,
-  output logic [  39:   0]   tx_phy6             ,
-  input  logic [  39:   0]   rx_phy6             ,
-  output logic [  39:   0]   tx_phy7             ,
-  input  logic [  39:   0]   rx_phy7             ,
 
   input  logic               clk_wr              ,
   input  logic               clk_rd              ,
@@ -90,18 +82,10 @@ module lpif_txrx_x4_f1_slave_concat  (
   logic [  39:   0]                              tx_phy_preflop_1              ;
   logic [  39:   0]                              tx_phy_preflop_2              ;
   logic [  39:   0]                              tx_phy_preflop_3              ;
-  logic [  39:   0]                              tx_phy_preflop_4              ;
-  logic [  39:   0]                              tx_phy_preflop_5              ;
-  logic [  39:   0]                              tx_phy_preflop_6              ;
-  logic [  39:   0]                              tx_phy_preflop_7              ;
   logic [  39:   0]                              tx_phy_flop_0_reg             ;
   logic [  39:   0]                              tx_phy_flop_1_reg             ;
   logic [  39:   0]                              tx_phy_flop_2_reg             ;
   logic [  39:   0]                              tx_phy_flop_3_reg             ;
-  logic [  39:   0]                              tx_phy_flop_4_reg             ;
-  logic [  39:   0]                              tx_phy_flop_5_reg             ;
-  logic [  39:   0]                              tx_phy_flop_6_reg             ;
-  logic [  39:   0]                              tx_phy_flop_7_reg             ;
 
   always_ff @(posedge clk_wr or negedge rst_wr_n)
   if (~rst_wr_n)
@@ -110,10 +94,6 @@ module lpif_txrx_x4_f1_slave_concat  (
     tx_phy_flop_1_reg                       <= 40'b0                                   ;
     tx_phy_flop_2_reg                       <= 40'b0                                   ;
     tx_phy_flop_3_reg                       <= 40'b0                                   ;
-    tx_phy_flop_4_reg                       <= 40'b0                                   ;
-    tx_phy_flop_5_reg                       <= 40'b0                                   ;
-    tx_phy_flop_6_reg                       <= 40'b0                                   ;
-    tx_phy_flop_7_reg                       <= 40'b0                                   ;
   end
   else
   begin
@@ -121,20 +101,12 @@ module lpif_txrx_x4_f1_slave_concat  (
     tx_phy_flop_1_reg                       <= tx_phy_preflop_1                        ;
     tx_phy_flop_2_reg                       <= tx_phy_preflop_2                        ;
     tx_phy_flop_3_reg                       <= tx_phy_preflop_3                        ;
-    tx_phy_flop_4_reg                       <= tx_phy_preflop_4                        ;
-    tx_phy_flop_5_reg                       <= tx_phy_preflop_5                        ;
-    tx_phy_flop_6_reg                       <= tx_phy_preflop_6                        ;
-    tx_phy_flop_7_reg                       <= tx_phy_preflop_7                        ;
   end
 
   assign tx_phy0                            = TX_REG_PHY ? tx_phy_flop_0_reg : tx_phy_preflop_0               ;
   assign tx_phy1                            = TX_REG_PHY ? tx_phy_flop_1_reg : tx_phy_preflop_1               ;
   assign tx_phy2                            = TX_REG_PHY ? tx_phy_flop_2_reg : tx_phy_preflop_2               ;
   assign tx_phy3                            = TX_REG_PHY ? tx_phy_flop_3_reg : tx_phy_preflop_3               ;
-  assign tx_phy4                            = TX_REG_PHY ? tx_phy_flop_4_reg : tx_phy_preflop_4               ;
-  assign tx_phy5                            = TX_REG_PHY ? tx_phy_flop_5_reg : tx_phy_preflop_5               ;
-  assign tx_phy6                            = TX_REG_PHY ? tx_phy_flop_6_reg : tx_phy_preflop_6               ;
-  assign tx_phy7                            = TX_REG_PHY ? tx_phy_flop_7_reg : tx_phy_preflop_7               ;
 
   assign tx_phy_preflop_0 [   0] = tx_upstream_data    [   0] ;
   assign tx_phy_preflop_0 [   1] = tx_stb_userbit             ; // STROBE
@@ -284,178 +256,18 @@ module lpif_txrx_x4_f1_slave_concat  (
   assign tx_phy_preflop_3 [  25] = tx_upstream_data    [ 138] ;
   assign tx_phy_preflop_3 [  26] = tx_upstream_data    [ 139] ;
   assign tx_phy_preflop_3 [  27] = tx_upstream_data    [ 140] ;
-  assign tx_phy_preflop_3 [  28] = tx_upstream_data    [ 141] ;
-  assign tx_phy_preflop_3 [  29] = tx_upstream_data    [ 142] ;
-  assign tx_phy_preflop_3 [  30] = tx_upstream_data    [ 143] ;
-  assign tx_phy_preflop_3 [  31] = tx_upstream_data    [ 144] ;
-  assign tx_phy_preflop_3 [  32] = tx_upstream_data    [ 145] ;
-  assign tx_phy_preflop_3 [  33] = tx_upstream_data    [ 146] ;
-  assign tx_phy_preflop_3 [  34] = tx_upstream_data    [ 147] ;
-  assign tx_phy_preflop_3 [  35] = tx_upstream_data    [ 148] ;
-  assign tx_phy_preflop_3 [  36] = tx_upstream_data    [ 149] ;
-  assign tx_phy_preflop_3 [  37] = tx_upstream_data    [ 150] ;
-  assign tx_phy_preflop_3 [  38] = tx_upstream_data    [ 151] ;
+  assign tx_phy_preflop_3 [  28] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  29] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  30] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  31] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  32] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  33] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  34] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  35] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  36] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  37] = 1'b0                       ;
+  assign tx_phy_preflop_3 [  38] = 1'b0                       ;
   assign tx_phy_preflop_3 [  39] = tx_mrk_userbit[0]          ; // MARKER
-  assign tx_phy_preflop_4 [   0] = tx_upstream_data    [ 152] ;
-  assign tx_phy_preflop_4 [   1] = tx_stb_userbit             ; // STROBE
-  assign tx_phy_preflop_4 [   2] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   3] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   4] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   5] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   6] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   7] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   8] = 1'b0                       ;
-  assign tx_phy_preflop_4 [   9] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  10] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  11] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  12] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  13] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  14] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  15] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  16] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  17] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  18] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  19] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  20] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  21] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  22] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  23] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  24] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  25] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  26] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  27] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  28] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  29] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  30] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  31] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  32] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  33] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  34] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  35] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  36] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  37] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  38] = 1'b0                       ;
-  assign tx_phy_preflop_4 [  39] = tx_mrk_userbit[0]          ; // MARKER
-  assign tx_phy_preflop_5 [   0] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   1] = tx_stb_userbit             ; // STROBE
-  assign tx_phy_preflop_5 [   2] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   3] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   4] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   5] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   6] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   7] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   8] = 1'b0                       ;
-  assign tx_phy_preflop_5 [   9] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  10] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  11] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  12] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  13] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  14] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  15] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  16] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  17] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  18] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  19] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  20] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  21] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  22] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  23] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  24] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  25] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  26] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  27] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  28] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  29] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  30] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  31] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  32] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  33] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  34] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  35] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  36] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  37] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  38] = 1'b0                       ;
-  assign tx_phy_preflop_5 [  39] = tx_mrk_userbit[0]          ; // MARKER
-  assign tx_phy_preflop_6 [   0] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   1] = tx_stb_userbit             ; // STROBE
-  assign tx_phy_preflop_6 [   2] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   3] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   4] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   5] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   6] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   7] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   8] = 1'b0                       ;
-  assign tx_phy_preflop_6 [   9] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  10] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  11] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  12] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  13] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  14] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  15] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  16] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  17] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  18] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  19] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  20] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  21] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  22] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  23] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  24] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  25] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  26] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  27] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  28] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  29] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  30] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  31] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  32] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  33] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  34] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  35] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  36] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  37] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  38] = 1'b0                       ;
-  assign tx_phy_preflop_6 [  39] = tx_mrk_userbit[0]          ; // MARKER
-  assign tx_phy_preflop_7 [   0] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   1] = tx_stb_userbit             ; // STROBE
-  assign tx_phy_preflop_7 [   2] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   3] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   4] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   5] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   6] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   7] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   8] = 1'b0                       ;
-  assign tx_phy_preflop_7 [   9] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  10] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  11] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  12] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  13] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  14] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  15] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  16] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  17] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  18] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  19] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  20] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  21] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  22] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  23] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  24] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  25] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  26] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  27] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  28] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  29] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  30] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  31] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  32] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  33] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  34] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  35] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  36] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  37] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  38] = 1'b0                       ;
-  assign tx_phy_preflop_7 [  39] = tx_mrk_userbit[0]          ; // MARKER
 // TX Section
 //////////////////////////////////////////////////////////////////
 
@@ -481,18 +293,10 @@ module lpif_txrx_x4_f1_slave_concat  (
   logic [  39:   0]                              rx_phy_postflop_1             ;
   logic [  39:   0]                              rx_phy_postflop_2             ;
   logic [  39:   0]                              rx_phy_postflop_3             ;
-  logic [  39:   0]                              rx_phy_postflop_4             ;
-  logic [  39:   0]                              rx_phy_postflop_5             ;
-  logic [  39:   0]                              rx_phy_postflop_6             ;
-  logic [  39:   0]                              rx_phy_postflop_7             ;
   logic [  39:   0]                              rx_phy_flop_0_reg             ;
   logic [  39:   0]                              rx_phy_flop_1_reg             ;
   logic [  39:   0]                              rx_phy_flop_2_reg             ;
   logic [  39:   0]                              rx_phy_flop_3_reg             ;
-  logic [  39:   0]                              rx_phy_flop_4_reg             ;
-  logic [  39:   0]                              rx_phy_flop_5_reg             ;
-  logic [  39:   0]                              rx_phy_flop_6_reg             ;
-  logic [  39:   0]                              rx_phy_flop_7_reg             ;
 
   always_ff @(posedge clk_rd or negedge rst_rd_n)
   if (~rst_rd_n)
@@ -501,10 +305,6 @@ module lpif_txrx_x4_f1_slave_concat  (
     rx_phy_flop_1_reg                       <= 40'b0                                   ;
     rx_phy_flop_2_reg                       <= 40'b0                                   ;
     rx_phy_flop_3_reg                       <= 40'b0                                   ;
-    rx_phy_flop_4_reg                       <= 40'b0                                   ;
-    rx_phy_flop_5_reg                       <= 40'b0                                   ;
-    rx_phy_flop_6_reg                       <= 40'b0                                   ;
-    rx_phy_flop_7_reg                       <= 40'b0                                   ;
   end
   else
   begin
@@ -512,10 +312,6 @@ module lpif_txrx_x4_f1_slave_concat  (
     rx_phy_flop_1_reg                       <= rx_phy1                                 ;
     rx_phy_flop_2_reg                       <= rx_phy2                                 ;
     rx_phy_flop_3_reg                       <= rx_phy3                                 ;
-    rx_phy_flop_4_reg                       <= rx_phy4                                 ;
-    rx_phy_flop_5_reg                       <= rx_phy5                                 ;
-    rx_phy_flop_6_reg                       <= rx_phy6                                 ;
-    rx_phy_flop_7_reg                       <= rx_phy7                                 ;
   end
 
 
@@ -523,10 +319,6 @@ module lpif_txrx_x4_f1_slave_concat  (
   assign rx_phy_postflop_1                  = RX_REG_PHY ? rx_phy_flop_1_reg : rx_phy1               ;
   assign rx_phy_postflop_2                  = RX_REG_PHY ? rx_phy_flop_2_reg : rx_phy2               ;
   assign rx_phy_postflop_3                  = RX_REG_PHY ? rx_phy_flop_3_reg : rx_phy3               ;
-  assign rx_phy_postflop_4                  = RX_REG_PHY ? rx_phy_flop_4_reg : rx_phy4               ;
-  assign rx_phy_postflop_5                  = RX_REG_PHY ? rx_phy_flop_5_reg : rx_phy5               ;
-  assign rx_phy_postflop_6                  = RX_REG_PHY ? rx_phy_flop_6_reg : rx_phy6               ;
-  assign rx_phy_postflop_7                  = RX_REG_PHY ? rx_phy_flop_7_reg : rx_phy7               ;
 
   assign rx_downstream_data  [   0] = rx_phy_postflop_0 [   0];
 //       STROBE                     = rx_phy_postflop_0 [   1]
@@ -676,178 +468,18 @@ module lpif_txrx_x4_f1_slave_concat  (
   assign rx_downstream_data  [ 138] = rx_phy_postflop_3 [  25];
   assign rx_downstream_data  [ 139] = rx_phy_postflop_3 [  26];
   assign rx_downstream_data  [ 140] = rx_phy_postflop_3 [  27];
-  assign rx_downstream_data  [ 141] = rx_phy_postflop_3 [  28];
-  assign rx_downstream_data  [ 142] = rx_phy_postflop_3 [  29];
-  assign rx_downstream_data  [ 143] = rx_phy_postflop_3 [  30];
-  assign rx_downstream_data  [ 144] = rx_phy_postflop_3 [  31];
-  assign rx_downstream_data  [ 145] = rx_phy_postflop_3 [  32];
-  assign rx_downstream_data  [ 146] = rx_phy_postflop_3 [  33];
-  assign rx_downstream_data  [ 147] = rx_phy_postflop_3 [  34];
-  assign rx_downstream_data  [ 148] = rx_phy_postflop_3 [  35];
-  assign rx_downstream_data  [ 149] = rx_phy_postflop_3 [  36];
-  assign rx_downstream_data  [ 150] = rx_phy_postflop_3 [  37];
-  assign rx_downstream_data  [ 151] = rx_phy_postflop_3 [  38];
+//       nc                         = rx_phy_postflop_3 [  28];
+//       nc                         = rx_phy_postflop_3 [  29];
+//       nc                         = rx_phy_postflop_3 [  30];
+//       nc                         = rx_phy_postflop_3 [  31];
+//       nc                         = rx_phy_postflop_3 [  32];
+//       nc                         = rx_phy_postflop_3 [  33];
+//       nc                         = rx_phy_postflop_3 [  34];
+//       nc                         = rx_phy_postflop_3 [  35];
+//       nc                         = rx_phy_postflop_3 [  36];
+//       nc                         = rx_phy_postflop_3 [  37];
+//       nc                         = rx_phy_postflop_3 [  38];
 //       MARKER                     = rx_phy_postflop_3 [  39]
-  assign rx_downstream_data  [ 152] = rx_phy_postflop_4 [   0];
-//       STROBE                     = rx_phy_postflop_4 [   1]
-//       nc                         = rx_phy_postflop_4 [   2];
-//       nc                         = rx_phy_postflop_4 [   3];
-//       nc                         = rx_phy_postflop_4 [   4];
-//       nc                         = rx_phy_postflop_4 [   5];
-//       nc                         = rx_phy_postflop_4 [   6];
-//       nc                         = rx_phy_postflop_4 [   7];
-//       nc                         = rx_phy_postflop_4 [   8];
-//       nc                         = rx_phy_postflop_4 [   9];
-//       nc                         = rx_phy_postflop_4 [  10];
-//       nc                         = rx_phy_postflop_4 [  11];
-//       nc                         = rx_phy_postflop_4 [  12];
-//       nc                         = rx_phy_postflop_4 [  13];
-//       nc                         = rx_phy_postflop_4 [  14];
-//       nc                         = rx_phy_postflop_4 [  15];
-//       nc                         = rx_phy_postflop_4 [  16];
-//       nc                         = rx_phy_postflop_4 [  17];
-//       nc                         = rx_phy_postflop_4 [  18];
-//       nc                         = rx_phy_postflop_4 [  19];
-//       nc                         = rx_phy_postflop_4 [  20];
-//       nc                         = rx_phy_postflop_4 [  21];
-//       nc                         = rx_phy_postflop_4 [  22];
-//       nc                         = rx_phy_postflop_4 [  23];
-//       nc                         = rx_phy_postflop_4 [  24];
-//       nc                         = rx_phy_postflop_4 [  25];
-//       nc                         = rx_phy_postflop_4 [  26];
-//       nc                         = rx_phy_postflop_4 [  27];
-//       nc                         = rx_phy_postflop_4 [  28];
-//       nc                         = rx_phy_postflop_4 [  29];
-//       nc                         = rx_phy_postflop_4 [  30];
-//       nc                         = rx_phy_postflop_4 [  31];
-//       nc                         = rx_phy_postflop_4 [  32];
-//       nc                         = rx_phy_postflop_4 [  33];
-//       nc                         = rx_phy_postflop_4 [  34];
-//       nc                         = rx_phy_postflop_4 [  35];
-//       nc                         = rx_phy_postflop_4 [  36];
-//       nc                         = rx_phy_postflop_4 [  37];
-//       nc                         = rx_phy_postflop_4 [  38];
-//       MARKER                     = rx_phy_postflop_4 [  39]
-//       nc                         = rx_phy_postflop_5 [   0];
-//       STROBE                     = rx_phy_postflop_5 [   1]
-//       nc                         = rx_phy_postflop_5 [   2];
-//       nc                         = rx_phy_postflop_5 [   3];
-//       nc                         = rx_phy_postflop_5 [   4];
-//       nc                         = rx_phy_postflop_5 [   5];
-//       nc                         = rx_phy_postflop_5 [   6];
-//       nc                         = rx_phy_postflop_5 [   7];
-//       nc                         = rx_phy_postflop_5 [   8];
-//       nc                         = rx_phy_postflop_5 [   9];
-//       nc                         = rx_phy_postflop_5 [  10];
-//       nc                         = rx_phy_postflop_5 [  11];
-//       nc                         = rx_phy_postflop_5 [  12];
-//       nc                         = rx_phy_postflop_5 [  13];
-//       nc                         = rx_phy_postflop_5 [  14];
-//       nc                         = rx_phy_postflop_5 [  15];
-//       nc                         = rx_phy_postflop_5 [  16];
-//       nc                         = rx_phy_postflop_5 [  17];
-//       nc                         = rx_phy_postflop_5 [  18];
-//       nc                         = rx_phy_postflop_5 [  19];
-//       nc                         = rx_phy_postflop_5 [  20];
-//       nc                         = rx_phy_postflop_5 [  21];
-//       nc                         = rx_phy_postflop_5 [  22];
-//       nc                         = rx_phy_postflop_5 [  23];
-//       nc                         = rx_phy_postflop_5 [  24];
-//       nc                         = rx_phy_postflop_5 [  25];
-//       nc                         = rx_phy_postflop_5 [  26];
-//       nc                         = rx_phy_postflop_5 [  27];
-//       nc                         = rx_phy_postflop_5 [  28];
-//       nc                         = rx_phy_postflop_5 [  29];
-//       nc                         = rx_phy_postflop_5 [  30];
-//       nc                         = rx_phy_postflop_5 [  31];
-//       nc                         = rx_phy_postflop_5 [  32];
-//       nc                         = rx_phy_postflop_5 [  33];
-//       nc                         = rx_phy_postflop_5 [  34];
-//       nc                         = rx_phy_postflop_5 [  35];
-//       nc                         = rx_phy_postflop_5 [  36];
-//       nc                         = rx_phy_postflop_5 [  37];
-//       nc                         = rx_phy_postflop_5 [  38];
-//       MARKER                     = rx_phy_postflop_5 [  39]
-//       nc                         = rx_phy_postflop_6 [   0];
-//       STROBE                     = rx_phy_postflop_6 [   1]
-//       nc                         = rx_phy_postflop_6 [   2];
-//       nc                         = rx_phy_postflop_6 [   3];
-//       nc                         = rx_phy_postflop_6 [   4];
-//       nc                         = rx_phy_postflop_6 [   5];
-//       nc                         = rx_phy_postflop_6 [   6];
-//       nc                         = rx_phy_postflop_6 [   7];
-//       nc                         = rx_phy_postflop_6 [   8];
-//       nc                         = rx_phy_postflop_6 [   9];
-//       nc                         = rx_phy_postflop_6 [  10];
-//       nc                         = rx_phy_postflop_6 [  11];
-//       nc                         = rx_phy_postflop_6 [  12];
-//       nc                         = rx_phy_postflop_6 [  13];
-//       nc                         = rx_phy_postflop_6 [  14];
-//       nc                         = rx_phy_postflop_6 [  15];
-//       nc                         = rx_phy_postflop_6 [  16];
-//       nc                         = rx_phy_postflop_6 [  17];
-//       nc                         = rx_phy_postflop_6 [  18];
-//       nc                         = rx_phy_postflop_6 [  19];
-//       nc                         = rx_phy_postflop_6 [  20];
-//       nc                         = rx_phy_postflop_6 [  21];
-//       nc                         = rx_phy_postflop_6 [  22];
-//       nc                         = rx_phy_postflop_6 [  23];
-//       nc                         = rx_phy_postflop_6 [  24];
-//       nc                         = rx_phy_postflop_6 [  25];
-//       nc                         = rx_phy_postflop_6 [  26];
-//       nc                         = rx_phy_postflop_6 [  27];
-//       nc                         = rx_phy_postflop_6 [  28];
-//       nc                         = rx_phy_postflop_6 [  29];
-//       nc                         = rx_phy_postflop_6 [  30];
-//       nc                         = rx_phy_postflop_6 [  31];
-//       nc                         = rx_phy_postflop_6 [  32];
-//       nc                         = rx_phy_postflop_6 [  33];
-//       nc                         = rx_phy_postflop_6 [  34];
-//       nc                         = rx_phy_postflop_6 [  35];
-//       nc                         = rx_phy_postflop_6 [  36];
-//       nc                         = rx_phy_postflop_6 [  37];
-//       nc                         = rx_phy_postflop_6 [  38];
-//       MARKER                     = rx_phy_postflop_6 [  39]
-//       nc                         = rx_phy_postflop_7 [   0];
-//       STROBE                     = rx_phy_postflop_7 [   1]
-//       nc                         = rx_phy_postflop_7 [   2];
-//       nc                         = rx_phy_postflop_7 [   3];
-//       nc                         = rx_phy_postflop_7 [   4];
-//       nc                         = rx_phy_postflop_7 [   5];
-//       nc                         = rx_phy_postflop_7 [   6];
-//       nc                         = rx_phy_postflop_7 [   7];
-//       nc                         = rx_phy_postflop_7 [   8];
-//       nc                         = rx_phy_postflop_7 [   9];
-//       nc                         = rx_phy_postflop_7 [  10];
-//       nc                         = rx_phy_postflop_7 [  11];
-//       nc                         = rx_phy_postflop_7 [  12];
-//       nc                         = rx_phy_postflop_7 [  13];
-//       nc                         = rx_phy_postflop_7 [  14];
-//       nc                         = rx_phy_postflop_7 [  15];
-//       nc                         = rx_phy_postflop_7 [  16];
-//       nc                         = rx_phy_postflop_7 [  17];
-//       nc                         = rx_phy_postflop_7 [  18];
-//       nc                         = rx_phy_postflop_7 [  19];
-//       nc                         = rx_phy_postflop_7 [  20];
-//       nc                         = rx_phy_postflop_7 [  21];
-//       nc                         = rx_phy_postflop_7 [  22];
-//       nc                         = rx_phy_postflop_7 [  23];
-//       nc                         = rx_phy_postflop_7 [  24];
-//       nc                         = rx_phy_postflop_7 [  25];
-//       nc                         = rx_phy_postflop_7 [  26];
-//       nc                         = rx_phy_postflop_7 [  27];
-//       nc                         = rx_phy_postflop_7 [  28];
-//       nc                         = rx_phy_postflop_7 [  29];
-//       nc                         = rx_phy_postflop_7 [  30];
-//       nc                         = rx_phy_postflop_7 [  31];
-//       nc                         = rx_phy_postflop_7 [  32];
-//       nc                         = rx_phy_postflop_7 [  33];
-//       nc                         = rx_phy_postflop_7 [  34];
-//       nc                         = rx_phy_postflop_7 [  35];
-//       nc                         = rx_phy_postflop_7 [  36];
-//       nc                         = rx_phy_postflop_7 [  37];
-//       nc                         = rx_phy_postflop_7 [  38];
-//       MARKER                     = rx_phy_postflop_7 [  39]
 
 // RX Section
 //////////////////////////////////////////////////////////////////

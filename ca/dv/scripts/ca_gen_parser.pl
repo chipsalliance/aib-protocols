@@ -46,7 +46,7 @@ if($randEnable) {
 }
 my @contentArr;
 my $NumChannel,$ChanType,$TxRate,$RxRate,$TxDBI,$RxDBI;
-my $Asymmetric;
+my $Asymmetric, $GlobalMaxInterChSkew,$GlobalInterChSkewS2M,$GlobalInterChSkewM2S;
 
 my $randVal,$randTxStrobeLoc, $randRxStrobeLoc;
 my @chanTypeArr = ("Gen2Only","Gen1Only");
@@ -232,6 +232,18 @@ if(exists($masterHash{"GLOBAL_NUM_OF_CHANNEL"})) {
     $NumChannel= $masterHash{"GLOBAL_NUM_OF_CHANNEL"} ;
 }
 
+if(exists($masterHash{"GLOBAL_MAX_INTER_CH_SKEW"})) {  #### delay per channel randomized between 0 up to this value
+	$GlobalMaxInterChSkew = $masterHash{"GLOBAL_MAX_INTER_CH_SKEW"} ;
+}
+if(exists($masterHash{"GLOBAL_INTER_CH_SKEW_S2M"})) {
+	$GlobalInterChSkewS2M = $masterHash{"GLOBAL_INTER_CH_SKEW_S2M"} ;
+        $GlobalInterChSkewS2M =~s/^0x//;
+}
+if(exists($masterHash{"GLOBAL_INTER_CH_SKEW_M2S"})) {
+	$GlobalInterChSkewM2S = $masterHash{"GLOBAL_INTER_CH_SKEW_M2S"} ;
+        $GlobalInterChSkewM2S =~s/^0x//;
+}
+
 if(exists($masterHash{"GLOBAL_GEN2_MODE"})){
 
     $ChanType = $masterHash{"GLOBAL_GEN2_MODE"};
@@ -396,6 +408,16 @@ $CaRxStbWdSel  = (1 << ($CaRxStrobeGenLoc/40));
 $CaRxStbBitSel = (1<< ($CaRxStrobeGenLoc%40));
 $CaFifoPFull   = $CaFifoDepth-4;
 ##print OP4 "`define CA_FIFO_DEPTH           $CaFifoDepth\n";
+
+if ($GlobalMaxInterChSkew ne ""){
+	print OP4 "`define GLOBAL_MAX_INTER_CH_SKEW	$GlobalMaxInterChSkew\n";
+}
+if ($GlobalInterChSkewS2M ne ""){
+	print OP4 "`define INTER_CHAN_SKEW_S2M	192'h$GlobalInterChSkewS2M\n";
+}
+if ($GlobalInterChSkewM2S ne ""){
+	print OP4 "`define INTER_CHAN_SKEW_M2S	192'h$GlobalInterChSkewM2S\n";
+}
 print OP4 "`define CA_FIFO_FULL            $CaFifoDepth\n";
 print OP4 "`define CA_FIFO_PFULL           $CaFifoPFull\n";
 print OP4 "`define CA_FIFO_EMPTY           0\n";

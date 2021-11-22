@@ -423,22 +423,30 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
             if(die_a_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
                 this.do_compare_rx_dout = 1'b0;
-                `uvm_error("verify_rx_dout", $sformatf("DIE_A NO expect src pkt: %0f from rx_dout",rx_out_cnt_die_a));
+                `uvm_error("verify_rx_dout", $sformatf("DIE_A NO expect src pkt: %0f from rx_dout",beat_cnt_a));
             end  
             else begin
-                src_item = die_a_exp_rx_dout_q.pop_front();   
-                xfer_cnt = rx_out_cnt_die_a;
+                src_item = die_a_exp_rx_dout_q.pop_front();  
+                `ifdef CA_ASYMMETRIC 
+                   xfer_cnt = beat_cnt_a * act_item.cnt_mul;
+                `else
+                   xfer_cnt = beat_cnt;
+                `endif
             end
         end
         "DIE_B": begin // came from die_A
             if(die_b_exp_rx_dout_q.size() == 0) begin
                 do_compare = 0;
                 this.do_compare_rx_dout = 1'b0;
-                `uvm_error("verify_rx_dout", $sformatf("DIE_B NO expect src pkt: %0f from rx_dout",rx_out_cnt_die_b));
+                `uvm_error("verify_rx_dout", $sformatf("DIE_B NO expect src pkt: %0f from rx_dout",beat_cnt_b));
             end  
             else begin
                 src_item = die_b_exp_rx_dout_q.pop_front();   
-                xfer_cnt = rx_out_cnt_die_b;
+                `ifdef CA_ASYMMETRIC 
+                   xfer_cnt = beat_cnt_b * act_item.cnt_mul;
+                `else
+                   xfer_cnt = beat_cnt;
+                `endif
             end
         end
         default: begin

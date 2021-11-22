@@ -4,7 +4,7 @@ set sailrock_file = sailrock_cfg.txt
 set mode_idx_file = ${config_dir}/config_default.txt
 set config_reg_file = config_aib.dat
 set config_hex_file = config_aib.hex
-set delay_file = aib_channel_delay.txt
+#set delay_file = aib_channel_delay.txt
 
 set top_item = (master slave)
 ##    ./aib_gen_parser.py -f $sailrock_file
@@ -32,7 +32,7 @@ set top_item = (master slave)
 	exit
   endif
 
-  echo "interface_num channel_num  TX     RX " > $delay_file
+  ##echo "interface_num channel_num  TX     RX " > $delay_file
   set mode_idx = `cat $mode_idx_file`
   @ idx = 1
   @ total_int = 0
@@ -107,31 +107,32 @@ set top_item = (master slave)
   end
 
 ###  Rule check
+  @ master_n = 0
+  @ chan_count = 0
   foreach top ($new_top_item)
     @ start_addr = 520
     @ count = 0
     @ ${top}_ch = 0
     while ( `eval 'echo $'${top}_ch` < `eval 'echo $'${top}_aib_num_of_channel` )
 
-                ## 0-256 -c9-
-		## 0-9   -c11-
-		## delay is phy clock delay after receiving data
-                set random_num = `head -c 1 /dev/urandom | od -t u1 | cut -c11-`
-                 @ random_tx_delay = $random_num % 6
-		 if ( `eval 'echo $'${top}_aib_tx_mode` == "fifo_4x") then	## fifo_4x can not less than 4
-		   if($random_tx_delay < 4) then
-			@ random_tx_delay = 6
-		   endif
-		 endif
-                set random_num = `head -c 1 /dev/urandom | od -t u1 | cut -c9-`
-                 @ random_rx_delay = $random_num % 7
-                 if ( `eval 'echo $'${top}_aib_rx_mode` == "fifo_4x") then      ## fifo_4x can not less than 4
-                   if($random_rx_delay < 4) then
-                        @ random_rx_delay = 7
-                   endif
-                 endif
+                ## ## 0-256 -c9-
+		## ## 0-9   -c11-
+		## ## delay is phy clock delay after receiving data
+                ## set random_num = `head -c 1 /dev/urandom | od -t u1 | cut -c11-`
+                ## @ random_tx_delay = $random_num % 6
+		##  if($random_tx_delay < 4) then
+		##	@ random_tx_delay = 6
+		##   endif
+		## endif
+                ##set random_num = `head -c 1 /dev/urandom | od -t u1 | cut -c9-`
+                ## @ random_rx_delay = $random_num % 7
+                ## if ( `eval 'echo $'${top}_aib_rx_mode` == "fifo_4x") then      ## fifo_4x can not less than 4
+                ##   if($random_rx_delay < 4) then
+                ##        @ random_rx_delay = 7
+                ##   endif
+                ## endif
 
-                printf "%s        %d           %d      %d\n" $top `eval 'echo $'${top}_ch` $random_tx_delay $random_rx_delay >> $delay_file
+                ## printf "%s        %d           %d      %d\n" $top `eval 'echo $'${top}_ch` $random_tx_delay $random_rx_delay >> $delay_file
 
 
 ## echo  CHECK Point 1 $top === `eval 'echo $'${top}_aib_rx_mode`
@@ -158,7 +159,8 @@ set top_item = (master slave)
 
 ##        switch (`eval 'echo $'${top}_aib_rx_rd_delay`)
 ## aib_rx_rd_delay up to 7
-	switch (${random_rx_delay})
+##	switch (${random_rx_delay})
+        switch (`eval 'echo $'${top}_aib_rx_rd_delay`)
           case 2:
                 @ ${top}_aib_rx_rd_delay = ((1<<1) | 0 )
           breaksw
@@ -254,8 +256,8 @@ set top_item = (master slave)
           breaksw
         endsw
 
-##        switch (`eval 'echo $'${top}_aib_tx_rd_delay`)
-	  switch (${random_tx_delay})
+	##switch (${random_tx_delay})
+        switch (`eval 'echo $'${top}_aib_tx_rd_delay`)
           case 2:
                 @ ${top}_aib_tx_rd_delay = ((1<<1) | 0 )
           breaksw

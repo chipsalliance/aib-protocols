@@ -207,7 +207,7 @@ def gen_llink_user_fifoname(llink_name, dir ):
     return ("rxfifo_"if dir=="input" else "txfifo_")+llink_name+"_data"
 
 def gen_llink_user_valid(llink_name):
-    return "user_"+llink_name+"_valid"
+    return "user_"+llink_name+"_vld"
 
 def gen_llink_user_enable(llink_name):
     return "user_"+llink_name+"_enable"

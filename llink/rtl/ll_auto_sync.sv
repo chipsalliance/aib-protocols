@@ -84,12 +84,12 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 // This delays online from the Word Alignment until the Channel Alignment
 // is complete. At this point we begin real transmisson.
 
-  logic                 tx_online_delay_yz;
+  logic                 tx_online_delay_y;
 
    level_delay level_delay_i_yvalue
      (/*AUTOINST*/
       // Outputs
-      .delayed_en			(tx_online_delay_yz),
+      .delayed_en			(tx_online_delay_y),
       // Inputs
       .rst_core_n			(rst_wr_n),
       .clk_core				(clk_wr),
@@ -106,6 +106,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 
   logic                 delay_z_1st_marker;
   logic                 delay_z_2nd_marker;
+  logic                 delay_z_1st_strobe;
 
   always @(posedge clk_wr or negedge rst_wr_n)
   if (!rst_wr_n)
@@ -119,10 +120,18 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 
   always @(posedge clk_wr or negedge rst_wr_n)
   if (!rst_wr_n)
+    delay_z_1st_strobe <= 1'h0;
+  else if (delay_z_1st_marker == 1'b0)
+    delay_z_1st_strobe <= 1'h0;
+  else if (tx_stb_userbit)
+    delay_z_1st_strobe <= 1'b1;
+
+  always @(posedge clk_wr or negedge rst_wr_n)
+  if (!rst_wr_n)
     delay_z_2nd_marker <= 1'h0;
   else if (delay_z_1st_marker == 1'b0)
     delay_z_2nd_marker <= 1'h0;
-  else if ((NO_MARKER == 1'b0) & (|tx_mrk_userbit))
+  else if ((NO_MARKER == 1'b0) & delay_z_1st_strobe & (|tx_mrk_userbit))
     delay_z_2nd_marker <= 1'b1;
   else if ((NO_MARKER == 1'b1) & (tx_stb_userbit))
     delay_z_2nd_marker <= 1'b1;
@@ -159,7 +168,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
   assign tx_auto_stb_userbit = DISABLE_TX_AUTOSYNC ? tx_stb_userbit : PERSISTENT_STROBE ? tx_stb_userbit : (tx_stb_userbit & delay_z_1st_marker & (~delay_z_2nd_marker)) ;
 
 // Test rst of logic we're good to begin transmission
-  assign tx_online_delay     = DISABLE_TX_AUTOSYNC ? tx_online      : tx_online_delay_yz ;
+  assign tx_online_delay     = DISABLE_TX_AUTOSYNC ? tx_online      : tx_online_delay_y ;
 
 // Gate off signals
 ////////////////////////////////////////////////////////////

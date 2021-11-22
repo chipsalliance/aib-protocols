@@ -53,8 +53,8 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     rand bit [7:0]   rx_stb_intv;
     rand int         bit_shift;
     int              bits_per_channel = 0;
-    real             master_rate = `MSR_GEAR;
-    real             slave_rate  = `SLV_GEAR;
+    bit [2:0]        master_rate      = `MSR_GEAR;
+    bit [2:0]        slave_rate       = `SLV_GEAR;
 
     bit              en_rx_stb_check = 1;
     bit              tx_stb_en      = `CA_TX_STB_EN;    // default

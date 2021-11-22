@@ -53,8 +53,7 @@ module lpif_txrx_x16_h1_master_name  (
 
   // Connect Data
 
-  assign user_downstream_valid               = 1'b1                               ; // user_downstream_valid is unused
-  // user_downstream_ready is unused
+  assign user_downstream_vld                = 1'b1                               ; // user_downstream_vld is unused
   assign txfifo_downstream_data [   0 +:   4] = dstrm_state          [   0 +:   4] ;
   assign txfifo_downstream_data [   4 +:   2] = dstrm_protid         [   0 +:   2] ;
   assign txfifo_downstream_data [   6 +:1024] = dstrm_data           [   0 +:1024] ;
@@ -63,8 +62,7 @@ module lpif_txrx_x16_h1_master_name  (
   assign txfifo_downstream_data [1064 +:   2] = dstrm_crc_valid      [   0 +:   2] ;
   assign txfifo_downstream_data [1066 +:   1] = dstrm_valid          [   0 +:   1] ;
 
-  // user_upstream_valid is unused
-  assign user_upstream_ready                = 1'b1                               ; // user_upstream_ready is unused
+  // user_upstream_vld is unused
   assign ustrm_state          [   0 +:   4] = rxfifo_upstream_data [   0 +:   4] ;
   assign ustrm_protid         [   0 +:   2] = rxfifo_upstream_data [   4 +:   2] ;
   assign ustrm_data           [   0 +:1024] = rxfifo_upstream_data [   6 +:1024] ;

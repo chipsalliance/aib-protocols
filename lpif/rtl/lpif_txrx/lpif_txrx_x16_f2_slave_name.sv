@@ -53,8 +53,7 @@ module lpif_txrx_x16_f2_slave_name  (
 
   // Connect Data
 
-  // user_downstream_valid is unused
-  assign user_downstream_ready               = 1'b1                               ; // user_downstream_ready is unused
+  // user_downstream_vld is unused
   assign dstrm_state          [   0 +:   4] = rxfifo_downstream_data [   0 +:   4] ;
   assign dstrm_protid         [   0 +:   2] = rxfifo_downstream_data [   4 +:   2] ;
   assign dstrm_data           [   0 +: 256] = rxfifo_downstream_data [   6 +: 256] ;
@@ -63,8 +62,7 @@ module lpif_txrx_x16_f2_slave_name  (
   assign dstrm_crc_valid      [   0 +:   1] = rxfifo_downstream_data [ 279 +:   1] ;
   assign dstrm_valid          [   0 +:   1] = rxfifo_downstream_data [ 280 +:   1] ;
 
-  assign user_upstream_valid                = 1'b1                               ; // user_upstream_valid is unused
-  // user_upstream_ready is unused
+  assign user_upstream_vld                  = 1'b1                               ; // user_upstream_vld is unused
   assign txfifo_upstream_data [   0 +:   4] = ustrm_state          [   0 +:   4] ;
   assign txfifo_upstream_data [   4 +:   2] = ustrm_protid         [   0 +:   2] ;
   assign txfifo_upstream_data [   6 +: 256] = ustrm_data           [   0 +: 256] ;

@@ -96,8 +96,15 @@ task ca_seq_lib_c::body();
     `endif
     
     fork
-        ca_die_a_tx_traffic_seq.start (p_sequencer.ca_die_a_tx_tb_out_seqr, this);
-        ca_die_b_tx_traffic_seq.start (p_sequencer.ca_die_b_tx_tb_out_seqr, this);
+
+         if(p_sequencer.ca_cfg.ca_knobs.traffic_enb_ab[0])begin 
+            ca_die_a_tx_traffic_seq.start (p_sequencer.ca_die_a_tx_tb_out_seqr, this);
+         end
+ 
+         if(p_sequencer.ca_cfg.ca_knobs.traffic_enb_ab[1])begin 
+           ca_die_b_tx_traffic_seq.start (p_sequencer.ca_die_b_tx_tb_out_seqr, this);
+         end
+
     join
     
     `uvm_info("ca_seq_lib_c::body", "END body of seq lib...\n", UVM_LOW);

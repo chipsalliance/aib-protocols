@@ -29,7 +29,7 @@ module lpif_txrx_x1_f1_slave_name  (
   output logic [   1:   0]   dstrm_protid        ,
   output logic [  31:   0]   dstrm_data          ,
   output logic [   0:   0]   dstrm_dvalid        ,
-  output logic [  15:   0]   dstrm_crc           ,
+  output logic [   0:   0]   dstrm_crc           ,
   output logic [   0:   0]   dstrm_crc_valid     ,
   output logic [   0:   0]   dstrm_valid         ,
 
@@ -38,14 +38,14 @@ module lpif_txrx_x1_f1_slave_name  (
   input  logic [   1:   0]   ustrm_protid        ,
   input  logic [  31:   0]   ustrm_data          ,
   input  logic [   0:   0]   ustrm_dvalid        ,
-  input  logic [  15:   0]   ustrm_crc           ,
+  input  logic [   0:   0]   ustrm_crc           ,
   input  logic [   0:   0]   ustrm_crc_valid     ,
   input  logic [   0:   0]   ustrm_valid         ,
 
   // Logic Link Interfaces
-  input  logic [  56:   0]   rxfifo_downstream_data,
+  input  logic [  41:   0]   rxfifo_downstream_data,
 
-  output logic [  56:   0]   txfifo_upstream_data,
+  output logic [  41:   0]   txfifo_upstream_data,
 
   input  logic               m_gen2_mode         
 
@@ -53,24 +53,22 @@ module lpif_txrx_x1_f1_slave_name  (
 
   // Connect Data
 
-  // user_downstream_valid is unused
-  assign user_downstream_ready               = 1'b1                               ; // user_downstream_ready is unused
+  // user_downstream_vld is unused
   assign dstrm_state          [   0 +:   4] = rxfifo_downstream_data [   0 +:   4] ;
   assign dstrm_protid         [   0 +:   2] = rxfifo_downstream_data [   4 +:   2] ;
   assign dstrm_data           [   0 +:  32] = rxfifo_downstream_data [   6 +:  32] ;
   assign dstrm_dvalid         [   0 +:   1] = rxfifo_downstream_data [  38 +:   1] ;
-  assign dstrm_crc            [   0 +:  16] = rxfifo_downstream_data [  39 +:  16] ;
-  assign dstrm_crc_valid      [   0 +:   1] = rxfifo_downstream_data [  55 +:   1] ;
-  assign dstrm_valid          [   0 +:   1] = rxfifo_downstream_data [  56 +:   1] ;
+  assign dstrm_crc            [   0 +:   1] = rxfifo_downstream_data [  39 +:   1] ;
+  assign dstrm_crc_valid      [   0 +:   1] = rxfifo_downstream_data [  40 +:   1] ;
+  assign dstrm_valid          [   0 +:   1] = rxfifo_downstream_data [  41 +:   1] ;
 
-  assign user_upstream_valid                = 1'b1                               ; // user_upstream_valid is unused
-  // user_upstream_ready is unused
+  assign user_upstream_vld                  = 1'b1                               ; // user_upstream_vld is unused
   assign txfifo_upstream_data [   0 +:   4] = ustrm_state          [   0 +:   4] ;
   assign txfifo_upstream_data [   4 +:   2] = ustrm_protid         [   0 +:   2] ;
   assign txfifo_upstream_data [   6 +:  32] = ustrm_data           [   0 +:  32] ;
   assign txfifo_upstream_data [  38 +:   1] = ustrm_dvalid         [   0 +:   1] ;
-  assign txfifo_upstream_data [  39 +:  16] = ustrm_crc            [   0 +:  16] ;
-  assign txfifo_upstream_data [  55 +:   1] = ustrm_crc_valid      [   0 +:   1] ;
-  assign txfifo_upstream_data [  56 +:   1] = ustrm_valid          [   0 +:   1] ;
+  assign txfifo_upstream_data [  39 +:   1] = ustrm_crc            [   0 +:   1] ;
+  assign txfifo_upstream_data [  40 +:   1] = ustrm_crc_valid      [   0 +:   1] ;
+  assign txfifo_upstream_data [  41 +:   1] = ustrm_valid          [   0 +:   1] ;
 
 endmodule

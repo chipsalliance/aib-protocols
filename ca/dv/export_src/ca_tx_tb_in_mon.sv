@@ -147,20 +147,16 @@ task ca_tx_tb_in_mon_c::mon_tx();
     int                                                       i_max;
     bit [2:0]                                                 clk_cnt;
     bit                                                       tx_compare_start=0;
-    int                                                       index, stb_bit_pos; 
+    int                                                       index, stb_bit_pos;
+    int                                                       first_time_rst; 
     forever begin @(posedge vif.clk)
-        
-        if(vif.rst_n === 1'b0) begin 
-            // reset state
-            tx_active = 0; 
-            tx_cnt = 0;
-            stb_cnt = 0;
-            stb_sync = 0;
-            if(calc_stb == 1) begin
-                calc_stb = 0;
-                gen_stb_beat();
-            end
-             index = 0;
+       
+        if (vif.rst_n == 1'b1) begin
+            first_time_rst = first_time_rst + 1;
+        end
+        if (first_time_rst == 5) begin
+           //$display("tx_tb_in_mon first_time_rst : %0d, marker %0d,my_name %s,time %0t",first_time_rst,vif.user_marker,my_name,$time);
+            index = 0;
              for (int i=0; i<40; i+=1) begin  ////tx_stb_bit_sel is always 39:0
                  if (cfg.tx_stb_bit_sel[i]) begin
                      index = i;
@@ -175,29 +171,58 @@ task ca_tx_tb_in_mon_c::mon_tx();
             for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                  if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
              `ifdef GEN2
-                if (BUS_BIT_WIDTH == 320) begin //Q2Q
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + 240 + `CA_TX_MARKER_LOC]    = 1'b1; 
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]     = 1'b1;
-                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
-                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1; ///only for asym
+               `ifdef CA_ASYMMETRIC
+                   if (BUS_BIT_WIDTH == 80) begin //F2F
+                       onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]  = vif.user_marker; 
+                       markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]  = vif.user_marker;
+                       markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]          = 1'b1; ///only for asym
+                       onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]          = 1'b1; ///only for asym
+                   end 
+               `endif//CA_ASYMMETRIC
+                if (BUS_BIT_WIDTH == 160) begin 
+                  for(int mk=0;mk<=1;mk++)begin ///80,160
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];  
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) +`CA_TX_MARKER_LOC]     = vif.user_marker[mk]; 
+                  end
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
+                end  else if (BUS_BIT_WIDTH == 320) begin 
+                  for(int mk=0;mk<=3;mk++)begin ///80,160,240,320
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk]; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];
+                  end
+                    markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
+                    onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
                 end
              `else
                 if (BUS_BIT_WIDTH == 40) begin
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = 1'b1; 
-                    markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = 1'b1;
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = vif.user_marker; 
+                    markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = vif.user_marker; 
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
                 end else if (BUS_BIT_WIDTH == 80) begin
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = 1'b1; 
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = 1'b1; 
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = 1'b1;
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = 1'b1;
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = vif.user_marker;  
+                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker;  
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = vif.user_marker; 
+                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker; 
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                 end 
              `endif //GEN1
             end  //of NUM_CHANNELS
-        end //reset=0
+        end // for first_time_rst
+
+        if(vif.rst_n === 1'b0) begin 
+            // reset state
+            tx_active = 0; 
+            tx_cnt = 0;
+            stb_cnt = 0;
+            stb_sync = 0;
+            if(calc_stb == 1) begin
+                calc_stb = 0;
+                gen_stb_beat();
+            end
+         end //rst_n =0
         else if((vif.tx_online === 1'b1) && (vif.align_done === 1'b1)) begin // non reset state
    
             calc_stb        = 1;
@@ -217,7 +242,6 @@ task ca_tx_tb_in_mon_c::mon_tx();
                 set_item(ca_item);
                 ca_item.init_xfer((BUS_BIT_WIDTH*NUM_CHANNELS) / 8);
  
-                //$display("myname %s, onlymark_data %h",my_name,onlymark_data);
                 `uvm_info("mon_tx_tb_in", $sformatf("%s rx-ing txRTL --> TB xfer: %0d tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
                 for(int i = 0; i < (BUS_BIT_WIDTH*NUM_CHANNELS) / 8; i++) begin
                     ca_item.databytes[i] = tx_data[7:0];
@@ -318,6 +342,7 @@ task ca_tx_tb_in_mon_c::mon_tx();
                 if ((cfg.master_rate == 2) && (cfg.slave_rate == 1)) begin //H2F (Gen2:160to80 or Gen1:80to40)
                       tx_data_fin         = tx_data_prev[0];
                       ca_item.tx_data_rdy = 1;
+                    //DOWNSIZING - MARKERS will be removed from AIB.So,for comparison 0 is updated at marker bit position
                       for (int i=0; i< NUM_CHANNELS; i++) begin
                          if(tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] == 1) begin
                             tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] = 0;
@@ -327,11 +352,23 @@ task ca_tx_tb_in_mon_c::mon_tx();
 //Q2H            
                 if ((cfg.master_rate == 4) && (cfg.slave_rate == 2)) begin //Q2H (Gen2:320to160)
                       tx_data_fin         = tx_data_prev[0];
+                      for (int i=0; i< NUM_CHANNELS; i++) begin
+                         if(tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] == 1) begin
+                            tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] = 0;
+                         end
+                      end
                       ca_item.tx_data_rdy = 1;
                 end
 
                 if ((cfg.master_rate == 4) && (cfg.slave_rate == 1)) begin //Q2F (Gen2:320to80)
                       tx_data_fin         = tx_data_prev[0];
+                      for (int i=0; i< NUM_CHANNELS; i++) begin
+                         for(int mk=0; mk<3; mk++)begin ///80,160,240,320
+                              if(tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC] == 1) begin
+                                tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC]  = 0;
+                             end
+                         end //for mk
+                      end //for i
                       ca_item.tx_data_rdy = 1;
                 end
       
@@ -341,15 +378,6 @@ task ca_tx_tb_in_mon_c::mon_tx();
                          tx_data_fin = tx_data_fin >> 8;
                      end // for
                  end //end if tx_data_rdy
-                if(my_name == "DIE_A") begin
-                    if(tx_cnt <= cfg.last_tx_cnt_a) begin
-                        //$display("tx_cnt %0d,cfg.last_tx_cnt_a  %0d",tx_cnt,cfg.last_tx_cnt_a);
-                    end
-                end else begin 
-                    if(tx_cnt <= cfg.last_tx_cnt_b) begin
-                        //$display("tx_cnt %0d,cfg.last_tx_cnt_b  %0d",tx_cnt,cfg.last_tx_cnt_b); 
-                    end
-                end
                 aport.write(ca_item); 
              end // if tx_data != x
  `endif

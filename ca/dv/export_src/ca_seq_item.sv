@@ -295,24 +295,45 @@ function bit  ca_seq_item_c::compare_beat(ca_seq_item_c  act_beat, bit tx_or_rx_
                if(tx_or_rx_compare_chk == 1) begin  //RX comparison
                   `ifdef CA_ASYMMETRIC
                     `ifdef GEN1
-                       //die_a to die_b busbitwidth check 40,80  *2  f2h/h2f ,f2f,h2h =same bcnt
+                       //die_a to die_b busbitwidth check 40,80    f2h/h2f ,f2f,h2h =same bcnt
                        //if((act_item.my_name == "DIE_A" ) && ((act_item.bus_bit_width == 40)  && act_item.bus_bit_width == 80))) size_mul = 2;
                        if((my_name == "DIE_A" ) && (bus_bit_width == 40)) size_mul = 2; //ASYM,F2H
                        if((my_name == "DIE_B" ) && (bus_bit_width == 80)) size_mul = 2; //ASYM H2F
                     `else
-                       if((my_name == "DIE_A" ) && ((bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 160))) size_mul = 2;//F2H
-                       if((my_name == "DIE_B" ) && ((bus_bit_width == 160)  && (`TB_DIE_A_BUS_BIT_WIDTH ==  80))) size_mul = 1;//H2F
-                       if((my_name == "DIE_A" ) && ((bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 320))) size_mul = 4;//F2Q
-                       if((my_name == "DIE_B" ) && ((bus_bit_width == 320)  && (`TB_DIE_A_BUS_BIT_WIDTH ==  80))) size_mul = 1;//Q2F
+                       if((my_name == "DIE_A" )      && (bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) size_mul = 2;//F2H-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width == 160)  && (`TB_DIE_B_BUS_BIT_WIDTH ==  80)) size_mul = 2;//H2F-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 320)) size_mul = 4;//F2Q-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width == 320)  && (`TB_DIE_B_BUS_BIT_WIDTH ==  80)) size_mul = 4;//Q2F-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width == 160)  && (`TB_DIE_B_BUS_BIT_WIDTH == 320)) size_mul = 2;//H2Q-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width == 320)  && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) size_mul = 2;//Q2H-A
+
+
+                       if((my_name == "DIE_B" )      && (bus_bit_width == 80)   && (`TB_DIE_A_BUS_BIT_WIDTH == 160)) size_mul = 2;//F2H-B
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 160)  && (`TB_DIE_A_BUS_BIT_WIDTH == 80))  size_mul = 2;//H2F-B
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 80)   && (`TB_DIE_A_BUS_BIT_WIDTH == 320)) size_mul = 4;//F2Q-B
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 320)  && (`TB_DIE_A_BUS_BIT_WIDTH == 80))  size_mul = 4;//Q2F-B
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 160)  && (`TB_DIE_A_BUS_BIT_WIDTH == 320)) size_mul = 2;//H2Q-B
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 320)  && (`TB_DIE_A_BUS_BIT_WIDTH == 160)) size_mul = 2;//Q2H-B
                        //Update need to be done for all combinations 
                      `endif
+                       // $display("SCBD_BEFORE src_BCNT = %0d,act_BCNT = %0d,size_mul %0d,my_name %s,bus_bit_width %0d",
+                                  //bcnt,act_beat.bcnt ,size_mul,my_name,bus_bit_width);
+                         
                         if(my_name == "DIE_A") begin
-                           bcnt = bcnt * size_mul ;
+                           if(`TB_DIE_A_BUS_BIT_WIDTH < `TB_DIE_B_BUS_BIT_WIDTH) begin //80-(160 or 320)  160->320 etc
+                               bcnt = bcnt * size_mul ;
+                           end else begin
+                               act_beat.bcnt = act_beat.bcnt * size_mul ;
+                           end
                         end
                         if(my_name == "DIE_B") begin
-                           act_beat.bcnt = act_beat.bcnt * size_mul ;
+                           if(`TB_DIE_A_BUS_BIT_WIDTH < `TB_DIE_B_BUS_BIT_WIDTH) begin
+                              act_beat.bcnt = act_beat.bcnt * size_mul ;
+                           end else begin
+                               bcnt = bcnt * size_mul ;
+                           end
                         end
-                        //$display("SCBD src_BCNT = %0d,act_BCNT = %0d,size_mul %0d,my_name %s,bus_bit_width %0d",bcnt,act_beat.bcnt ,size_mul,my_name,bus_bit_width);
+                        //$display("SCBD_AFTER src_BCNT = %0d,act_BCNT = %0d,size_mul %0d,my_name %s,bus_bit_width %0d",bcnt,act_beat.bcnt ,size_mul,my_name,bus_bit_width);
                   `endif //CA_ASYMMETRIC
                end
 

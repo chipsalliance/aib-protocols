@@ -32,7 +32,7 @@ module axi_st_d128_asym_half_master_name  (
   output logic               user_tready         ,
 
   // Logic Link Interfaces
-  output logic               user_st_valid       ,
+  output logic               user_st_vld         ,
   output logic [ 289:   0]   txfifo_st_data      ,
   input  logic               user_st_ready       ,
 
@@ -42,7 +42,7 @@ module axi_st_d128_asym_half_master_name  (
 
   // Connect Data
 
-  assign user_st_valid                      = user_tvalid                        ;
+  assign user_st_vld                        = user_tvalid                        ;
   assign user_tready                        = user_st_ready                      ;
   assign txfifo_st_data       [   0 +:  16] = user_tkeep           [   0 +:  16] ;
   assign txfifo_st_data       [  16 +: 128] = user_tdata           [   0 +: 128] ;
