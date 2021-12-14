@@ -36,6 +36,7 @@ module ll_receive #(parameter WIDTH=8, parameter DEPTH=8'h1) (
 
     // Control Logic
     input logic                                 rx_online ,
+    input logic                                 tx_online ,
     input logic                                 rx_i_push_ovrd ,
 
     // From Upstream
@@ -123,6 +124,7 @@ parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
       // Inputs
       .clk_wr				(clk_wr),
       .rst_wr_n				(rst_wr_n),
+      .tx_online			(tx_online),
       .user_i_ready			(user_i_ready),		 // Templated
       .rxfifo_i_empty			(rxfifo_i_empty),	 // Templated
       .dbg_rxfifo_i_numfilled		(dbg_rxfifo_i_numfilled[FIFO_COUNT_MSB:0]), // Templated

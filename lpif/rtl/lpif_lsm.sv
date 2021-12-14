@@ -56,7 +56,6 @@ module lpif_lsm
    output logic       pl_lnk_up,
 
    output logic [3:0] lsm_dstrm_state,
-   output logic [2:0] lsm_lnk_cfg,
    output logic [2:0] lsm_speedmode
    );
 
@@ -70,7 +69,6 @@ module lpif_lsm
 
   logic [3:0]         d_lsm_dstrm_state;
   logic [4:0]         lsm_return_state, d_lsm_return_state;
-  logic [2:0]         d_lsm_lnk_cfg;
   logic [2:0]         d_lsm_speedmode;
 
   logic               lsm_cg_req;
@@ -280,7 +278,7 @@ module lpif_lsm
 
   wire                sb_l1_ack = (sb_ustrm_l1_sts & sb_dstrm_l1_req);
   wire                sb_active_ack = (sb_ustrm_active_sts & sb_dstrm_active_req);
-  wire                sb_l2_ack = (sb_ustrm_l2_sts & sb_dstrm_l2_sts);
+  wire                sb_l2_ack = (sb_ustrm_l2_sts & sb_dstrm_l2_req);
   wire                sb_link_reset_ack = (sb_ustrm_link_reset_sts & sb_dstrm_link_reset_req);
   wire                sb_link_retrain_ack = (sb_ustrm_link_retrain_sts & sb_dstrm_link_retrain_req);
   wire                sb_ack = sb_l1_ack | sb_active_ack | sb_l2_ack | sb_link_reset_ack |
@@ -294,12 +292,6 @@ module lpif_lsm
                                        state_req_linkreset | state_req_disable)
                                       )
                                      );
-  // pl_lnk_cfg encodings
-
-  localparam [2:0]
-    LNK_CFG_X1	= 3'b000,
-    LNK_CFG_X16	= 3'b101;
-
   // pl_speedmode encoding
 
   localparam [2:0]
@@ -371,7 +363,8 @@ module lpif_lsm
 
   // lsm state decodes
 
-  assign lsm_state_active = (pl_state_sts == STS_ACTIVE);
+  assign lsm_state_active = (pl_state_sts == STS_ACTIVE) & ~coldstart;
+  assign d_pl_phyinl2 = (d_pl_state_sts == STS_SLEEP_L2);
 
   always_ff @(posedge lclk or negedge rst_n)
     if (~rst_n)
@@ -383,10 +376,8 @@ module lpif_lsm
     begin : lsm_state_next
       d_lsm_state = lsm_state;
       d_pl_phyinl1 = 1'b0;
-      d_pl_phyinl2 = 1'b0;
       d_pl_phyinrecenter = 1'b0;
       d_lsm_dstrm_state = lsm_dstrm_state;
-      d_lsm_lnk_cfg = lsm_lnk_cfg;
       d_lsm_speedmode = lsm_speedmode;
       lsm_cg_req = 1'b0;
       lsm_stall_req = 1'b0;
@@ -431,8 +422,9 @@ module lpif_lsm
                   lsm_cg_req = 1'b1;
                   d_lsm_state = LSM_ACTIVE_a;
                 end
-              else if (state_req_active & state_req_change)
+              else if ((state_req_active & state_req_change) | linkreset2reset)
                 begin
+                  d_linkreset2reset = 1'b0;
                   d_lsm_state = LSM_ACTIVE_c;
                 end
               else if (state_req_linkreset & state_req_change)
@@ -490,7 +482,13 @@ module lpif_lsm
                     d_pl_state_sts = STS_IDLE_L1_1;
                     d_lsm_state = LSM_IDLE_L1_1;
                   end
-                else if (state_req_sleep_l2 | sb_ustrm_l2_req)
+                else if (state_req_sleep_l2)
+                  begin
+                    d_lsm_dstrm_state = SB_L2_REQ;
+                    d_lsm_return_state = LSM_SLEEP_L2;
+                    d_lsm_state = LSM_SB_ACK;
+                  end
+                else if (sb_ustrm_l2_req)
                   begin
                     d_pl_state_sts = STS_SLEEP_L2;
                     d_lsm_state = LSM_SLEEP_L2;
@@ -509,7 +507,7 @@ module lpif_lsm
                   d_lsm_state = LSM_DISABLE;
                 else if (sb_ustrm_link_error)
                   d_lsm_state = LSM_LinkError;
-              end
+              end // if (pl_stallreq & lp_stallack)
           end // case: LSM_ACTIVE_b
           LSM_IDLE_L1_1: begin
             d_pl_state_sts = STS_IDLE_L1_1;
@@ -631,7 +629,6 @@ module lpif_lsm
           LSM_SLEEP_L2: begin
             d_pl_state_sts = STS_SLEEP_L2;
             d_lsm_dstrm_state = SB_L2_STS;
-            d_pl_phyinl2 = 1'b1;
             if ((state_req_active | state_req_retrain) & state_req_change)
               begin
                 d_state_req_change = 1'b0;
@@ -643,6 +640,11 @@ module lpif_lsm
               begin
                 d_state_req_change = 1'b0;
                 d_lsm_dstrm_state = SB_LINK_RESET_REQ;
+                d_lsm_return_state = LSM_LinkReset_a;
+                d_lsm_state = LSM_SB_ACK;
+              end
+            else if (sb_ustrm_link_reset_req)
+              begin
                 d_lsm_state = LSM_LinkReset_a;
               end
             else if (state_req_disable & state_req_change)
@@ -671,6 +673,7 @@ module lpif_lsm
               end
             else if ((state_req_active | state_req_disable) & state_req_change)
               begin
+                d_linkreset2reset = 1'b1;
                 d_state_req_change = 1'b0;
                 d_lsm_dstrm_state = SB_ACTIVE_REQ;
                 d_lsm_return_state = LSM_RESET;
@@ -703,7 +706,6 @@ module lpif_lsm
               end
           end
           LSM_RETRAIN: begin
-            d_lsm_lnk_cfg = LNK_CFG_X16;
             d_lsm_speedmode = SPEEDMODE_GEN5;
             lsm_cg_req = 1'b1;
             d_pl_phyinrecenter = 1'b1;
@@ -749,6 +751,8 @@ module lpif_lsm
               begin
                 if (lsm_return_state == LSM_ACTIVE_a)
                   lsm_cg_req = 1'b1;
+                if (lsm_return_state == LSM_SLEEP_L2)
+                  d_pl_state_sts = STS_SLEEP_L2;
                 d_lsm_state = lsm_return_state;
               end
           end
@@ -766,7 +770,6 @@ module lpif_lsm
         pl_phyinrecenter <= 1'b0;
         pl_state_sts <= 4'b0;
         lsm_dstrm_state <= 4'b0;
-        lsm_lnk_cfg <= LNK_CFG_X1;
         lsm_speedmode <= 3'b0;
         pl_lnk_up <= 1'b0;
         coldstart <= 1'b1;
@@ -783,7 +786,6 @@ module lpif_lsm
         pl_phyinrecenter <= d_pl_phyinrecenter;
         pl_state_sts <= d_pl_state_sts;
         lsm_dstrm_state <= d_lsm_dstrm_state;
-        lsm_lnk_cfg <= d_lsm_lnk_cfg;
         lsm_speedmode <= d_lsm_speedmode;
         pl_lnk_up <= d_pl_lnk_up;
         coldstart <= d_coldstart;

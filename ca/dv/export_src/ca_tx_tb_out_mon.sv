@@ -176,8 +176,13 @@ task ca_tx_tb_out_mon_c::mon_tx();
 
         if(vif.rst_n === 1'b0) begin 
             // reset state
-            tx_active = 0;
-            tx_cnt    = 0;
+            tx_active      = 0;
+            tx_cnt         = 0;
+            first_time_rst = 0;
+            onlystb_data   = 0;
+            onlymark_data  = 0;
+            markstb_data   = 0;
+            start_tx_din_to_scbd = 0;
         end //rst_n=0
         else if((vif.align_done === 1'b1) && (vif.tx_online === 1'b1)) begin // non reset state (clock posedge)
         `ifndef CA_ASYMMETRIC
@@ -229,6 +234,9 @@ endtask : mon_tx
 function void ca_tx_tb_out_mon_c::check_phase(uvm_phase phase);
 
     if(tx_active == 1) `uvm_error("check_phase", $sformatf("TX pkt tx_active still active at EOT!"));
+    if((cfg.stop_strobes_inject == 1) && (vif.align_done !== 1'b1)) begin
+       `uvm_info("check_phase", $sformatf("no_external_strobes_test: align_done not asserted as expected in tx_tb_out_mon"), UVM_LOW);
+    end
 
 endfunction : check_phase
 

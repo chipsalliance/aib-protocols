@@ -125,7 +125,7 @@ task ca_tx_tb_out_drv_c::drv_tx_online();
     
     forever begin @(posedge vif.clk)
         if(vif.rst_n === 1'b0) begin // reset state
-            vif.tx_online  <=  1'b0;
+            //vif.tx_online  <=  1'b0;
             tx_online = 0;
         end // reset
         else begin
@@ -199,6 +199,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                 set_item(tx_item);
                 tx_item.build_tx_beat(stb_item);
                 got_tx = 1;
+                cfg.align_done_assert = 1; 
             end
         
             if(got_tx == 1)  begin
@@ -244,21 +245,6 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                         `endif
                         end //of marker_loc
                     end //for loop (i, ch)
-
-                    if (cfg.tx_stb_en == 1'b0) begin //mainly with asymmetrical modes
-                        if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin ///Strobe position in First 39:0 bits
-                            stb_bit_pos = index;
-                        end else begin
-                            stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
-                        end
-                        for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
-                            if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
-
-                            if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
-                                idle_data[i] = vif.user_stb;
-                            end
-                        end //for
-                    end //if
                   `else //SYMMETRIC (GEN2 H2H and Q2Q only considered)
                     for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                         if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
@@ -274,6 +260,24 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                         end
                     end //for
                   `endif //CA_ASYMMETRIC
+                   if ((cfg.tx_stb_en == 1'b0) && (cfg.stop_strobes_inject == 0)) begin //mainly with asymmetrical modes
+                        if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin ///Strobe position in First 39:0 bits
+                            stb_bit_pos = index;
+                        end else begin
+                            stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                        end
+                        for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                            if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
+                            if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                            //$display("inside stb_inject part1.time,i = %0d,stb_bit_pos = %0d",$time,i,stb_bit_pos);
+                                if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                    idle_data[i] = 0;
+                                end else begin
+                                    idle_data[i] = vif.user_stb;
+                                end
+                            end
+                        end //for
+                    end //if
                   drv_tx_idle();
                 end else begin // no delay case (inj_delay==0)
                         // send data
@@ -313,21 +317,6 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                                   `endif
                                 end //of marker_loc
                             end //of for loop
-                            ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
-                            if (cfg.tx_stb_en == 1'b0) begin
-                                if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin
-                                    stb_bit_pos = index; //int'(cfg.tx_stb_bit_sel[39:0]);
-                                end else begin
-                                    stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
-                                end
-                                for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
-                                    if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
-
-                                    if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
-                                        tx_data[i] = vif.user_stb;
-                                    end
-                                end //for
-                            end //if
                         `else
                             for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                                 if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
@@ -343,6 +332,24 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                                 end
                             end //for
                         `endif //CA_ASYMMETRIC
+                           if ((cfg.tx_stb_en == 1'b0) && (cfg.stop_strobes_inject == 0)) begin
+                                if (cfg.tx_stb_wd_sel[7:0]  == 8'h01) begin
+                                    stb_bit_pos = index; //int'(cfg.tx_stb_bit_sel[39:0]);
+                                end else begin
+                                    stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                                end
+                                for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                                    if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
+                                    if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                                        //$display("inside stb_inject part2.time, i = %0d",$time,i);
+                                        if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                           tx_data[i] = 0;
+                                        end else begin
+                                           tx_data[i] = vif.user_stb;
+                                        end
+                                    end
+                                end //for
+                            end //if
                         tx_cnt++;
                         vif.tx_din = tx_data;
                         `uvm_info("drv_tx", $sformatf("%s Driving transfer %0d TB ---> tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
@@ -381,29 +388,6 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                     `endif
                     end //of marker_loc
                 end //of for loop
- 
-                ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
-                if (cfg.tx_stb_en == 1'b0) begin
-                    index = 0;
-                    for (int i=0; i<40; i+=1) begin
-                        if (cfg.tx_stb_bit_sel[i]) begin
-                            index = i;
-                            break;
-                        end
-                    end
-                    if (cfg.tx_stb_wd_sel[7:0]  == 8'b1) begin
-                        stb_bit_pos = index;  ///Strobe position in First 39:0 bits
-                    end else begin
-                        stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
-                    end
-                    for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
-                        if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
-
-                        if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
-                            idle_data[i] = vif.user_stb;
-                        end
-                    end //for
-                end //if (ca_cfg.tx_stb_en == 0)
              `else //SYMMETRIC
                 for (int i=0, ch=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                     if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) ch++;
@@ -419,6 +403,32 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                     end
                 end //for
              `endif //CA_ASYMMETRIC
+////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
+                if ((cfg.tx_stb_en == 1'b0) && (cfg.stop_strobes_inject == 0)) begin
+                    index = 0;
+                    for (int i=0; i<40; i+=1) begin
+                        if (cfg.tx_stb_bit_sel[i]) begin
+                            index = i;
+                            break;
+                        end
+                    end
+                    if (cfg.tx_stb_wd_sel[7:0]  == 8'b1) begin
+                        stb_bit_pos = index;  ///Strobe position in First 39:0 bits
+                    end else begin
+                        stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
+                    end
+                    for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
+                        if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
+                        if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
+                           if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                              idle_data[i] = 0;
+                           end else begin
+                              idle_data[i] = vif.user_stb;
+                           end
+                        end
+                    end //for
+                end //if (ca_cfg.tx_stb_en == 0)
+
                 drv_tx_idle();
             end //send IDLE
         end // non reset
@@ -445,11 +455,11 @@ function void ca_tx_tb_out_drv_c::check_phase(uvm_phase phase);
 
     `uvm_info("check_phase", $sformatf("Starting ca_tx_tb_out_drv check_phase..."), UVM_LOW);
                 
-    if((got_tx == 1) || (tx_q.size() > 0)) begin
+    if(((cfg.stop_strobes_inject == 0) && (cfg.stb_error_test == 0) && (cfg.align_error_test == 0) ) && ((got_tx == 1) || (tx_q.size() > 0))) begin
         `uvm_warning("check_phase", $sformatf("%s ca_tx_tb_out thread active: in transcation: %s queued : %0d", 
             my_name, got_tx ? "T":"F", tx_q.size()));
          pass = 0;
-        end
+    end
 
     if(pass == 1) begin
         `uvm_info("check_phase", $sformatf("%s ca_tx_tb_out_drv check_phase ok", my_name), UVM_LOW);

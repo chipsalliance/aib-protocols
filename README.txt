@@ -6,14 +6,12 @@ The IPs are:
 axi4-st - AHMB AXI4-ST over AIB based off of the LLINK design
 axi4-mm - AHMB AXI4 (memory mapped) over AIB based off of the LLINK design
 ca - Channel Alignment module (used in multiple AIB channel designs)
-spi - SPI based communication modules to allow remove AVMM interfaces over the AIB
-
+lpif - Logical PHY interface adapter to AIB
 
 For DV resources, look at:
 ca/dv
 llink/dv
-spi/dv
-
+lpif/dv
 
 
 
@@ -55,11 +53,7 @@ For correct simulation, please ensure it is organized as shown below.
 |   |   |-- README
 |   |   `-- rtl
 |   |-- README.txt
-|   |-- setup.sh
-|   `-- spi
-|       |-- doc
-|       |-- dv
-|       `-- rtl
+|   `-- setup.sh
 `-- aib-phy-hardware (seperate repository)
     |-- docs
     |-- v1.0

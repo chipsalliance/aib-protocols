@@ -31,7 +31,7 @@ module lpif
     parameter AIB_VERSION = 2,
     parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
-    parameter AIB_BITS_PER_LANE = 320,
+    parameter AIB_BITS_PER_LANE = 80,
     parameter AIB_CLOCK_RATE = 2000,
     parameter LPIF_CLOCK_RATE = 2000,
     parameter LPIF_DATA_WIDTH = 32,
@@ -172,7 +172,6 @@ module lpif
   logic [3:0]           dstrm_state;            // From lpif_ctl_i of lpif_ctl.v
   logic                 dstrm_valid;            // From lpif_ctl_i of lpif_ctl.v
   logic [3:0]           lsm_dstrm_state;        // From lpif_lsm_i of lpif_lsm.v
-  logic [2:0]           lsm_lnk_cfg;            // From lpif_lsm_i of lpif_lsm.v
   logic [2:0]           lsm_speedmode;          // From lpif_lsm_i of lpif_lsm.v
   logic                 lsm_state_active;       // From lpif_lsm_i of lpif_lsm.v
   logic [31:0]          rx_upstream_debug_status;// From lpif_txrx_i of lpif_txrx.v
@@ -218,7 +217,29 @@ module lpif
         rx_phy1 = '0;
         rx_phy0 = '0;
 
-        if (AIB_LANES == 4)
+        if (AIB_LANES == 1)
+          begin
+            data_in_f = {
+                         tx_phy0[0+:AIB_BITS_PER_LANE]
+                         };
+            {
+             rx_phy0[0+:AIB_BITS_PER_LANE]
+             }
+              = dout_lpbk;
+          end
+        else if (AIB_LANES == 2)
+          begin
+            data_in_f = {
+                         tx_phy1[0+:AIB_BITS_PER_LANE],
+                         tx_phy0[0+:AIB_BITS_PER_LANE]
+                         };
+            {
+             rx_phy1[0+:AIB_BITS_PER_LANE],
+             rx_phy0[0+:AIB_BITS_PER_LANE]
+             }
+              = dout_lpbk;
+          end
+        else if (AIB_LANES == 4)
           begin
             data_in_f = {
                          tx_phy3[0+:AIB_BITS_PER_LANE],
@@ -227,6 +248,30 @@ module lpif
                          tx_phy0[0+:AIB_BITS_PER_LANE]
                          };
             {
+             rx_phy3[0+:AIB_BITS_PER_LANE],
+             rx_phy2[0+:AIB_BITS_PER_LANE],
+             rx_phy1[0+:AIB_BITS_PER_LANE],
+             rx_phy0[0+:AIB_BITS_PER_LANE]
+             }
+              = dout_lpbk;
+          end
+        else if (AIB_LANES == 8)
+          begin
+            data_in_f = {
+                         tx_phy7[0+:AIB_BITS_PER_LANE],
+                         tx_phy6[0+:AIB_BITS_PER_LANE],
+                         tx_phy5[0+:AIB_BITS_PER_LANE],
+                         tx_phy4[0+:AIB_BITS_PER_LANE],
+                         tx_phy3[0+:AIB_BITS_PER_LANE],
+                         tx_phy2[0+:AIB_BITS_PER_LANE],
+                         tx_phy1[0+:AIB_BITS_PER_LANE],
+                         tx_phy0[0+:AIB_BITS_PER_LANE]
+                         };
+            {
+             rx_phy7[0+:AIB_BITS_PER_LANE],
+             rx_phy6[0+:AIB_BITS_PER_LANE],
+             rx_phy5[0+:AIB_BITS_PER_LANE],
+             rx_phy4[0+:AIB_BITS_PER_LANE],
              rx_phy3[0+:AIB_BITS_PER_LANE],
              rx_phy2[0+:AIB_BITS_PER_LANE],
              rx_phy1[0+:AIB_BITS_PER_LANE],
@@ -291,6 +336,7 @@ module lpif
       .AIB_VERSION                      (AIB_VERSION),
       .AIB_GENERATION                   (AIB_GENERATION),
       .AIB_LANES                        (AIB_LANES),
+      .AIB_BITS_PER_LANE                (AIB_BITS_PER_LANE),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
       .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE),
       .ASYM                             (ASYM))
@@ -389,6 +435,7 @@ module lpif
       .AIB_VERSION                      (AIB_VERSION),
       .AIB_GENERATION                   (AIB_GENERATION),
       .AIB_LANES                        (AIB_LANES),
+      .AIB_BITS_PER_LANE                (AIB_BITS_PER_LANE),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
       .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE),
       .LPIF_PIPELINE_STAGES             (LPIF_PIPELINE_STAGES),
@@ -492,7 +539,6 @@ module lpif
      .fifo_empty                        (fifo_empty),
      .fifo_pempty                       (fifo_pempty),
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
-     .lsm_lnk_cfg                       (lsm_lnk_cfg[2:0]),
      .lsm_speedmode                     (lsm_speedmode[2:0]),
      .lsm_state_active                  (lsm_state_active));
 
@@ -517,7 +563,6 @@ module lpif
      .pl_phyinrecenter                  (pl_phyinrecenter),
      .pl_lnk_up                         (pl_lnk_up),
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
-     .lsm_lnk_cfg                       (lsm_lnk_cfg[2:0]),
      .lsm_speedmode                     (lsm_speedmode[2:0]),
      // Inputs
      .lclk                              (lclk),

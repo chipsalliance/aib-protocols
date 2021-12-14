@@ -25,10 +25,10 @@
 //////////////////////////////////////////////////////////////////////
 // Data and Channel Size
   Logic Link Data Info
-    LogicLink MAIN     downstream TX  529  RX    0
-    LogicLink MAIN     upstream TX    0  RX  529
+    LogicLink MAIN     downstream TX  537  RX    0
+    LogicLink MAIN     upstream TX    0  RX  537
                                 -------  -------
-    Total     MAIN              TX  529  RX  529
+    Total     MAIN              TX  537  RX  537
 
   Channel Info
     MAIN: Each channel is Gen2 PHY running at Quarter Rate with 320 bits
@@ -47,8 +47,8 @@
        RX: Total overhead bits across 2 channels is 10
        RX: Total data bits available 630
 
-  MAIN TX needs  529 bits of data and has  630 bits available across 2x Gen2 Quarter Rate channels so  101 spare bits
-  MAIN RX needs  529 bits of data and has  630 bits available across 2x Gen2 Quarter Rate channels so  101 spare bits
+  MAIN TX needs  537 bits of data and has  630 bits available across 2x Gen2 Quarter Rate channels so   93 spare bits
+  MAIN RX needs  537 bits of data and has  630 bits available across 2x Gen2 Quarter Rate channels so   93 spare bits
 
 // Data and Channel Size
 //////////////////////////////////////////////////////////////////////
@@ -60,17 +60,17 @@
   assign tx_downstream_data   [   4 +:   2] = dstrm_protid         [   0 +:   2]
   assign tx_downstream_data   [   6 +: 512] = dstrm_data           [   0 +: 512]
   assign tx_downstream_data   [ 518 +:   1] = dstrm_dvalid         [   0 +:   1]
-  assign tx_downstream_data   [ 519 +:   8] = dstrm_crc            [   0 +:   8]
-  assign tx_downstream_data   [ 527 +:   1] = dstrm_crc_valid      [   0 +:   1]
-  assign tx_downstream_data   [ 528 +:   1] = dstrm_valid          [   0 +:   1]
+  assign tx_downstream_data   [ 519 +:  16] = dstrm_crc            [   0 +:  16]
+  assign tx_downstream_data   [ 535 +:   1] = dstrm_crc_valid      [   0 +:   1]
+  assign tx_downstream_data   [ 536 +:   1] = dstrm_valid          [   0 +:   1]
 
   assign rx_upstream_data     [   0 +:   4] = ustrm_state          [   0 +:   4]
   assign rx_upstream_data     [   4 +:   2] = ustrm_protid         [   0 +:   2]
   assign rx_upstream_data     [   6 +: 512] = ustrm_data           [   0 +: 512]
   assign rx_upstream_data     [ 518 +:   1] = ustrm_dvalid         [   0 +:   1]
-  assign rx_upstream_data     [ 519 +:   8] = ustrm_crc            [   0 +:   8]
-  assign rx_upstream_data     [ 527 +:   1] = ustrm_crc_valid      [   0 +:   1]
-  assign rx_upstream_data     [ 528 +:   1] = ustrm_valid          [   0 +:   1]
+  assign rx_upstream_data     [ 519 +:  16] = ustrm_crc            [   0 +:  16]
+  assign rx_upstream_data     [ 535 +:   1] = ustrm_crc_valid      [   0 +:   1]
+  assign rx_upstream_data     [ 536 +:   1] = ustrm_valid          [   0 +:   1]
 // AXI to Logic Link Data Mapping
 //////////////////////////////////////////////////////////////////////
 
@@ -611,16 +611,16 @@
   Channel 1 TX   [ 212] = dstrm_crc            [   5]
   Channel 1 TX   [ 213] = dstrm_crc            [   6]
   Channel 1 TX   [ 214] = dstrm_crc            [   7]
-  Channel 1 TX   [ 215] = dstrm_crc_valid      [   0]
-  Channel 1 TX   [ 216] = dstrm_valid          [   0]
-  Channel 1 TX   [ 217] = 1'b0                
-  Channel 1 TX   [ 218] = 1'b0                
-  Channel 1 TX   [ 219] = 1'b0                
-  Channel 1 TX   [ 220] = 1'b0                
-  Channel 1 TX   [ 221] = 1'b0                
-  Channel 1 TX   [ 222] = 1'b0                
-  Channel 1 TX   [ 223] = 1'b0                
-  Channel 1 TX   [ 224] = 1'b0                
+  Channel 1 TX   [ 215] = dstrm_crc            [   8]
+  Channel 1 TX   [ 216] = dstrm_crc            [   9]
+  Channel 1 TX   [ 217] = dstrm_crc            [  10]
+  Channel 1 TX   [ 218] = dstrm_crc            [  11]
+  Channel 1 TX   [ 219] = dstrm_crc            [  12]
+  Channel 1 TX   [ 220] = dstrm_crc            [  13]
+  Channel 1 TX   [ 221] = dstrm_crc            [  14]
+  Channel 1 TX   [ 222] = dstrm_crc            [  15]
+  Channel 1 TX   [ 223] = dstrm_crc_valid      [   0]
+  Channel 1 TX   [ 224] = dstrm_valid          [   0]
   Channel 1 TX   [ 225] = 1'b0                
   Channel 1 TX   [ 226] = 1'b0                
   Channel 1 TX   [ 227] = 1'b0                
@@ -1256,16 +1256,16 @@
   Channel 1 RX   [ 212] = ustrm_crc            [   5]
   Channel 1 RX   [ 213] = ustrm_crc            [   6]
   Channel 1 RX   [ 214] = ustrm_crc            [   7]
-  Channel 1 RX   [ 215] = ustrm_crc_valid      [   0]
-  Channel 1 RX   [ 216] = ustrm_valid          [   0]
-  Channel 1 RX   [ 217] = 1'b0                
-  Channel 1 RX   [ 218] = 1'b0                
-  Channel 1 RX   [ 219] = 1'b0                
-  Channel 1 RX   [ 220] = 1'b0                
-  Channel 1 RX   [ 221] = 1'b0                
-  Channel 1 RX   [ 222] = 1'b0                
-  Channel 1 RX   [ 223] = 1'b0                
-  Channel 1 RX   [ 224] = 1'b0                
+  Channel 1 RX   [ 215] = ustrm_crc            [   8]
+  Channel 1 RX   [ 216] = ustrm_crc            [   9]
+  Channel 1 RX   [ 217] = ustrm_crc            [  10]
+  Channel 1 RX   [ 218] = ustrm_crc            [  11]
+  Channel 1 RX   [ 219] = ustrm_crc            [  12]
+  Channel 1 RX   [ 220] = ustrm_crc            [  13]
+  Channel 1 RX   [ 221] = ustrm_crc            [  14]
+  Channel 1 RX   [ 222] = ustrm_crc            [  15]
+  Channel 1 RX   [ 223] = ustrm_crc_valid      [   0]
+  Channel 1 RX   [ 224] = ustrm_valid          [   0]
   Channel 1 RX   [ 225] = 1'b0                
   Channel 1 RX   [ 226] = 1'b0                
   Channel 1 RX   [ 227] = 1'b0                

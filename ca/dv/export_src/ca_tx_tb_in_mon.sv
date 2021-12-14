@@ -142,6 +142,7 @@ task ca_tx_tb_in_mon_c::mon_tx();
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]                onlystb_data=0; 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]                markstb_data=0; 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS*4)-1):0]              tx_data_fin=0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS*4)-1):0]              tx_data_fin_prev=0; 
     ca_data_pkg::ca_seq_item_c                                ca_item;
     bit                                                       calc_stb = 1;
     int                                                       i_max;
@@ -218,7 +219,12 @@ task ca_tx_tb_in_mon_c::mon_tx();
             tx_cnt = 0;
             stb_cnt = 0;
             stb_sync = 0;
-            if(calc_stb == 1) begin
+            first_time_rst   = 0;
+            markstb_data     = 0;
+            onlystb_data     = 0;
+            onlymark_data    = 0;
+            //tx_compare_start = 0;
+           if(calc_stb == 1) begin
                 calc_stb = 0;
                 gen_stb_beat();
             end
@@ -261,21 +267,28 @@ task ca_tx_tb_in_mon_c::mon_tx();
                          end
                      end
                      2'b10: begin
-                         verify_tx_stb();  // stb only
+                             //$display("tx_tb_in_mon.sv 2'b10 inside  loop,time %0t onlymark_data=%h",$time,onlymark_data);
+                             if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                                 verify_tx_stb();  // stb only
+                             end
                      end
                      2'b11: begin // both data and stb
                          if(((`TB_DIE_A_BUS_BIT_WIDTH == 160) && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) || 
                             ((`TB_DIE_A_BUS_BIT_WIDTH == 320) && (`TB_DIE_B_BUS_BIT_WIDTH == 320)))begin
                              //$display("tx_tb_in_mon.sv 2'b11 inside H2H,Q2Q loop,time %0t markstb_data=%h",$time,markstb_data);
                              if(markstb_data != tx_data_prev[0]) begin
+                               if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
                                  verify_tx_stb();  
                                  ca_item.add_stb = 1;
+                               end
                                  aport.write(ca_item);
                              end
                          end else begin
-                             verify_tx_stb();  
-                             ca_item.add_stb = 1;
-                             aport.write(ca_item);
+                             if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                                verify_tx_stb();  
+                                ca_item.add_stb = 1;
+                             end
+                                aport.write(ca_item);
                          end
                      end
                      default: begin
@@ -339,39 +352,53 @@ task ca_tx_tb_in_mon_c::mon_tx();
                     end
                 end
 
-                if ((cfg.master_rate == 2) && (cfg.slave_rate == 1)) begin //H2F (Gen2:160to80 or Gen1:80to40)
+                if ((cfg.master_rate == 2) && (cfg.slave_rate == 1)) begin //H2F (Gen2:160to80 or Gen1:80to40) //F2H 
                       tx_data_fin         = tx_data_prev[0];
                       ca_item.tx_data_rdy = 1;
+                   `ifdef GEN1
                     //DOWNSIZING - MARKERS will be removed from AIB.So,for comparison 0 is updated at marker bit position
                       for (int i=0; i< NUM_CHANNELS; i++) begin
-                         if(tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] == 1) begin
-                            tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] = 0;
+                         for(int mk=0; mk<1; mk++)begin ///80,160,240,320
+                             if(tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC] == 1) begin
+                                tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC]  = 0;
+                             end
                          end
                       end
+                   `endif
                 end
 //Q2H            
                 if ((cfg.master_rate == 4) && (cfg.slave_rate == 2)) begin //Q2H (Gen2:320to160)
                       tx_data_fin         = tx_data_prev[0];
-                      for (int i=0; i< NUM_CHANNELS; i++) begin
-                         if(tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] == 1) begin
-                            tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] = 0;
-                         end
-                      end
+                      //for (int i=0; i< NUM_CHANNELS; i++) begin
+                      //   if(tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] == 1) begin
+                      //      tx_data_fin[(i*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] = 0;
+                      //   end
+                      //end
                       ca_item.tx_data_rdy = 1;
                 end
 
                 if ((cfg.master_rate == 4) && (cfg.slave_rate == 1)) begin //Q2F (Gen2:320to80)
                       tx_data_fin         = tx_data_prev[0];
-                      for (int i=0; i< NUM_CHANNELS; i++) begin
-                         for(int mk=0; mk<3; mk++)begin ///80,160,240,320
-                              if(tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC] == 1) begin
-                                tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC]  = 0;
-                             end
-                         end //for mk
-                      end //for i
+                      //for (int i=0; i< NUM_CHANNELS; i++) begin
+                      //   for(int mk=0; mk<3; mk++)begin ///80,160,240,320
+                      //       if(tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC] == 1) begin
+                      //          tx_data_fin[(i*BUS_BIT_WIDTH)+ (mk*80) + `CA_TX_MARKER_LOC]  = 0;
+                      //       end
+                      //   end //for mk
+                      //end //for i
                       ca_item.tx_data_rdy = 1;
                 end
-      
+               //////////////////////////////////////////////////////////////////////////////////////////
+                 if(my_name == "DIE_A") begin
+                     cfg.tx_stb_intv = vif.strobe_gen_m_interval;
+                 end else begin
+                     cfg.tx_stb_intv = vif.strobe_gen_s_interval;
+                 end
+                 $display("TX::interval m %0d,s %0d",vif.strobe_gen_m_interval,vif.strobe_gen_s_interval);
+
+                 tx_data_fin_prev = tx_data_fin;
+
+                 //// Prepare ca_item data ready to be written to scoreboard from tx-dout
                  if(ca_item.tx_data_rdy == 1) begin
                      for(int i = 0; i < i_max; i++) begin
                          ca_item.tx_data_fin[i] = tx_data_fin[7:0];
@@ -401,11 +428,17 @@ task ca_tx_tb_in_mon_c::mon_err_sig();
             if((vif.tx_stb_pos_err !== 1'b0 ) || (vif.tx_stb_pos_coding_err !== 1'b0)) begin 
                 ca_item = ca_data_pkg::ca_seq_item_c::type_id::create("ca_item");
                 set_item(ca_item);
+              if(cfg.stb_error_test == 0) begin
                 `uvm_warning("mon_tx", $sformatf("%s rx-ing error: tx_stb_pos_err: %0d  tx_stb_pos_coding_err: %0d",
                     my_name, vif.tx_stb_pos_err, vif.tx_stb_pos_coding_err));
-                ca_item.stb_pos_err        = vif.tx_stb_pos_err;
-                ca_item.stb_pos_coding_err = vif.tx_stb_pos_coding_err;
-                aport.write(ca_item); 
+                    ca_item.stb_pos_err        = vif.tx_stb_pos_err;
+                    ca_item.stb_pos_coding_err = vif.tx_stb_pos_coding_err;
+                    aport.write(ca_item); 
+              end else begin
+                    cfg.num_of_stb_error++;
+                   `uvm_info("mon_tx", $sformatf("%s rx-ing error : tx_stb_pos_err %0d tx_stb_pos_coding_err %0d,tx_num_of_errors =%0d",
+                    my_name, vif.tx_stb_pos_err, vif.tx_stb_pos_coding_err,cfg.num_of_stb_error), UVM_LOW);
+              end 
             end // non error 
         end // non reset 
     
@@ -425,7 +458,7 @@ function void ca_tx_tb_in_mon_c::verify_tx_stb();
     end
     else begin // sync
 
-`ifndef CA_ASYMMETRIC
+//`ifndef CA_ASYMMETRIC
         if(stb_cnt != cfg.tx_stb_intv) begin 
          `uvm_error("verify_tx_stb", $sformatf("%s TX did NOT rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
               my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt));
@@ -434,8 +467,8 @@ function void ca_tx_tb_in_mon_c::verify_tx_stb();
           `uvm_info("verify_tx_stb", $sformatf("%s rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
               my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt), UVM_MEDIUM);
         end
-`else //TBD  
-`endif
+//`else //TBD  
+//`endif
    end
 
     stb_cnt = 0; 
@@ -444,15 +477,44 @@ endfunction : verify_tx_stb
     
 //---------------------------------------------
 function void ca_tx_tb_in_mon_c::check_phase(uvm_phase phase);
+     
+    bit pass = 1; 
 
-    if((cfg.tx_en_stb_check == 1) && (stb_beat_cnt == 0) && (cfg.tx_stb_en == 1)) begin
-       `uvm_error("check_phase", $sformatf("%s tx_stb_en == 1 and NO stb received!", my_name));
+    if((cfg.with_external_stb_test == 0) &&(cfg.stb_error_test == 0) && (cfg.align_error_test == 0))begin
+       if((cfg.tx_en_stb_check == 1) && (stb_beat_cnt == 0) && (cfg.tx_stb_en == 1)) begin
+          `uvm_error("check_phase", $sformatf("%s tx_stb_en == 1 and NO stb received!", my_name));
+       end
     end
 
-    if(vif.align_done !== 1'b1) begin
-       `uvm_error("check_phase", $sformatf("%s align_done NEVER asserted! act: %0h", my_name, vif.align_done));
+    if((cfg.stb_error_test == 0) && (cfg.align_error_test == 0) && (vif.align_done !== 1'b1)) begin
+       if(cfg.no_external_stb_test == 0)begin
+         `uvm_error("check_phase", $sformatf("%s align_done NEVER asserted! act: %0h", my_name, vif.align_done));
+       end else begin
+            pass = 1;
+            if (cfg.no_external_stb_test == 1) begin 
+            `uvm_info("check_phase", "no_external_strobes_test: align_done not asserted as expected in tx_tb_in_mon :\n", UVM_NONE); 
+            end //no_external_strobes_test == 1
+            if (cfg.align_error_test == 1) begin
+            `uvm_info("check_phase", "align_error_test: align_done not asserted as expected  in tx_tb_in_mon:\n", UVM_NONE);
+            end  //align_error_test == 1
+       end  //no_external_strobes_test = 0 , align_error_test = 0
+    end 
+
+    if ((cfg.stb_error_test == 1) && (cfg.num_of_stb_error == 0))begin
+         pass = 0;
     end
-   
+
+    if ((cfg.no_external_stb_test == 1) && (vif.align_done == 1))begin
+         pass = 0;
+    end
+
+    if(pass == 1) begin
+        `uvm_info("check_phase", "passed\n", UVM_NONE);  
+    end
+    else begin
+        `uvm_error("check_phase", ">> FAIL <<  Please see above msg\n"); 
+    end
+
 endfunction : check_phase
 
 ////////////////////////////////////////////////////////////

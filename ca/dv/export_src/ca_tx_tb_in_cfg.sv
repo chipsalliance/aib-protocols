@@ -49,6 +49,13 @@ class ca_tx_tb_in_cfg_c extends uvm_object;
     string           my_name = "";
     int              last_tx_cnt_a;
     int              last_tx_cnt_b;
+    bit              drv_tfr_complete_ab;
+    bit              stb_error_test;
+    bit              align_error_test;
+    int              num_of_stb_error;
+    bit              no_external_stb_test;
+    bit              with_external_stb_test;
+    bit              ca_afly1_stb_incorrect_intv_test;
 
     //------------------------------------------
     // UVM Factory Registration Macro

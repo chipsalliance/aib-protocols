@@ -31,6 +31,7 @@ module lpif_ctl
     parameter AIB_VERSION = 2,
     parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
+    parameter AIB_BITS_PER_LANE = 80,
     parameter LPIF_DATA_WIDTH = 64,
     parameter LPIF_CLOCK_RATE = 2000,
     parameter LPIF_PIPELINE_STAGES = 1,
@@ -146,7 +147,6 @@ module lpif_ctl
    // lsm
 
    input logic [3:0]                    lsm_dstrm_state,
-   input logic [2:0]                    lsm_lnk_cfg,
    input logic [2:0]                    lsm_speedmode,
 
    // misc
@@ -211,26 +211,36 @@ module lpif_ctl
   logic                                 d_rx_online;
 
   wire                                  phy_err = ~&{ms_tx_transfer_en, sl_tx_transfer_en} |
-                                        (|wa_error) |
+                                        (|wa_error) | align_err |
                                         lp_linkerror;
 
 `include "lpif_configs.svh"
 
+  wire                                  one_channel = (aib_lanes == 16'h1);
+
   // multi-cycle data transfers
 
+  // one less than number of beats
+  // for 32B LPIF Data Width, number is doubled
   logic [3:0]                           num_xfr_beats;
 
   generate
-    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+    if (X16_Q2 | X16_H2 | X16_H1 | X16_F1)
       assign num_xfr_beats = 4'h0;
-    else if (X8_Q2 | X8_H2 | X8_F2 | X8_H1 | X8_F1)
+    else if (X8_Q2 | X8_H2 | X8_H1 | X8_F1)
       assign num_xfr_beats = 4'h1;
-    else if (X4_Q2 | X4_H2 | X4_F2 | X4_H1 | X4_F1)
+    else if (X4_Q2 | X4_H2 | X4_H1 | X4_F1)
       assign num_xfr_beats = 4'h3;
     else if (X2_H1 | X2_F1)
       assign num_xfr_beats = 4'h7;
     else if (X1_H1 | X1_F1)
       assign num_xfr_beats = 4'hF;
+    else if (X16_F2)
+      assign num_xfr_beats = 4'h1;
+    else if (X8_F2)
+      assign num_xfr_beats = 4'h3;
+    else if (X4_F2)
+      assign num_xfr_beats = 4'h7;
   endgenerate
 
   // handle lp -> dstrm multi-cycle transfers
@@ -247,9 +257,55 @@ module lpif_ctl
   localparam STRM_DATA_WIDTH8  = (LPIF_DATA_WIDTH*8)/8;
   localparam STRM_DATA_WIDTH16 = (LPIF_DATA_WIDTH*8)/16;
 
+  logic [LPIF_VALID_WIDTH-1:0]          d_dstrm_dvalid;
   logic [LPIF_DATA_WIDTH*8-1:0]         d_dstrm_data;
+  logic [LPIF_CRC_WIDTH-1:0]            d_dstrm_crc;
+  logic [LPIF_VALID_WIDTH-1:0]          d_dstrm_crc_valid;
 
-  assign pl_trdy = lsm_state_active | (lp_irdy & lp_data_xfr_done);
+  logic [LPIF_DATA_WIDTH*8-1:0]         lp_data0;
+
+  logic                                 d_pl_trdy;
+  logic [1:0]                           pl_trdy_cnt, d_pl_trdy_cnt;
+
+  generate
+    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+      always_comb
+        begin
+          d_pl_trdy = lsm_state_active;
+        end
+    if (X8_Q2 & (LPIF_DATA_WIDTH == 128))
+      always_comb
+        begin
+          d_pl_trdy = pl_trdy;
+          d_pl_trdy_cnt = pl_trdy_cnt;
+          if (lsm_state_active & ~lp_irdy)
+            d_pl_trdy = 1'b1;
+          else
+            begin
+              if (lp_irdy & pl_trdy)
+                d_pl_trdy = 1'b0;
+              if (lp_irdy & ~pl_trdy)
+                d_pl_trdy = 1'b1;
+              if (pl_trdy)
+                d_pl_trdy_cnt = pl_trdy_cnt + 1'b1;
+              if (pl_trdy_cnt == 2'h1)
+                d_pl_trdy_cnt = 2'b0;
+            end
+        end
+  endgenerate
+
+  always_ff @(posedge lclk or negedge rst_n)
+    if (~rst_n)
+      begin
+        pl_trdy <= 1'b0;
+        pl_trdy_cnt <= 2'b0;
+      end
+    else
+      begin
+        pl_trdy <= d_pl_trdy;
+        pl_trdy_cnt <= d_pl_trdy_cnt;
+      end
+
   assign d_dstrm_valid = lp_data_count_en;
 
   always_comb
@@ -274,15 +330,36 @@ module lpif_ctl
       always_comb
         begin
           d_dstrm_data = lp_data;
+          d_dstrm_dvalid = lp_valid;
+          d_dstrm_crc = lp_crc;
+          d_dstrm_crc_valid = lp_crc_valid;
         end
     if (X8_Q2 | X8_H1)
       always_comb
         begin
+          d_dstrm_dvalid = dstrm_dvalid;
           d_dstrm_data = dstrm_data;
+          d_dstrm_crc = dstrm_crc;
+          d_dstrm_crc_valid = dstrm_crc_valid;
           case (lp_data_beat)
-            4'h0: d_dstrm_data = lp_data[0*512+:512];
-            4'h1: d_dstrm_data = lp_data[1*512+:512];
-            default: d_dstrm_data = lp_data[0*512+:512];
+            4'h0: begin
+              d_dstrm_dvalid = lp_valid[0*1+:1];
+              d_dstrm_data = lp_data[0*512+:512];
+              d_dstrm_crc = lp_crc[0*16+:16];
+              d_dstrm_crc_valid = lp_crc_valid[0*1+:1];
+            end
+            4'h1: begin
+              d_dstrm_dvalid = lp_valid[1*1+:1];
+              d_dstrm_data = lp_data[1*512+:512];
+              d_dstrm_crc = lp_crc[1*16+:16];
+              d_dstrm_crc_valid = lp_crc_valid[1*1+:1];
+            end
+            default: begin
+              d_dstrm_dvalid = lp_valid[0*1+:1];
+              d_dstrm_data = lp_data[0*512+:512];
+              d_dstrm_crc = lp_crc[0*16+:16];
+              d_dstrm_crc_valid = lp_crc_valid[0*1+:1];
+            end
           endcase // case (lp_data_beat)
         end
     if (X8_H2 | X8_F1)
@@ -290,9 +367,9 @@ module lpif_ctl
         begin
           d_dstrm_data = dstrm_data;
           case (lp_data_beat)
-            4'h0: d_dstrm_data = lp_data[0*256+:256];
-            4'h1: d_dstrm_data = lp_data[1*256+:256];
-            default: d_dstrm_data = lp_data[0*256+:256];
+            4'h0: d_dstrm_data = lp_data0[0*256+:256];
+            4'h1: d_dstrm_data = lp_data0[1*256+:256];
+            default: d_dstrm_data = lp_data0[0*256+:256];
           endcase // case (lp_data_beat)
         end
     if (X8_F2)
@@ -300,9 +377,11 @@ module lpif_ctl
         begin
           d_dstrm_data = dstrm_data;
           case (lp_data_beat)
-            4'h0: d_dstrm_data = lp_data[0*128+:128];
-            4'h1: d_dstrm_data = lp_data[1*128+:128];
-            default: d_dstrm_data = lp_data[0*128+:128];
+            4'h0: d_dstrm_data = lp_data[1*128+:128];
+            4'h1: d_dstrm_data = lp_data[0*128+:128];
+            4'h2: d_dstrm_data = lp_data0[1*128+:128];
+            4'h3: d_dstrm_data = lp_data[0*128+:128];
+            default: d_dstrm_data = lp_data0[0*128+:128];
           endcase // case (lp_data_beat)
         end
     if (X4_Q2 | X4_H1)
@@ -310,11 +389,11 @@ module lpif_ctl
         begin
           d_dstrm_data = dstrm_data;
           case (lp_data_beat)
-            4'h0: d_dstrm_data = lp_data[0*256+:256];
-            4'h1: d_dstrm_data = lp_data[1*256+:256];
-            4'h2: d_dstrm_data = lp_data[2*256+:256];
+            4'h0: d_dstrm_data = lp_data0[0*256+:256];
+            4'h1: d_dstrm_data = lp_data0[1*256+:256];
+            4'h2: d_dstrm_data = lp_data0[2*256+:256];
             4'h3: d_dstrm_data = lp_data[3*256+:256];
-            default: d_dstrm_data = lp_data[0*256+:256];
+            default: d_dstrm_data = lp_data0[0*256+:256];
           endcase // case (lp_data_beat)
         end
     if (X4_H2 | X4_F1)
@@ -322,11 +401,11 @@ module lpif_ctl
         begin
           d_dstrm_data = dstrm_data;
           case (lp_data_beat)
-            4'h0: d_dstrm_data = lp_data[0*128+:128];
-            4'h1: d_dstrm_data = lp_data[1*128+:128];
-            4'h2: d_dstrm_data = lp_data[2*128+:128];
+            4'h0: d_dstrm_data = lp_data0[0*128+:128];
+            4'h1: d_dstrm_data = lp_data0[1*128+:128];
+            4'h2: d_dstrm_data = lp_data0[2*128+:128];
             4'h3: d_dstrm_data = lp_data[3*128+:128];
-            default: d_dstrm_data = lp_data[0*128+:128];
+            default: d_dstrm_data = lp_data0[0*128+:128];
           endcase // case (lp_data_beat)
         end
     if (X4_F2)
@@ -338,7 +417,11 @@ module lpif_ctl
             4'h1: d_dstrm_data = lp_data[1*64+:64];
             4'h2: d_dstrm_data = lp_data[2*64+:64];
             4'h3: d_dstrm_data = lp_data[3*64+:64];
-            default: d_dstrm_data = lp_data[0*64+:64];
+            4'h4: d_dstrm_data = lp_data0[0*64+:64];
+            4'h5: d_dstrm_data = lp_data0[1*64+:64];
+            4'h6: d_dstrm_data = lp_data0[2*64+:64];
+            4'h7: d_dstrm_data = lp_data[3*64+:64];
+            default: d_dstrm_data = lp_data0[0*64+:64];
           endcase // case (lp_data_beat)
         end
     if (X2_H1)
@@ -448,6 +531,36 @@ module lpif_ctl
   logic [LPIF_VALID_WIDTH-1:0]          d_pl_crc_valid;
   logic [LPIF_VALID_WIDTH-1:0]          d_pl_valid;
 
+  logic [LPIF_VALID_WIDTH-1:0]          pl_valid_tmp, d_pl_valid_tmp;
+  logic [LPIF_DATA_WIDTH*8-1:0]         pl_data_tmp, d_pl_data_tmp;
+  logic [LPIF_VALID_WIDTH-1:0]          pl_crc_valid_tmp, d_pl_crc_valid_tmp;
+  logic [LPIF_CRC_WIDTH-1:0]            pl_crc_tmp, d_pl_crc_tmp;
+
+  // FIX THIS - tmp
+
+  logic [31:0]                          lp_data_dw[31:0];
+  logic [31:0]                          lp_data0_dw[31:0];
+
+  logic [31:0]                          ustrm_data_dw[31:0];
+  logic [31:0]                          d_pl_data_dw[31:0];
+  logic [31:0]                          pl_data_dw[31:0];
+  logic [31:0]                          pl_data_tmp_dw[31:0];
+
+  localparam NUM_DWORDS = LPIF_DATA_WIDTH * 8 / 32;
+
+  always_comb
+    begin
+      for (int i = 0; i < 32; i++)
+        begin
+          lp_data_dw[i] = lp_data[i*32+:32];
+          lp_data0_dw[i] = lp_data0[i*32+:32];
+          ustrm_data_dw[i] = ustrm_data[i*32+:32];
+          pl_data_dw[i] = pl_data[i*32+:32];
+          d_pl_data_dw[i] = d_pl_data[i*32+:32];
+          pl_data_tmp_dw[i] = pl_data_tmp[i*32+:32];
+        end
+    end
+
   always_comb
     begin
       ustrm_data_max_beat = num_xfr_beats;
@@ -465,28 +578,54 @@ module lpif_ctl
         d_ustrm_data_beat = ustrm_data_beat - 1'b1;
     end
 
-  always_comb
-    begin
-      d_pl_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_dvalid;
-      d_pl_crc_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_crc_valid;
-      d_pl_crc = ustrm_crc;
-    end
-
   generate
     if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
       always_comb
         begin
           d_pl_data = ustrm_data;
+          d_pl_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_dvalid;
+          d_pl_crc_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_crc_valid;
+          d_pl_crc = ustrm_crc;
         end
     if (X8_Q2 | X8_H1)
       always_comb
         begin
+          d_pl_valid = pl_valid;
           d_pl_data = pl_data;
-          case (ustrm_data_beat)
-            4'h0: d_pl_data[0*512+:512] = ustrm_data;
-            4'h1: d_pl_data[1*512+:512] = ustrm_data;
-            default: d_pl_data[0*512+:512] = ustrm_data;
-          endcase // case (ustrm_data_beat)
+          d_pl_crc_valid = pl_crc_valid;
+          d_pl_crc = pl_crc;
+          d_pl_valid_tmp = pl_valid_tmp;
+          d_pl_data_tmp = pl_data_tmp;
+          d_pl_crc_valid_tmp = pl_crc_valid_tmp;
+          d_pl_crc_tmp = pl_crc_tmp;
+          if (ustrm_valid)
+            begin
+              case (ustrm_data_beat)
+                4'h0: begin
+                  d_pl_valid = {pl_valid_tmp[0], ustrm_dvalid[0]};
+                  d_pl_data = {pl_data_tmp[511:0], ustrm_data[511:0]};
+                  d_pl_crc_valid = {pl_crc_valid_tmp[0], ustrm_crc_valid[0]};
+                  d_pl_crc = {pl_crc_tmp[15:0], ustrm_crc[15:0]};
+                end
+                4'h1: begin
+                  d_pl_valid_tmp[0] = ustrm_dvalid[0];
+                  d_pl_valid = 2'b0;
+                  d_pl_data_tmp[511:0] = ustrm_data[511:0];
+                  d_pl_crc_valid_tmp[0] = ustrm_crc_valid[0];
+                  d_pl_crc_tmp[15:0] = ustrm_crc[15:0];
+                end
+                default: begin
+                  d_pl_data = pl_data;
+                  d_pl_valid = pl_valid;
+                  d_pl_crc = pl_crc;
+                  d_pl_crc_valid = pl_crc_valid;
+                end
+              endcase // case (ustrm_data_beat)
+            end
+          else
+            begin
+              d_pl_valid = 2'h0;
+            end
         end
     if (X8_H2 | X8_F1)
       always_comb
@@ -626,6 +765,32 @@ module lpif_ctl
         end
   endgenerate
 
+  // pl_lnk_cfg encodings
+
+  localparam [2:0]
+    LNK_CFG_X1	= 3'b000,
+    LNK_CFG_X2	= 3'b001,
+    LNK_CFG_X4	= 3'b010,
+    LNK_CFG_X8	= 3'b011,
+    LNK_CFG_X16	= 3'b101;
+
+  logic [2:0]                   d_pl_lnk_cfg;
+
+  generate
+    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+      assign d_pl_lnk_cfg = LNK_CFG_X16;
+    else if (X8_Q2 | X8_F2 | X8_H2 | X8_H1 | X8_F1)
+      assign d_pl_lnk_cfg = LNK_CFG_X8;
+    else if (X4_Q2 | X4_H2 | X4_F2 | X4_H1 | X4_F1)
+      assign d_pl_lnk_cfg = LNK_CFG_X4;
+    else if (X2_H1 | X2_F1)
+      assign d_pl_lnk_cfg = LNK_CFG_X2;
+    else if (X1_H1 | X1_F1)
+      assign d_pl_lnk_cfg = LNK_CFG_X1;
+    else
+      assign d_pl_lnk_cfg = LNK_CFG_X1;
+  endgenerate
+
   always_ff @(posedge lclk or negedge rst_n)
     if (~rst_n)
       begin
@@ -707,9 +872,8 @@ module lpif_ctl
     CTL_CFG		= 3'h2,
     CTL_CALIB		= 3'h3,
     CTL_WAIT_CA_ALIGN	= 3'h4,
-    CTL_CA_ALIGNED	= 3'h5,
-    CTL_LINK_UP		= 3'h6,
-    CTL_PHY_ERR		= 3'h7;
+    CTL_LINK_UP		= 3'h5,
+    CTL_PHY_ERR		= 3'h6;
 
   logic [2:0] /* auto enum ctl_state_info */
               ctl_state, d_ctl_state;
@@ -724,7 +888,6 @@ module lpif_ctl
       CTL_CFG:           ctl_state_ascii = "ctl_cfg          ";
       CTL_CALIB:         ctl_state_ascii = "ctl_calib        ";
       CTL_WAIT_CA_ALIGN: ctl_state_ascii = "ctl_wait_ca_align";
-      CTL_CA_ALIGNED:    ctl_state_ascii = "ctl_ca_aligned   ";
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
       CTL_PHY_ERR:       ctl_state_ascii = "ctl_phy_err      ";
       default:           ctl_state_ascii = "%Error           ";
@@ -768,15 +931,12 @@ module lpif_ctl
             begin
               d_tx_online = 1'b1;
               d_rx_online = 1'b1;
-              d_ctl_state = CTL_WAIT_CA_ALIGN;
+              d_ctl_state = one_channel ? CTL_LINK_UP : CTL_WAIT_CA_ALIGN;
             end
         end
         CTL_WAIT_CA_ALIGN: begin
           if (align_done)
             d_ctl_state = CTL_LINK_UP;
-        end
-        CTL_CA_ALIGNED: begin
-          d_ctl_state = CTL_CA_ALIGNED;
         end
         CTL_LINK_UP: begin
           if (phy_err)
@@ -801,6 +961,8 @@ module lpif_ctl
           dstrm_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
           dstrm_valid <= 1'b0;
 
+          lp_data0 <= {LPIF_DATA_WIDTH*8{1'b0}};
+
           ns_mac_rdy <= 1'b0;
           ns_adapter_rstn <= {AIB_LANES{1'b0}};
 
@@ -813,6 +975,11 @@ module lpif_ctl
           pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
           pl_stream <= 8'b0;
 
+          pl_valid_tmp <= 1'b0;
+          pl_data_tmp <= {LPIF_DATA_WIDTH*8{1'b0}};
+          pl_crc_valid_tmp <= {LPIF_VALID_WIDTH{1'b0}};
+          pl_crc_tmp <= {LPIF_CRC_WIDTH{1'b0}};
+
           tx_online <= 1'b0;
           rx_online <= 1'b0;
         end
@@ -821,15 +988,17 @@ module lpif_ctl
           dstrm_state <= lsm_dstrm_state;
           dstrm_protid <= d_dstrm_protid[1:0];
           dstrm_data <= d_dstrm_data;
-          dstrm_dvalid <= lp_valid;
-          dstrm_crc <= lp_crc;
-          dstrm_crc_valid <= lp_crc_valid;
+          dstrm_dvalid <= d_dstrm_dvalid;
+          dstrm_crc <= d_dstrm_crc;
+          dstrm_crc_valid <= d_dstrm_crc_valid;
           dstrm_valid <= d_dstrm_valid;
+
+          lp_data0 <=(lp_irdy & pl_trdy) ? lp_data : lp_data0;
 
           ns_mac_rdy <= d_ns_mac_rdy;
           ns_adapter_rstn <= d_ns_adapter_rstn;
 
-          pl_lnk_cfg <= lsm_lnk_cfg;
+          pl_lnk_cfg <= d_pl_lnk_cfg;
           pl_speedmode <= lsm_speedmode;
 
           pl_valid <= d_pl_valid;
@@ -837,6 +1006,11 @@ module lpif_ctl
           pl_crc_valid <= d_pl_crc_valid;
           pl_crc <= d_pl_crc;
           pl_stream <= d_pl_stream;
+
+          pl_valid_tmp <= d_pl_valid_tmp;
+          pl_data_tmp <= d_pl_data_tmp;
+          pl_crc_valid_tmp <= d_pl_crc_valid_tmp;
+          pl_crc_tmp <= d_pl_crc_tmp;
 
           tx_online <= d_tx_online;
           rx_online <= d_rx_online;

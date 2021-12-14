@@ -116,6 +116,7 @@ module axi_st_d128_asym_half_slave_top  (
          .clk_wr                           (clk_wr),
          .rst_wr_n                         (rst_wr_n),
          .rx_online                        (rx_online_delay),
+         .tx_online                        (tx_online_delay),
          .rx_i_push_ovrd                   (rx_st_push_ovrd),
          .rx_i_data                        (rx_st_data[291:0]),
          .rx_i_pushbit                     (rx_st_pushbit),

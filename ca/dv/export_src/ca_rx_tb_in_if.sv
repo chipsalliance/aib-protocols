@@ -45,6 +45,7 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic                                         rx_online;
     logic                                         align_fly;
     logic [2:0]                                   rden_dly;
+    logic                                         tx_stb_rcvr;
     logic                                         rx_stb_pos_err;
     logic                                         rx_stb_pos_coding_err;
     logic [7:0]                                   rx_stb_wd_sel;
@@ -64,6 +65,8 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic [24-1:0]                                fl_sl_rx_transfer_en;
     logic[3:0]                                    user_marker;
     logic                                         user_stb;
+    logic [7:0]                                   strobe_gen_m_interval;
+    logic [7:0]                                   strobe_gen_s_interval;
 
     // modports...
     //---------------------------------------------------
@@ -108,6 +111,7 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
         output    rx_online,
         output    align_fly,
         output    rden_dly,
+        output    tx_stb_rcvr,
         input     rx_stb_pos_err,
         input     rx_stb_pos_coding_err,
         output    rx_stb_wd_sel,

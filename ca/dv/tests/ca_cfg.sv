@@ -52,7 +52,8 @@ class ca_cfg_c extends uvm_object;
 
     chan_delay_cfg_c     ca_die_b_delay_cfg[`MAX_NUM_CHANNELS];
     chan_delay_cfg_c     ca_die_a_delay_cfg[`MAX_NUM_CHANNELS];
-   
+ 
+    bit                  stb_error_test; 
     //------------------------------------------
     // constraints
     //------------------------------------------
@@ -141,8 +142,8 @@ function void ca_cfg_c::configure( );
     // if valid, override the random values BEFORE the config is executed
 
     // randomize the bit/wd select
-    ca_die_a_tx_tb_out_cfg.configure(); 
-    ca_die_b_tx_tb_out_cfg.configure();
+    //ca_die_a_tx_tb_out_cfg.configure(); 
+    //ca_die_b_tx_tb_out_cfg.configure();
  
     ca_die_a_tx_tb_in_cfg.configure(); 
     ca_die_b_tx_tb_in_cfg.configure(); 

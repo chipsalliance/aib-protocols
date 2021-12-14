@@ -46,7 +46,8 @@ class base_ca_test_c extends uvm_test;
     virtual reset_if       vif;
     ca_cfg_c               ca_cfg;  
     uvm_report_server      server;
-    
+    bit                    test_end;   
+    bit                    base_test;   
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -73,6 +74,7 @@ class base_ca_test_c extends uvm_test;
     extern function bit ck_xfer_cnt_a(bit show);
     extern function bit ck_xfer_cnt_b(bit show);
     extern task ck_eot( uvm_phase phase );
+    extern task sbd_counts_clear( );
  
 endclass: base_ca_test_c
 
@@ -159,6 +161,25 @@ task base_ca_test_c::run_phase(uvm_phase phase);
     $display("\n CA_BASE_TEST :: run phase done call to super at %0t",$time);
 `endif
 endtask : run_phase
+//------------------------------------------
+task base_ca_test_c::sbd_counts_clear();
+     
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_top_env.ca_scoreboard.rx_out_cnt_die_a        = 0;
+     ca_top_env.ca_scoreboard.rx_out_cnt_die_b        = 0;
+     ca_top_env.ca_scoreboard.tx_out_cnt_die_a        = 0;
+     ca_top_env.ca_scoreboard.tx_out_cnt_die_b        = 0;
+     ca_top_env.ca_scoreboard.beat_cnt_a              = 0;
+     ca_top_env.ca_scoreboard.beat_cnt_b              = 0;
+
+endtask : sbd_counts_clear 
 //------------------------------------------
 task base_ca_test_c::global_timer();
 
@@ -266,6 +287,7 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
     bit result_b = 0;
 
     phase.raise_objection(this);
+    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test == 0))begin
      if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
         while(ck_xfer_cnt_a(0) == 0) begin
             repeat (10) @(posedge vif.clk);
@@ -276,18 +298,24 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
             repeat (10) @(posedge vif.clk);
         end
      end
-    `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
+    end
+   if(base_test == 0)begin 
+     wait(test_end == 1); 
+   end
+    $display("inside_base_ca_test : test_end,%0d",test_end);
+   
     repeat (10) @(posedge vif.clk);
     phase.drop_objection(this);
-
-   uvm_test_done.set_drain_time(this, 10ps);
+    `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
+    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test == 0))begin
+      uvm_test_done.set_drain_time(this, 10ps);
            if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
               result_a = ck_xfer_cnt_a(1);
            end
            if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
               result_b = ck_xfer_cnt_b(1);
            end
-
+   end
 endtask : ck_eot
 
 //------------------------------------------

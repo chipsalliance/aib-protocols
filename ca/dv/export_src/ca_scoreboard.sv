@@ -265,23 +265,47 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                         beat_cnt = ++rx_out_cnt_die_a;
                       `else
                         beat_cnt_a += 1;
+                        if(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a == 0 ) begin 
                         rx_out_cnt_die_a = beat_cnt_a *  rx_tb_in_item.cnt_mul;
-                        ///if(beat_cnt == rx_tb_in_item.last_tx_cnt_a) rx_out_cnt_die_a = beat_cnt * rx_tb_in_item.cnt_mul;
+                        end
                       `endif
+                        if(rx_out_cnt_die_a == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
+                             ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                             ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                        end
                      end
             "DIE_B": begin
                       `ifndef CA_ASYMMETRIC
                         beat_cnt = ++rx_out_cnt_die_b;
                       `else
                         beat_cnt_b += 1;
-                        rx_out_cnt_die_b = beat_cnt_b *  rx_tb_in_item.cnt_mul;
+                        if(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b == 0 ) begin 
+                           rx_out_cnt_die_b = beat_cnt_b *  rx_tb_in_item.cnt_mul;
+                        end
                         //if(beat_cnt == rx_tb_in_item.last_tx_cnt_b) rx_out_cnt_die_b = beat_cnt * rx_tb_in_item.cnt_mul;
                       `endif
+                        if(rx_out_cnt_die_b == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  
+                             ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                             ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                             //$display("DIE_B rx_cnt %0f,cfg.last_tx_cnt_b  %0d",rx_out_cnt_die_b,ca_cfg.ca_die_b_rx_tb_in_cfg.last_tx_cnt_b);
+                        end
                      end
             default: begin
                 `uvm_fatal("write_rx_tb_in", "BAD case in my_name");
             end
         endcase
+                    if((ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a == 1 ) && (ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b == 1)) begin
+                       ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 1;
+                       ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab = 1;
+                       ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 1;
+                       ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab = 1;
+                       $display("drv_tfr_complete_ab %0d",ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab);
+                    end
+                     // $display("RX:: drv_tfr_complete_ab %0d,%0d,%s",ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab,ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab,rx_tb_in_item.my_name);
+                     // $display("TX:: drv_tfr_complete_ab %0d,%0d,%s",ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab,ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab,rx_tb_in_item.my_name);
+                     // $display("my_name %0s rx_cnt %0f,tx_cnt   %0d",rx_tb_in_item.my_name ,rx_out_cnt_die_a,ca_cfg.ca_knobs.tx_xfer_cnt_die_a);
+                     // $display("my_name %0s rx_cnt %0f,tx_cnt   %0d",rx_tb_in_item.my_name ,rx_out_cnt_die_b,ca_cfg.ca_knobs.tx_xfer_cnt_die_b);
+
        `ifdef CA_ASYMMETRIC
         //$display("cnt_mul = %0f,beat %0f,rx_die_a %0f,rx_die_b %0f,last_tx_cnt_a %0d,last_tx_cnt_b %0d,my_name  %s",rx_tb_in_item.cnt_mul,(rx_tb_in_item.my_name=="DIE_A")?beat_cnt_a:beat_cnt_b,rx_out_cnt_die_a,rx_out_cnt_die_b,rx_tb_in_item.last_tx_cnt_a,rx_tb_in_item.last_tx_cnt_b,rx_tb_in_item.my_name);
         `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing %0d item from RTL: %s --> TB rx_dout \n", (rx_tb_in_item.my_name=="DIE_A")?beat_cnt_a:beat_cnt_b, rx_tb_in_item.my_name), UVM_MEDIUM);
@@ -296,18 +320,19 @@ endfunction : write_rx_tb_in
 
 //=========================================================================================
 function void ca_scoreboard_c::proc_tx_tb_in_err( ca_data_pkg::ca_seq_item_c  tx_tb_in_item );
-
-    `uvm_error("proc_tx_tb_in", $sformatf("%s UNEXPECTED ERROR: tx_stb_pos_err: %0d  tx_stb_pos_coding_err: %0d",
-        tx_tb_in_item.my_name, tx_tb_in_item.stb_pos_err, tx_tb_in_item.stb_pos_coding_err));
-
+     if(ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0)  begin
+       `uvm_error("proc_tx_tb_in", $sformatf("%s UNEXPECTED ERROR: tx_stb_pos_err: %0d  tx_stb_pos_coding_err: %0d",
+            tx_tb_in_item.my_name, tx_tb_in_item.stb_pos_err, tx_tb_in_item.stb_pos_coding_err));
+     end
 endfunction : proc_tx_tb_in_err
 
 //------------------------------------------
 function void ca_scoreboard_c::proc_rx_tb_in_err( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
 
-    `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d align_err: %0d",
-        rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err, rx_tb_in_item.align_err));
-
+     if((ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))  begin
+        `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d align_err: %0d",
+            rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err, rx_tb_in_item.align_err));
+     end 
 endfunction : proc_rx_tb_in_err
 
 //=========================================================================================

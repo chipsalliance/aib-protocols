@@ -157,6 +157,7 @@ task ca_rx_tb_in_drv_c::drv_rx();
             while(rx_q.size() > 0) rx_item = rx_q.pop_front(); 
         end // reset
         else begin // non reset state
+            drv_rx_idle();
             //
         end // non reset
     end // forever clk
@@ -171,6 +172,7 @@ function void ca_rx_tb_in_drv_c::drv_rx_idle();
     vif.rx_stb_intv      <=  cfg.rx_stb_intv;
     vif.align_fly        <=  cfg.align_fly;
     vif.rden_dly         <=  cfg.rden_dly;
+    vif.tx_stb_rcvr      <=  cfg.tx_stb_rcvr;
     vif.fifo_full_val    <=  cfg.fifo_full_val;
     vif.fifo_pfull_val   <=  cfg.fifo_pfull_val;
     vif.fifo_empty_val   <=  cfg.fifo_empty_val;
