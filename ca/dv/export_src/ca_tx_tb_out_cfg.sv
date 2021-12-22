@@ -49,7 +49,12 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit [7:0]        tx_stb_intv    = `CA_TX_STB_INTV ;
     rand int         bit_shift ;
     int              bits_per_channel = 0;
-
+    bit              stb_error_test;
+    bit              align_error_test;
+    bit              stop_strobes_inject;
+    bit              align_done_assert;
+    bit              shift_stb_intv_enb;
+    int              max_wd_sel = 0 ; 
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------
@@ -69,7 +74,7 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     //------------------------------------------
     // constraints 
     //------------------------------------------
-    //constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
+     constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
     //constraint c_tx_stb_intv    { tx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
 
     //------------------------------------------
@@ -105,18 +110,17 @@ endfunction : set_bits_per_channel
 //------------------------------------------
 function void ca_tx_tb_out_cfg_c::configure( );
    
-    int max_wd_sel = 0 ; 
     int wd_shift   = 0 ;
 
-//    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
-//    max_wd_sel = bits_per_channel/40;
-//    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
-//
-//    tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
-//    tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
-//    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0h  tx_stb_wd_sel: %0b", 
-//        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_LOW);
-//
+    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));
+    max_wd_sel = bits_per_channel/40;
+    if(max_wd_sel > 1) wd_shift =  $urandom_range((max_wd_sel-1),0);
+
+    tx_stb_bit_sel = tx_stb_bit_sel << bit_shift;
+    tx_stb_wd_sel  = tx_stb_wd_sel << wd_shift;
+    `uvm_info("ca_tx_tb_out_cfg", $sformatf("%s bit_shift: %0d wd_shift: %0d tx_stb_bit_sel: %0b  tx_stb_wd_sel: %0b", 
+        my_name, bit_shift, wd_shift, tx_stb_bit_sel, tx_stb_wd_sel), UVM_LOW);
+
 endfunction: configure 
 ////////////////////////////////////////////////////////////
 `endif

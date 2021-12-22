@@ -167,17 +167,17 @@ marker_gen marker_gen_im
       .local_rate                       (`SLV_GEAR),                         // Templated
       .remote_rate                      (`MSR_GEAR));                        // Templated
 
-   logic [7:0] strobe_gen_m_interval;
-   logic [7:0] strobe_gen_s_interval;
+   //logic [7:0] strobe_gen_m_interval;
+   //logic [7:0] strobe_gen_s_interval;
 
    // Should be remote side's expected interval, multiplied by Remote Rate / Local Rate.
-   assign strobe_gen_m_interval = ((ca_s_if.rx_stb_intv * `SLV_GEAR) / `MSR_GEAR);
-   assign strobe_gen_s_interval = ((ca_m_if.rx_stb_intv * `MSR_GEAR) / `SLV_GEAR);
+   assign ca_die_a_tx_tb_in_if.strobe_gen_m_interval = ((ca_s_if.rx_stb_intv * `SLV_GEAR) / `MSR_GEAR);
+   assign ca_die_b_tx_tb_in_if.strobe_gen_s_interval = ((ca_m_if.rx_stb_intv * `MSR_GEAR) / `SLV_GEAR);
 
    strobe_gen strobe_gen_im (
       .clk      (msr_wr_clk),
       .rst_n    (tb_reset_l),
-      .interval (strobe_gen_m_interval),
+      .interval (ca_die_a_tx_tb_in_if.strobe_gen_m_interval),
       .user_marker(|ca_die_a_tx_tb_out_if.user_marker),
       .online(1'b1),
       .user_strobe(ca_die_a_tx_tb_out_if.user_stb));
@@ -186,7 +186,7 @@ marker_gen marker_gen_im
 
       .clk      (slv_wr_clk),
       .rst_n    (tb_reset_l),
-      .interval (strobe_gen_s_interval),
+      .interval (ca_die_b_tx_tb_in_if.strobe_gen_s_interval),
       .user_marker(|ca_die_b_tx_tb_out_if.user_marker),
       .online(1'b1),
       .user_strobe(ca_die_b_tx_tb_out_if.user_stb));
@@ -236,12 +236,12 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign ca_die_b_rx_tb_in_if.rx_stb_pos_err         = ca_s_if.rx_stb_pos_err;  
         assign ca_die_b_rx_tb_in_if.rx_stb_pos_coding_err  = ca_s_if.rx_stb_pos_coding_err;  
             
-        assign ca_m_if.align_fly        = `CA_ALIGN_FLY;
-        assign ca_s_if.align_fly        = `CA_ALIGN_FLY;
-        assign ca_m_if.tx_stb_en        = `CA_TX_STB_EN;
-        assign ca_s_if.tx_stb_en        = `CA_TX_STB_EN;
-        assign ca_m_if.tx_stb_rcvr      = 1'b0;
-        assign ca_s_if.tx_stb_rcvr      = 1'b0;
+        assign ca_m_if.align_fly        = ca_die_a_rx_tb_in_if.align_fly;
+        assign ca_s_if.align_fly        = ca_die_b_rx_tb_in_if.align_fly;
+        assign ca_m_if.tx_stb_en        = ca_die_a_tx_tb_out_if.tx_stb_en;
+        assign ca_s_if.tx_stb_en        = ca_die_b_tx_tb_out_if.tx_stb_en;
+        assign ca_m_if.tx_stb_rcvr      = ca_die_a_rx_tb_in_if.tx_stb_rcvr;
+        assign ca_s_if.tx_stb_rcvr      = ca_die_b_rx_tb_in_if.tx_stb_rcvr;
         assign ca_m_if.rden_dly         = `CA_RDEN_DLY;
         assign ca_s_if.rden_dly         = `CA_RDEN_DLY;
 
@@ -251,30 +251,30 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign ca_s_if.delay_z_value    = DELAY_XZ_VALUE;
 
 
-        assign ca_m_if.fifo_full_val    = (`CA_FIFO_FULL)-1;
-        assign ca_m_if.fifo_pfull_val   = `CA_FIFO_PFULL;
-        assign ca_m_if.fifo_empty_val   = `CA_FIFO_EMPTY;
-        assign ca_m_if.fifo_pempty_val  = `CA_FIFO_PEMPTY;
-        assign ca_s_if.fifo_full_val    = (`CA_FIFO_FULL)-1;
-        assign ca_s_if.fifo_pfull_val   = `CA_FIFO_PFULL;
-        assign ca_s_if.fifo_empty_val   = `CA_FIFO_EMPTY;
-        assign ca_s_if.fifo_pempty_val  = `CA_FIFO_PEMPTY;
+        assign ca_m_if.fifo_full_val    = ca_die_a_rx_tb_in_if.fifo_full_val;
+        assign ca_m_if.fifo_pfull_val   = ca_die_a_rx_tb_in_if.fifo_pfull_val;
+        assign ca_m_if.fifo_empty_val   = ca_die_a_rx_tb_in_if.fifo_empty_val;
+        assign ca_m_if.fifo_pempty_val  = ca_die_a_rx_tb_in_if.fifo_pempty_val;
+        assign ca_s_if.fifo_full_val    = ca_die_b_rx_tb_in_if.fifo_full_val;
+        assign ca_s_if.fifo_pfull_val   = ca_die_b_rx_tb_in_if.fifo_pfull_val;
+        assign ca_s_if.fifo_empty_val   = ca_die_b_rx_tb_in_if.fifo_empty_val;
+        assign ca_s_if.fifo_pempty_val  = ca_die_b_rx_tb_in_if.fifo_pempty_val;
+   
+	assign ca_m_if.tx_stb_wd_sel	= ca_die_a_tx_tb_out_if.tx_stb_wd_sel;
+	assign ca_m_if.tx_stb_bit_sel 	= ca_die_a_tx_tb_out_if.tx_stb_bit_sel; 
+	assign ca_m_if.tx_stb_intv 	= ca_die_a_tx_tb_out_if.tx_stb_intv;
 
-        assign ca_m_if.tx_stb_wd_sel    = `CA_TX_STB_WD_SEL;
-        assign ca_m_if.tx_stb_bit_sel   = `CA_TX_STB_BIT_SEL;
-        assign ca_m_if.tx_stb_intv      = `CA_TX_STB_INTV;
+        assign ca_m_if.rx_stb_wd_sel  	= ca_die_a_rx_tb_in_if.rx_stb_wd_sel;
+        assign ca_m_if.rx_stb_bit_sel 	= ca_die_a_rx_tb_in_if.rx_stb_bit_sel;
+        assign ca_m_if.rx_stb_intv	= ca_die_a_rx_tb_in_if.rx_stb_intv;
 
-        assign ca_m_if.rx_stb_wd_sel    = `CA_RX_STB_WD_SEL;
-        assign ca_m_if.rx_stb_bit_sel   = `CA_RX_STB_BIT_SEL;
-        assign ca_m_if.rx_stb_intv      = `CA_RX_STB_INTV;
+        assign ca_s_if.tx_stb_wd_sel  	= ca_die_b_tx_tb_out_if.tx_stb_wd_sel; 
+        assign ca_s_if.tx_stb_bit_sel 	= ca_die_b_tx_tb_out_if.tx_stb_bit_sel;
+        assign ca_s_if.tx_stb_intv	= ca_die_b_tx_tb_out_if.tx_stb_intv;
 
-        assign ca_s_if.tx_stb_wd_sel    = `CA_TX_STB_WD_SEL;
-        assign ca_s_if.tx_stb_bit_sel   = `CA_TX_STB_BIT_SEL;
-        assign ca_s_if.tx_stb_intv      = `CA_TX_STB_INTV;
-
-        assign ca_s_if.rx_stb_wd_sel    = `CA_RX_STB_WD_SEL;
-        assign ca_s_if.rx_stb_bit_sel   = `CA_RX_STB_BIT_SEL;
-        assign ca_s_if.rx_stb_intv      = `CA_RX_STB_INTV;
+        assign ca_s_if.rx_stb_wd_sel	= ca_die_b_rx_tb_in_if.rx_stb_wd_sel;
+        assign ca_s_if.rx_stb_bit_sel 	= ca_die_b_rx_tb_in_if.rx_stb_bit_sel;
+        assign ca_s_if.rx_stb_intv	= ca_die_b_rx_tb_in_if.rx_stb_intv;
 
 /////////////////////////  DUT instantiation started  ////////////////////////////////////////
 

@@ -55,6 +55,8 @@ module ca_tx_strb
   logic [7:0]                                       stb_intv_count;
   logic                                             tx_userbit;
   logic                                             tx_state_gen_stb;
+  logic                                             tx_state_done;
+  logic                                             tx_stb_en_final;
   logic [BITS_PER_CHANNEL-1:0]                      tx_din_ch [NUM_CHANNELS-1:0];
   logic [BITS_PER_CHANNEL-1:0]                      tx_dout_ch [NUM_CHANNELS-1:0];
 
@@ -66,25 +68,21 @@ module ca_tx_strb
   logic [5:0] tx_stb_bit_sel_pos;
 
   assign tx_userbit = (stb_intv_count == 8'h1) & tx_state_gen_stb;
+  assign tx_stb_en_final = tx_stb_en & (tx_stb_rcvr ? (~tx_state_done) : 1'b1);
 
   always_comb
     begin : tx_dout_asm
       for (int i = 0; i < NUM_CHANNELS; i++)
-        tx_dout[i*BITS_PER_CHANNEL +: BITS_PER_CHANNEL] = tx_stb_en ? tx_dout_ch[i] : tx_din_ch[i];
+        tx_dout[i*BITS_PER_CHANNEL +: BITS_PER_CHANNEL] = tx_stb_en_final ? tx_dout_ch[i] : tx_din_ch[i];
     end
 
   /* TX mux */
 
   /* ca_tx_mux AUTO_TEMPLATE (
-   .PERSISTENT  (1'b0),
    .CH_WIDTH    (BITS_PER_CHANNEL),
-   .ENABLE      (1'b1),
    .data_out    (tx_dout_ch[i]),
    .data_in     (tx_din_ch[i]),
-   .online      (1'b0),
-   .m_gen2_mode (1'b1),
-   .gen1_loc    (tx_stb_loc[]),
-   .gen2_loc    (tx_stb_loc[]),
+   .stb_loc     (tx_stb_loc[]),
    ); */
 
   genvar                                            i;
@@ -95,19 +93,14 @@ module ca_tx_strb
         ca_tx_mux
           #(/*AUTOINSTPARAM*/
             // Parameters
-            .PERSISTENT                 (1'b0),                  // Templated
-            .CH_WIDTH                   (BITS_PER_CHANNEL),      // Templated
-            .ENABLE                     (1'b1))                  // Templated
+            .CH_WIDTH                   (BITS_PER_CHANNEL))      // Templated
         ca_tx_mux_i
           (/*AUTOINST*/
            // Outputs
            .data_out                    (tx_dout_ch[i]),         // Templated
            // Inputs
            .data_in                     (tx_din_ch[i]),          // Templated
-           .online                      (1'b0),                  // Templated
-           .m_gen2_mode                 (1'b1),                  // Templated
-           .gen1_loc                    (tx_stb_loc[8:0]),       // Templated
-           .gen2_loc                    (tx_stb_loc[8:0]),       // Templated
+           .stb_loc                     (tx_stb_loc[8:0]),       // Templated
            .tx_userbit                  (tx_userbit));
       end
   endgenerate
@@ -117,19 +110,19 @@ module ca_tx_strb
       .delayed_en   (tx_online_del),
       .rst_core_n   (rst_com_n),
       .clk_core	    (com_clk),
-      .enable	    (rx_online),
+      .enable	    (tx_online),
       .delay_value  (delay_z_value[]));
    ); */
 
    level_delay level_delay_i_zvalue
      (/*AUTOINST*/
       // Outputs
-      .delayed_en			(tx_online_del),
+      .delayed_en                       (tx_online_del),         // Templated
       // Inputs
-      .rst_core_n			(rst_n),
-      .clk_core				(com_clk),
-      .enable				(tx_online),
-      .delay_value			(delay_z_value[15:0]));
+      .rst_core_n                       (rst_com_n),             // Templated
+      .clk_core                         (com_clk),               // Templated
+      .enable                           (tx_online),             // Templated
+      .delay_value                      (delay_z_value[15:0]));   // Templated
 
   /* strobe interval counters */
 
@@ -180,6 +173,7 @@ module ca_tx_strb
   // End of automatics
 
   assign tx_state_gen_stb = tx_state == TX_GEN_STB;
+  assign tx_state_done    = tx_state == TX_DONE;
 
   always_ff @(posedge com_clk or negedge rst_n)
     if (~rst_n)

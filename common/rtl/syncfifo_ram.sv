@@ -98,7 +98,6 @@ reg [FIFO_ADDR_MSB:0]           write_addr_reg;
 reg [FIFO_ADDR_MSB:0]           write_addr_nxt;
 reg [FIFO_ADDR_MSB:0]           read_addr_reg;
 reg [FIFO_ADDR_MSB:0]           read_addr_nxt;
-reg [FIFO_ADDR_MSB:0]           write_read_addr_diff;
 
 reg [FIFO_COUNT_MSB:0]          numfilled_reg;
 reg [FIFO_COUNT_MSB:0]          numempty_reg;
@@ -194,27 +193,27 @@ assign numempty = numempty_reg;
 
 ////////////////////////////////////////////////////////////
 // Full / Empty status
-// These are simplier versions of numfilled/empty
-// These use a state bit that indicates if the previous write-read addr was
-// aproaching 0 (EMPTY) or 0 (FULL).
-reg             fifo_data_filling;
-always_ff @(posedge clk_core or negedge rst_core_n)
-if (~rst_core_n)
-  fifo_data_filling <= 1'b0 ;
-else if (soft_reset)
-  fifo_data_filling <= 1'b0 ;
-else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
-  fifo_data_filling <= fifo_data_filling ;
-else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write caught up with read... full
-  fifo_data_filling <= 1'b1 ;
-else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe           ))  // Read caught up with write... empty
-  fifo_data_filling <= 1'b0 ;
+// // These are simplier versions of numfilled/empty
+// // These use a state bit that indicates if the previous write-read addr was
+// // aproaching 0 (EMPTY) or 0 (FULL).
+// reg             fifo_data_filling;
+// always_ff @(posedge clk_core or negedge rst_core_n)
+// if (~rst_core_n)
+//   fifo_data_filling <= 1'b0 ;
+// else if (soft_reset)
+//   fifo_data_filling <= 1'b0 ;
+// else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe & wrstrobe))  // Keeping pace... no change
+//   fifo_data_filling <= fifo_data_filling ;
+// else if ((write_addr_nxt == read_addr_nxt) & (           wrstrobe))  // Write caught up with read... full
+//   fifo_data_filling <= 1'b1 ;
+// else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe           ))  // Read caught up with write... empty
+//   fifo_data_filling <= 1'b0 ;
 
 
 // The following is implemented two ways, combinatorial and register based.
 // The register based is more timing closure friendly, but both are functional.
-wire full_comb;
-wire empty_comb;
+// wire full_comb;
+// wire empty_comb;
 reg full_reg;
 reg empty_reg;
 
@@ -242,8 +241,8 @@ else if ((write_addr_nxt == read_addr_nxt) & (rdstrobe           ))  // Read cau
 else if ((write_addr_nxt != read_addr_nxt) | (           wrstrobe))
   empty_reg <= 1'b0 ;
 
-assign full_comb  = (write_addr_reg == read_addr_reg) &  fifo_data_filling;
-assign empty_comb = (write_addr_reg == read_addr_reg) & !fifo_data_filling;
+// assign full_comb  = (write_addr_reg == read_addr_reg) &  fifo_data_filling;
+// assign empty_comb = (write_addr_reg == read_addr_reg) & !fifo_data_filling;
 
 assign full   = full_reg;
 assign empty  = empty_reg;

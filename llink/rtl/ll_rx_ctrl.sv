@@ -43,6 +43,7 @@ module ll_rx_ctrl #(parameter FIFO_COUNT_MSB=4) (
     input  logic                        rxfifo_i_push,
 
     // To Upstream
+    input  logic                        tx_online,
     output logic                        tx_i_credit
   );
 
@@ -66,6 +67,8 @@ logic rxfifo_i_empty_dly_reg;
 
 always_ff @(posedge clk_wr or negedge rst_wr_n)
 if (~rst_wr_n)
+  rxfifo_i_empty_dly_reg <= 1'b1;
+else if (tx_online == 1'b0) // If we cannot respond with credits, lets hold the data until we can to not lose credits
   rxfifo_i_empty_dly_reg <= 1'b1;
 else
   rxfifo_i_empty_dly_reg <= rxfifo_i_empty;

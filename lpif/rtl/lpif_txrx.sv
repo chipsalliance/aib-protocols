@@ -31,7 +31,8 @@ module lpif_txrx
     parameter AIB_VERSION = 2,
     parameter AIB_GENERATION = 2,
     parameter AIB_LANES = 4,
-    parameter LPIF_DATA_WIDTH = 128,
+    parameter AIB_BITS_PER_LANE = 80,
+    parameter LPIF_DATA_WIDTH = 32,
     parameter LPIF_CLOCK_RATE = 2000,
     parameter ASYM = 0,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
@@ -110,40 +111,7 @@ module lpif_txrx
 
   /* TX & RX datapath */
 
-  wire [15:0]                           lpif_clock_rate = LPIF_CLOCK_RATE;
-  wire [15:0]                           lpif_data_width = LPIF_DATA_WIDTH;
-  wire [15:0]                           aib_version = AIB_VERSION;
-  wire [15:0]                           aib_generation = AIB_GENERATION;
-  wire [15:0]                           aib_lanes = AIB_LANES;
-
 `include "lpif_configs.svh"
-
-  wire                                  x16_q2 = X16_Q2;
-  wire                                  x16_h2 = X16_H2;
-  wire                                  x16_f2 = X16_F2;
-
-  wire                                  x8_q2  = X8_Q2;
-  wire                                  x8_h2  = X8_H2;
-  wire                                  x8_f2  = X8_F2;
-
-  wire                                  x4_q2  = X4_Q2;
-  wire                                  x4_h2  = X4_H2;
-  wire                                  x4_f2  = X4_F2;
-
-  wire                                  x16_h1 = X16_H1;
-  wire                                  x16_f1 = X16_F1;
-
-  wire                                  x8_h1  = X8_H1;
-  wire                                  x8_f1  = X8_F1;
-
-  wire                                  x4_h1  = X4_H1;
-  wire                                  x4_f1  = X4_F1;
-
-  wire                                  x2_h1  = X2_H1;
-  wire                                  x2_f1  = X2_F1;
-
-  wire                                  x1_h1  = X1_H1;
-  wire                                  x1_f1  = X1_F1;
 
   logic [319:0]                         ll_tx_phy0;
   logic [319:0]                         ll_tx_phy1;
@@ -357,6 +325,18 @@ module lpif_txrx
       end
   endgenerate
 
+  logic [15:0]                    dstrm_state_tmp;
+  logic [7:0]                     dstrm_protid_tmp;
+  logic [3:0]                     dstrm_dvalid_tmp;
+  logic [63:0]                    dstrm_crc_tmp;
+  logic [3:0]                     dstrm_crc_valid_tmp;
+
+  assign dstrm_state_tmp = {4{dstrm_state}};
+  assign dstrm_protid_tmp = {4{dstrm_protid}};
+  assign dstrm_dvalid_tmp = {4{dstrm_dvalid}};
+  assign dstrm_crc_tmp = {4{dstrm_crc}};
+  assign dstrm_crc_valid_tmp = {4{dstrm_crc_valid}};
+
   // symmetric datapaths
 
   /*
@@ -384,6 +364,11 @@ module lpif_txrx
    .init_downstream_credit (8'hff),
    .ustrm_valid            (ustrm_valid),
    .dstrm_valid            (dstrm_valid),
+   .dstrm_state            (dstrm_state_tmp[]),
+   .dstrm_protid           (dstrm_protid_tmp[]),
+   .dstrm_dvalid           (dstrm_dvalid_tmp[]),
+   .dstrm_crc              (dstrm_crc_tmp[]),
+   .dstrm_crc_valid        (dstrm_crc_valid_tmp[]),
    .tx_phy\([0-9]+\)       (ll_tx_phy\1[]),
    ); */
 
@@ -419,12 +404,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[319:0]),
                  .rx_phy2               (rx_phy2[319:0]),
                  .rx_phy3               (rx_phy3[319:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[31:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -432,7 +417,7 @@ module lpif_txrx
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X16_Q2)
+          end
         if (X16_H2) // half rate
           begin
             lpif_txrx_x16_h2_master_top
@@ -462,12 +447,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[159:0]),
                  .rx_phy2               (rx_phy2[159:0]),
                  .rx_phy3               (rx_phy3[159:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -475,7 +460,7 @@ module lpif_txrx
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X16_H2)
+          end
         if (X16_F2) // full rate
           begin
             lpif_txrx_x16_f2_master_top
@@ -505,12 +490,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[79:0]),
                  .rx_phy2               (rx_phy2[79:0]),
                  .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -518,7 +503,7 @@ module lpif_txrx
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X16_F2)
+          end
         if (X8_Q2) // quarter rate
           begin
             lpif_txrx_x8_q2_master_top
@@ -531,7 +516,7 @@ module lpif_txrx
                  .ustrm_protid          (ustrm_protid[1:0]),
                  .ustrm_data            (ustrm_data[511:0]),
                  .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
+                 .ustrm_crc             (ustrm_crc[15:0]),
                  .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
                  .ustrm_valid           (ustrm_valid),           // Templated
                  .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
@@ -544,12 +529,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[319:0]),
                  .rx_phy1               (rx_phy1[319:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -583,12 +568,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[159:0]),
                  .rx_phy1               (rx_phy1[159:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -622,12 +607,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
                  .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -659,12 +644,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[319:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -696,12 +681,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[159:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -733,12 +718,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -800,18 +785,18 @@ module lpif_txrx
                  .rx_phy13              (rx_phy13[79:0]),
                  .rx_phy14              (rx_phy14[79:0]),
                  .rx_phy15              (rx_phy15[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[31:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X16_H1)
+          end
         if (X16_F1) // full rate
           begin
             lpif_txrx_x16_f1_master_top
@@ -865,18 +850,18 @@ module lpif_txrx
                  .rx_phy13              (rx_phy13[39:0]),
                  .rx_phy14              (rx_phy14[39:0]),
                  .rx_phy15              (rx_phy15[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X16_F1)
+          end
         if (X8_H1) // half rate
           begin
             lpif_txrx_x8_h1_master_top
@@ -914,18 +899,18 @@ module lpif_txrx
                  .rx_phy5               (rx_phy5[79:0]),
                  .rx_phy6               (rx_phy6[79:0]),
                  .rx_phy7               (rx_phy7[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X8_H1)
+          end
         if (X8_F1) // full rate
           begin
             lpif_txrx_x8_f1_master_top
@@ -963,18 +948,18 @@ module lpif_txrx
                  .rx_phy5               (rx_phy5[39:0]),
                  .rx_phy6               (rx_phy6[39:0]),
                  .rx_phy7               (rx_phy7[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X8_F1)
+          end
         if (X4_H1) // half rate
           begin
             lpif_txrx_x4_h1_master_top
@@ -1004,18 +989,18 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[79:0]),
                  .rx_phy2               (rx_phy2[79:0]),
                  .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X4_H1)
+          end
         if (X4_F1) // full rate
           begin
             lpif_txrx_x4_f1_master_top
@@ -1045,18 +1030,18 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[39:0]),
                  .rx_phy2               (rx_phy2[39:0]),
                  .rx_phy3               (rx_phy3[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
                  .delay_y_value         (delay_y_value[15:0]),
                  .delay_z_value         (delay_z_value[15:0]));
-          end // if (X4_F1)
+          end
         if (X2_H1) // half rate
           begin
             lpif_txrx_x2_h1_master_top
@@ -1082,12 +1067,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
                  .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1119,12 +1104,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[39:0]),
                  .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[1:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1154,12 +1139,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[1:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1191,12 +1176,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[39:0]),
                  .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[31:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[0:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[0:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1233,6 +1218,11 @@ module lpif_txrx
    .init_downstream_credit (8'hff),
    .ustrm_valid            (ustrm_valid),
    .dstrm_valid            (dstrm_valid),
+   .dstrm_state            (dstrm_state_tmp[]),
+   .dstrm_protid           (dstrm_protid_tmp[]),
+   .dstrm_dvalid           (dstrm_dvalid_tmp[]),
+   .dstrm_crc              (dstrm_crc_tmp[]),
+   .dstrm_crc_valid        (dstrm_crc_valid_tmp[]),
    .tx_phy\([0-9]+\)       (ll_tx_phy\1[]),
    ); */
 
@@ -1268,12 +1258,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[319:0]),
                  .rx_phy2               (rx_phy2[319:0]),
                  .rx_phy3               (rx_phy3[319:0]),
-                 .dstrm_state           (dstrm_state[15:0]),
-                 .dstrm_protid          (dstrm_protid[7:0]),
+                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
                  .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[3:0]),
-                 .dstrm_crc             (dstrm_crc[63:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[3:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[63:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -1311,12 +1301,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[159:0]),
                  .rx_phy2               (rx_phy2[159:0]),
                  .rx_phy3               (rx_phy3[159:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[31:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -1354,12 +1344,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[79:0]),
                  .rx_phy2               (rx_phy2[79:0]),
                  .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -1393,12 +1383,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[319:0]),
                  .rx_phy1               (rx_phy1[319:0]),
-                 .dstrm_state           (dstrm_state[15:0]),
-                 .dstrm_protid          (dstrm_protid[7:0]),
+                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[3:0]),
-                 .dstrm_crc             (dstrm_crc[31:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[3:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -1432,12 +1422,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[159:0]),
                  .rx_phy1               (rx_phy1[159:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -1471,12 +1461,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
                  .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -1508,12 +1498,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[319:0]),
-                 .dstrm_state           (dstrm_state[15:0]),
-                 .dstrm_protid          (dstrm_protid[7:0]),
+                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[3:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[3:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
@@ -1545,12 +1535,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[159:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
@@ -1582,12 +1572,12 @@ module lpif_txrx
                  .rx_online             (rx_online),
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
@@ -1649,12 +1639,12 @@ module lpif_txrx
                  .rx_phy13              (rx_phy13[79:0]),
                  .rx_phy14              (rx_phy14[79:0]),
                  .rx_phy15              (rx_phy15[79:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[31:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1714,12 +1704,12 @@ module lpif_txrx
                  .rx_phy13              (rx_phy13[39:0]),
                  .rx_phy14              (rx_phy14[39:0]),
                  .rx_phy15              (rx_phy15[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1763,12 +1753,12 @@ module lpif_txrx
                  .rx_phy5               (rx_phy5[79:0]),
                  .rx_phy6               (rx_phy6[79:0]),
                  .rx_phy7               (rx_phy7[79:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[15:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1812,12 +1802,12 @@ module lpif_txrx
                  .rx_phy5               (rx_phy5[39:0]),
                  .rx_phy6               (rx_phy6[39:0]),
                  .rx_phy7               (rx_phy7[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1853,12 +1843,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[79:0]),
                  .rx_phy2               (rx_phy2[79:0]),
                  .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[7:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1894,12 +1884,12 @@ module lpif_txrx
                  .rx_phy1               (rx_phy1[39:0]),
                  .rx_phy2               (rx_phy2[39:0]),
                  .rx_phy3               (rx_phy3[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1931,12 +1921,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
                  .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[3:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -1968,12 +1958,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[39:0]),
                  .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[1:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -2005,12 +1995,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[79:0]),
                  .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state[7:0]),
-                 .dstrm_protid          (dstrm_protid[3:0]),
+                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
                  .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[1:0]),
-                 .dstrm_crc             (dstrm_crc[1:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[1:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),
@@ -2042,12 +2032,12 @@ module lpif_txrx
                  .init_downstream_credit(8'hff),                 // Templated
                  .rx_phy0               (rx_phy0[39:0]),
                  .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state[3:0]),
-                 .dstrm_protid          (dstrm_protid[1:0]),
+                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
+                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
                  .dstrm_data            (dstrm_data[31:0]),
-                 .dstrm_dvalid          (dstrm_dvalid[0:0]),
-                 .dstrm_crc             (dstrm_crc[0:0]),
-                 .dstrm_crc_valid       (dstrm_crc_valid[0:0]),
+                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
+                 .dstrm_crc             (dstrm_crc_tmp[0:0]),    // Templated
+                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
                  .dstrm_valid           (dstrm_valid),           // Templated
                  .m_gen2_mode           (m_gen2_mode),
                  .delay_x_value         (delay_x_value[15:0]),

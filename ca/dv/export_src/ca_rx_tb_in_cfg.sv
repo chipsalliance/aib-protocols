@@ -51,6 +51,7 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit [2:0]        fifo_pempty_val  = `CA_FIFO_PEMPTY;
     rand bit [2:0]   rden_dly; 
     rand bit [7:0]   rx_stb_intv;
+    bit              tx_stb_rcvr;
     rand int         bit_shift;
     int              bits_per_channel = 0;
     bit [2:0]        master_rate      = `MSR_GEAR;
@@ -62,7 +63,16 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit [39:0]       tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
     int              last_tx_cnt_a;
     int              last_tx_cnt_b;
-
+    bit              drv_tfr_complete_a;
+    bit              drv_tfr_complete_b;
+    bit              drv_tfr_complete_ab;
+    bit              test_end;
+    bit              stb_error_test;
+    bit              align_error_test;
+    int              num_of_stb_error;
+    int              num_of_align_error;
+    bit              no_external_stb_test;
+    bit              with_external_stb_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

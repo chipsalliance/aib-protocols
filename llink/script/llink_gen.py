@@ -1030,10 +1030,10 @@ def calculate_channel_parameters(configuration):
                 llink['HASVALID'] = False
 
                 ## First, lets find the LLINDEX of the last data bit
-                ll_sig_lsb = 0
+                ll_sig_lsb = -1
                 for sig in llink['SIGNALLIST_MAIN']:
-                    if sig['LLINDEX_MAIN_LSB'] > ll_sig_lsb:
-                        ll_sig_lsb = sig['LLINDEX_MAIN_LSB']
+                    if sig['LLINDEX_MAIN_LSB'] >= ll_sig_lsb:
+                        ll_sig_lsb = sig['LLINDEX_MAIN_LSB'] + sig['SIGWID'] - 1
 
                 ## Then lets turn the Valid into data
                 for sig in llink['SIGNALLIST_MAIN']:
@@ -2532,6 +2532,7 @@ def make_top_file(configuration):
                     file_name.write("         .clk_wr                           (clk_wr),\n")
                     file_name.write("         .rst_wr_n                         (rst_wr_n),\n")
                     file_name.write("         .rx_online                        (rx_online_delay),\n")
+                    file_name.write("         .tx_online                        (tx_online_delay),\n")
                     file_name.write("         .rx_i_push_ovrd                   (rx_{0}_push_ovrd),\n".format(llink['NAME']))
                     if configuration['REPLICATED_STRUCT']:
                         file_name.write("         .rx_i_data                        (rx_{0}_data[{1}:0]),\n".format(llink['NAME'], (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR'])-1))

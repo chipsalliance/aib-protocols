@@ -43,6 +43,8 @@ interface ca_tx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic                                         tx_stb_pos_coding_err;
     logic[3:0]                                    user_marker;
     logic                                         user_stb;
+    logic [7:0]                                   strobe_gen_m_interval;
+    logic [7:0]                                   strobe_gen_s_interval;
 
     // modports... 
     //---------------------------------------------------

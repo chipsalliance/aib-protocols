@@ -22,9 +22,6 @@
 //
 // Functional Descript:
 //
-// MUX functionality to either mux in a Strobe or Marker (PERSISTENT == 0)
-// or to route the data around the inserted Strobe or Marker (PERSISTENT == 1)
-//
 // Note, this code assumes the widest channel wil be 320 bits wide.
 // Everything is sized up to 320 and then only the lower most
 // portion is used.
@@ -34,17 +31,14 @@
 //
 ////////////////////////////////////////////////////////////
 
-module ca_tx_mux #(parameter PERSISTENT=0, parameter CH_WIDTH=80, parameter ENABLE=1) (
+module ca_tx_mux #(parameter CH_WIDTH=80) (
 
     // Data In / out
     input logic [CH_WIDTH-1:0]  data_in,
     output logic [CH_WIDTH-1:0] data_out,
 
     // Control signals
-    input logic                 online, // Set to 1 to disable non-persistent strobe/markers
-    input logic                 m_gen2_mode, // Set to 1 to be in gen2 mode and use gen2_loc or else use gen1_loc
-    input logic [8:0]           gen1_loc,
-    input logic [8:0]           gen2_loc,
+    input logic [8:0]           stb_loc,
 
     // Control signals
     input logic                 tx_userbit
@@ -65,7 +59,7 @@ assign max_wid_din = data_in | '0;
 
 // This should generate a 1 hot, 320 bit wide vector
 // where the persistent strobe/ marker should go.
-assign max_wid_bitfield_loc = m_gen2_mode ? (320'h1 << gen2_loc) : (320'h1 << gen1_loc);
+assign max_wid_bitfield_loc = (320'h1 << stb_loc);
 
 // This should be be all zeros except for USER bit.
 assign max_wid_user_data     = max_wid_bitfield_loc & {320{tx_userbit}};
@@ -77,9 +71,7 @@ assign max_wid_user_data     = max_wid_bitfield_loc & {320{tx_userbit}};
 // Calculate Non Persistent (i.e. Recoverable) Insertion
 wire [319:0] max_wid_non_persist;
 
-// This looks like effectively 320 2-input muxes. But since gen2_loc
-// should be constants, this should synthesize down to exactly one or TWO muxes depending on gen1/gen2_loc.
-assign max_wid_non_persist  = online ? max_wid_din : (max_wid_user_data | ((~max_wid_bitfield_loc) & max_wid_din)) ;
+assign max_wid_non_persist  = (max_wid_user_data | ((~max_wid_bitfield_loc) & max_wid_din)) ;
 
 // Calculate Non Persistent (i.e. Recoverable) Insertion
 //////////////////////////////////////////////////////////////////////
@@ -124,20 +116,11 @@ assign max_wid_pesist_lo  =  max_wid_pers_mask_low  & max_wid_din;
 assign max_wid_pesist_hi  = (max_wid_pers_mask_high & max_wid_din) << 1;
 
 // Combine resulting vectors.
-// This should result in no logic, only wires (assuming gen2_loc are constants).
+// This should result in no logic, only wires (assuming stb_loc are constants).
 assign max_wid_persist  = max_wid_user_data | max_wid_pesist_hi | max_wid_pesist_lo ;
 
-// Calculate Persistent (i.e. non-Recoverable) Insertion
-//////////////////////////////////////////////////////////////////////
+assign max_wid_dout = max_wid_non_persist;
 
-//////////////////////////////////////////////////////////////////////
-// Selected between Persistent and Non Persistent and Resize
-
-assign max_wid_dout = PERSISTENT ? max_wid_persist : max_wid_non_persist;
-
-assign data_out = ENABLE ? max_wid_dout[CH_WIDTH-1:0] : data_in;
-
-// Selected between Persistent and Non Persistent and Resize
-//////////////////////////////////////////////////////////////////////
+assign data_out = max_wid_dout[CH_WIDTH-1:0];
 
 endmodule // ca_tx_mux
