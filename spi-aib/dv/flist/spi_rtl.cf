@@ -1,5 +1,7 @@
 +incdir+${SPI_ROOT}
 ${SPI_ROOT}/mspi_avmm_csr.sv   
+${SPI_ROOT}/reg_avmm_csr.sv   
+${SPI_ROOT}/app_avmm_csr.sv   
 ${SPI_ROOT}/mspi_intf.sv   
 ${SPI_ROOT}/spi_buf_ram.sv  
 ${SPI_ROOT}/spi_rstnsync.sv

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export AIB_PHY="$(pwd)/../../../aib-phy-hardware-master"
+export AIB_PHY="$(pwd)/../../../../aib-phy-hardware-master"
 export AIB2_RTL_ROOT="$AIB_PHY/v2.0/rev1/rtl"
 export MAIB_RTL_ROOT="$AIB_PHY/v1.0/rev2/rtl/v1_slave"
 export SPI_ROOT="$(pwd)/../../rtl"

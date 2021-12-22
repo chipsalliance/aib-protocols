@@ -8,7 +8,7 @@ Test bench(top_tb.sv) description. See user_guide under doc for detail.
     random       |             |                           |             |-----> rx data checker
     data  tx---->| dut_master1 |<=========================>| dut_slave1  |
                  |             |                           |             |-----> tx random data
-    data  rx<----|             |                           | FPGA        |
+    data  rx<----| or app_reg  |                           | FPGA        |
     checker      |             |                           |             |
                  ---------------                           ---------------
                  master aka leader                         slave aka follower
@@ -38,16 +38,18 @@ Test bench(top_tb.sv) description. See user_guide under doc for detail.
  Test Vectors and how to run test
 ===========================================================
 
-Two test vectors provided 
+Three test vectors provided 
 spi-aib/dv/test/
 test_cases/
 ├── basic_spi_test.inc  --Cover all basic spi commands
-└── fifo2x_test.inc     --Program dut_master1, dut_master2, dut_slave2 all 24 channels and run traffic for pair1 and pair2.
+|── fifo2x_test.inc     --Program dut_master1, dut_master2, dut_slave2 all 24 channels and run traffic for pair1 and pair2.
+|── app_reg_test.inc    --Test Application Register Block.
 
 Commands to run vcs:
 go to sims directory.
 
 ln -s ../test/test_cases/basic_spi_test.inc test.inc   or
 ln -s ../test/test_cases/fifo2x_test.inc test.inc
+ln -s ../test/test_cases/app_reg_test.inc test.inc
 
 ./run_compile

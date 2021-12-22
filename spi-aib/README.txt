@@ -12,6 +12,14 @@ Revision 1.1 11/19/2021:
 2) Changed spi clock to 100MHz. (User can specify accordingly base on application)
 3) Correct some typo in user guide CSR.
 ============================================================
+Revision 1.2 12/21/2021
+1) Created app_avmm_csr rtl block. This block is to mimic what SPI follower (slave)
+   can connect to user application layer avmm register block instead of AIB model.
+   In this app registeter block, user can provide status register, so that SPI leader
+   can read. SPI leader can also provide control regiser to user application side.
+2) Test cases has been provided for how to program this module. See README.txt under
+   dv/sims  
+
 Included in this package are :
 
 spi-aib

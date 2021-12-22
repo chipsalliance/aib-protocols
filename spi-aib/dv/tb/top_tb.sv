@@ -18,7 +18,7 @@ parameter PAD_NUM_HI  = 102;
 `include "top_tb_declare.inc"
 `include "agent.sv"
 `include "spi_task.sv"
-
+`include "test.inc"
 //------------------------------------------------------------------------------------------
 // Clock generation.
 //------------------------------------------------------------------------------------------
@@ -73,7 +73,6 @@ parameter PAD_NUM_HI  = 102;
      .clk    (avmm_clk)
     );
 
-
     //-----------------------------------------------------------------------------------------
     // SPI interface connect between spi_master and spi_slave 
     // In addition, spi_master connects to second spi_slave dut_sspi_1.
@@ -108,14 +107,35 @@ parameter PAD_NUM_HI  = 102;
     //-----------------------------------------------------------------------------------------
     //  dut ms1 and dut sl1 pair togather
     //-----------------------------------------------------------------------------------------
+`ifdef APP_REG
+    //-----------------------------------------------------------------------------------------
+    //  dut Application register block
+    //-----------------------------------------------------------------------------------------
+    parameter STAT_NUM = 16;
+    parameter CTRL_NUM = 256;
+    logic [STAT_NUM-1:0][31:0] user_status = {4{32'h4444, 32'h3333, 32'h2222, 32'h1111}};
+    logic [CTRL_NUM-1:0][31:0]    user_csr;
+    app_avmm_csr #(.STAT_NUM(STAT_NUM),
+                   .CTRL_NUM(CTRL_NUM)) app_reg (
+        `include "dut_app_reg.inc"
+     );
+`else
+
 
     aib_model_top  #(.DATAWIDTH(DATAWIDTH)) dut_master1 (
         `include "dut_ms1_port.inc"
      );
 
+`endif
+
     maib_top dut_slave1 (
         `include "dut_sl_gen1.inc"
        );
+
+    //-----------------------------------------------------------------------------------------
+    //  dut Application register block
+    //-----------------------------------------------------------------------------------------
+
     //-----------------------------------------------------------------------------------------
     // FPGA MAIB configuration is through maib_prog.inc. All other three dut is through SPI to
     // avmm interface programming 
@@ -147,6 +167,5 @@ parameter PAD_NUM_HI  = 102;
      $vcdpluson;
    end
 `endif
-   `include "test.inc"
 
 endmodule 
