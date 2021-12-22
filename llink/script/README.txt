@@ -34,12 +34,6 @@ AXI-MM, the AW bus would generally be an output.
 
 
 
-Items missing from script:
-1. Verilog Headers
-2. script revision number (embedded header)
-3. Partitioning for Gen2 to Gen1
-
-
 List of CFG:
 
  axi_st_d64.cfg                         - Basic, simple AXI ST with 64 bit data. 1 Full AIB2 Channel

@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -214,8 +207,6 @@
   Channel 0 TX   [  77] = 1'b0 // MARKER
   Channel 0 TX   [  78] = dstrm_valid          [   0]
   Channel 0 TX   [  79] = 1'b0                
-  Channel 1 TX   [   0] = 1'b0                
-  Channel 1 TX   [   1] = 1'b1 // STROBE
   Channel 0 TX   [  80] = dstrm_state          [   4]
   Channel 0 TX   [  81] = 1'b1 // STROBE
   Channel 0 TX   [  82] = dstrm_state          [   5]
@@ -541,8 +532,6 @@
   Channel 0 RX   [  77] = 1'b0 // MARKER
   Channel 0 RX   [  78] = ustrm_valid          [   0]
   Channel 0 RX   [  79] = 1'b0                
-  Channel 1 RX   [   0] = 1'b0                
-  Channel 1 RX   [   1] = 1'b1 // STROBE
   Channel 0 RX   [  80] = ustrm_state          [   4]
   Channel 0 RX   [  81] = 1'b1 // STROBE
   Channel 0 RX   [  82] = ustrm_state          [   5]

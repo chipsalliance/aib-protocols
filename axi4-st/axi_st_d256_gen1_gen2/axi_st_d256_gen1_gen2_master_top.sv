@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -52,7 +45,7 @@ module axi_st_d256_gen1_gen2_master_top  (
   input  logic               m_gen2_mode         ,
 
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -61,7 +54,7 @@ module axi_st_d256_gen1_gen2_master_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          tx_st_pushbit                 ;
-  logic                                          user_st_valid                 ;
+  logic                                          user_st_vld                   ;
   logic [ 288:   0]                              tx_st_data                    ;
   logic [ 288:   0]                              txfifo_st_data                ;
   logic                                          rx_st_credit                  ;
@@ -120,10 +113,11 @@ module axi_st_d256_gen1_gen2_master_top  (
          .rst_wr_n                         (rst_wr_n),
          .end_of_txcred_coal               (1'b1),
          .tx_online                        (tx_online_delay),
+         .rx_online                        (rx_online_delay),
          .init_i_credit                    (init_st_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_st_pop_ovrd),
          .txfifo_i_data                    (txfifo_st_data[288:0]),
-         .user_i_valid                     (user_st_valid),
+         .user_i_valid                     (user_st_vld),
          .rx_i_credit                      ({3'b0,rx_st_credit}));
 
 // Logic Link Instantiation
@@ -140,7 +134,7 @@ module axi_st_d256_gen1_gen2_master_top  (
          .user_tvalid                      (user_tvalid),
          .user_tready                      (user_tready),
 
-         .user_st_valid                    (user_st_valid),
+         .user_st_vld                      (user_st_vld),
          .txfifo_st_data                   (txfifo_st_data[ 288:   0]),
          .user_st_ready                    (user_st_ready),
 

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -242,13 +237,13 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign ca_s_if.tx_stb_en        = ca_die_b_tx_tb_out_if.tx_stb_en;
         assign ca_m_if.tx_stb_rcvr      = ca_die_a_rx_tb_in_if.tx_stb_rcvr;
         assign ca_s_if.tx_stb_rcvr      = ca_die_b_rx_tb_in_if.tx_stb_rcvr;
-        assign ca_m_if.rden_dly         = `CA_RDEN_DLY;
-        assign ca_s_if.rden_dly         = `CA_RDEN_DLY;
+        assign ca_m_if.rden_dly         = ca_die_a_rx_tb_in_if.rden_dly;
+        assign ca_s_if.rden_dly         = ca_die_a_rx_tb_in_if.rden_dly;
 
-        assign ca_m_if.delay_x_value    = DELAY_X_VALUE; 
-        assign ca_m_if.delay_z_value    = DELAY_XZ_VALUE;
-        assign ca_s_if.delay_x_value    = DELAY_X_VALUE; 
-        assign ca_s_if.delay_z_value    = DELAY_XZ_VALUE;
+        assign ca_m_if.delay_x_value    = ca_die_a_rx_tb_in_if.delay_x_value;
+        assign ca_m_if.delay_z_value    = ca_die_a_rx_tb_in_if.delay_xz_value;
+        assign ca_s_if.delay_x_value    = ca_die_b_rx_tb_in_if.delay_x_value;
+        assign ca_s_if.delay_z_value    = ca_die_b_rx_tb_in_if.delay_xz_value;
 
 
         assign ca_m_if.fifo_full_val    = ca_die_a_rx_tb_in_if.fifo_full_val;
@@ -457,14 +452,14 @@ endgenerate
     // ++++++
     // die a
     // ++++++
-    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_out_if (.clk(clk_die_a), .rst_n(tb_reset_l));
-    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_in_if  (.clk(clk_die_a), .rst_n(tb_reset_l));
+    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_out_if (.clk(clk_lane_a[0]), .rst_n(tb_reset_l));
+    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_tx_tb_in_if  (.clk(clk_lane_a[0]), .rst_n(tb_reset_l));
     ca_rx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_A_NUM_CHANNELS)) ca_die_a_rx_tb_in_if  (.clk(clk_die_a), .rst_n(tb_reset_l));
     // ++++++
     // die b
     // ++++++
-    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_out_if (.clk(clk_die_b), .rst_n(tb_reset_l));
-    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
+    ca_tx_tb_out_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_out_if (.clk(clk_lane_b[0]), .rst_n(tb_reset_l));
+    ca_tx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_tx_tb_in_if  (.clk(clk_lane_b[0]), .rst_n(tb_reset_l));
     ca_rx_tb_in_if  #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)) ca_die_b_rx_tb_in_if  (.clk(clk_die_b), .rst_n(tb_reset_l));
 
 `ifdef CA_YELLOW_OVAL

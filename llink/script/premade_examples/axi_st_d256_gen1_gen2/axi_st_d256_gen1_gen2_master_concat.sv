@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,6 +84,7 @@ module axi_st_d256_gen1_gen2_master_concat  (
 
   assign tx_phy0                            = TX_REG_PHY ? tx_phy_flop_0_reg : tx_phy_preflop_0               ;
   assign tx_phy1                            = TX_REG_PHY ? tx_phy_flop_1_reg : tx_phy_preflop_1               ;
+
 
   assign tx_phy_preflop_0 [   0] = m_gen2_mode ? tx_st_pushbit             : tx_st_pushbit             ;  // Gen2 ? tx_st_pushbit        : tx_st_pushbit       
   assign tx_phy_preflop_0 [   1] = m_gen2_mode ? tx_st_data          [   0] : tx_st_data          [   0];  // Gen2 ? user_tkeep[0]        : user_tkeep[0]       

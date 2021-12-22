@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +39,6 @@ module ca_tx_mux #(parameter CH_WIDTH=80) (
     input logic                 tx_userbit
 );
 
-
 //////////////////////////////////////////////////////////////////////
 // Upsize the vector to the max channel width vector for consistency
 wire [319:0] max_wid_din;
@@ -75,49 +69,6 @@ assign max_wid_non_persist  = (max_wid_user_data | ((~max_wid_bitfield_loc) & ma
 
 // Calculate Non Persistent (i.e. Recoverable) Insertion
 //////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-// Calculate Persistent (i.e. non-Recoverable) Insertion
-
-// This is a piece of logic that makes a lower mask and upper mask for the data in on either side of the strobe bit
-// the resulting vector is the anded with the data. The lower portion stays in "place" the upper portion is shifted up
-// one bit. The USER bit goes inbetween
-//
-reg          found_loc;
-reg [319:0]  max_wid_pers_mask_low;
-reg [319:0]  max_wid_pers_mask_high;
-
-wire [319:0] max_wid_pesist_lo;
-wire [319:0] max_wid_pesist_hi;
-wire [319:0] max_wid_persist;
-
-always_comb
-  begin
-  found_loc = 0;
-  for (integer index0=0; index0<320; index0=index0+1)
-    begin
-    // If we found the location, set this bit
-    if (found_loc == 1'b0)
-      begin
-      found_loc = max_wid_bitfield_loc[index0];
-      end
-
-      if (found_loc) begin
-      max_wid_pers_mask_low[index0]  = 1'b0;
-      max_wid_pers_mask_high[index0] = 1'b1;
-      end else begin
-      max_wid_pers_mask_low[index0]  = 1'b1;
-      max_wid_pers_mask_high[index0] = 1'b0;
-      end
-    end
-  end
-
-assign max_wid_pesist_lo  =  max_wid_pers_mask_low  & max_wid_din;
-assign max_wid_pesist_hi  = (max_wid_pers_mask_high & max_wid_din) << 1;
-
-// Combine resulting vectors.
-// This should result in no logic, only wires (assuming stb_loc are constants).
-assign max_wid_persist  = max_wid_user_data | max_wid_pesist_hi | max_wid_pesist_lo ;
 
 assign max_wid_dout = max_wid_non_persist;
 

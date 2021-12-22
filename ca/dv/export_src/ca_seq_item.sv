@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,6 +42,7 @@ class ca_seq_item_c extends uvm_sequence_item ;
     bit [7:0]                      stb_intv           = 0;
     bit                            stb_pos_err        = 0;
     bit                            stb_pos_coding_err = 0;
+    bit                            stb_rcvr_enb       = 0;
 
     bit                            align_err = 0;
 

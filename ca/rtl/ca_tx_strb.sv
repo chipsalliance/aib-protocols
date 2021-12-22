@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +37,7 @@ module ca_tx_strb
 
    input logic [7:0]                                tx_stb_wd_sel,
    input logic [39:0]                               tx_stb_bit_sel,
-   input logic [7:0]                                tx_stb_intv,
+   input logic [15:0]                               tx_stb_intv,
 
    input logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]  tx_din,
    output logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0] tx_dout,
@@ -52,7 +47,7 @@ module ca_tx_strb
    );
 
   logic                                             tx_online_del;
-  logic [7:0]                                       stb_intv_count;
+  logic [15:0]                                      stb_intv_count;
   logic                                             tx_userbit;
   logic                                             tx_state_gen_stb;
   logic                                             tx_state_done;
@@ -67,7 +62,7 @@ module ca_tx_strb
   logic [5:0] tx_stb_bit_sel_ones;
   logic [5:0] tx_stb_bit_sel_pos;
 
-  assign tx_userbit = (stb_intv_count == 8'h1) & tx_state_gen_stb;
+  assign tx_userbit = (stb_intv_count == 16'h1) & tx_state_gen_stb;
   assign tx_stb_en_final = tx_stb_en & (tx_stb_rcvr ? (~tx_state_done) : 1'b1);
 
   always_comb
@@ -108,7 +103,7 @@ module ca_tx_strb
 
   /* level_delay AUTO_TEMPLATE (
       .delayed_en   (tx_online_del),
-      .rst_core_n   (rst_com_n),
+      .rst_core_n   (rst_n),
       .clk_core	    (com_clk),
       .enable	    (tx_online),
       .delay_value  (delay_z_value[]));
@@ -119,7 +114,7 @@ module ca_tx_strb
       // Outputs
       .delayed_en                       (tx_online_del),         // Templated
       // Inputs
-      .rst_core_n                       (rst_com_n),             // Templated
+      .rst_core_n                       (rst_n),                 // Templated
       .clk_core                         (com_clk),               // Templated
       .enable                           (tx_online),             // Templated
       .delay_value                      (delay_z_value[15:0]));   // Templated
@@ -129,18 +124,18 @@ module ca_tx_strb
   always_ff @(posedge com_clk or negedge rst_n)
     if (~rst_n)
       begin
-        stb_intv_count <= 8'b0;
+        stb_intv_count <= 16'b0;
       end
     else
       begin
         if (tx_online & ~tx_online_del)
           begin
-            stb_intv_count <= 8'h1;
+            stb_intv_count <= 16'h1;
           end
         else
           begin
             if (tx_state_gen_stb)
-              if ((stb_intv_count == 8'h1) & ~tx_stb_rcvr)
+              if ((stb_intv_count == 16'h1) & ~tx_stb_rcvr)
                 stb_intv_count <= tx_stb_intv;
               else if (|stb_intv_count)
                 stb_intv_count <= stb_intv_count - 1'b1;

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +41,7 @@ module ca_rx_align
 
    input logic [7:0]                                rx_stb_wd_sel,
    input logic [39:0]                               rx_stb_bit_sel,
-   input logic [7:0]                                rx_stb_intv,
+   input logic [15:0]                               rx_stb_intv,
 
    input logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]  rx_din,
    output logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0] rx_dout,
@@ -79,6 +74,7 @@ module ca_rx_align
 
   logic [NUM_CHANNELS-1:0]                          stb_det, d_stb_det;
   logic [NUM_CHANNELS-1:0]                          first_stb_det;
+  logic [NUM_CHANNELS-1:0]                          first_stb_det_common;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv_com;
   logic [NUM_CHANNELS-1:0]                          fifo_wr;
@@ -95,7 +91,7 @@ module ca_rx_align
   logic                                             rx_state_done;
 
   logic                                             all_fifos_not_empty;
-  logic [7:0]                                       stb_intv_count [NUM_CHANNELS-1:0];
+  logic [15:0]                                      stb_intv_count [NUM_CHANNELS-1:0];
 
   logic [NUM_CHANNELS-1:0]                          rd_empty;
   logic [NUM_CHANNELS-1:0]                          wr_overflow_pulse;
@@ -244,6 +240,14 @@ module ca_rx_align
 
 
 
+  /* levelsync AUTO_TEMPLATE (
+   .RESET_VALUE (1'b0),
+   .clk_dest    (com_clk),
+   .rst_dest_n  (rst_com_n),
+   .src_data    (first_stb_det[i]),
+   .dest_data   (first_stb_det_common[i]),
+   ); */
+
   generate
     for (i = 0; i < NUM_CHANNELS; i++)
       begin : stb_dets
@@ -293,6 +297,27 @@ module ca_rx_align
                     end
                 end
             end
+
+        if (SYNC_FIFO)
+          begin
+            assign first_stb_det_common[i] = first_stb_det[i];
+          end
+        else
+          begin
+            levelsync
+              #(/*AUTOINSTPARAM*/
+                // Parameters
+                .RESET_VALUE                (1'b0))                  // Templated
+            level_sync_i
+              (/*AUTOINST*/
+               // Outputs
+               .dest_data                   (first_stb_det_common[i]), // Templated
+               // Inputs
+               .rst_dest_n                  (rst_com_n),             // Templated
+               .clk_dest                    (com_clk),               // Templated
+               .src_data                    (first_stb_det[i])); // Templated
+          end
+
       end // block: stb_dets
   endgenerate
 
@@ -319,7 +344,7 @@ module ca_rx_align
 
   /* FIFO reads */
 
-  assign all_fifos_not_empty = &first_stb_det;
+  assign all_fifos_not_empty = &first_stb_det_common;
   assign fifo_pop = all_fifos_not_empty & ~|rd_dly;
 
   // RX state machine, in com_clk domain
@@ -470,12 +495,12 @@ module ca_rx_align
         always_ff @(posedge lane_clk[i] or negedge rst_lane_n[i])
           if (~rst_lane_n[i])
             begin
-              stb_intv_count[i] <= 8'b0;
+              stb_intv_count[i] <= 16'b0;
               align_err_stb_intv[i] <= 1'b0;
             end
           else if (fifo_soft_reset)
             begin
-              stb_intv_count[i] <= 8'b0;
+              stb_intv_count[i] <= 16'b0;
               align_err_stb_intv[i] <= 1'b0;
             end
           else
@@ -483,7 +508,7 @@ module ca_rx_align
               if (stb_det[i])
                 stb_intv_count[i] <= rx_stb_intv;
               else if (first_stb_det[i])
-                if (stb_intv_count[i] == 8'h1)
+                if (stb_intv_count[i] == 16'h1)
                   begin
                     if (~stb_det[i])
                       align_err_stb_intv[i] <= align_fly;

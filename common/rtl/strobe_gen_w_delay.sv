@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,15 +19,15 @@
 
 module strobe_gen_w_delay (
 
-    input logic        clk,
-    input logic        rst_n,
+    input logic         clk,
+    input logic         rst_n,
 
-    input logic  [7:0] interval,          // Set to 0 for back to back strobes. Otherwise, interval is the time between strobes (so if you want a strobe every 10 cycles, set to 9)
+    input logic  [15:0] interval,          // Set to 0 for back to back strobes. Otherwise, interval is the time between strobes (so if you want a strobe every 10 cycles, set to 9)
     input logic  [15:0] delay_value,       // Delay after online before we start sending strobes.
-    input logic        user_marker,       // Effectiely the OR reduction of all user_marker bits. We only increment strobe count when we send a remote side word
-    input logic        online,            // Set to 1 to begin strobe generation (0 to stop)
+    input logic         user_marker,       // Effectiely the OR reduction of all user_marker bits. We only increment strobe count when we send a remote side word
+    input logic         online,            // Set to 1 to begin strobe generation (0 to stop)
 
-    output logic       user_strobe
+    output logic        user_strobe
 
    );
 

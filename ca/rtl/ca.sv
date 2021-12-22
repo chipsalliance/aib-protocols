@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,11 +44,11 @@ module ca
 
    input logic [7:0]                                tx_stb_wd_sel,
    input logic [39:0]                               tx_stb_bit_sel,
-   input logic [7:0]                                tx_stb_intv,
+   input logic [15:0]                               tx_stb_intv,
 
    input logic [7:0]                                rx_stb_wd_sel,
    input logic [39:0]                               rx_stb_bit_sel,
-   input logic [7:0]                                rx_stb_intv,
+   input logic [15:0]                               rx_stb_intv,
 
    input logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]  tx_din,
    output logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0] tx_dout,
@@ -113,7 +108,7 @@ module ca
        .delay_z_value                   (delay_z_value[15:0]),
        .tx_stb_wd_sel                   (tx_stb_wd_sel[7:0]),
        .tx_stb_bit_sel                  (tx_stb_bit_sel[39:0]),
-       .tx_stb_intv                     (tx_stb_intv[7:0]),
+       .tx_stb_intv                     (tx_stb_intv[15:0]),
        .tx_din                          (tx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]));
 
     logic                    rst_com_n;
@@ -176,7 +171,7 @@ module ca
        .delay_x_value                   (delay_x_value[15:0]),
        .rx_stb_wd_sel                   (rx_stb_wd_sel[7:0]),
        .rx_stb_bit_sel                  (rx_stb_bit_sel[39:0]),
-       .rx_stb_intv                     (rx_stb_intv[7:0]),
+       .rx_stb_intv                     (rx_stb_intv[15:0]),
        .rx_din                          (rx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
        .fifo_full_val                   (fifo_full_val[5:0]),
        .fifo_pfull_val                  (fifo_pfull_val[5:0]),

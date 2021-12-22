@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -40,12 +35,13 @@ class ca_strobe_error_test_c extends base_ca_test_c;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    ca_seq_lib_c    ca_vseq;
-    bit test_end_tx_a;
-    bit test_end_tx_b;
-    bit test_end_rx_a;
-    bit test_end_rx_b;
-    bit test_end_loc;
+    ca_seq_lib_c        ca_vseq;
+    ca_traffic_seq_c    ca_traffic_seq;
+    bit                 test_end_tx_a;
+    bit                 test_end_tx_b;
+    bit                 test_end_rx_a;
+    bit                 test_end_rx_b;
+    bit                 test_end_loc;
     // Component Members
     //------------------------------------------
  
@@ -57,7 +53,7 @@ class ca_strobe_error_test_c extends base_ca_test_c;
     extern function new(string name = "ca_strobe_error_test", uvm_component parent = null);
     extern function void build_phase( uvm_phase phase );
     extern function void start_of_simulation( );
-    extern task ck_stb_error( );
+    extern task chk_stb_error( );
     extern task strobe_err_clr_send_traffic( );
     extern task run_phase( uvm_phase phase);
     extern task run_test( uvm_phase phase );
@@ -84,11 +80,14 @@ endfunction: start_of_simulation
 
 // run phase 
 task ca_strobe_error_test_c::run_phase(uvm_phase phase);
+
+     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
+
     fork
         run_test(phase);
         global_timer(); // and check for error count
         ck_eot(phase);
-        ck_stb_error();
+        chk_stb_error();
         strobe_err_clr_send_traffic();
     join
 
@@ -99,7 +98,8 @@ task ca_strobe_error_test_c::run_test(uvm_phase phase);
 
      bit result = 0;
     `uvm_info("ca_strobe_error_test ::run_phase", "START test...", UVM_LOW);
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
+
      ca_vseq.start(ca_top_env.virt_seqr);
 
     `uvm_info("ca_strobe_error_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
@@ -118,7 +118,6 @@ task ca_strobe_error_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_a_tx_tb_out_cfg.stb_error_test  = 1;
      ca_cfg.ca_die_b_tx_tb_out_cfg.stb_error_test  = 1;
     `uvm_info("ca_strobe_error_test::run_phase", "START test...", UVM_LOW);
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
       
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel  = 4;  
      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel  = 4;
@@ -133,7 +132,7 @@ task ca_strobe_error_test_c::run_test(uvm_phase phase);
   endtask : run_test
  
 //------------------------------------------
-task ca_strobe_error_test_c::ck_stb_error();
+task ca_strobe_error_test_c::chk_stb_error();
      forever begin
         repeat(1)@(posedge vif.clk); 
           if((ca_cfg.ca_die_a_tx_tb_in_cfg.num_of_stb_error == 1) && (test_end_tx_a == 0)) test_end_tx_a = 1; 
@@ -145,18 +144,28 @@ task ca_strobe_error_test_c::ck_stb_error();
                 $display("inside_stb_error_test : %0d",test_end_loc);
               end
      end
-endtask:ck_stb_error 
+endtask:chk_stb_error 
 //------------------------------------------
 
 task ca_strobe_error_test_c::strobe_err_clr_send_traffic();
      bit result;
+
      wait(test_end_loc==1);
      ca_top_env.virt_seqr.stop_sequences();
-     repeat(1000)@ (posedge vif.clk);
+
      sbd_counts_clear(); 
      test_end_loc = 0;
+
+     ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test   = 0;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.stb_error_test   = 0;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.stb_error_test   = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.stb_error_test   = 0;
+     ca_cfg.ca_die_a_tx_tb_out_cfg.stb_error_test  = 0;
+     ca_cfg.ca_die_b_tx_tb_out_cfg.stb_error_test  = 0;
+
     `uvm_info("error ca_tx_tb_out_cfg", $sformatf("bit_shift: %0d  tx_stb_bit_sel: %0h ",ca_cfg.ca_die_a_tx_tb_out_cfg.bit_shift,ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel), UVM_LOW);
     `uvm_info("error ca_tx_tb_out_cfg", $sformatf("bit_shift: %0d  tx_stb_bit_sel: %0h ",ca_cfg.ca_die_a_tx_tb_out_cfg.bit_shift,ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel), UVM_LOW);
+
      ca_cfg.ca_die_a_tx_tb_out_cfg.configure(); 
      ca_cfg.ca_die_b_tx_tb_out_cfg.configure();
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel = 1;
@@ -165,9 +174,10 @@ task ca_strobe_error_test_c::strobe_err_clr_send_traffic();
      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel = 1;
      ca_cfg.configure();
 
-    `uvm_info("ca_strobe_error_test_c::run_phase", "second ca_vseq starts..\n", UVM_LOW);
+    `uvm_info("ca_strobe_error_test_c::run_phase", "second ca_traffic_seq starts..\n", UVM_LOW);
      ca_vseq.start(ca_top_env.virt_seqr);
-    `uvm_info("ca_strobe_error_test_c::run_phase", "second ca_vseq ends..\n", UVM_LOW);
+     //ca_traffic_seq.start(ca_top_env.virt_seqr);
+    `uvm_info("ca_strobe_error_test_c::run_phase", "second ca_traffic_seq ends..\n", UVM_LOW);
 
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
     `uvm_info("ca_strobe_error_test_c::run_phase", "after_2nd drv_tfr_complete..\n", UVM_LOW);

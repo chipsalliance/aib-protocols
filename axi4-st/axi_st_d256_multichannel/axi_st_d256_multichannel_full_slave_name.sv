@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +24,7 @@ module axi_st_d256_multichannel_full_slave_name  (
   output logic [   0:   0]   user_enable         ,
 
   // Logic Link Interfaces
-  input  logic               user_st_valid       ,
+  input  logic               user_st_vld         ,
   input  logic [ 256:   0]   rxfifo_st_data      ,
   output logic               user_st_ready       ,
 
@@ -41,7 +34,7 @@ module axi_st_d256_multichannel_full_slave_name  (
 
   // Connect Data
 
-  assign user_tvalid                        = user_st_valid                      ;
+  assign user_tvalid                        = user_st_vld                        ;
   assign user_st_ready                      = user_tready                        ;
   assign user_tdata           [   0 +: 256] = rxfifo_st_data       [   0 +: 256] ;
   assign user_enable          [   0 +:   1] = rxfifo_st_data       [ 256 +:   1] ;

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,6 +61,7 @@ class ca_tx_tb_out_drv_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm
     extern task drv_tx();
     extern task drv_tx_online();
     extern function void drv_tx_idle();
+    extern function void drv_tx_cfg_to_vif();
     extern function void gen_stb_beat();
     extern function void set_item(ca_data_pkg::ca_seq_item_c  item);
 
@@ -194,6 +190,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
         end // reset
         else begin // non reset state
             calc_stb = 1;
+            drv_tx_cfg_to_vif();
             if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin
                 tx_item = tx_q.pop_front();
                 set_item(tx_item);
@@ -434,6 +431,17 @@ task  ca_tx_tb_out_drv_c::drv_tx();
         end // non reset
     end // forever clk
 endtask: drv_tx
+
+//----------------------------------------------
+function void ca_tx_tb_out_drv_c::drv_tx_cfg_to_vif();
+
+    vif.tx_stb_en        <=  cfg.tx_stb_en;
+    vif.tx_stb_rcvr      <=  cfg.tx_stb_rcvr;
+    vif.tx_stb_wd_sel    <=  cfg.tx_stb_wd_sel;
+    vif.tx_stb_bit_sel   <=  cfg.tx_stb_bit_sel;
+    vif.tx_stb_intv      <=  cfg.tx_stb_intv;
+    //`uvm_info("drv_tx", $sformatf("Driving transfer TB ---> tx_din: 0x%h", vif.tx_din), UVM_DEBUG);
+endfunction : drv_tx_cfg_to_vif
 
 //----------------------------------------------
 function void ca_tx_tb_out_drv_c::drv_tx_idle();

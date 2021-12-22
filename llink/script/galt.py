@@ -1,12 +1,7 @@
 ############################################################
 ##
 ##        Copyright (C) 2021 Eximius Design
-##                All Rights Reserved
 ##
-## This entire notice must be reproduced on all copies of this file
-## and copies of this file may only be made by a person if such person is
-## permitted to do so under the terms of a subsisting license agreement
-## from Eximius Design
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -124,6 +119,8 @@ def calculate_bit_loc_galt(use_master, configuration):
     main_index_lsb = 0
     galt_index_lsb = 0
 
+    #pprint.pprint (configuration)
+
     ## List out Main Signals
     for llink in configuration['LL_LIST']:
         if llink['DIR'] == localdir:
@@ -231,7 +228,7 @@ def calculate_bit_loc_galt(use_master, configuration):
                         if sig['TYPE'] == 'valid' or sig['TYPE'] == 'ready':
                             continue
                         sig_index_lsb   = sig['LSB']
-                        sig_llindex_lsb = sig2['LLINDEX_MAIN_LSB'] + sig['LSB']
+                        sig_llindex_lsb = sig2['LLINDEX_MAIN_LSB']
                         for each_bit in list (range (0,  sig['SIGWID'])):
                             galt_list, galt_index_lsb = check_for_aib_overhead_signal_galt(configuration, galt_list, galt_index_lsb, use_master, "GALT")
 
@@ -291,6 +288,8 @@ def calculate_bit_loc_galt(use_master, configuration):
         galt_list, galt_index_lsb = check_for_aib_overhead_signal_galt(configuration, galt_list, galt_index_lsb, use_master, "GALT")
 
 
+    #print ("\n\n\n")
+    #pprint.pprint (configuration)
 
     #print ("Total Main TX Elements={}  Total GALT Tx Elements={} for {}".format(len(main_list) , len(galt_list), "master" if use_master else "slave"))
 
@@ -656,6 +655,13 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
     while bit_added:
         bit_added = False
 
+        ## This stops us from rolling over into the next region
+        if current_lsb == (configuration['NUM_CHAN'] * (configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if use_master else configuration['CHAN_RX_RAW1PHY_DATA_MAIN'])):
+              #print ("stopping current_lsb {} =  NUM_CHAN:{}  * CHAN_/RXTX_RAW1PHY_DATA_MAIN:{}  use_master:{}".format(current_lsb, configuration['NUM_CHAN'], (configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if use_master else configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), use_master))
+              continue
+
+        #print ("going    current_lsb {} =  NUM_CHAN:{}  * CHAN_/RXTX_RAW1PHY_DATA_MAIN:{}  use_master:{}".format(current_lsb, configuration['NUM_CHAN'], (configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] if use_master else configuration['CHAN_RX_RAW1PHY_DATA_MAIN']), use_master))
+
         if ( (gen=="GALT" and (current_lsb % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']) >= configuration['CHAN_TX_RAW1PHY_DATA_GALT'] and use_master == True ) or
              (gen=="GALT" and (current_lsb % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']) >= configuration['CHAN_RX_RAW1PHY_DATA_GALT'] and use_master == False) ):
             sig_element=dict()
@@ -683,6 +689,7 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
                 signal_list.append(sig_element)
                 current_lsb += 1
                 bit_added = True
+                continue
 
         if configuration['TX_ENABLE_STROBE'] and configuration['TX_PERSISTENT_STROBE'] and use_master == True :
             if ( (current_lsb % configuration['CHAN_TX_RAW1PHY_DATA_MAIN'] == configuration['TX_STROBE_GEN2_LOC'] and gen=="MAIN") or
@@ -697,6 +704,7 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
                 signal_list.append(sig_element)
                 current_lsb += 1
                 bit_added = True
+                continue
 
         if configuration['RX_ENABLE_STROBE'] and configuration['RX_PERSISTENT_STROBE'] and use_master == False :
             if ( (current_lsb % configuration['CHAN_RX_RAW1PHY_DATA_MAIN'] == configuration['RX_STROBE_GEN2_LOC'] and gen=="MAIN") or
@@ -711,10 +719,10 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
                 signal_list.append(sig_element)
                 current_lsb += 1
                 bit_added = True
+                continue
 
         if configuration['TX_ENABLE_MARKER'] and configuration['TX_PERSISTENT_MARKER'] and use_master == True :
-            if ( (current_lsb % configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] == configuration['TX_MARKER_GEN2_LOC'] and gen=="MAIN") or
-                 (current_lsb % configuration['CHAN_TX_RAW1PHY_BEAT_GALT'] == configuration['TX_MARKER_GEN1_LOC'] and gen=="GALT") ):
+            if ( (current_lsb % configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'] == configuration['TX_MARKER_GEN2_LOC'] and gen=="MAIN") ):
                 sig_element=dict()
                 sig_element['SIG_NAME']  = "tx_mrk_userbit___"+gen+"[{}]".format ( (int(current_lsb) % configuration['CHAN_TX_RAW1PHY_DATA_MAIN']) // configuration['CHAN_TX_RAW1PHY_BEAT_MAIN'])
                 sig_element['SIG_INDEX'] = -1 ## indicate a scaler
@@ -725,10 +733,24 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
                 signal_list.append(sig_element)
                 current_lsb += 1
                 bit_added = True
+                continue
+
+        if configuration['TX_ENABLE_MARKER'] and configuration['TX_PERSISTENT_MARKER'] and use_master == True :
+            if ( (current_lsb % configuration['CHAN_TX_RAW1PHY_BEAT_GALT'] == configuration['TX_MARKER_GEN1_LOC'] and gen=="GALT") ):
+                sig_element=dict()
+                sig_element['SIG_NAME']  = "tx_mrk_userbit___"+gen+"[{}]".format ( (int(current_lsb) % configuration['CHAN_TX_RAW1PHY_DATA_GALT']) // configuration['CHAN_TX_RAW1PHY_BEAT_GALT'])
+                sig_element['SIG_INDEX'] = -1 ## indicate a scaler
+                sig_element['LL_INDEX']  = -1 ## indicate not part of LLink Data
+                sig_element['LL_NAME']   = "NO_LLDATA" ## unused, but lets be consistent
+                sig_element['AIB_INDEX'] = current_lsb
+                sig_element['COMMENT']   = "{}".format ("MARKER")
+                signal_list.append(sig_element)
+                current_lsb += 1
+                bit_added = True
+                continue
 
         if configuration['RX_ENABLE_MARKER'] and configuration['RX_PERSISTENT_MARKER'] and use_master == False :
-            if ( (current_lsb % configuration['CHAN_RX_RAW1PHY_BEAT_MAIN'] == configuration['RX_MARKER_GEN2_LOC'] and gen=="MAIN") or
-                 (current_lsb % configuration['CHAN_RX_RAW1PHY_BEAT_GALT'] == configuration['RX_MARKER_GEN1_LOC'] and gen=="GALT") ):
+            if ( (current_lsb % configuration['CHAN_RX_RAW1PHY_BEAT_MAIN'] == configuration['RX_MARKER_GEN2_LOC'] and gen=="MAIN") ):
                 sig_element=dict()
                 sig_element['SIG_NAME']  = "tx_mrk_userbit___"+gen+"[{}]".format ( (int(current_lsb) % configuration['CHAN_RX_RAW1PHY_DATA_MAIN']) // configuration['CHAN_RX_RAW1PHY_BEAT_MAIN'])
                 sig_element['SIG_INDEX'] = -1 ## indicate a scaler
@@ -739,6 +761,21 @@ def check_for_aib_overhead_signal_galt(configuration, signal_list, current_lsb, 
                 signal_list.append(sig_element)
                 current_lsb += 1
                 bit_added = True
+                continue
+
+        if configuration['RX_ENABLE_MARKER'] and configuration['RX_PERSISTENT_MARKER'] and use_master == False :
+            if ( (current_lsb % configuration['CHAN_RX_RAW1PHY_BEAT_GALT'] == configuration['RX_MARKER_GEN1_LOC'] and gen=="GALT") ):
+                sig_element=dict()
+                sig_element['SIG_NAME']  = "tx_mrk_userbit___"+gen+"[{}]".format ( (int(current_lsb) % configuration['CHAN_RX_RAW1PHY_DATA_GALT']) // configuration['CHAN_RX_RAW1PHY_BEAT_GALT'])
+                sig_element['SIG_INDEX'] = -1 ## indicate a scaler
+                sig_element['LL_INDEX']  = -1 ## indicate not part of LLink Data
+                sig_element['LL_NAME']   = "NO_LLDATA" ## unused, but lets be consistent
+                sig_element['AIB_INDEX'] = current_lsb
+                sig_element['COMMENT']   = "{}".format ("MARKER")
+                signal_list.append(sig_element)
+                current_lsb += 1
+                bit_added = True
+                continue
 
 
     return signal_list, current_lsb

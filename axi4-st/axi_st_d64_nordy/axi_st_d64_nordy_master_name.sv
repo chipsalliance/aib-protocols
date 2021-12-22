@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,14 +26,14 @@ module axi_st_d64_nordy_master_name  (
   // Logic Link Interfaces
   output logic [  73:   0]   txfifo_st_data      ,
 
+  input  logic               rx_online           ,
   input  logic               m_gen2_mode         
 
 );
 
   // Connect Data
 
-  assign user_st_valid                      = 1'b1                               ; // user_st_valid is unused
-  // user_st_ready is unused
+  assign user_st_vld                        = 1'b1                               ; // user_st_vld is unused
   assign txfifo_st_data       [   0 +:   8] = user_tkeep           [   0 +:   8] ;
   assign txfifo_st_data       [   8 +:  64] = user_tdata           [   0 +:  64] ;
   assign txfifo_st_data       [  72 +:   1] = user_tlast                         ;

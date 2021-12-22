@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +16,8 @@
 // limitations under the License.
 //
 // Functional Descript: Channel Alignment Testbench File
-//
-//
+// TESE_CASE Description 
+// tx_stb_enb =1,send traffic -> tx_stb_enb=0,send traffic -> tx_stb_enb=1,send traffic
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +33,8 @@ class ca_stb_enb_high_low_high_test_c extends base_ca_test_c;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    ca_seq_lib_c    ca_vseq;
+    ca_seq_lib_c        ca_vseq;
+    ca_traffic_seq_c    ca_traffic_seq;
  
     //------------------------------------------
     // Component Members
@@ -88,66 +84,62 @@ endtask : run_phase
 task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
 
      bit result = 0;
-     phase.raise_objection(this);
 
     `uvm_info("stb_enb_high_low_high_test ::run_phase", "START test...", UVM_LOW);
      ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
-     ca_vseq.start(ca_top_env.virt_seqr);
-    `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
+     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
+
+     ca_vseq.start(ca_top_env.virt_seqr); //tx_stb_en = 1 by default
+
+    `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 1st drv_trf_complete ..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+    `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 1st drv_trf_complete..\n", UVM_LOW);
+
      result =  ck_xfer_cnt_a(1);
      result =  ck_xfer_cnt_b(1);
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
+     `uvm_info("stb_enb_high_low_high_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
+
+     sbd_counts_clear();
+
      repeat(20)@ (posedge vif.clk);
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en    =  0 ;
      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en    =  0 ; 
      ca_cfg.configure();
-
      `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_top_env.ca_scoreboard.rx_out_cnt_die_a = 0;
-     ca_top_env.ca_scoreboard.rx_out_cnt_die_b = 0;
-     ca_top_env.ca_scoreboard.tx_out_cnt_die_a = 0;
-     ca_top_env.ca_scoreboard.tx_out_cnt_die_b = 0;
-     ca_top_env.ca_scoreboard.beat_cnt_a       = 0;
-     ca_top_env.ca_scoreboard.beat_cnt_b       = 0;
 
-      ca_vseq.start(ca_top_env.virt_seqr);
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
+      ca_traffic_seq.start(ca_top_env.virt_seqr);
+
+     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 1st drv_tfr_complete ..\n", UVM_LOW);
-      #10ns;
+     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
+
+      repeat(10)@ (posedge vif.clk);
       result =  ck_xfer_cnt_a(1);
       result =  ck_xfer_cnt_b(1);
      `uvm_info("stb_enb_high_low_high_test ::run_phase", "SCOREBOARD comparison completed for second set of traffic ..\n", UVM_LOW);
-     repeat(20)@ (posedge vif.clk);
-     ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en    =  1 ;
-     ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en    =  1 ; 
-     ca_cfg.configure();
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
-     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
-     ca_top_env.ca_scoreboard.rx_out_cnt_die_a = 0;
-     ca_top_env.ca_scoreboard.rx_out_cnt_die_b = 0;
+
+      sbd_counts_clear();
+
+      repeat(20)@ (posedge vif.clk);
+      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en    =  1 ;
+      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en    =  1 ; 
+      ca_cfg.configure();
+     `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
+
+      //ca_traffic_seq.start(ca_top_env.virt_seqr);
       ca_vseq.start(ca_top_env.virt_seqr);
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 3rd drv_tfr_complete ..\n", UVM_LOW);
-      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 3rd drv_tfr_complete ..\n", UVM_LOW);
-      #10ns;
-      result =  ck_xfer_cnt_a(1);
-      result =  ck_xfer_cnt_b(1);
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "Scoreboard comparison completed for third set of traffic ..\n", UVM_LOW);
-      test_end = 1; 
-     `uvm_info("stb_enb_high_low_high_test ::run_phase", "END test...\n", UVM_LOW);
+
+      `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 3rd drv_tfr_complete ..\n", UVM_LOW);
+       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
+      `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_ended for 3rd drv_tfr_complete ..\n", UVM_LOW);
+
+       repeat(10)@ (posedge vif.clk);
+       result =  ck_xfer_cnt_a(1);
+       result =  ck_xfer_cnt_b(1);
+      `uvm_info("stb_enb_high_low_high_test ::run_phase", "SCOREBOARD comparison completed for third set of traffic ..\n", UVM_LOW);
+
+       test_end = 1; 
+      `uvm_info("stb_enb_high_low_high_test ::run_phase", "END test...\n", UVM_LOW);
 
 endtask : run_test
 ////////////////////////////////////////////////////////////////

@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,15 +40,13 @@ module axi_fourchan_tier2_master_name  (
 
   // Connect Data
 
-  assign user_tx_valid                      = 1'b1                               ; // user_tx_valid is unused
-  // user_tx_ready is unused
+  assign user_tx_vld                        = 1'b1                               ; // user_tx_vld is unused
   assign txfifo_tx_data       [   0 +:  74] = ch0_tx_data          [   0 +:  74] ;
   assign txfifo_tx_data       [  74 +:  74] = ch1_tx_data          [   0 +:  74] ;
   assign txfifo_tx_data       [ 148 +:  74] = ch2_tx_data          [   0 +:  74] ;
   assign txfifo_tx_data       [ 222 +:  74] = ch3_tx_data          [   0 +:  74] ;
 
-  // user_rx_valid is unused
-  assign user_rx_ready                      = 1'b1                               ; // user_rx_ready is unused
+  // user_rx_vld is unused
   assign ch0_rx_data          [   0 +:  74] = rxfifo_rx_data       [   0 +:  74] ;
   assign ch1_rx_data          [   0 +:  74] = rxfifo_rx_data       [  74 +:  74] ;
   assign ch2_rx_data          [   0 +:  74] = rxfifo_rx_data       [ 148 +:  74] ;

@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -62,7 +55,7 @@ module axi_st_d256_multichannel_half_slave_top  (
   input  logic [   1:   0]   tx_mrk_userbit      ,
   input  logic               tx_stb_userbit      ,
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -71,7 +64,7 @@ module axi_st_d256_multichannel_half_slave_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          rx_st_pushbit                 ;
-  logic                                          user_st_valid                 ;
+  logic                                          user_st_vld                   ;
   logic [ 513:   0]                              rx_st_data                    ;
   logic [ 513:   0]                              rxfifo_st_data                ;
   logic                                          tx_st_credit                  ;
@@ -117,13 +110,14 @@ module axi_st_d256_multichannel_half_slave_top  (
       ll_receive #(.WIDTH(514), .DEPTH(8'd64)) ll_receive_ist
         (// Outputs
          .rxfifo_i_data                    (rxfifo_st_data[513:0]),
-         .user_i_valid                     (user_st_valid),
+         .user_i_valid                     (user_st_vld),
          .tx_i_credit                      (tx_st_credit),
          .rx_i_debug_status                (rx_st_debug_status[31:0]),
          // Inputs
          .clk_wr                           (clk_wr),
          .rst_wr_n                         (rst_wr_n),
          .rx_online                        (rx_online_delay),
+         .tx_online                        (tx_online_delay),
          .rx_i_push_ovrd                   (rx_st_push_ovrd),
          .rx_i_data                        (rx_st_data[513:0]),
          .rx_i_pushbit                     (rx_st_pushbit),
@@ -142,7 +136,7 @@ module axi_st_d256_multichannel_half_slave_top  (
          .user_tready                      (user_tready),
          .user_enable                      (user_enable[   1:   0]),
 
-         .user_st_valid                    (user_st_valid),
+         .user_st_vld                      (user_st_vld),
          .rxfifo_st_data                   (rxfifo_st_data[ 513:   0]),
          .user_st_ready                    (user_st_ready),
 

@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +43,7 @@ module axi_st_d64_nordy_slave_top  (
   input  logic [   0:   0]   tx_mrk_userbit      ,
   input  logic               tx_stb_userbit      ,
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -100,8 +93,7 @@ module axi_st_d64_nordy_slave_top  (
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
   assign rxfifo_st_data       [   0 +:  74] = rx_st_data           [   0 +:  74] ;
-  assign rx_st_debug_status   [   0 +:  32] = 32'h0                              ;
-
+  assign rx_st_debug_status   [   0 +:  32] = {12'h0, tx_online_delay, rx_online_delay, 18'h0} ;               
 // Logic Link Instantiation
 //////////////////////////////////////////////////////////////////
 
@@ -117,6 +109,7 @@ module axi_st_d64_nordy_slave_top  (
 
          .rxfifo_st_data                   (rxfifo_st_data[  73:   0]),
 
+         .rx_online                        (rx_online_delay),
          .m_gen2_mode                      (m_gen2_mode)
 
       );

@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +37,7 @@ module lpif_txrx_x4_asym2_quarter_master_concat  (
   input  logic               tx_online           ,
 
   input  logic               tx_stb_userbit      ,
-  input  logic [   3:   0]   tx_mrk_userbit
+  input  logic [   3:   0]   tx_mrk_userbit      
 
 );
 
@@ -167,8 +160,6 @@ module lpif_txrx_x4_asym2_quarter_master_concat  (
   assign tx_phy_preflop_0 [  77] = tx_mrk_userbit[0]          ; // MARKER
   assign tx_phy_preflop_0 [  78] = tx_downstream_data  [  76] ;
   assign tx_phy_preflop_0 [  79] = 1'b0                       ;
-//  assign tx_phy_preflop_1 [   0] = 1'b0                       ;
-//  assign tx_phy_preflop_1 [   1] = tx_stb_userbit             ; // STROBE
   assign tx_phy_preflop_0 [  80] = tx_downstream_data  [  77] ;
   assign tx_phy_preflop_0 [  81] = 1'b0                       ; // STROBE (unused)
   assign tx_phy_preflop_0 [  82] = tx_downstream_data  [  78] ;
@@ -526,8 +517,6 @@ module lpif_txrx_x4_asym2_quarter_master_concat  (
 //       MARKER                     = rx_phy_postflop_0 [  77]
   assign rx_upstream_data    [  76] = rx_phy_postflop_0 [  78];
 //       nc                         = rx_phy_postflop_0 [  79];
-//       nc                         = rx_phy_postflop_1 [   0];
-//       STROBE                     = rx_phy_postflop_1 [   1]
   assign rx_upstream_data    [  77] = rx_phy_postflop_0 [  80];
 //       STROBE                     = rx_phy_postflop_0 [  81]
   assign rx_upstream_data    [  78] = rx_phy_postflop_0 [  82];

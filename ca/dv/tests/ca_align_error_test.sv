@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -110,11 +105,14 @@ task ca_align_error_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_test   = 1;
      ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test   = 1;
      ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_test   = 1;
+
     `uvm_info("ca_align_error_test::run_phase", "START test...", UVM_LOW);
      ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+
     `uvm_info("ca_align_error_test::run_phase", "ca_vseq starts..\n", UVM_LOW);
      ca_vseq.start(ca_top_env.virt_seqr);
     `uvm_info("ca_align_error_test::run_phase", "ca_vseq ends...\n", UVM_LOW);
+
   endtask : run_test
 ////////////////////////////////////////////////////////////////
 `endif

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,7 +49,9 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit              stop_strobes_inject;
     bit              align_done_assert;
     bit              shift_stb_intv_enb;
+    bit              shift_stb_bit_pos_en;
     int              max_wd_sel = 0 ; 
+    bit              ca_afly1_stb_incorrect_intv_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

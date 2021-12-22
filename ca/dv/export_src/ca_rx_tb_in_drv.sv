@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,6 +167,8 @@ function void ca_rx_tb_in_drv_c::drv_rx_idle();
     vif.rx_stb_intv      <=  cfg.rx_stb_intv;
     vif.align_fly        <=  cfg.align_fly;
     vif.rden_dly         <=  cfg.rden_dly;
+    vif.delay_x_value    <=  cfg.delay_x_value;
+    vif.delay_xz_value   <=  cfg.delay_xz_value;
     vif.tx_stb_rcvr      <=  cfg.tx_stb_rcvr;
     vif.fifo_full_val    <=  cfg.fifo_full_val;
     vif.fifo_pfull_val   <=  cfg.fifo_pfull_val;

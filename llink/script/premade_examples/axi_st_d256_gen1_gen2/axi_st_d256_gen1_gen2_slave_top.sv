@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,7 +46,7 @@ module axi_st_d256_gen1_gen2_slave_top  (
   input  logic [   1:   0]   tx_mrk_userbit      ,
   input  logic               tx_stb_userbit      ,
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 

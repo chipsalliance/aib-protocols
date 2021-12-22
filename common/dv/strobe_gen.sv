@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +21,7 @@ module strobe_gen (
   input logic        clk,
   input logic        rst_n,
 
-  input logic  [7:0] interval,          // Set to 0 for back to back strobes. Otherwise, interval is the time between strobes (so if you want a strobe every 10 cycles, set to 9)
+  input logic [15:0] interval,          // Set to 0 for back to back strobes. Otherwise, interval is the time between strobes (so if you want a strobe every 10 cycles, set to 9)
   input logic        user_marker,       // Effectiely the OR reduction of all user_marker bits. We only increment strobe count when we send a remote side word
   input logic        online,            // Set to 1 to begin strobe generation (0 to stop)
 
@@ -34,8 +29,8 @@ module strobe_gen (
 
 );
 
-logic       marker_dly_reg;
-logic [7:0] count_reg;
+logic        marker_dly_reg;
+logic [15:0] count_reg;
 
 always @(posedge clk or negedge rst_n)
 if (!rst_n)
@@ -45,15 +40,15 @@ else
 
 always @(posedge clk or negedge rst_n)
 if (!rst_n)
-  count_reg <= 8'h0;
+  count_reg <= 16'h0;
 else if (~online)
-  count_reg <= 8'h0;
-else if ((marker_dly_reg) & (|count_reg[7:1] == 7'h0)) // If we get a marker and we are empty or at 1.
+  count_reg <= 16'h0;
+else if ((marker_dly_reg) & (|count_reg[15:1] == 15'h0)) // If we get a marker and we are empty or at 1.
   count_reg <= interval;
 else if (|count_reg)
-  count_reg <= count_reg - 8'h1;
+  count_reg <= count_reg - 16'h1;
 
-assign user_strobe = (count_reg == 8'h1) & online;
+assign user_strobe = (count_reg == 16'h1) & online;
 
 
 endmodule

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +29,9 @@ module lpif_txrx
     parameter AIB_BITS_PER_LANE = 80,
     parameter LPIF_DATA_WIDTH = 32,
     parameter LPIF_CLOCK_RATE = 2000,
-    parameter ASYM = 0,
+    parameter MEM_CACHE_STREAM_ID = 8'h1,
+    parameter IO_STREAM_ID = 8'h2,
+    parameter ARB_MUX_STREAM_ID = 8'h3,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
     localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
@@ -45,6 +42,7 @@ module lpif_txrx
    input logic                          tx_online,
    input logic                          rx_online,
    input logic                          m_gen2_mode,
+   input logic [1:0]                    remote_rate,
 
    input logic [15:0]                   delay_x_value,
    input logic [15:0]                   delay_y_value,
@@ -325,871 +323,33 @@ module lpif_txrx
       end
   endgenerate
 
+  logic [15:0]                    ustrm_state_tmp;
+  logic [7:0]                     ustrm_protid_tmp;
+  logic [3:0]                     ustrm_dvalid_tmp;
+  logic [63:0]                    ustrm_crc_tmp;
+  logic [3:0]                     ustrm_crc_valid_tmp;
+  logic [3:0]                     ustrm_valid_tmp;
+
+  assign ustrm_valid = ustrm_valid_tmp[0];
+  assign ustrm_state = ustrm_state_tmp[3:0];
+  assign ustrm_protid = ustrm_protid_tmp[1:0];
+  assign ustrm_dvalid = ustrm_dvalid_tmp[LPIF_VALID_WIDTH-1:0];
+  assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
+  assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
+
   logic [15:0]                    dstrm_state_tmp;
   logic [7:0]                     dstrm_protid_tmp;
   logic [3:0]                     dstrm_dvalid_tmp;
   logic [63:0]                    dstrm_crc_tmp;
   logic [3:0]                     dstrm_crc_valid_tmp;
+  logic [3:0]                     dstrm_valid_tmp;
 
   assign dstrm_state_tmp = {4{dstrm_state}};
   assign dstrm_protid_tmp = {4{dstrm_protid}};
   assign dstrm_dvalid_tmp = {4{dstrm_dvalid}};
   assign dstrm_crc_tmp = {4{dstrm_crc}};
   assign dstrm_crc_valid_tmp = {4{dstrm_crc_valid}};
-
-  // symmetric datapaths
-
-  /*
-   lpif_txrx_x16_q2_master_top AUTO_TEMPLATE
-   lpif_txrx_x16_h2_master_top AUTO_TEMPLATE
-   lpif_txrx_x16_f2_master_top AUTO_TEMPLATE
-   lpif_txrx_x8_q2_master_top AUTO_TEMPLATE
-   lpif_txrx_x8_h2_master_top AUTO_TEMPLATE
-   lpif_txrx_x8_f2_master_top AUTO_TEMPLATE
-   lpif_txrx_x4_q2_master_top AUTO_TEMPLATE
-   lpif_txrx_x4_h2_master_top AUTO_TEMPLATE
-   lpif_txrx_x4_f2_master_top AUTO_TEMPLATE
-   lpif_txrx_x16_h1_master_top AUTO_TEMPLATE
-   lpif_txrx_x16_f1_master_top AUTO_TEMPLATE
-   lpif_txrx_x8_h1_master_top AUTO_TEMPLATE
-   lpif_txrx_x8_f1_master_top AUTO_TEMPLATE
-   lpif_txrx_x4_h1_master_top AUTO_TEMPLATE
-   lpif_txrx_x4_f1_master_top AUTO_TEMPLATE
-   lpif_txrx_x2_h1_master_top AUTO_TEMPLATE
-   lpif_txrx_x2_f1_master_top AUTO_TEMPLATE
-   lpif_txrx_x1_h1_master_top AUTO_TEMPLATE
-   lpif_txrx_x1_f1_master_top AUTO_TEMPLATE (
-   .clk_wr                 (com_clk),
-   .rst_wr_n               (rst_n),
-   .init_downstream_credit (8'hff),
-   .ustrm_valid            (ustrm_valid),
-   .dstrm_valid            (dstrm_valid),
-   .dstrm_state            (dstrm_state_tmp[]),
-   .dstrm_protid           (dstrm_protid_tmp[]),
-   .dstrm_dvalid           (dstrm_dvalid_tmp[]),
-   .dstrm_crc              (dstrm_crc_tmp[]),
-   .dstrm_crc_valid        (dstrm_crc_valid_tmp[]),
-   .tx_phy\([0-9]+\)       (ll_tx_phy\1[]),
-   ); */
-
-  generate
-    if (ASYM == 0)
-      begin
-        if (X16_Q2) // quarter rate
-          begin
-            lpif_txrx_x16_q2_master_top
-              lpif_txrx_x16_q2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[319:0]),     // Templated
-                 .tx_phy2               (ll_tx_phy2[319:0]),     // Templated
-                 .tx_phy3               (ll_tx_phy3[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[1023:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[31:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .rx_phy1               (rx_phy1[319:0]),
-                 .rx_phy2               (rx_phy2[319:0]),
-                 .rx_phy3               (rx_phy3[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_H2) // half rate
-          begin
-            lpif_txrx_x16_h2_master_top
-              lpif_txrx_x16_h2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[159:0]),     // Templated
-                 .tx_phy2               (ll_tx_phy2[159:0]),     // Templated
-                 .tx_phy3               (ll_tx_phy3[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .rx_phy1               (rx_phy1[159:0]),
-                 .rx_phy2               (rx_phy2[159:0]),
-                 .rx_phy3               (rx_phy3[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_F2) // full rate
-          begin
-            lpif_txrx_x16_f2_master_top
-              lpif_txrx_x16_f2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_Q2) // quarter rate
-          begin
-            lpif_txrx_x8_q2_master_top
-              lpif_txrx_x8_q2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .rx_phy1               (rx_phy1[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_H2) // half rate
-          begin
-            lpif_txrx_x8_h2_master_top
-              lpif_txrx_x8_h2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .rx_phy1               (rx_phy1[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_F2) // full rate
-          begin
-            lpif_txrx_x8_f2_master_top
-              lpif_txrx_x8_f2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_Q2) // quarter rate
-          begin
-            lpif_txrx_x4_q2_master_top
-              lpif_txrx_x4_q2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_H2) // half rate
-          begin
-            lpif_txrx_x4_h2_master_top
-              lpif_txrx_x4_h2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_F2) // full rate
-          begin
-            lpif_txrx_x4_f2_master_top
-              lpif_txrx_x4_f2_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_H1) // half rate
-          begin
-            lpif_txrx_x16_h1_master_top
-              lpif_txrx_x16_h1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[79:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[79:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[79:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[79:0]),      // Templated
-                 .tx_phy8               (ll_tx_phy8[79:0]),      // Templated
-                 .tx_phy9               (ll_tx_phy9[79:0]),      // Templated
-                 .tx_phy10              (ll_tx_phy10[79:0]),     // Templated
-                 .tx_phy11              (ll_tx_phy11[79:0]),     // Templated
-                 .tx_phy12              (ll_tx_phy12[79:0]),     // Templated
-                 .tx_phy13              (ll_tx_phy13[79:0]),     // Templated
-                 .tx_phy14              (ll_tx_phy14[79:0]),     // Templated
-                 .tx_phy15              (ll_tx_phy15[79:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[1023:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[31:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .rx_phy4               (rx_phy4[79:0]),
-                 .rx_phy5               (rx_phy5[79:0]),
-                 .rx_phy6               (rx_phy6[79:0]),
-                 .rx_phy7               (rx_phy7[79:0]),
-                 .rx_phy8               (rx_phy8[79:0]),
-                 .rx_phy9               (rx_phy9[79:0]),
-                 .rx_phy10              (rx_phy10[79:0]),
-                 .rx_phy11              (rx_phy11[79:0]),
-                 .rx_phy12              (rx_phy12[79:0]),
-                 .rx_phy13              (rx_phy13[79:0]),
-                 .rx_phy14              (rx_phy14[79:0]),
-                 .rx_phy15              (rx_phy15[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_F1) // full rate
-          begin
-            lpif_txrx_x16_f1_master_top
-              lpif_txrx_x16_f1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[39:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[39:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[39:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[39:0]),      // Templated
-                 .tx_phy8               (ll_tx_phy8[39:0]),      // Templated
-                 .tx_phy9               (ll_tx_phy9[39:0]),      // Templated
-                 .tx_phy10              (ll_tx_phy10[39:0]),     // Templated
-                 .tx_phy11              (ll_tx_phy11[39:0]),     // Templated
-                 .tx_phy12              (ll_tx_phy12[39:0]),     // Templated
-                 .tx_phy13              (ll_tx_phy13[39:0]),     // Templated
-                 .tx_phy14              (ll_tx_phy14[39:0]),     // Templated
-                 .tx_phy15              (ll_tx_phy15[39:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .rx_phy4               (rx_phy4[39:0]),
-                 .rx_phy5               (rx_phy5[39:0]),
-                 .rx_phy6               (rx_phy6[39:0]),
-                 .rx_phy7               (rx_phy7[39:0]),
-                 .rx_phy8               (rx_phy8[39:0]),
-                 .rx_phy9               (rx_phy9[39:0]),
-                 .rx_phy10              (rx_phy10[39:0]),
-                 .rx_phy11              (rx_phy11[39:0]),
-                 .rx_phy12              (rx_phy12[39:0]),
-                 .rx_phy13              (rx_phy13[39:0]),
-                 .rx_phy14              (rx_phy14[39:0]),
-                 .rx_phy15              (rx_phy15[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_H1) // half rate
-          begin
-            lpif_txrx_x8_h1_master_top
-              lpif_txrx_x8_h1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[79:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[79:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[79:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .rx_phy4               (rx_phy4[79:0]),
-                 .rx_phy5               (rx_phy5[79:0]),
-                 .rx_phy6               (rx_phy6[79:0]),
-                 .rx_phy7               (rx_phy7[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_F1) // full rate
-          begin
-            lpif_txrx_x8_f1_master_top
-              lpif_txrx_x8_f1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[39:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[39:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[39:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .rx_phy4               (rx_phy4[39:0]),
-                 .rx_phy5               (rx_phy5[39:0]),
-                 .rx_phy6               (rx_phy6[39:0]),
-                 .rx_phy7               (rx_phy7[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_H1) // half rate
-          begin
-            lpif_txrx_x4_h1_master_top
-              lpif_txrx_x4_h1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_F1) // full rate
-          begin
-            lpif_txrx_x4_f1_master_top
-              lpif_txrx_x4_f1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X2_H1) // half rate
-          begin
-            lpif_txrx_x2_h1_master_top
-              lpif_txrx_x2_h1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X2_F1) // full rate
-          begin
-            lpif_txrx_x2_f1_master_top
-              lpif_txrx_x2_f1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[1:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X1_H1) // half rate
-          begin
-            lpif_txrx_x1_h1_master_top
-              lpif_txrx_x1_h1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[1:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X1_F1) // full rate
-          begin
-            lpif_txrx_x1_f1_master_top
-              lpif_txrx_x1_f1_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[31:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[0:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[31:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[0:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-      end // if (ASYM == 0)
-  endgenerate
+  assign dstrm_valid_tmp = {4{dstrm_valid}};
 
   // asymmetric datapaths
 
@@ -1216,8 +376,13 @@ module lpif_txrx
    .clk_wr                 (com_clk),
    .rst_wr_n               (rst_n),
    .init_downstream_credit (8'hff),
-   .ustrm_valid            (ustrm_valid),
-   .dstrm_valid            (dstrm_valid),
+   .ustrm_valid            (ustrm_valid_tmp[]),
+   .ustrm_state            (ustrm_state_tmp[]),
+   .ustrm_protid           (ustrm_protid_tmp[]),
+   .ustrm_dvalid           (ustrm_dvalid_tmp[]),
+   .ustrm_crc              (ustrm_crc_tmp[]),
+   .ustrm_crc_valid        (ustrm_crc_valid_tmp[]),
+   .dstrm_valid            (dstrm_valid_tmp[]),
    .dstrm_state            (dstrm_state_tmp[]),
    .dstrm_protid           (dstrm_protid_tmp[]),
    .dstrm_dvalid           (dstrm_dvalid_tmp[]),
@@ -1227,845 +392,863 @@ module lpif_txrx
    ); */
 
   generate
-    if (ASYM == 1)
+    if (X16_Q2) // quarter rate
       begin
-        if (X16_Q2) // quarter rate
-          begin
-            lpif_txrx_x16_asym2_quarter_master_top
-              lpif_txrx_x16_asym2_quarter_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[319:0]),     // Templated
-                 .tx_phy2               (ll_tx_phy2[319:0]),     // Templated
-                 .tx_phy3               (ll_tx_phy3[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[15:0]),
-                 .ustrm_protid          (ustrm_protid[7:0]),
-                 .ustrm_data            (ustrm_data[1023:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[3:0]),
-                 .ustrm_crc             (ustrm_crc[63:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[3:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .rx_phy1               (rx_phy1[319:0]),
-                 .rx_phy2               (rx_phy2[319:0]),
-                 .rx_phy3               (rx_phy3[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
-                 .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[63:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_H2) // half rate
-          begin
-            lpif_txrx_x16_asym2_half_master_top
-              lpif_txrx_x16_asym2_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[159:0]),     // Templated
-                 .tx_phy2               (ll_tx_phy2[159:0]),     // Templated
-                 .tx_phy3               (ll_tx_phy3[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[31:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .rx_phy1               (rx_phy1[159:0]),
-                 .rx_phy2               (rx_phy2[159:0]),
-                 .rx_phy3               (rx_phy3[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_F2) // full rate
-          begin
-            lpif_txrx_x16_asym2_full_master_top
-              lpif_txrx_x16_asym2_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_Q2) // quarter rate
-          begin
-            lpif_txrx_x8_asym2_quarter_master_top
-              lpif_txrx_x8_asym2_quarter_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[15:0]),
-                 .ustrm_protid          (ustrm_protid[7:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[3:0]),
-                 .ustrm_crc             (ustrm_crc[31:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[3:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .rx_phy1               (rx_phy1[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_H2) // half rate
-          begin
-            lpif_txrx_x8_asym2_half_master_top
-              lpif_txrx_x8_asym2_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .tx_phy1               (ll_tx_phy1[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .rx_phy1               (rx_phy1[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_F2) // full rate
-          begin
-            lpif_txrx_x8_asym2_full_master_top
-              lpif_txrx_x8_asym2_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_Q2) // quarter rate
-          begin
-            lpif_txrx_x4_asym2_quarter_master_top
-              lpif_txrx_x4_asym2_quarter_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[319:0]),     // Templated
-                 .ustrm_state           (ustrm_state[15:0]),
-                 .ustrm_protid          (ustrm_protid[7:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[3:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[3:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[319:0]),
-                 .dstrm_state           (dstrm_state_tmp[15:0]), // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[7:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[3:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[3:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[3:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_H2) // half rate
-          begin
-            lpif_txrx_x4_asym2_half_master_top
-              lpif_txrx_x4_asym2_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[159:0]),     // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[159:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[1:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_F2) // full rate
-          begin
-            lpif_txrx_x4_asym2_full_master_top
-              lpif_txrx_x4_asym2_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .tx_mrk_userbit        (tx_mrk_userbit[0:0]),
-                 .tx_stb_userbit        (tx_stb_userbit),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_H1) // half rate
-          begin
-            lpif_txrx_x16_asym1_half_master_top
-              lpif_txrx_x16_asym1_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[79:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[79:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[79:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[79:0]),      // Templated
-                 .tx_phy8               (ll_tx_phy8[79:0]),      // Templated
-                 .tx_phy9               (ll_tx_phy9[79:0]),      // Templated
-                 .tx_phy10              (ll_tx_phy10[79:0]),     // Templated
-                 .tx_phy11              (ll_tx_phy11[79:0]),     // Templated
-                 .tx_phy12              (ll_tx_phy12[79:0]),     // Templated
-                 .tx_phy13              (ll_tx_phy13[79:0]),     // Templated
-                 .tx_phy14              (ll_tx_phy14[79:0]),     // Templated
-                 .tx_phy15              (ll_tx_phy15[79:0]),     // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[1023:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[31:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .rx_phy4               (rx_phy4[79:0]),
-                 .rx_phy5               (rx_phy5[79:0]),
-                 .rx_phy6               (rx_phy6[79:0]),
-                 .rx_phy7               (rx_phy7[79:0]),
-                 .rx_phy8               (rx_phy8[79:0]),
-                 .rx_phy9               (rx_phy9[79:0]),
-                 .rx_phy10              (rx_phy10[79:0]),
-                 .rx_phy11              (rx_phy11[79:0]),
-                 .rx_phy12              (rx_phy12[79:0]),
-                 .rx_phy13              (rx_phy13[79:0]),
-                 .rx_phy14              (rx_phy14[79:0]),
-                 .rx_phy15              (rx_phy15[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[1023:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[31:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X16_F1) // full rate
-          begin
-            lpif_txrx_x16_asym1_full_master_top
-              lpif_txrx_x16_asym1_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[39:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[39:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[39:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[39:0]),      // Templated
-                 .tx_phy8               (ll_tx_phy8[39:0]),      // Templated
-                 .tx_phy9               (ll_tx_phy9[39:0]),      // Templated
-                 .tx_phy10              (ll_tx_phy10[39:0]),     // Templated
-                 .tx_phy11              (ll_tx_phy11[39:0]),     // Templated
-                 .tx_phy12              (ll_tx_phy12[39:0]),     // Templated
-                 .tx_phy13              (ll_tx_phy13[39:0]),     // Templated
-                 .tx_phy14              (ll_tx_phy14[39:0]),     // Templated
-                 .tx_phy15              (ll_tx_phy15[39:0]),     // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .rx_phy4               (rx_phy4[39:0]),
-                 .rx_phy5               (rx_phy5[39:0]),
-                 .rx_phy6               (rx_phy6[39:0]),
-                 .rx_phy7               (rx_phy7[39:0]),
-                 .rx_phy8               (rx_phy8[39:0]),
-                 .rx_phy9               (rx_phy9[39:0]),
-                 .rx_phy10              (rx_phy10[39:0]),
-                 .rx_phy11              (rx_phy11[39:0]),
-                 .rx_phy12              (rx_phy12[39:0]),
-                 .rx_phy13              (rx_phy13[39:0]),
-                 .rx_phy14              (rx_phy14[39:0]),
-                 .rx_phy15              (rx_phy15[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_H1) // half rate
-          begin
-            lpif_txrx_x8_asym1_half_master_top
-              lpif_txrx_x8_asym1_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[79:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[79:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[79:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[511:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[15:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .rx_phy4               (rx_phy4[79:0]),
-                 .rx_phy5               (rx_phy5[79:0]),
-                 .rx_phy6               (rx_phy6[79:0]),
-                 .rx_phy7               (rx_phy7[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[511:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[15:0]),   // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X8_F1) // full rate
-          begin
-            lpif_txrx_x8_asym1_full_master_top
-              lpif_txrx_x8_asym1_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .tx_phy4               (ll_tx_phy4[39:0]),      // Templated
-                 .tx_phy5               (ll_tx_phy5[39:0]),      // Templated
-                 .tx_phy6               (ll_tx_phy6[39:0]),      // Templated
-                 .tx_phy7               (ll_tx_phy7[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .rx_phy4               (rx_phy4[39:0]),
-                 .rx_phy5               (rx_phy5[39:0]),
-                 .rx_phy6               (rx_phy6[39:0]),
-                 .rx_phy7               (rx_phy7[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_H1) // half rate
-          begin
-            lpif_txrx_x4_asym1_half_master_top
-              lpif_txrx_x4_asym1_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[79:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[255:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[7:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .rx_phy2               (rx_phy2[79:0]),
-                 .rx_phy3               (rx_phy3[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[255:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[7:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X4_F1) // full rate
-          begin
-            lpif_txrx_x4_asym1_full_master_top
-              lpif_txrx_x4_asym1_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .tx_phy2               (ll_tx_phy2[39:0]),      // Templated
-                 .tx_phy3               (ll_tx_phy3[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .rx_phy2               (rx_phy2[39:0]),
-                 .rx_phy3               (rx_phy3[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X2_H1) // half rate
-          begin
-            lpif_txrx_x2_asym1_half_master_top
-              lpif_txrx_x2_asym1_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[127:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[3:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[127:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[3:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X2_F1) // full rate
-          begin
-            lpif_txrx_x2_asym1_full_master_top
-              lpif_txrx_x2_asym1_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[1:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X1_H1) // half rate
-          begin
-            lpif_txrx_x1_asym1_half_master_top
-              lpif_txrx_x1_asym1_half_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[79:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[79:0]),      // Templated
-                 .ustrm_state           (ustrm_state[7:0]),
-                 .ustrm_protid          (ustrm_protid[3:0]),
-                 .ustrm_data            (ustrm_data[63:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[1:0]),
-                 .ustrm_crc             (ustrm_crc[1:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[1:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[79:0]),
-                 .rx_phy1               (rx_phy1[79:0]),
-                 .dstrm_state           (dstrm_state_tmp[7:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[3:0]), // Templated
-                 .dstrm_data            (dstrm_data[63:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[1:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[1:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[1:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-        if (X1_F1) // full rate
-          begin
-            lpif_txrx_x1_asym1_full_master_top
-              lpif_txrx_x1_asym1_full_master_top_i
-                (/*AUTOINST*/
-                 // Outputs
-                 .tx_phy0               (ll_tx_phy0[39:0]),      // Templated
-                 .tx_phy1               (ll_tx_phy1[39:0]),      // Templated
-                 .ustrm_state           (ustrm_state[3:0]),
-                 .ustrm_protid          (ustrm_protid[1:0]),
-                 .ustrm_data            (ustrm_data[31:0]),
-                 .ustrm_dvalid          (ustrm_dvalid[0:0]),
-                 .ustrm_crc             (ustrm_crc[0:0]),
-                 .ustrm_crc_valid       (ustrm_crc_valid[0:0]),
-                 .ustrm_valid           (ustrm_valid),           // Templated
-                 .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
-                 .rx_upstream_debug_status(rx_upstream_debug_status[31:0]),
-                 // Inputs
-                 .clk_wr                (com_clk),               // Templated
-                 .rst_wr_n              (rst_n),                 // Templated
-                 .tx_online             (tx_online),
-                 .rx_online             (rx_online),
-                 .init_downstream_credit(8'hff),                 // Templated
-                 .rx_phy0               (rx_phy0[39:0]),
-                 .rx_phy1               (rx_phy1[39:0]),
-                 .dstrm_state           (dstrm_state_tmp[3:0]),  // Templated
-                 .dstrm_protid          (dstrm_protid_tmp[1:0]), // Templated
-                 .dstrm_data            (dstrm_data[31:0]),
-                 .dstrm_dvalid          (dstrm_dvalid_tmp[0:0]), // Templated
-                 .dstrm_crc             (dstrm_crc_tmp[0:0]),    // Templated
-                 .dstrm_crc_valid       (dstrm_crc_valid_tmp[0:0]), // Templated
-                 .dstrm_valid           (dstrm_valid),           // Templated
-                 .m_gen2_mode           (m_gen2_mode),
-                 .delay_x_value         (delay_x_value[15:0]),
-                 .delay_y_value         (delay_y_value[15:0]),
-                 .delay_z_value         (delay_z_value[15:0]));
-          end
-      end // if (ASYM == 1)
+        lpif_txrx_x16_asym2_quarter_master_top
+          lpif_txrx_x16_asym2_quarter_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[319:0]),     // Templated
+             .tx_phy1                   (ll_tx_phy1[319:0]),     // Templated
+             .tx_phy2                   (ll_tx_phy2[319:0]),     // Templated
+             .tx_phy3                   (ll_tx_phy3[319:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
+             .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
+             .ustrm_data                (ustrm_data[1023:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[63:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[3:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[319:0]),
+             .rx_phy1                   (rx_phy1[319:0]),
+             .rx_phy2                   (rx_phy2[319:0]),
+             .rx_phy3                   (rx_phy3[319:0]),
+             .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
+             .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
+             .dstrm_data                (dstrm_data[1023:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[63:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[3:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X16_Q2)
+    if (X16_H2) // half rate
+      begin
+        lpif_txrx_x16_asym2_half_master_top
+          lpif_txrx_x16_asym2_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[159:0]),     // Templated
+             .tx_phy1                   (ll_tx_phy1[159:0]),     // Templated
+             .tx_phy2                   (ll_tx_phy2[159:0]),     // Templated
+             .tx_phy3                   (ll_tx_phy3[159:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[159:0]),
+             .rx_phy1                   (rx_phy1[159:0]),
+             .rx_phy2                   (rx_phy2[159:0]),
+             .rx_phy3                   (rx_phy3[159:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X16_H2)
+    if (X16_F2) // full rate
+      begin
+        lpif_txrx_x16_asym2_full_master_top
+          lpif_txrx_x16_asym2_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[79:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .rx_phy2                   (rx_phy2[79:0]),
+             .rx_phy3                   (rx_phy3[79:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X16_F2)
+    if (X8_Q2) // quarter rate
+      begin
+        lpif_txrx_x8_asym2_quarter_master_top
+          lpif_txrx_x8_asym2_quarter_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[319:0]),     // Templated
+             .tx_phy1                   (ll_tx_phy1[319:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
+             .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
+             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[3:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[319:0]),
+             .rx_phy1                   (rx_phy1[319:0]),
+             .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
+             .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
+             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[3:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X8_H2) // half rate
+      begin
+        lpif_txrx_x8_asym2_half_master_top
+          lpif_txrx_x8_asym2_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[159:0]),     // Templated
+             .tx_phy1                   (ll_tx_phy1[159:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[159:0]),
+             .rx_phy1                   (rx_phy1[159:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X8_F2) // full rate
+      begin
+        lpif_txrx_x8_asym2_full_master_top
+          lpif_txrx_x8_asym2_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X4_Q2) // quarter rate
+      begin
+        lpif_txrx_x4_asym2_quarter_master_top
+          lpif_txrx_x4_asym2_quarter_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[319:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
+             .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
+             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[3:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[319:0]),
+             .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
+             .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
+             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[3:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[3:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X4_H2) // half rate
+      begin
+        lpif_txrx_x4_asym2_half_master_top
+          lpif_txrx_x4_asym2_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[159:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[159:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X4_F2) // full rate
+      begin
+        lpif_txrx_x4_asym2_full_master_top
+          lpif_txrx_x4_asym2_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X16_H1) // half rate
+      begin
+        lpif_txrx_x16_asym1_half_master_top
+          lpif_txrx_x16_asym1_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[79:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
+             .tx_phy4                   (ll_tx_phy4[79:0]),      // Templated
+             .tx_phy5                   (ll_tx_phy5[79:0]),      // Templated
+             .tx_phy6                   (ll_tx_phy6[79:0]),      // Templated
+             .tx_phy7                   (ll_tx_phy7[79:0]),      // Templated
+             .tx_phy8                   (ll_tx_phy8[79:0]),      // Templated
+             .tx_phy9                   (ll_tx_phy9[79:0]),      // Templated
+             .tx_phy10                  (ll_tx_phy10[79:0]),     // Templated
+             .tx_phy11                  (ll_tx_phy11[79:0]),     // Templated
+             .tx_phy12                  (ll_tx_phy12[79:0]),     // Templated
+             .tx_phy13                  (ll_tx_phy13[79:0]),     // Templated
+             .tx_phy14                  (ll_tx_phy14[79:0]),     // Templated
+             .tx_phy15                  (ll_tx_phy15[79:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[1023:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .rx_phy2                   (rx_phy2[79:0]),
+             .rx_phy3                   (rx_phy3[79:0]),
+             .rx_phy4                   (rx_phy4[79:0]),
+             .rx_phy5                   (rx_phy5[79:0]),
+             .rx_phy6                   (rx_phy6[79:0]),
+             .rx_phy7                   (rx_phy7[79:0]),
+             .rx_phy8                   (rx_phy8[79:0]),
+             .rx_phy9                   (rx_phy9[79:0]),
+             .rx_phy10                  (rx_phy10[79:0]),
+             .rx_phy11                  (rx_phy11[79:0]),
+             .rx_phy12                  (rx_phy12[79:0]),
+             .rx_phy13                  (rx_phy13[79:0]),
+             .rx_phy14                  (rx_phy14[79:0]),
+             .rx_phy15                  (rx_phy15[79:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[1023:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X16_H1)
+    if (X16_F1) // full rate
+      begin
+        lpif_txrx_x16_asym1_full_master_top
+          lpif_txrx_x16_asym1_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[39:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[39:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[39:0]),      // Templated
+             .tx_phy4                   (ll_tx_phy4[39:0]),      // Templated
+             .tx_phy5                   (ll_tx_phy5[39:0]),      // Templated
+             .tx_phy6                   (ll_tx_phy6[39:0]),      // Templated
+             .tx_phy7                   (ll_tx_phy7[39:0]),      // Templated
+             .tx_phy8                   (ll_tx_phy8[39:0]),      // Templated
+             .tx_phy9                   (ll_tx_phy9[39:0]),      // Templated
+             .tx_phy10                  (ll_tx_phy10[39:0]),     // Templated
+             .tx_phy11                  (ll_tx_phy11[39:0]),     // Templated
+             .tx_phy12                  (ll_tx_phy12[39:0]),     // Templated
+             .tx_phy13                  (ll_tx_phy13[39:0]),     // Templated
+             .tx_phy14                  (ll_tx_phy14[39:0]),     // Templated
+             .tx_phy15                  (ll_tx_phy15[39:0]),     // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[39:0]),
+             .rx_phy1                   (rx_phy1[39:0]),
+             .rx_phy2                   (rx_phy2[39:0]),
+             .rx_phy3                   (rx_phy3[39:0]),
+             .rx_phy4                   (rx_phy4[39:0]),
+             .rx_phy5                   (rx_phy5[39:0]),
+             .rx_phy6                   (rx_phy6[39:0]),
+             .rx_phy7                   (rx_phy7[39:0]),
+             .rx_phy8                   (rx_phy8[39:0]),
+             .rx_phy9                   (rx_phy9[39:0]),
+             .rx_phy10                  (rx_phy10[39:0]),
+             .rx_phy11                  (rx_phy11[39:0]),
+             .rx_phy12                  (rx_phy12[39:0]),
+             .rx_phy13                  (rx_phy13[39:0]),
+             .rx_phy14                  (rx_phy14[39:0]),
+             .rx_phy15                  (rx_phy15[39:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X16_F1)
+    if (X8_H1) // half rate
+      begin
+        lpif_txrx_x8_asym1_half_master_top
+          lpif_txrx_x8_asym1_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[79:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
+             .tx_phy4                   (ll_tx_phy4[79:0]),      // Templated
+             .tx_phy5                   (ll_tx_phy5[79:0]),      // Templated
+             .tx_phy6                   (ll_tx_phy6[79:0]),      // Templated
+             .tx_phy7                   (ll_tx_phy7[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .rx_phy2                   (rx_phy2[79:0]),
+             .rx_phy3                   (rx_phy3[79:0]),
+             .rx_phy4                   (rx_phy4[79:0]),
+             .rx_phy5                   (rx_phy5[79:0]),
+             .rx_phy6                   (rx_phy6[79:0]),
+             .rx_phy7                   (rx_phy7[79:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X8_H1)
+    if (X8_F1) // full rate
+      begin
+        lpif_txrx_x8_asym1_full_master_top
+          lpif_txrx_x8_asym1_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[39:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[39:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[39:0]),      // Templated
+             .tx_phy4                   (ll_tx_phy4[39:0]),      // Templated
+             .tx_phy5                   (ll_tx_phy5[39:0]),      // Templated
+             .tx_phy6                   (ll_tx_phy6[39:0]),      // Templated
+             .tx_phy7                   (ll_tx_phy7[39:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[39:0]),
+             .rx_phy1                   (rx_phy1[39:0]),
+             .rx_phy2                   (rx_phy2[39:0]),
+             .rx_phy3                   (rx_phy3[39:0]),
+             .rx_phy4                   (rx_phy4[39:0]),
+             .rx_phy5                   (rx_phy5[39:0]),
+             .rx_phy6                   (rx_phy6[39:0]),
+             .rx_phy7                   (rx_phy7[39:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X8_F1)
+    if (X4_H1) // half rate
+      begin
+        lpif_txrx_x4_asym1_half_master_top
+          lpif_txrx_x4_asym1_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[79:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .rx_phy2                   (rx_phy2[79:0]),
+             .rx_phy3                   (rx_phy3[79:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X4_H1)
+    if (X4_F1) // full rate
+      begin
+        lpif_txrx_x4_asym1_full_master_top
+          lpif_txrx_x4_asym1_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[39:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
+             .tx_phy2                   (ll_tx_phy2[39:0]),      // Templated
+             .tx_phy3                   (ll_tx_phy3[39:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[39:0]),
+             .rx_phy1                   (rx_phy1[39:0]),
+             .rx_phy2                   (rx_phy2[39:0]),
+             .rx_phy3                   (rx_phy3[39:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end // if (X4_F1)
+    if (X2_H1) // half rate
+      begin
+        lpif_txrx_x2_asym1_half_master_top
+          lpif_txrx_x2_asym1_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X2_F1) // full rate
+      begin
+        lpif_txrx_x2_asym1_full_master_top
+          lpif_txrx_x2_asym1_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[39:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[1:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[39:0]),
+             .rx_phy1                   (rx_phy1[39:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[1:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X1_H1) // half rate
+      begin
+        lpif_txrx_x1_asym1_half_master_top
+          lpif_txrx_x1_asym1_half_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
+             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[1:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[1:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[79:0]),
+             .rx_phy1                   (rx_phy1[79:0]),
+             .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
+             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[1:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[1:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[1:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
+    if (X1_F1) // full rate
+      begin
+        lpif_txrx_x1_asym1_full_master_top
+          lpif_txrx_x1_asym1_full_master_top_i
+            (/*AUTOINST*/
+             // Outputs
+             .tx_phy0                   (ll_tx_phy0[39:0]),      // Templated
+             .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
+             .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
+             .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
+             .ustrm_data                (ustrm_data[31:0]),
+             .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
+             .ustrm_crc                 (ustrm_crc_tmp[0:0]),    // Templated
+             .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
+             .ustrm_valid               (ustrm_valid_tmp[0:0]),  // Templated
+             .tx_downstream_debug_status(tx_downstream_debug_status[31:0]),
+             .rx_upstream_debug_status  (rx_upstream_debug_status[31:0]),
+             // Inputs
+             .clk_wr                    (com_clk),               // Templated
+             .rst_wr_n                  (rst_n),                 // Templated
+             .tx_online                 (tx_online),
+             .rx_online                 (rx_online),
+             .init_downstream_credit    (8'hff),                 // Templated
+             .rx_phy0                   (rx_phy0[39:0]),
+             .rx_phy1                   (rx_phy1[39:0]),
+             .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
+             .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
+             .dstrm_data                (dstrm_data[31:0]),
+             .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
+             .dstrm_crc                 (dstrm_crc_tmp[0:0]),    // Templated
+             .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
+             .dstrm_valid               (dstrm_valid_tmp[0:0]),  // Templated
+             .m_gen2_mode               (m_gen2_mode),
+             .tx_mrk_userbit            (tx_mrk_userbit[0:0]),
+             .tx_stb_userbit            (tx_stb_userbit),
+             .delay_x_value             (delay_x_value[15:0]),
+             .delay_y_value             (delay_y_value[15:0]),
+             .delay_z_value             (delay_z_value[15:0]));
+      end
   endgenerate
 
   // strobe and marker generation
 
-  localparam STB_INTERVAL = 8'h8;
+  localparam STB_INTERVAL = 16'h8;
   localparam STB_DELAY = 16'h14;
+
+  // external port values
+
+  localparam PORT_FULL = 2'b00;
+  localparam PORT_HALF = 2'b01;
+  localparam PORT_QUARTER = 2'b10;
 
   localparam FULL = 4'h1;
   localparam HALF = 4'h2;
   localparam QUARTER = 4'h4;
 
-  wire local_rate_f = x16_f2 | x16_f1;
-  wire local_rate_h = x16_h2 | x16_h1;
-  wire local_rate_q = x16_q2;
+  wire local_rate_f = x16_f2 | x8_f2 | x4_f2 | x16_f1 | x8_f1 | x4_f1 | x2_f1 | x1_f1;
+  wire local_rate_h = x16_h2 | x8_h2 | x4_h2 | x16_h1 | x8_h1 | x4_h1 | x2_h1 | x1_h1;
+  wire local_rate_q = x16_q2 | x8_q2 | x4_q2;
 
-  // symmetric for now
-  wire remote_rate_f = local_rate_f;
-  wire remote_rate_h = local_rate_h;
-  wire remote_rate_q = local_rate_q;
-
-  logic [3:0] local_rate, remote_rate;
+  logic [3:0] local_rate, remote_rate_int;
 
   always_comb
     begin
@@ -2075,12 +1258,16 @@ module lpif_txrx
         3'b001: local_rate = QUARTER;
         default: local_rate = FULL;
       endcase // case ({local_rate_f, local_rate_h, local_rate_q})
-      case ({remote_rate_f, remote_rate_h, remote_rate_q})
-        3'b100: remote_rate = FULL;
-        3'b010: remote_rate = HALF;
-        3'b001: remote_rate = QUARTER;
-        default: remote_rate = FULL;
-      endcase // case ({remote_rate_f, remote_rate_h, remote_rate_q})
+/* -----\/----- EXCLUDED -----\/-----
+      case (remote_rate)
+        PORT_FULL: remote_rate_int = FULL;
+        PORT_HALF: remote_rate_int = HALF;
+        PORT_QUARTER: remote_rate_int = QUARTER;
+        default: remote_rate_int = FULL;
+      endcase // case (remote_rate)
+ -----/\----- EXCLUDED -----/\----- */
+      // symmetric until TB changes are done
+      assign remote_rate_int = local_rate;
     end
 
   /* strobe_gen_w_delay AUTO_TEMPLATE (
@@ -2109,6 +1296,7 @@ module lpif_txrx
   /* marker_gen AUTO_TEMPLATE (
    .clk         (com_clk),
    .rst_n       (rst_n),
+   .remote_rate (remote_rate_int[]),
    .user_marker (tx_mrk_userbit[]),
    ); */
 
@@ -2121,7 +1309,7 @@ module lpif_txrx
        .clk                             (com_clk),               // Templated
        .rst_n                           (rst_n),                 // Templated
        .local_rate                      (local_rate[3:0]),
-       .remote_rate                     (remote_rate[3:0]));
+       .remote_rate                     (remote_rate_int[3:0]));  // Templated
 
 endmodule // lpif_txrx
 

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,6 +70,7 @@ class base_ca_test_c extends uvm_test;
     extern function bit ck_xfer_cnt_b(bit show);
     extern task ck_eot( uvm_phase phase );
     extern task sbd_counts_clear( );
+    extern task sbd_counts_only_clear( );
  
 endclass: base_ca_test_c
 
@@ -162,6 +158,25 @@ task base_ca_test_c::run_phase(uvm_phase phase);
 `endif
 endtask : run_phase
 //------------------------------------------
+task base_ca_test_c::sbd_counts_only_clear();
+
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b  = 0;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab = 0;
+     ca_top_env.ca_scoreboard.rx_out_cnt_die_a        = 0;
+     ca_top_env.ca_scoreboard.rx_out_cnt_die_b        = 0;
+     ca_top_env.ca_scoreboard.tx_out_cnt_die_a        = 0;
+     ca_top_env.ca_scoreboard.tx_out_cnt_die_b        = 0;
+     ca_top_env.ca_scoreboard.beat_cnt_a              = 0;
+     ca_top_env.ca_scoreboard.beat_cnt_b              = 0;
+
+endtask : sbd_counts_only_clear
+
 task base_ca_test_c::sbd_counts_clear();
      
      ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a  = 0;
@@ -178,6 +193,10 @@ task base_ca_test_c::sbd_counts_clear();
      ca_top_env.ca_scoreboard.tx_out_cnt_die_b        = 0;
      ca_top_env.ca_scoreboard.beat_cnt_a              = 0;
      ca_top_env.ca_scoreboard.beat_cnt_b              = 0;
+     ca_top_env.ca_scoreboard.die_a_tx_din_q.delete();
+     ca_top_env.ca_scoreboard.die_b_tx_din_q.delete();
+     ca_top_env.ca_scoreboard.die_a_exp_rx_dout_q.delete();
+     ca_top_env.ca_scoreboard.die_b_exp_rx_dout_q.delete();
 
 endtask : sbd_counts_clear 
 //------------------------------------------
@@ -303,8 +322,7 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
      wait(test_end == 1); 
    end
     $display("inside_base_ca_test : test_end,%0d",test_end);
-   
-    repeat (10) @(posedge vif.clk);
+         repeat (10) @(posedge vif.clk);
     phase.drop_objection(this);
     `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
     if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test == 0))begin

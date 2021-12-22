@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,8 +108,6 @@ task ca_stb_rcvr_enb_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_a_rx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_rx_tb_in_cfg.with_external_stb_test   = 1;
 
-     ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en               = 0;
-     ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en               = 0;
      ca_cfg.ca_die_a_rx_tb_in_cfg.tx_stb_rcvr              = 1;
      ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr              = 1;
 

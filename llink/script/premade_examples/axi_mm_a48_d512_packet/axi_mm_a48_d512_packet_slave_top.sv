@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -90,7 +83,7 @@ module axi_mm_a48_d512_packet_slave_top  (
   input  logic               m_gen2_mode         ,
 
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -238,6 +231,7 @@ module axi_mm_a48_d512_packet_slave_top  (
          .rst_wr_n                         (rst_wr_n),
          .end_of_txcred_coal               (1'b1),
          .tx_online                        (tx_online_delay),
+         .rx_online                        (rx_online_delay),
          .init_i_credit                    (init_r_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_r_pop_ovrd),
          .txfifo_i_data                    (txfifo_r_data[518:0]),
@@ -255,6 +249,7 @@ module axi_mm_a48_d512_packet_slave_top  (
          .rst_wr_n                         (rst_wr_n),
          .end_of_txcred_coal               (1'b1),
          .tx_online                        (tx_online_delay),
+         .rx_online                        (rx_online_delay),
          .init_i_credit                    (init_b_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_b_pop_ovrd),
          .txfifo_i_data                    (txfifo_b_data[5:0]),

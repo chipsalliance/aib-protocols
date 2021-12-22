@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -417,10 +412,10 @@ end
 
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'd20),                // Strobe repeats every 20 cycles
+      .tx_stb_intv			(16'd48),                // Strobe repeats every 48 cycles
       .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_intv			(16'd48),                 // Strobe repeats every 48 cycles
 
       .tx_din				({ll2ca_master_1[79:0], ll2ca_master_0[79:0]}),
       .rx_din				({phy2ca_master_1[79:0], phy2ca_master_0[79:0]}),
@@ -472,10 +467,10 @@ end
       .delay_z_value                    (MASTER_DELAY_Z_VALUE),  // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'd20),			 // Templated
+      .tx_stb_intv			(16'd48),			 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'd20),			 // Templated
+      .rx_stb_intv			(16'd48),			 // Templated
       .tx_din				({ll2ca_master_1[79:0], ll2ca_master_0[79:0]}), // Templated
       .rx_din				({phy2ca_master_1[79:0], phy2ca_master_0[79:0]}), // Templated
       .fifo_full_val			(6'd16),		 // Templated
@@ -612,10 +607,10 @@ end
       .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .tx_stb_intv			(16'd48),                 // Strobe repeats every 48 cycles
       .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC 1
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_intv			(16'd48),                 // Strobe repeats every 48 cycles
 
       .tx_din				({ll2ca_slave_1[79:0], ll2ca_slave_0[79:0]}),
       .rx_din				({phy2ca_slave_1[79:0], phy2ca_slave_0[79:0]}),
@@ -666,10 +661,10 @@ end
       .delay_z_value                    (SLAVE_DELAY_Z_VALUE),   // Templated
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'd20),			 // Templated
+      .tx_stb_intv			(16'd48),			 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'd20),			 // Templated
+      .rx_stb_intv			(16'd48),			 // Templated
       .tx_din				({ll2ca_slave_1[79:0], ll2ca_slave_0[79:0]}), // Templated
       .rx_din				({phy2ca_slave_1[79:0], phy2ca_slave_0[79:0]}), // Templated
       .fifo_full_val			(6'd16),		 // Templated

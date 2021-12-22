@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -363,7 +358,7 @@ module lpif_lsm
 
   // lsm state decodes
 
-  assign lsm_state_active = (pl_state_sts == STS_ACTIVE) & ~coldstart;
+  assign lsm_state_active = (pl_state_sts == STS_ACTIVE);
   assign d_pl_phyinl2 = (d_pl_state_sts == STS_SLEEP_L2);
 
   always_ff @(posedge lclk or negedge rst_n)
@@ -391,6 +386,7 @@ module lpif_lsm
       if (ctl_phy_err)
         begin
           d_pl_state_sts = STS_LinkError;
+          d_lsm_dstrm_state = SB_LINK_ERROR;
           d_lsm_state = LSM_LinkError;
         end
       else
@@ -542,6 +538,10 @@ module lpif_lsm
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
+/* -----\/----- EXCLUDED -----\/-----
+          //
+          // L1 substates are not implemented
+          //
           LSM_IDLE_L1_2: begin
             d_pl_state_sts = STS_IDLE_L1_2;
             d_lsm_dstrm_state = SB_L1_STS;
@@ -626,15 +626,22 @@ module lpif_lsm
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
+ -----/\----- EXCLUDED -----/\----- */
           LSM_SLEEP_L2: begin
             d_pl_state_sts = STS_SLEEP_L2;
             d_lsm_dstrm_state = SB_L2_STS;
-            if ((state_req_active | state_req_retrain) & state_req_change)
+            if (sb_ustrm_active_req)
+              begin
+                d_lsm_exit_lp = 1'b1;
+                d_pl_state_sts = STS_RESET;
+                d_lsm_state = LSM_RESET;
+              end
+            else if ((state_req_active | state_req_retrain) & state_req_change)
               begin
                 d_state_req_change = 1'b0;
                 d_lsm_exit_lp = 1'b1;
-                d_pl_state_sts = STS_RETRAIN;
-                d_lsm_state = LSM_RETRAIN_a;
+                d_pl_state_sts = STS_RESET;
+                d_lsm_state = LSM_RESET;
               end
             else if (state_req_linkreset & state_req_change)
               begin
@@ -688,6 +695,7 @@ module lpif_lsm
               d_lsm_state = LSM_LinkError;
           end
           LSM_LinkError: begin
+            d_pl_state_sts = STS_LinkError;
             d_lsm_dstrm_state = SB_LINK_ERROR;
           end
           LSM_RETRAIN_a: begin
@@ -736,6 +744,10 @@ module lpif_lsm
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
+/* -----\/----- EXCLUDED -----\/-----
+          //
+          // DISABLE is not implemented
+          //
           LSM_DISABLE: begin
             d_pl_state_sts = STS_DISABLE;
             if (sb_ustrm_link_error)
@@ -746,6 +758,7 @@ module lpif_lsm
                 d_lsm_state = LSM_RESET;
               end
           end
+ -----/\----- EXCLUDED -----/\----- */
           LSM_SB_ACK: begin
             if (sb_ack)
               begin

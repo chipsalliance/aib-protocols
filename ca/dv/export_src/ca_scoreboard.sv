@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,8 +48,10 @@ class ca_scoreboard_c extends uvm_scoreboard;
 
 
     bit  do_compare_rx_dout = 1'b1;
+    bit  do_compare         = 1'b1;
 
-    int  tx_xfer_cnt        = 0; // number of xfers from TB into RTL on the TX side
+    int  tx_xfer_cnt_a        = 0; // number of xfers from TB into RTL on the TX side
+    int  tx_xfer_cnt_b        = 0; // number of xfers from TB into RTL on the TX side
     int  xfer_cnt           = 0;
     int  tx_out_cnt_die_a   = 0;
     int  tx_out_cnt_die_b   = 0;
@@ -195,6 +192,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_a_rx_stb_item.stb_bit_sel    = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_bit_sel;
     die_a_rx_stb_item.stb_intv       = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_intv;
     die_a_rx_stb_item.stb_en         = ca_cfg.ca_die_a_rx_tb_in_cfg.rx_stb_en;
+    die_a_rx_stb_item.stb_rcvr_enb   = ca_cfg.ca_die_a_rx_tb_in_cfg.tx_stb_rcvr;   
     die_a_rx_stb_item.calc_stb_beat();
     die_a_rx_stb_item.dprint();
 
@@ -206,6 +204,7 @@ function void ca_scoreboard_c::generate_stb_beat( );
     die_b_rx_stb_item.stb_bit_sel    = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_bit_sel;
     die_b_rx_stb_item.stb_intv       = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_intv;
     die_b_rx_stb_item.stb_en         = ca_cfg.ca_die_b_rx_tb_in_cfg.rx_stb_en;
+    die_b_rx_stb_item.stb_rcvr_enb   = ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr;   
     die_b_rx_stb_item.calc_stb_beat();
     die_b_rx_stb_item.dprint();
     
@@ -213,13 +212,26 @@ endfunction : generate_stb_beat
 
 //------------------------------------------
 function void ca_scoreboard_c::write_ca_tx_tb_out ( ca_data_pkg::ca_seq_item_c  tx_tb_out_item );
-
-    tx_xfer_cnt++;
-    `uvm_info("write_ca_tx_tb_out",$sformatf("===> SB RX-ing %0d item from TB: %s --> RTL tx_din \n", tx_xfer_cnt, tx_tb_out_item.my_name), UVM_MEDIUM);
+   
+    if(tx_tb_out_item.my_name == "DIE_A") begin
+       tx_xfer_cnt_a++;
+    `uvm_info("write_ca_tx_tb_out",$sformatf("===> SB RX-ing %0d item from TB: %s --> RTL tx_din \n", tx_xfer_cnt_a, tx_tb_out_item.my_name), UVM_MEDIUM);
+    end else begin
+       tx_xfer_cnt_b++;
+    `uvm_info("write_ca_tx_tb_out",$sformatf("===> SB RX-ing %0d item from TB: %s --> RTL tx_din \n", tx_xfer_cnt_b, tx_tb_out_item.my_name), UVM_MEDIUM);
+    end
     tx_tb_out_item.dprint();
     case(tx_tb_out_item.my_name)
-        "DIE_A": die_a_tx_din_q.push_back(tx_tb_out_item);
-        "DIE_B": die_b_tx_din_q.push_back(tx_tb_out_item); 
+        "DIE_A": begin
+                     if(tx_xfer_cnt_a <= (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  
+                        die_a_tx_din_q.push_back(tx_tb_out_item);
+                     end
+                 end
+        "DIE_B": begin
+                     if(tx_xfer_cnt_b <= (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
+		        die_b_tx_din_q.push_back(tx_tb_out_item); 
+                      end
+                 end
         default: begin
             `uvm_fatal("write_tx_tb_out", "BAD case in my_name");
         end
@@ -339,7 +351,6 @@ endfunction : proc_rx_tb_in_err
 function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_item);
 
     ca_data_pkg::ca_seq_item_c   src_item;
-    bit                          do_compare = 1;
     int                          size_mul;
 
     // get expect pkt from tx_din
@@ -347,7 +358,7 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_A": begin
             if(die_a_tx_din_q.size() == 0) begin
                 do_compare = 0;
-                `uvm_error("verify_tx_dout", $sformatf("DIE_A NO expect src pkt: %0d from tx_din",tx_out_cnt_die_a));
+                    `uvm_error("verify_tx_dout", $sformatf("DIE_A NO expect src pkt: %0d from tx_din",tx_out_cnt_die_a));
             end  
             else begin
                 xfer_cnt = tx_out_cnt_die_a;
@@ -357,7 +368,7 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
         "DIE_B": begin
             if(die_b_tx_din_q.size() == 0) begin
                 do_compare = 0;
-                `uvm_error("verify_tx_dout", $sformatf("DIE_B NO expect src pkt: %0d from tx_din",tx_out_cnt_die_b));
+                     `uvm_error("verify_tx_dout", $sformatf("DIE_B NO expect src pkt: %0d from tx_din",tx_out_cnt_die_b));
             end  
             else begin
                 xfer_cnt = tx_out_cnt_die_b;
@@ -374,12 +385,12 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
     if(act_item.add_stb == 1) begin
         `uvm_info("verify_tx_dout", $sformatf("%s is_stb detected, added stb bits into expect data...", act_item.my_name), UVM_MEDIUM);
         if(act_item.my_name == "DIE_A") begin
-            if(die_a_tx_stb_item.stb_en == 1) begin 
+            if((die_a_rx_stb_item.stb_rcvr_enb == 0) && (die_a_tx_stb_item.stb_en == 1)) begin 
                src_item.add_stb_beat(die_a_tx_stb_item);
             end
         end
         else begin
-            if(die_b_tx_stb_item.stb_en == 1) begin
+            if((die_b_rx_stb_item.stb_rcvr_enb == 0) && (die_b_tx_stb_item.stb_en == 1)) begin
                src_item.add_stb_beat(die_b_tx_stb_item);
             end
         end // b
@@ -387,12 +398,12 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
     else begin
         `uvm_info("verify_tx_dout", $sformatf("%s is_stb not detected, clear stb bits into expect data...", act_item.my_name), UVM_MEDIUM);
         if(act_item.my_name == "DIE_A") begin
-            if(die_a_tx_stb_item.stb_en == 1) begin 
+            if((die_a_rx_stb_item.stb_rcvr_enb == 0 ) && (die_a_tx_stb_item.stb_en == 1)) begin 
                src_item.clr_stb_beat(die_a_tx_stb_item);
             end
         end
         else begin
-            if(die_b_tx_stb_item.stb_en == 1) begin
+            if((die_b_rx_stb_item.stb_rcvr_enb == 0) && (die_b_tx_stb_item.stb_en == 1)) begin
                src_item.clr_stb_beat(die_b_tx_stb_item);
             end
         end // b
@@ -439,7 +450,6 @@ endfunction : verify_tx_dout
 function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_item);
 
     ca_data_pkg::ca_seq_item_c   src_item;
-    bit                          do_compare = 1;
     int                          xfer_cnt = 0;
 
     // get expect pkt from tx_din

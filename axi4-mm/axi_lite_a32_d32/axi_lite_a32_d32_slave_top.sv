@@ -1,13 +1,6 @@
 ////////////////////////////////////////////////////////////
-// Proprietary Information of Eximius Design
 //
 //        (C) Copyright 2021 Eximius Design
-//                All Rights Reserved
-//
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -75,7 +68,7 @@ module axi_lite_a32_d32_slave_top  (
   input  logic               m_gen2_mode         ,
 
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -84,7 +77,7 @@ module axi_lite_a32_d32_slave_top  (
 //////////////////////////////////////////////////////////////////
 // Interconnect Wires
   logic                                          rx_ar_lite_pushbit            ;
-  logic                                          user_ar_lite_valid            ;
+  logic                                          user_ar_lite_vld              ;
   logic [  31:   0]                              rx_ar_lite_data               ;
   logic [  31:   0]                              rxfifo_ar_lite_data           ;
   logic                                          tx_ar_lite_credit             ;
@@ -92,7 +85,7 @@ module axi_lite_a32_d32_slave_top  (
   logic                                          rx_ar_lite_push_ovrd          ;
 
   logic                                          rx_aw_lite_pushbit            ;
-  logic                                          user_aw_lite_valid            ;
+  logic                                          user_aw_lite_vld              ;
   logic [  31:   0]                              rx_aw_lite_data               ;
   logic [  31:   0]                              rxfifo_aw_lite_data           ;
   logic                                          tx_aw_lite_credit             ;
@@ -100,7 +93,7 @@ module axi_lite_a32_d32_slave_top  (
   logic                                          rx_aw_lite_push_ovrd          ;
 
   logic                                          rx_w_lite_pushbit             ;
-  logic                                          user_w_lite_valid             ;
+  logic                                          user_w_lite_vld               ;
   logic [  35:   0]                              rx_w_lite_data                ;
   logic [  35:   0]                              rxfifo_w_lite_data            ;
   logic                                          tx_w_lite_credit              ;
@@ -108,7 +101,7 @@ module axi_lite_a32_d32_slave_top  (
   logic                                          rx_w_lite_push_ovrd           ;
 
   logic                                          tx_r_lite_pushbit             ;
-  logic                                          user_r_lite_valid             ;
+  logic                                          user_r_lite_vld               ;
   logic [  33:   0]                              tx_r_lite_data                ;
   logic [  33:   0]                              txfifo_r_lite_data            ;
   logic                                          rx_r_lite_credit              ;
@@ -116,7 +109,7 @@ module axi_lite_a32_d32_slave_top  (
   logic                                          tx_r_lite_pop_ovrd            ;
 
   logic                                          tx_b_lite_pushbit             ;
-  logic                                          user_b_lite_valid             ;
+  logic                                          user_b_lite_vld               ;
   logic [   1:   0]                              tx_b_lite_data                ;
   logic [   1:   0]                              txfifo_b_lite_data            ;
   logic                                          rx_b_lite_credit              ;
@@ -167,13 +160,14 @@ module axi_lite_a32_d32_slave_top  (
       ll_receive #(.WIDTH(32), .DEPTH(8'd8)) ll_receive_iar_lite
         (// Outputs
          .rxfifo_i_data                    (rxfifo_ar_lite_data[31:0]),
-         .user_i_valid                     (user_ar_lite_valid),
+         .user_i_valid                     (user_ar_lite_vld),
          .tx_i_credit                      (tx_ar_lite_credit),
          .rx_i_debug_status                (rx_ar_lite_debug_status[31:0]),
          // Inputs
          .clk_wr                           (clk_wr),
          .rst_wr_n                         (rst_wr_n),
          .rx_online                        (rx_online_delay),
+         .tx_online                        (tx_online_delay),
          .rx_i_push_ovrd                   (rx_ar_lite_push_ovrd),
          .rx_i_data                        (rx_ar_lite_data[31:0]),
          .rx_i_pushbit                     (rx_ar_lite_pushbit),
@@ -182,13 +176,14 @@ module axi_lite_a32_d32_slave_top  (
       ll_receive #(.WIDTH(32), .DEPTH(8'd8)) ll_receive_iaw_lite
         (// Outputs
          .rxfifo_i_data                    (rxfifo_aw_lite_data[31:0]),
-         .user_i_valid                     (user_aw_lite_valid),
+         .user_i_valid                     (user_aw_lite_vld),
          .tx_i_credit                      (tx_aw_lite_credit),
          .rx_i_debug_status                (rx_aw_lite_debug_status[31:0]),
          // Inputs
          .clk_wr                           (clk_wr),
          .rst_wr_n                         (rst_wr_n),
          .rx_online                        (rx_online_delay),
+         .tx_online                        (tx_online_delay),
          .rx_i_push_ovrd                   (rx_aw_lite_push_ovrd),
          .rx_i_data                        (rx_aw_lite_data[31:0]),
          .rx_i_pushbit                     (rx_aw_lite_pushbit),
@@ -197,13 +192,14 @@ module axi_lite_a32_d32_slave_top  (
       ll_receive #(.WIDTH(36), .DEPTH(8'd128)) ll_receive_iw_lite
         (// Outputs
          .rxfifo_i_data                    (rxfifo_w_lite_data[35:0]),
-         .user_i_valid                     (user_w_lite_valid),
+         .user_i_valid                     (user_w_lite_vld),
          .tx_i_credit                      (tx_w_lite_credit),
          .rx_i_debug_status                (rx_w_lite_debug_status[31:0]),
          // Inputs
          .clk_wr                           (clk_wr),
          .rst_wr_n                         (rst_wr_n),
          .rx_online                        (rx_online_delay),
+         .tx_online                        (tx_online_delay),
          .rx_i_push_ovrd                   (rx_w_lite_push_ovrd),
          .rx_i_data                        (rx_w_lite_data[35:0]),
          .rx_i_pushbit                     (rx_w_lite_pushbit),
@@ -220,10 +216,11 @@ module axi_lite_a32_d32_slave_top  (
          .rst_wr_n                         (rst_wr_n),
          .end_of_txcred_coal               (1'b1),
          .tx_online                        (tx_online_delay),
+         .rx_online                        (rx_online_delay),
          .init_i_credit                    (init_r_lite_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_r_lite_pop_ovrd),
          .txfifo_i_data                    (txfifo_r_lite_data[33:0]),
-         .user_i_valid                     (user_r_lite_valid),
+         .user_i_valid                     (user_r_lite_vld),
          .rx_i_credit                      ({3'b0,rx_r_lite_credit}));
 
       ll_transmit #(.WIDTH(2), .DEPTH(8'd1), .TX_CRED_SIZE(3'h1), .ASYMMETRIC_CREDIT(1'b0), .DEFAULT_TX_CRED(8'd8)) ll_transmit_ib_lite
@@ -237,10 +234,11 @@ module axi_lite_a32_d32_slave_top  (
          .rst_wr_n                         (rst_wr_n),
          .end_of_txcred_coal               (1'b1),
          .tx_online                        (tx_online_delay),
+         .rx_online                        (rx_online_delay),
          .init_i_credit                    (init_b_lite_credit[7:0]),
          .tx_i_pop_ovrd                    (tx_b_lite_pop_ovrd),
          .txfifo_i_data                    (txfifo_b_lite_data[1:0]),
-         .user_i_valid                     (user_b_lite_valid),
+         .user_i_valid                     (user_b_lite_vld),
          .rx_i_credit                      ({3'b0,rx_b_lite_credit}));
 
 // Logic Link Instantiation
@@ -269,19 +267,19 @@ module axi_lite_a32_d32_slave_top  (
          .user_bvalid                      (user_bvalid),
          .user_bready                      (user_bready),
 
-         .user_ar_lite_valid               (user_ar_lite_valid),
+         .user_ar_lite_vld                 (user_ar_lite_vld),
          .rxfifo_ar_lite_data              (rxfifo_ar_lite_data[  31:   0]),
          .user_ar_lite_ready               (user_ar_lite_ready),
-         .user_aw_lite_valid               (user_aw_lite_valid),
+         .user_aw_lite_vld                 (user_aw_lite_vld),
          .rxfifo_aw_lite_data              (rxfifo_aw_lite_data[  31:   0]),
          .user_aw_lite_ready               (user_aw_lite_ready),
-         .user_w_lite_valid                (user_w_lite_valid),
+         .user_w_lite_vld                  (user_w_lite_vld),
          .rxfifo_w_lite_data               (rxfifo_w_lite_data[  35:   0]),
          .user_w_lite_ready                (user_w_lite_ready),
-         .user_r_lite_valid                (user_r_lite_valid),
+         .user_r_lite_vld                  (user_r_lite_vld),
          .txfifo_r_lite_data               (txfifo_r_lite_data[  33:   0]),
          .user_r_lite_ready                (user_r_lite_ready),
-         .user_b_lite_valid                (user_b_lite_valid),
+         .user_b_lite_vld                  (user_b_lite_vld),
          .txfifo_b_lite_data               (txfifo_b_lite_data[   1:   0]),
          .user_b_lite_ready                (user_b_lite_ready),
 

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -156,7 +151,8 @@ module lpif
    input logic [15:0]                               delay_y_value,
    input logic [15:0]                               delay_z_value,
 
-   input logic                                      lpbk_en
+   input logic                                      lpbk_en,
+   input logic [1:0]                                remote_rate
    );
 
   /*AUTOWIRE*/
@@ -339,7 +335,9 @@ module lpif
       .AIB_BITS_PER_LANE                (AIB_BITS_PER_LANE),
       .LPIF_DATA_WIDTH                  (LPIF_DATA_WIDTH),
       .LPIF_CLOCK_RATE                  (LPIF_CLOCK_RATE),
-      .ASYM                             (ASYM))
+      .MEM_CACHE_STREAM_ID              (MEM_CACHE_STREAM_ID),
+      .IO_STREAM_ID                     (IO_STREAM_ID),
+      .ARB_MUX_STREAM_ID                (ARB_MUX_STREAM_ID))
   lpif_txrx_i
     (/*AUTOINST*/
      // Outputs
@@ -374,6 +372,7 @@ module lpif
      .tx_online                         (tx_online),
      .rx_online                         (rx_online),
      .m_gen2_mode                       (m_gen2_mode),
+     .remote_rate                       (remote_rate[1:0]),
      .delay_x_value                     (delay_x_value[15:0]),
      .delay_y_value                     (delay_y_value[15:0]),
      .delay_z_value                     (delay_z_value[15:0]),

@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -104,7 +99,9 @@ endfunction: build_phase
 task ca_tx_tb_in_mon_c::run_phase(uvm_phase phase);
     
     fork
-        mon_tx();
+        if(cfg.align_error_test == 0)begin
+          mon_tx();
+        end
         mon_err_sig();
     join 
 
@@ -268,25 +265,24 @@ task ca_tx_tb_in_mon_c::mon_tx();
                      end
                      2'b10: begin
                              //$display("tx_tb_in_mon.sv 2'b10 inside  loop,time %0t onlymark_data=%h",$time,onlymark_data);
-                             if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
                                  verify_tx_stb();  // stb only
                              end
                      end
                      2'b11: begin // both data and stb
+                                ca_item.add_stb = 1;
                          if(((`TB_DIE_A_BUS_BIT_WIDTH == 160) && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) || 
                             ((`TB_DIE_A_BUS_BIT_WIDTH == 320) && (`TB_DIE_B_BUS_BIT_WIDTH == 320)))begin
                              //$display("tx_tb_in_mon.sv 2'b11 inside H2H,Q2Q loop,time %0t markstb_data=%h",$time,markstb_data);
                              if(markstb_data != tx_data_prev[0]) begin
-                               if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                               if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
                                  verify_tx_stb();  
-                                 ca_item.add_stb = 1;
                                end
                                  aport.write(ca_item);
                              end
                          end else begin
-                             if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0))begin //dont check stbs after align_done case
                                 verify_tx_stb();  
-                                ca_item.add_stb = 1;
                              end
                                 aport.write(ca_item);
                          end

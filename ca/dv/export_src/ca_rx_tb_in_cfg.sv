@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +44,9 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit [5:0]        fifo_pfull_val   = `CA_FIFO_PFULL;
     bit [2:0]        fifo_empty_val   = `CA_FIFO_EMPTY; 
     bit [2:0]        fifo_pempty_val  = `CA_FIFO_PEMPTY;
-    rand bit [2:0]   rden_dly; 
+    bit [2:0]        rden_dly         = `CA_RDEN_DLY; 
+    bit [15:0]       delay_x_value    = 10; 
+    bit [15:0]       delay_xz_value   = 14; 
     rand bit [7:0]   rx_stb_intv;
     bit              tx_stb_rcvr;
     rand int         bit_shift;
@@ -73,6 +70,8 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     int              num_of_align_error;
     bit              no_external_stb_test;
     bit              with_external_stb_test;
+    bit              ca_afly1_stb_incorrect_intv_test;
+    bit              ca_afly_toggling_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

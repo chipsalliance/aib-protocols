@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +32,7 @@
 `define MIN_BUS_BIT_WIDTH       40
 `define MAX_BUS_BIT_WIDTH       320 
 `define MAX_NUM_CHANNELS        24
-`define SYNC_FIFO               1 
+`define SYNC_FIFO               `CA_SYNC_FIFO 
 `define AIB_PROG_FIFO_MODE      1  
 
 // DIE A

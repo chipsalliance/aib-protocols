@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -266,7 +261,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
                      end
                      2'b10: begin
                              //display("rx_tb_in_mon.sv 10 inside H2H,Q2Q loop,time %0t",$time);
-                             if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0))begin //dont check stbs after align_done case
                                 verify_rx_stb();  // stb only
                              end
                      end
@@ -277,11 +272,11 @@ task ca_rx_tb_in_mon_c::mon_rx();
                                   ca_item.add_stb = 1;
                                   aport.write(ca_item);
                               end
-                              if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
                                  verify_rx_stb();  
                               end
                           end else begin
-                              if(cfg.with_external_stb_test == 0) begin //dont check stbs after align_done case
+                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
                                  verify_rx_stb();  
                               end
                               ca_item.add_stb = 1;
@@ -422,24 +417,38 @@ task ca_rx_tb_in_mon_c::mon_err_sig();
             // reset state
             end
         else if(vif.rx_online === 1'b1) begin // non reset state
-    
+   
             if((vif.rx_stb_pos_err !== 1'b0 ) || (vif.rx_stb_pos_coding_err !== 1'b0) || vif.align_err !== 1'b0) begin 
+
                 ca_item = ca_data_pkg::ca_seq_item_c::type_id::create("ca_item");
                 set_item(ca_item);
-               if((cfg.align_error_test == 0) && (cfg.stb_error_test == 0)) begin
+
+               if((cfg.align_error_test == 0) && (cfg.stb_error_test == 0) &&  (cfg.ca_afly1_stb_incorrect_intv_test == 0) && (cfg.ca_afly_toggling_test == 0)) begin
+
                 `uvm_warning("mon_err_sig", $sformatf("%s rx-ing error: rx_stb_pos_err: %h  rx_stb_pos_coding_err: %h align_err: %h",
                     my_name, vif.rx_stb_pos_err, vif.rx_stb_pos_coding_err, vif.align_err));
+
                     ca_item.stb_pos_err        = vif.rx_stb_pos_err;
                     ca_item.stb_pos_coding_err = vif.rx_stb_pos_coding_err;
                     ca_item.align_err          = vif.align_err;
                     aport.write(ca_item); 
-              end else begin
+               end else begin
                     if(cfg.stb_error_test == 1) begin
                         if((vif.rx_stb_pos_err !== 1'b0 ) || (vif.rx_stb_pos_coding_err !== 1'b0)) cfg.num_of_stb_error++;
                     end
+
                     if(cfg.align_error_test == 1) begin
                         if(vif.align_err !== 1'b0 ) cfg.num_of_align_error++;
                     end
+
+                    if(cfg.ca_afly1_stb_incorrect_intv_test == 1) begin
+                        if(vif.align_err !== 1'b0 ) cfg.num_of_align_error++;
+                    end
+
+                    if(cfg.ca_afly_toggling_test == 1) begin
+                        if(vif.align_err !== 1'b0 ) cfg.num_of_align_error++;
+                    end
+
                    `uvm_info("mon_rx", $sformatf("%s rx-ing error : align_err %0d rx_stb_pos_err %0d rx_stb_pos_coding_err %0d,rx_num_of_stb_errors =%0d,num_of_align_error =%0d",
                     my_name, vif.align_err,vif.rx_stb_pos_err, vif.rx_stb_pos_coding_err,cfg.num_of_stb_error,cfg.num_of_align_error), UVM_LOW);
                end

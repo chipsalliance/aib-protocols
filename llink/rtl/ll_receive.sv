@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -172,7 +167,9 @@ assign rx_i_debug_status [7:0]   = '0 | dbg_rxfifo_i_numfilled ;
 assign rx_i_debug_status [15:8]  = DEPTH ;
 assign rx_i_debug_status [16]    = '0 | rx_overflow_sticky     ;
 assign rx_i_debug_status [17]    = '0 | rx_underflow_sticky    ;
-assign rx_i_debug_status [23:18] = '0                          ;
+assign rx_i_debug_status [18]    = rx_online                   ;
+assign rx_i_debug_status [19]    = tx_online                   ;
+assign rx_i_debug_status [23:20] = '0                          ;
 assign rx_i_debug_status [31:24] = '0                          ;
 
 always_ff @(posedge clk_wr or negedge rst_wr_n)

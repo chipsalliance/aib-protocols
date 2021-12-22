@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -611,6 +606,7 @@ module lpif_ctl
                   d_pl_valid_tmp[0] = ustrm_dvalid[0];
                   d_pl_valid = 2'b0;
                   d_pl_data_tmp[511:0] = ustrm_data[511:0];
+                  d_pl_crc_valid = 2'b0;
                   d_pl_crc_valid_tmp[0] = ustrm_crc_valid[0];
                   d_pl_crc_tmp[15:0] = ustrm_crc[15:0];
                 end
@@ -837,25 +833,16 @@ module lpif_ctl
       endcase // case (lp_stream)
     end
 
-  logic [7:0] /* auto enum protid_info */
-              pl_stream_int;
+  logic [7:0] pl_stream_int;
   logic [7:0] d_pl_stream;
   assign d_pl_stream = pl_stream_int;
 
-  /*AUTOASCIIENUM("pl_stream_int", "pl_stream_int_ascii", "")*/
-  // Beginning of automatic ASCII enum decoding
-  reg [111:0]           pl_stream_int_ascii;    // Decode of pl_stream_int
-  always @(pl_stream_int) begin
-    case ({pl_stream_int})
-      PROTID_CACHE:   pl_stream_int_ascii = "protid_cache  ";
-      PROTID_IO:      pl_stream_int_ascii = "protid_io     ";
-      PROTID_ARB_MUX: pl_stream_int_ascii = "protid_arb_mux";
-      default:        pl_stream_int_ascii = "%Error        ";
-    endcase
-  end
-  // End of automatics
+  assign pl_stream_mem_cache_stream_id = (pl_stream == MEM_CACHE_STREAM_ID);
+  assign pl_stream_io_stream_id = (pl_stream == IO_STREAM_ID);
+  assign pl_stream_arb_mux_stream_id = (pl_stream == ARB_MUX_STREAM_ID);
+
   always_comb
-    begin : lp_stream_id
+    begin : pl_stream_id
       case ({6'b0, ustrm_protid})
         PROTID_CACHE: pl_stream_int = MEM_CACHE_STREAM_ID;
         PROTID_IO: pl_stream_int = IO_STREAM_ID;

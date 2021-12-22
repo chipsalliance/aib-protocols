@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -97,7 +92,9 @@ endfunction: build_phase
 task ca_tx_tb_out_mon_c::run_phase(uvm_phase phase);
     
     fork
-        mon_tx();
+        if(cfg.align_error_test == 0)begin
+           mon_tx();
+        end
     join 
 
 endtask : run_phase

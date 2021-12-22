@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +34,8 @@ class ca_stb_wd_sel_Q2Q_test_c extends base_ca_test_c;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    ca_seq_lib_c    ca_vseq;
+    ca_seq_lib_c        ca_vseq;
+    ca_traffic_seq_c    ca_traffic_seq;
  
     //------------------------------------------
     // Component Members
@@ -91,10 +87,12 @@ task ca_stb_wd_sel_Q2Q_test_c::run_test(uvm_phase phase);
      bit result = 0;
 
     `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "START test...", UVM_LOW);
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
+
      ca_vseq.start(ca_top_env.virt_seqr); //stb_wd_sel = 0 by default 
 
-    `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "wait_started for drv_tfr_complete ..\n", UVM_LOW);
+    `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
      `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "after_1st drv_tfr_complete..\n", UVM_LOW);
 
@@ -111,10 +109,13 @@ task ca_stb_wd_sel_Q2Q_test_c::run_test(uvm_phase phase);
         ca_cfg.configure();
 
         sbd_counts_clear(); 
-        `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "ca_vseq startss..\n", UVM_LOW);
-        ca_vseq.start(ca_top_env.virt_seqr);
-        `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "ca_vseq endsss..\n", UVM_LOW);
 
+	`uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "ca_traffic_seq starts..\n", UVM_LOW);
+         //ca_traffic_seq.start(ca_top_env.virt_seqr);
+         ca_vseq.start(ca_top_env.virt_seqr);
+        `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "ca_traffic_seq ends..\n", UVM_LOW);
+
+        `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
          wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
         `uvm_info("ca_stb_wd_sel_Q2Q_test ::run_phase", "after_2nd drv_tfr_complete..\n", UVM_LOW);
 

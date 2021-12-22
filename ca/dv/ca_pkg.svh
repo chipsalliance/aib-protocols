@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,12 +78,18 @@ package ca_pkg;
     `include "../tests/ca_strobe_error_test.sv"
     //`include "../tests/ca_tx_online_test.sv"
     `include "../tests/ca_stb_enb_high_low_high_test.sv"
-    //`include "../tests/ca_fifo_ptr_values_variations_test.sv"
+    `include "../tests/ca_fifo_ptr_values_variations_test.sv"
     `include "../tests/ca_no_external_strobes_test.sv"
     `include "../tests/ca_with_external_strobes_test.sv"
     `include "../tests/ca_stb_rcvr_enb_test.sv"
     `include "../tests/ca_afly1_stb_incorrect_intv_test.sv"
     `include "../tests/ca_align_error_test.sv"
+    `include "../tests/ca_aln_err_by_incorrect_stb_test.sv"
+    `include "../tests/ca_afly1_stb_intv_variations_test.sv"
+    //`include "../tests/ca_afly1_incorrect_stbbitpos_test.sv"
+    `include "../tests/ca_afly_toggling_test.sv"
+    `include "../tests/ca_stb_rcvr_aft_aln_done_test.sv"
+   // `include "../tests/ca_toggle_cover_test.sv"
     //`include "../tests/ca_reset_traffic_idle_test.sv"
     // `include "../tests/ca_traffic_reset_traffic_test.sv"
     

@@ -34,6 +34,7 @@ aib_loop_back_mode	0               0		0,1				aib internal loop back
 
 ASYMMETRIC_CA           0                                                               /////MUST BE 0 for Symmetric Mode and 1 for Asymmetric
 // Channel Alignment setting
+CA_SYNC_FIFO            1		1		0,1	      	    		cover in block level?(rmove?)	
 CA_ALIGN_FLY            0		0		0,1	      	    		cover in block level?(rmove?)	
 CA_RDEN_DLY             0               0	        0				cover in block level(rmove?) 
 CA_FIFO_DEPTH		32		32      	8,16,32				Configured by setting CA parameter AD_WIDTH = Log2Depth

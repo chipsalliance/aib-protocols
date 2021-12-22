@@ -1,12 +1,7 @@
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
-//                All Rights Reserved
 //
-// This entire notice must be reproduced on all copies of this file
-// and copies of this file may only be made by a person if such person is
-// permitted to do so under the terms of a subsisting license agreement
-// from Eximius Design
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,6 +31,7 @@ module ll_transmit #(parameter WIDTH=8, parameter DEPTH=8'h1, parameter TX_CRED_
 
     // Control Logic
     input logic                                 tx_online ,
+    input logic                                 rx_online ,
     input logic [7:0]                           init_i_credit ,
     input logic                                 tx_i_pop_ovrd ,
     input logic                                 end_of_txcred_coal ,
@@ -179,7 +175,9 @@ assign tx_i_debug_status [7:0]   = '0 | dbg_txfifo_i_numfilled ;
 assign tx_i_debug_status [15:8]  = DEPTH ;
 assign tx_i_debug_status [16]    = '0 | tx_overflow_sticky     ;
 assign tx_i_debug_status [17]    = '0 | tx_underflow_sticky    ;
-assign tx_i_debug_status [23:18] = '0                          ;
+assign tx_i_debug_status [18]    = rx_online                   ;
+assign tx_i_debug_status [19]    = tx_online                   ;
+assign tx_i_debug_status [23:20] = '0                          ;
 assign tx_i_debug_status [31:24] = '0 | dbg_curr_i_credit      ;
 
 always @(posedge clk_wr or negedge rst_wr_n)
