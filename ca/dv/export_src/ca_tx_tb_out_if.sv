@@ -40,7 +40,7 @@ interface ca_tx_tb_out_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk
     logic                                         tx_stb_rcvr;
     logic  [7:0]                                  tx_stb_wd_sel;
     logic  [39:0]                                 tx_stb_bit_sel;
-    logic  [7:0]                                  tx_stb_intv;
+    logic  [15:0]                                 tx_stb_intv;
     logic  [24-1:0]                               ld_ms_rx_transfer_en;
     logic  [24-1:0]                               ld_sl_rx_transfer_en;
     logic  [24-1:0]                               fl_ms_rx_transfer_en;

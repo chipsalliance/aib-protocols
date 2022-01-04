@@ -24,10 +24,12 @@
 
 default: help
 
+run_all : run_all_xrun
+#run_all : run_all_vcs
+
 #-----------------------------------------------------------------------------
 # user specify Files
 #-----------------------------------------------------------------------------
-DESIGNWARE_HOME = <DW_HOME_PATH_HERE>
 PROJ_DIR	= ../../..
 xcelium_home	= CDNS-1.2
 
@@ -108,7 +110,11 @@ AIB_VERSION = +define+AIB
 EXTRA_RUN =  -LDFLAGS "-g -rdynamic" -lgcov
 
 #-----------------------------------------------------------------------------
-TOP_FILES = ${CA_DV_HOME}/tb/ca_tb_files.f
+TOP_FILES = ${CA_DV_HOME}/tb/ca_top_tb.f
+
+my_cmd_p2p_defines   = +define+P2P_LITE +define+P2P_LITE_CH_DELAY_ENB
+my_cmd_aib_defines   = +define+CA_YELLOW_OVAL +define+AIB_DATA_DELAY
+
 
 #-----------------------------------------------------------------------------
 # Example VCS execution command.
@@ -123,7 +129,7 @@ VLOG_COMM = vlogan -sverilog -Mdir=csrc_debug +vcs+lic+wait +v2k -full64 -kdb -v
 	+define+SYNOPSYS_SV +define+DESIGNWARE_INCDIR=${DESIGNWARE_HOME} \
 	+define+UVM_PACKER_MAX_BYTES=1500000 +define+UVM_DISABLE_AUTO_ITEM_RECORDING \
 	+define+WAVES -timescale=1ns/1ps +define+directed_test_sequence_length=10 \
-	+incdir+${aib_inc_dir} +incdir+${ca_tb_inc_dir}
+	+incdir+${aib_inc_dir} +incdir+${ca_tb_inc_dir} ${my_cmd_aib_defines}
 
 VLOG_COMM_DUT = vlogan -sverilog +v2k -full64 -kdb +define+VCS_TIMESCALE_EN
 
@@ -177,9 +183,9 @@ comp_top:
 	${VCS} ${EXTRA_RUN} -top ca_top_tb -l vcs.log
 
 comp_aib : check_log_dir comp_aib_tb comp_dut_v1m comp_dut_v1s comp_aib2 comp_emib
-comp_ex  : xcomp_m2s1
-comp_all  : all_x
+comp_ex  : comp_ca
 comp_all_p2p  : all_p2p
+comp_all: gen_cfg comp_aib comp_ex comp_top
 
 #-----------------------------------------------------------------------------
 ## Generation Config
@@ -221,7 +227,10 @@ sim :
 #-----------------------------------------------------------------------------
 ## Run all Steps
 #-----------------------------------------------------------------------------
-run_all : comp_all
+
+run_all_xrun : all_xrun
+run_all_vcs : comp_all sim
+
 run_all_p2p : comp_all_p2p
 #### For XCELIUM
 run_allX : gen_cfg comp_allX comp_topX simX
@@ -268,7 +277,14 @@ clean:
 	rm -rf *.fcov *.html .vhdl.assert* .vlog.assert* vc_hdrs.h urgReport
 	rm -rf pioneer_shell.v pioneer.vdb pioneer.config transcript virsim.cfg
 	rm -f */*.bak *.sav *.bak *.key .restartSimSession.tcl.old
-	rm -rf 64 AN.DB work.lib* logs *.log
+	rm -rf 64 AN.DB work.lib* logs *.log ca_tb.history
+	rm -rf aib_channel_delay.txt aib_config.txt
+	rm -rf ca_config_define.svi .fsm.sch.verilog.xml
+	rm -rf config_aib_0.hex
+	rm -rf master_0_config_aib.dat
+	rm -rf slave_0_config_aib.dat
+	rm -rf xcelium.d
+	rm -rf waves.shm
 
 arcs:
 	arc shell cadence_xcelium,cadence_xcelium-lic,synopsys_vip_common/vip_R-2020.12G, synopsys_verdi/R-2020.12, vcs/R-2020.12-SP1, python/3.8.10
@@ -288,16 +304,19 @@ XRUN_SIM_ARGS_DEBUG = +UVM_CONFIG_DB_TRACE +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=
 XRUN_SIM_ARGS = +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_TRANS_COUNT=120 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} ${comp_define}
 
 my_xlm1 = +incdir+${aib_inc_dir} ${TESTBENCH_DIR}/top/abstract_class_pkg.sv ${TESTBENCH_DIR}/params/aib/aib_param_pkg.sv  ${TESTBENCH_DIR}/macro/macro_intf_inst.svh ${TESTBENCH_DIR}/macro/macro_tb_dut_inst.svh ${TESTBENCH_DIR}/macro/macro_intf_to_uvm.svh ${TESTBENCH_DIR}/interface/ca_if.sv ${TESTBENCH_DIR}/interface/vclock_if.sv  ${TESTBENCH_DIR}/interface/aib_mac_if.sv  ${TESTBENCH_DIR}/interface/avalon_mm_if.sv  ${TESTBENCH_DIR}/interface/dut_bump_if.sv  ${TESTBENCH_DIR}/interface/tb_nios_if.sv ${TESTBENCH_DIR}/interface/dut_if_mac.sv ${TESTBENCH_DIR}/aib2.0/tb_aib2_dut_wrapper_m0.sv ${TESTBENCH_DIR}/aib2.0/tb_aib2_dut_wrapper_s0.sv ${TESTBENCH_DIR}/aib2.0/tb_emib.sv ${TESTBENCH_DIR}/top/delay_clk_unit.v ${TESTBENCH_DIR}/top/delay_unit.v ${TESTBENCH_DIR}/aib_uvm/aib_test/aib_test_macros.svh ${TESTBENCH_DIR}/top/tb_dut_wrapper_m0.sv ${TESTBENCH_DIR}/top/tb_dut_wrapper_s0.sv ${TESTBENCH_DIR}/aib_uvm/aib_master/aib_master_por/aib_master_por_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_slave/aib_slave_por/aib_slave_por_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_env/aib_env_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_master/aib_master_common/aib_master_common_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_slave/aib_slave_common/aib_slave_common_pkg.sv ${TESTBENCH_DIR}/top/clk_gen.sv ${TESTBENCH_DIR}/macro/macro_clk_gen.svh              ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f  ${PROJ_DIR}/common/dv/p2p_lite.sv  +incdir+${CA_DV_HOME}/tb/ +incdir+${PROJ_DIR}/common/dv/reset_agent/  +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/ ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv +incdir+${CA_DV_HOME}/export_src/ ${CA_DV_HOME}/local_src/ca_gen_if.sv ${CA_DV_HOME}/export_src/ca_data_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_out_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_out_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_in_pkg.svh ${CA_DV_HOME}/export_src/ca_rx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_rx_tb_in_pkg.svh ${CA_DV_HOME}/ca_pkg.svh ${PROJ_DIR}/common/dv/marker_gen.sv ${PROJ_DIR}/common/dv/strobe_gen.sv ${CA_DV_HOME}/tb/ca_DUT_wrapper.sv ${CA_DV_HOME}/tb/ca_top_tb.sv -top ca_top_tb +UVM_TESTNAME=${gen_scenario} -input ../ca_shm.tcl -l ca_tb.log
-my_x = ${TESTBENCH_DIR}/params/aib/aib_param_pkg.sv ${TESTBENCH_DIR}/macro/macro_intf_inst.svh ${TESTBENCH_DIR}/macro/macro_tb_dut_inst.svh ${TESTBENCH_DIR}/macro/macro_intf_to_uvm.svh ${TESTBENCH_DIR}/interface/ca_if.sv ${TESTBENCH_DIR}/interface/vclock_if.sv  ${TESTBENCH_DIR}/interface/aib_mac_if.sv  ${TESTBENCH_DIR}/interface/avalon_mm_if.sv  ${TESTBENCH_DIR}/interface/dut_bump_if.sv  ${TESTBENCH_DIR}/interface/tb_nios_if.sv ${TESTBENCH_DIR}/interface/dut_if_mac.sv ${TESTBENCH_DIR}/aib2.0/tb_aib2_dut_wrapper_m0.sv ${TESTBENCH_DIR}/aib2.0/tb_aib2_dut_wrapper_s0.sv ${TESTBENCH_DIR}/aib2.0/tb_emib.sv ${TESTBENCH_DIR}/top/delay_clk_unit.v ${TESTBENCH_DIR}/top/delay_unit.v ${TESTBENCH_DIR}/aib_uvm/aib_test/aib_test_macros.svh ${TESTBENCH_DIR}/top/tb_dut_wrapper_m0.sv ${TESTBENCH_DIR}/top/tb_dut_wrapper_s0.sv ${TESTBENCH_DIR}/aib_uvm/aib_master/aib_master_por/aib_master_por_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_slave/aib_slave_por/aib_slave_por_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_env/aib_env_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_master/aib_master_common/aib_master_common_pkg.sv ${TESTBENCH_DIR}/aib_uvm/aib_slave/aib_slave_common/aib_slave_common_pkg.sv ${TESTBENCH_DIR}/top/clk_gen.sv ${TESTBENCH_DIR}/macro/macro_clk_gen.svh              ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f  ${PROJ_DIR}/common/dv/p2p_lite.sv  +incdir+${CA_DV_HOME}/tb/ +incdir+${PROJ_DIR}/common/dv/reset_agent/  +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/ ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv +incdir+${CA_DV_HOME}/export_src/ ${CA_DV_HOME}/local_src/ca_gen_if.sv ${CA_DV_HOME}/export_src/ca_data_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_out_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_out_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_in_pkg.svh ${CA_DV_HOME}/export_src/ca_rx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_rx_tb_in_pkg.svh ${CA_DV_HOME}/ca_pkg.svh ${PROJ_DIR}/common/dv/marker_gen.sv ${PROJ_DIR}/common/dv/strobe_gen.sv ${CA_DV_HOME}/tb/ca_DUT_wrapper.sv ${CA_DV_HOME}/tb/ca_top_tb.sv -top ca_top_tb +UVM_TESTNAME=${gen_scenario} -input ../ca_shm.tcl -l ca_tb.log
+
+my_x = -f ${TOP_FILES}                          \
+       -top ca_top_tb                           \
+       +UVM_TESTNAME=${gen_scenario}            \
+       -input ../ca_shm.tcl                     \
+       -l ca_tb.log
 
 my_xlm2 = ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f  ${PROJ_DIR}/common/dv/p2p_lite.sv  +incdir+${CA_DV_HOME}/tb/ +incdir+${PROJ_DIR}/common/dv/reset_agent/  +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/ ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv +incdir+${CA_DV_HOME}/export_src/ ${CA_DV_HOME}/local_src/ca_gen_if.sv ${CA_DV_HOME}/export_src/ca_data_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_out_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_out_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_in_pkg.svh ${CA_DV_HOME}/export_src/ca_rx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_rx_tb_in_pkg.svh ${CA_DV_HOME}/ca_pkg.svh ${CA_DV_HOME}/tb/ca_DUT_wrapper.sv ${CA_DV_HOME}/tb/ca_top_tb.sv -top ca_top_tb +UVM_TESTNAME=${gen_scenario} -input ../ca_shm.tcl -l ca_tb.log +UVM_VERBOSITY=UVM_LOW
 
-my_cmd_p2p_defines   = +define+P2P_LITE +define+P2P_LITE_CH_DELAY_ENB
-my_cmd_aib_defines   = +define+CA_YELLOW_OVAL +define+AIB_DATA_DELAY
 
 ############################# TARGETS #################################
-all_x :	gen_cfg
-	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x}
+all_xrun :	gen_cfg
+	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x} -f ${CA_DV_HOME}/../rtl/ca.f
 
 all_p2p : gen_cfg
 	  xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS} ${my_xlm2} ${my_cmd_p2p_defines}

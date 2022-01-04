@@ -53,7 +53,7 @@ RESULTS="$PROJ_DIR/smoke_test.log"
 
 echo -e "Smoke Test Started: $(date)\n" > $RESULTS
 
-for MODULE in AXI4-MM AXI4-ST CA LPIF SPI; do
+for MODULE in AXI4-MM AXI4-ST CA LPIF; do
 
   # Note: SCRIPT and LOG are relative to DIR.
   case $MODULE in

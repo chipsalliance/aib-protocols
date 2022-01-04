@@ -116,11 +116,11 @@ task ca_stb_rcvr_enb_test_c::run_test(uvm_phase phase);
 
     `uvm_info("ca_stb_rcvr_enb_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_enb_test::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
 
      result =  ck_xfer_cnt_a(1);
      result =  ck_xfer_cnt_b(1);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_enb_test::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
 
      test_end = 1; 
      `uvm_info("ca_stb_rcvr_enb_test ::run_phase", "END test...\n", UVM_LOW);

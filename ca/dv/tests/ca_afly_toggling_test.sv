@@ -57,7 +57,6 @@ class ca_afly_toggling_test_c extends base_ca_test_c;
     extern function void start_of_simulation( );
     extern task run_phase( uvm_phase phase);
     extern task run_test( uvm_phase phase );
-    //extern task shift_stb_intv( );
     extern task aln_err_chk( );
  
 endclass:ca_afly_toggling_test_c 
@@ -87,7 +86,6 @@ task ca_afly_toggling_test_c::run_phase(uvm_phase phase);
         run_test(phase);
         global_timer(); // and check for error count
         ck_eot(phase);   
-        //shift_stb_intv();
     join
   
 endtask : run_phase

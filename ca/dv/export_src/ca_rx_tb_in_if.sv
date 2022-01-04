@@ -47,7 +47,7 @@ interface ca_rx_tb_in_if #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) (input clk,
     logic                                         rx_stb_pos_coding_err;
     logic [7:0]                                   rx_stb_wd_sel;
     logic [39:0]                                  rx_stb_bit_sel;
-    logic [7:0]                                   rx_stb_intv;
+    logic [15:0]                                  rx_stb_intv;
     logic [5:0]                                   fifo_full_val;
     logic [5:0]                                   fifo_pfull_val;
     logic [2:0]                                   fifo_empty_val;

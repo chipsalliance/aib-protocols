@@ -114,10 +114,10 @@ task ca_with_external_strobes_test_c::run_test(uvm_phase phase);
      ca_vseq.start(ca_top_env.virt_seqr);
     `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+     `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
      result =  ck_xfer_cnt_a(1);
      result =  ck_xfer_cnt_b(1);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
+     `uvm_info("ca_with_external_strobes_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
      // RELEASE stop_strobes_inject and feed external strobes
      repeat(20)@ (posedge vif.clk);
      ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert       = 0; 
@@ -127,13 +127,13 @@ task ca_with_external_strobes_test_c::run_test(uvm_phase phase);
      sbd_counts_clear;
 
       ca_vseq.start(ca_top_env.virt_seqr);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
+     `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
+     `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
       repeat(10)@ (posedge vif.clk);
       result =  ck_xfer_cnt_a(1);
       result =  ck_xfer_cnt_b(1);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "Scoreboard comparison completed for second set of traffic ..\n", UVM_LOW);
+     `uvm_info("ca_with_external_strobes_test ::run_phase", "Scoreboard comparison completed for second set of traffic ..\n", UVM_LOW);
      test_end = 1; 
      `uvm_info("ca_with_external_strobes_test ::run_phase", "END test...\n", UVM_LOW);
 

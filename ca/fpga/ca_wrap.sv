@@ -39,16 +39,16 @@ module ca_wrap
    input logic                                      tx_stb_rcvr_i,
    input logic                                      align_fly_i,
    input logic [2:0]                                rden_dly_i,
-   input logic [7:0]                                count_x_i,
-   input logic [7:0]                                count_xz_i,
+   input logic [15:0]                               delay_x_value_i,
+   input logic [15:0]                               delay_z_value_i,
 
    input logic [7:0]                                tx_stb_wd_sel_i,
    input logic [39:0]                               tx_stb_bit_sel_i,
-   input logic [7:0]                                tx_stb_intv_i,
+   input logic [15:0]                               tx_stb_intv_i,
 
    input logic [7:0]                                rx_stb_wd_sel_i,
    input logic [39:0]                               rx_stb_bit_sel_i,
-   input logic [7:0]                                rx_stb_intv_i,
+   input logic [15:0]                               rx_stb_intv_i,
 
    input logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]  tx_din_i,
    output logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0] tx_dout_o,
@@ -80,16 +80,16 @@ module ca_wrap
   logic                                             tx_stb_rcvr;
   logic                                             align_fly;
   logic [2:0]                                       rden_dly;
-  logic [7:0]                                       count_x;
-  logic [7:0]                                       count_xz;
+  logic [15:0]                                      delay_x_value;
+  logic [15:0]                                      delay_z_value;
 
   logic [7:0]                                       tx_stb_wd_sel;
   logic [39:0]                                      tx_stb_bit_sel;
-  logic [7:0]                                       tx_stb_intv;
+  logic [15:0]                                      tx_stb_intv;
 
   logic [7:0]                                       rx_stb_wd_sel;
   logic [39:0]                                      rx_stb_bit_sel;
-  logic [7:0]                                       rx_stb_intv;
+  logic [15:0]                                      rx_stb_intv;
 
   logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]         tx_din;
   logic [NUM_CHANNELS*BITS_PER_CHANNEL-1:0]         tx_dout;
@@ -122,8 +122,8 @@ module ca_wrap
       tx_stb_rcvr <= tx_stb_rcvr_i ;
       align_fly <= align_fly_i ;
       rden_dly <= rden_dly_i ;
-      count_x <= count_x_i ;
-      count_xz <= count_xz_i ;
+      delay_x_value <= delay_x_value_i ;
+      delay_z_value <= delay_z_value_i ;
 
       tx_stb_wd_sel <= tx_stb_wd_sel_i ;
       tx_stb_bit_sel <= tx_stb_bit_sel_i ;
@@ -195,14 +195,14 @@ module ca_wrap
      .tx_stb_rcvr                       (tx_stb_rcvr),
      .align_fly                         (align_fly),
      .rden_dly                          (rden_dly[2:0]),
-     .count_x                           (count_x[7:0]),
-     .count_xz                          (count_xz[7:0]),
+     .delay_x_value                     (delay_x_value[15:0]),
+     .delay_z_value                     (delay_z_value[15:0]),
      .tx_stb_wd_sel                     (tx_stb_wd_sel[7:0]),
      .tx_stb_bit_sel                    (tx_stb_bit_sel[39:0]),
-     .tx_stb_intv                       (tx_stb_intv[7:0]),
+     .tx_stb_intv                       (tx_stb_intv[15:0]),
      .rx_stb_wd_sel                     (rx_stb_wd_sel[7:0]),
      .rx_stb_bit_sel                    (rx_stb_bit_sel[39:0]),
-     .rx_stb_intv                       (rx_stb_intv[7:0]),
+     .rx_stb_intv                       (rx_stb_intv[15:0]),
      .tx_din                            (tx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
      .rx_din                            (rx_din[NUM_CHANNELS*BITS_PER_CHANNEL-1:0]),
      .fifo_full_val                     (fifo_full_val[5:0]),

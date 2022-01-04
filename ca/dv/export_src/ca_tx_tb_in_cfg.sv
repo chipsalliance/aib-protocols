@@ -33,7 +33,7 @@ class ca_tx_tb_in_cfg_c extends uvm_object;
     // Whether env analysis components are used:
     bit         agent_active  = UVM_PASSIVE;
     bit         has_func_cov  = 0;
-    bit [7:0]   tx_stb_intv = 0;
+    bit [15:0]  tx_stb_intv = 0;
     bit              tx_stb_en         = `CA_TX_STB_EN;    // default
     bit [7:0]        tx_stb_wd_sel     = `CA_TX_STB_WD_SEL;
     bit [39:0]       tx_stb_bit_sel    = `CA_TX_STB_BIT_SEL;
@@ -52,7 +52,10 @@ class ca_tx_tb_in_cfg_c extends uvm_object;
     bit              with_external_stb_test;
     bit              ca_afly1_stb_incorrect_intv_test;
     bit              ca_afly_toggling_test;
-
+    bit              ca_toggle_test;
+    bit              ca_tx_online_test;
+    bit              stop_stb_checker;
+    bit              stop_monitor;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

@@ -34,9 +34,10 @@ class ca_stb_rcvr_aft_aln_done_test_c extends base_ca_test_c;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    ca_seq_lib_c    ca_vseq;
-    bit             tx_stb_rcvr_to_be_enb_diea; 
-    bit             tx_stb_rcvr_to_be_enb_dieb; 
+    ca_seq_lib_c       ca_vseq;
+    ca_traffic_seq_c   ca_traffic_seq;
+    bit                tx_stb_rcvr_to_be_enb_diea; 
+    bit                tx_stb_rcvr_to_be_enb_dieb; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -87,25 +88,50 @@ endtask : run_phase
 //------------------------------------------
 task ca_stb_rcvr_aft_aln_done_test_c::chk_align_done();
 
-     forever begin
-        repeat(1)@(posedge vif.clk);
-
-           // After align_done, tx_stb_rcvr = 1
-             if ((tx_stb_rcvr_to_be_enb_diea == 1) && (ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1))begin
+ // After align_done, tx_stb_rcvr = 1
+    fork
+        begin
+            wait (tx_stb_rcvr_to_be_enb_diea == 1);
+            wait (ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1);
+                 //repeat(tx_stb_intv_bkp + 2)@(posedge vif.clk);
                 ca_cfg.ca_die_a_rx_tb_in_cfg.tx_stb_rcvr        =  1;
                 tx_stb_rcvr_to_be_enb_diea                      =  0;
-                repeat(2)@(posedge vif.clk);
-                ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
-             end
-
-             if((tx_stb_rcvr_to_be_enb_dieb == 1) && (ca_cfg.ca_die_b_tx_tb_out_cfg.align_done_assert == 1))begin
+                // repeat(4)@(posedge vif.clk);
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in scoreboard started ..\n", UVM_LOW);
+                 ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+                 ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+                 ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+                 ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+                 ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
+                disable fork;
+         end
+    join_none
+ 
+    fork
+        begin
+            wait (tx_stb_rcvr_to_be_enb_dieb == 1);
+            wait (ca_cfg.ca_die_b_tx_tb_out_cfg.align_done_assert == 1);
+                //repeat(tx_stb_intv_bkp + 2)@(posedge vif.clk);
                 ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr        =  1;
                 tx_stb_rcvr_to_be_enb_dieb                      =  0;
-                repeat(2)@(posedge vif.clk);
+                 //repeat(4)@(posedge vif.clk);
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_B_generate_stb_beat in scoreboard started ..\n", UVM_LOW);
                 ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
-             end 
-
-     end
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_B_generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+                 ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+                 ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_B_generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_B_generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+                 ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+                 ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_B_generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
+                disable fork;
+         end
+    join_none 
 
 endtask: chk_align_done
 
@@ -115,30 +141,38 @@ task ca_stb_rcvr_aft_aln_done_test_c::run_test(uvm_phase phase);
      bit result=0;
 
     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "START test...", UVM_LOW);
+     ca_cfg.ca_die_a_tx_tb_out_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
+     ca_cfg.ca_die_b_tx_tb_out_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
      ca_cfg.ca_die_a_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_rx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_rx_tb_in_cfg.with_external_stb_test   = 1;
-
+  
+     if(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv > ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv) begin
+         tx_stb_intv_bkp = ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv;
+     end else begin
+         tx_stb_intv_bkp = ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv;
+     end
+     `uvm_info("ca_stb_related_test ::run_phase", $sformatf("tx_stb_intv_bkp = %0d..\n",tx_stb_intv_bkp), UVM_LOW);
+ 
      ca_cfg.ca_die_a_rx_tb_in_cfg.tx_stb_rcvr              = 0;
      ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr              = 0;
-
-     repeat(2)@(posedge vif.clk);
 
      tx_stb_rcvr_to_be_enb_diea =  1;
      tx_stb_rcvr_to_be_enb_dieb =  1;
 
 
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
      ca_vseq.start(ca_top_env.virt_seqr);
 
-    `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_started for 1st drv_tfr_complete..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-    `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
 
      result =  ck_xfer_cnt_a(1);
      result =  ck_xfer_cnt_b(1);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "Scoreboard comparison completed for first set of traffic ..\n", UVM_LOW);
       
      repeat(20)@ (posedge vif.clk);
      ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert       = 0; 
@@ -147,22 +181,31 @@ task ca_stb_rcvr_aft_aln_done_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_a_rx_tb_in_cfg.tx_stb_rcvr              = 0;
      ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr              = 0;
 
-     repeat(2)@(posedge vif.clk);
+     repeat(4)@(posedge vif.clk);
      ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "aft_rcvr_0_generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+     ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+     ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "aft_rcvr_0_generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "aft_rcvr_0_generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+     ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+     ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "aft_rcvr_0_generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
 
      sbd_counts_clear;
 
-      ca_vseq.start(ca_top_env.virt_seqr);  //under reset,align_done gone, then again we will get align_done
-      //ca_traffic_seq.start(ca_top_env.virt_seqr);
+     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "before ca_traffic_seq starts ..\n", UVM_LOW);
+      ca_traffic_seq.start(ca_top_env.virt_seqr);
+      `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "after ca_traffic_seq starts ..\n", UVM_LOW);
 
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
 
       repeat(10)@ (posedge vif.clk);
       result =  ck_xfer_cnt_a(1);
       result =  ck_xfer_cnt_b(1);
-     `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "Scoreboard comparison completed for second set of traffic ..\n", UVM_LOW);
+     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "Scoreboard comparison completed for second set of traffic ..\n", UVM_LOW);
 
      test_end = 1; 
      `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "END test...\n", UVM_LOW);

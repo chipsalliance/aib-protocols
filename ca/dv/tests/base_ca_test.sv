@@ -39,10 +39,12 @@ class base_ca_test_c extends uvm_test;
     // Data Members
     //------------------------------------------
     virtual reset_if       vif;
+    virtual ca_gen_if      gen_if;
     ca_cfg_c               ca_cfg;  
     uvm_report_server      server;
     bit                    test_end;   
     bit                    base_test;   
+    int                    tx_stb_intv_bkp;
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -123,6 +125,9 @@ function void base_ca_test_c::build_phase( uvm_phase phase );
     if( !uvm_config_db #( virtual reset_if )::get(this, "" , "reset_vif", vif) )
         `uvm_fatal("build_phase", "unable to get reset vif")
     
+    if( !uvm_config_db #( virtual ca_gen_if)::get(this, "" , "gen_vif", gen_if) )
+        `uvm_fatal("build_phase", "unable to get gen vif")
+
     server = uvm_report_server::get_server();
 
     // create the env
@@ -193,6 +198,8 @@ task base_ca_test_c::sbd_counts_clear();
      ca_top_env.ca_scoreboard.tx_out_cnt_die_b        = 0;
      ca_top_env.ca_scoreboard.beat_cnt_a              = 0;
      ca_top_env.ca_scoreboard.beat_cnt_b              = 0;
+     ca_top_env.ca_scoreboard.tx_xfer_cnt_a           = 0;
+     ca_top_env.ca_scoreboard.tx_xfer_cnt_b           = 0;
      ca_top_env.ca_scoreboard.die_a_tx_din_q.delete();
      ca_top_env.ca_scoreboard.die_b_tx_din_q.delete();
      ca_top_env.ca_scoreboard.die_a_exp_rx_dout_q.delete();
@@ -306,7 +313,12 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
     bit result_b = 0;
 
     phase.raise_objection(this);
-    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test == 0))begin
+    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && 
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test       == 0) && 
+       (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test     == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_toggle_test       == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_tx_online_test    == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))begin
      if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
         while(ck_xfer_cnt_a(0) == 0) begin
             repeat (10) @(posedge vif.clk);
@@ -325,15 +337,20 @@ task base_ca_test_c::ck_eot( uvm_phase phase );
          repeat (10) @(posedge vif.clk);
     phase.drop_objection(this);
     `uvm_info("ck_eot", $sformatf("DROPPING objection... test ending gracefully "), UVM_NONE);
-    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test == 0))begin
-      uvm_test_done.set_drain_time(this, 10ps);
-           if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
-              result_a = ck_xfer_cnt_a(1);
-           end
-           if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
-              result_b = ck_xfer_cnt_b(1);
-           end
-   end
+    if((ca_cfg.ca_die_a_tx_tb_in_cfg.no_external_stb_test == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test       == 0) &&
+       (ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_test     == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_toggle_test       == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_tx_online_test    == 0) &&
+       (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))begin
+        uvm_test_done.set_drain_time(this, 10ps);
+        if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+            result_a = ck_xfer_cnt_a(1);
+        end
+        if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+            result_b = ck_xfer_cnt_b(1);
+        end
+    end
 endtask : ck_eot
 
 //------------------------------------------

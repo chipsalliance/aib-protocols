@@ -86,7 +86,7 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
      bit result = 0;
 
     `uvm_info("stb_enb_high_low_high_test ::run_phase", "START test...", UVM_LOW);
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
      ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
 
      ca_vseq.start(ca_top_env.virt_seqr); //tx_stb_en = 1 by default
@@ -100,6 +100,10 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
      `uvm_info("stb_enb_high_low_high_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
 
      sbd_counts_clear();
+     ca_cfg.ca_die_a_tx_tb_in_cfg.stop_stb_checker =  1 ;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.stop_stb_checker =  1 ; 
+     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker =  1 ;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker =  1 ; 
 
      repeat(20)@ (posedge vif.clk);
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en    =  0 ;
@@ -107,7 +111,7 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
      ca_cfg.configure();
      `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
 
-      ca_traffic_seq.start(ca_top_env.virt_seqr);
+      ca_traffic_seq.start(ca_top_env.virt_seqr); //tx_stb_en = 0 
 
      `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
@@ -126,8 +130,7 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
       ca_cfg.configure();
      `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
 
-      //ca_traffic_seq.start(ca_top_env.virt_seqr);
-      ca_vseq.start(ca_top_env.virt_seqr);
+      ca_traffic_seq.start(ca_top_env.virt_seqr); //tx_stb_en = 1
 
       `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 3rd drv_tfr_complete ..\n", UVM_LOW);
        wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 

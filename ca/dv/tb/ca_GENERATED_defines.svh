@@ -54,7 +54,6 @@
 `endif
 `define CHAN_DELAY_MIN            1
 `define CHAN_DELAY_MAX            5
-parameter osc_period  = 1000;
 
 ///////////////////////////////////////////////////////////
 `ifdef GEN1

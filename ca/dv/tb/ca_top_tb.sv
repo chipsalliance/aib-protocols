@@ -201,24 +201,24 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign ca_m_if.tx_din                = ca_die_a_tx_tb_out_if.tx_din;
         assign ca_s_if.tx_din                = ca_die_b_tx_tb_out_if.tx_din;
    `ifdef AIB_DATA_DELAY
-        assign ca_m_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
-        assign ca_m_if.rx_online        = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
-        assign ca_s_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
-        assign ca_s_if.rx_online        = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_die_a_tx_tb_out_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_die_a_rx_tb_in_if.rx_online         = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_die_b_tx_tb_out_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+        assign ca_die_b_rx_tb_in_if.rx_online         = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
    `else
-        assign ca_m_if.tx_online        = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
-        assign ca_m_if.rx_online        = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
-        assign ca_s_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
-        assign ca_s_if.rx_online        = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
+        assign ca_die_a_rx_tb_in_if.rx_online         = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
+        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
+        assign ca_die_b_rx_tb_in_if.rx_online         = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
    `endif
-        assign ca_die_a_tx_tb_out_if.tx_online= ca_m_if.tx_online; 
-        assign ca_die_a_tx_tb_in_if.tx_online = ca_m_if.tx_online; 
-        assign ca_die_a_rx_tb_in_if.rx_online = ca_m_if.rx_online; 
-         
-        assign ca_die_b_tx_tb_out_if.tx_online = ca_s_if.tx_online;  
-        assign ca_die_b_tx_tb_in_if.tx_online  = ca_s_if.tx_online;  
-        assign ca_die_b_rx_tb_in_if.rx_online  = ca_s_if.rx_online; 
-  
+        assign ca_die_a_tx_tb_in_if.tx_online         = ca_die_a_tx_tb_out_if.tx_online; 
+        assign ca_die_b_tx_tb_in_if.tx_online         = ca_die_b_tx_tb_out_if.tx_online;
+        //force0_tx_rx_online will be used in tx_online_test 
+        assign ca_m_if.tx_online                     = (~gen_if.force0_tx_rx_online) & ca_die_a_tx_tb_out_if.tx_online; 
+        assign ca_s_if.tx_online                     = (~gen_if.force0_tx_rx_online) & ca_die_b_tx_tb_out_if.tx_online;  
+        assign ca_m_if.rx_online                     = (~gen_if.force0_tx_rx_online) & ca_die_a_rx_tb_in_if.rx_online; 
+        assign ca_s_if.rx_online                     = (~gen_if.force0_tx_rx_online) & ca_die_b_rx_tb_in_if.rx_online; 
+
         assign ca_die_a_rx_tb_in_if.align_err              = ca_m_if.align_err;  
         assign ca_die_a_tx_tb_in_if.tx_stb_pos_err         = ca_m_if.tx_stb_pos_err;  
         assign ca_die_a_tx_tb_in_if.tx_stb_pos_coding_err  = ca_m_if.tx_stb_pos_coding_err;  
@@ -283,7 +283,7 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
                    .AD_WIDTH          (`TB_DIE_A_AD_WIDTH),
                    .SYNC_FIFO         (`SYNC_FIFO))
   ca_DUT_wrapper_m0 (
-        clk_lane_a,
+        clk_lane_a[`TB_DIE_A_NUM_CHANNELS-1:0],
         clk_lane_a[0],    //This is com_clk
         tb_reset_l,
         ca_m_if
@@ -294,7 +294,7 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
                    .AD_WIDTH          (`TB_DIE_B_AD_WIDTH),
                    .SYNC_FIFO         (`SYNC_FIFO))
   ca_DUT_wrapper_s0 (
-        clk_lane_b,
+        clk_lane_b[`TB_DIE_B_NUM_CHANNELS-1:0],
         clk_lane_b[0],
         tb_reset_l,
         ca_s_if

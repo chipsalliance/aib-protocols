@@ -33,6 +33,7 @@ module lpif_ctl
     parameter MEM_CACHE_STREAM_ID = 8'h1,
     parameter IO_STREAM_ID = 8'h2,
     parameter ARB_MUX_STREAM_ID = 8'h3,
+    parameter PTM_RX_DELAY = 4,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
     localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
@@ -76,8 +77,9 @@ module lpif_ctl
    output logic                         pl_cerror,
    output logic                         pl_tmstmp,
    output logic [7:0]                   pl_tmstmp_stream,
-
    input logic                          lp_tmstmp,
+   input logic [7:0]                    lp_tmstmp_stream,
+
    input logic                          lp_linkerror,
    output logic                         pl_quiesce,
    input logic                          lp_flushed_all,
@@ -127,10 +129,10 @@ module lpif_ctl
    output logic                         align_fly,
    output logic [7:0]                   tx_stb_wd_sel,
    output logic [39:0]                  tx_stb_bit_sel,
-   output logic [7:0]                   tx_stb_intv,
+   output logic [15:0]                  tx_stb_intv,
    output logic [7:0]                   rx_stb_wd_sel,
    output logic [39:0]                  rx_stb_bit_sel,
-   output logic [7:0]                   rx_stb_intv,
+   output logic [15:0]                  rx_stb_intv,
    output logic [5:0]                   fifo_full_val,
    output logic [5:0]                   fifo_pfull_val,
    output logic [2:0]                   fifo_empty_val,
@@ -138,6 +140,9 @@ module lpif_ctl
    output logic [2:0]                   rden_dly,
    output logic                         tx_online,
    output logic                         rx_online,
+
+   input logic [15:0]                   lpif_tx_stb_intv,
+   input logic [15:0]                   lpif_rx_stb_intv,
 
    // lsm
 
@@ -170,8 +175,6 @@ module lpif_ctl
   assign pl_setlbms = 1'b0;
   assign pl_setlabs = 1'b0;
   assign pl_surprise_lnk_down = 1'b0;
-  assign pl_tmstmp = 1'b0;
-  assign pl_tmstmp_stream = 8'b0;
 
   // tied-off for now
   assign pl_trainerror = 1'b0;
@@ -185,10 +188,10 @@ module lpif_ctl
   assign align_fly = 1'b1;
   assign tx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign tx_stb_bit_sel = 40'h2;
-  assign tx_stb_intv = 8'h8;
+  assign tx_stb_intv = lpif_tx_stb_intv;
   assign rx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign rx_stb_bit_sel = 40'h2;
-  assign rx_stb_intv = 8'h8;
+  assign rx_stb_intv = lpif_rx_stb_intv;
   assign fifo_full_val = 6'h1F;
   assign fifo_pfull_val = 6'h10;
   assign fifo_empty_val = 3'h0;
@@ -819,7 +822,7 @@ module lpif_ctl
       PROTID_IO:      protid_ascii = "protid_io     ";
       PROTID_ARB_MUX: protid_ascii = "protid_arb_mux";
       default:        protid_ascii = "%Error        ";
-    endcase
+    endcase // case ({protid})
   end
   // End of automatics
 
@@ -878,7 +881,7 @@ module lpif_ctl
       CTL_LINK_UP:       ctl_state_ascii = "ctl_link_up      ";
       CTL_PHY_ERR:       ctl_state_ascii = "ctl_phy_err      ";
       default:           ctl_state_ascii = "%Error           ";
-    endcase
+    endcase // case ({ctl_state})
   end
   // End of automatics
 
@@ -1003,6 +1006,62 @@ module lpif_ctl
           rx_online <= d_rx_online;
         end // else: !if(~rst_n)
     end // always_ff @ (posedge lclk or negedge rst_n)
+
+
+
+  genvar   i_ptm_delay;
+  generate
+    logic [0:0]   lp_tmstmp_delay        [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
+    logic [7:0]   lp_tmstmp_stream_delay [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
+
+    assign lp_tmstmp_delay        [0] = lp_tmstmp;
+    assign lp_tmstmp_stream_delay [0] = lp_tmstmp_stream;
+
+    assign pl_tmstmp        = lp_tmstmp_delay        [PTM_RX_DELAY];
+    assign pl_tmstmp_stream = lp_tmstmp_stream_delay [PTM_RX_DELAY];
+
+    for (i_ptm_delay = 0; i_ptm_delay < PTM_RX_DELAY; i_ptm_delay++)
+      begin : gen_blk_ptm_delay
+
+          always_ff @(posedge lclk or negedge rst_n)
+            begin
+              if (~rst_n)
+                begin
+                  lp_tmstmp_delay        [i_ptm_delay+1] <= 1'b0;
+                  lp_tmstmp_stream_delay [i_ptm_delay+1] <= 8'b0;
+                end
+              else
+                begin
+                  lp_tmstmp_delay        [i_ptm_delay+1] <= lp_tmstmp_delay        [i_ptm_delay];
+                  lp_tmstmp_stream_delay [i_ptm_delay+1] <= lp_tmstmp_stream_delay [i_ptm_delay];
+                end // else: !if(~rst_n)
+            end // always_ff @ (posedge lclk or negedge rst_n)
+      end
+  endgenerate
+
+
+// // FIXME, this is a quick hack test for the above logic.
+// // It should be removed once the TB can drive.
+// initial
+// begin
+//   force lp_tmstmp = 1'b0;
+//   force lp_tmstmp_stream = 8'b0;
+//
+//   forever
+//   begin
+//     repeat (100) @(posedge lclk);
+//     force lp_tmstmp = lp_tmstmp + 1;
+//     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
+//     repeat (10) @(posedge lclk);
+//     force lp_tmstmp = lp_tmstmp + 1;
+//     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
+//     repeat (100) @(posedge lclk);
+//   end
+//
+//
+// end
+
+
 
 endmodule // lpif_ctl
 

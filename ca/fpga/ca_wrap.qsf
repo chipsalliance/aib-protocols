@@ -12,6 +12,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/ca.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/ca_tx_mux.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/asyncfifo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/syncfifo_mem1r1w.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/level_delay.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/levelsync.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/rst_regen_low.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../../common/rtl/syncfifo.sv

@@ -47,7 +47,7 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit [2:0]        rden_dly         = `CA_RDEN_DLY; 
     bit [15:0]       delay_x_value    = 10; 
     bit [15:0]       delay_xz_value   = 14; 
-    rand bit [7:0]   rx_stb_intv;
+    rand bit [15:0]   rx_stb_intv;
     bit              tx_stb_rcvr;
     rand int         bit_shift;
     int              bits_per_channel = 0;
@@ -72,6 +72,10 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit              with_external_stb_test;
     bit              ca_afly1_stb_incorrect_intv_test;
     bit              ca_afly_toggling_test;
+    bit              stop_stb_checker;
+    bit              stop_monitor;
+    bit              ca_tx_online_test;
+    bit              ca_fifo_ptr_values_variations_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------
@@ -97,7 +101,7 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     // constraints 
     //------------------------------------------
     constraint c_bit_shift      { bit_shift  inside {[0:37]}; }
-    constraint c_rx_stb_intv    { rx_stb_intv  inside {[4:16]}; } // FIXME - need min/max for distribution
+    constraint c_rx_stb_intv    { rx_stb_intv  inside {[96:300]}; } // FIXME - need min/max for distribution
     constraint c_rden_dly       { rden_dly  inside {[4:7]}; } // FIXME - need min/max for distribution
 
     //------------------------------------------

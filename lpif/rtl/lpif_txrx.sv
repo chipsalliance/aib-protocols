@@ -42,7 +42,7 @@ module lpif_txrx
    input logic                          tx_online,
    input logic                          rx_online,
    input logic                          m_gen2_mode,
-   input logic [1:0]                    remote_rate,
+   input logic [1:0]                    remote_rate_port,
 
    input logic [15:0]                   delay_x_value,
    input logic [15:0]                   delay_y_value,
@@ -97,6 +97,9 @@ module lpif_txrx
    output logic [LPIF_CRC_WIDTH-1:0]    ustrm_crc,
    output logic [LPIF_VALID_WIDTH-1:0]  ustrm_crc_valid,
    output logic                         ustrm_valid,
+
+   output logic [15:0]                  lpif_tx_stb_intv,
+   output logic [15:0]                  lpif_rx_stb_intv,
 
    output logic [31:0]                  rx_upstream_debug_status,
    output logic [31:0]                  tx_downstream_debug_status
@@ -1234,47 +1237,101 @@ module lpif_txrx
   localparam STB_INTERVAL = 16'h8;
   localparam STB_DELAY = 16'h14;
 
-  // external port values
+  // external rate encodings
 
-  localparam PORT_FULL = 2'b00;
-  localparam PORT_HALF = 2'b01;
-  localparam PORT_QUARTER = 2'b10;
+  localparam [1:0] /* auto enum ext_rate_info */
+    PORT_FULL		= 2'h0,
+    PORT_HALF		= 2'h1,
+    PORT_QUARTER	= 2'h2;
 
-  localparam FULL = 4'h1;
-  localparam HALF = 4'h2;
-  localparam QUARTER = 4'h4;
+  logic [1:0]         /* auto enum ext_rate_info */
+                      remote_rate_port_int;
+  assign remote_rate_port_int = remote_rate_port;
 
-  wire local_rate_f = x16_f2 | x8_f2 | x4_f2 | x16_f1 | x8_f1 | x4_f1 | x2_f1 | x1_f1;
-  wire local_rate_h = x16_h2 | x8_h2 | x4_h2 | x16_h1 | x8_h1 | x4_h1 | x2_h1 | x1_h1;
-  wire local_rate_q = x16_q2 | x8_q2 | x4_q2;
+  /*AUTOASCIIENUM("remote_rate_port_int", "remote_rate_port_ascii", "")*/
+  // Beginning of automatic ASCII enum decoding
+  reg [95:0]            remote_rate_port_ascii; // Decode of remote_rate_port_int
+  always @(remote_rate_port_int) begin
+    case ({remote_rate_port_int})
+      PORT_FULL:    remote_rate_port_ascii = "port_full   ";
+      PORT_HALF:    remote_rate_port_ascii = "port_half   ";
+      PORT_QUARTER: remote_rate_port_ascii = "port_quarter";
+      default:      remote_rate_port_ascii = "%Error      ";
+    endcase // case ({remote_rate_port_int})
+  end
+  // End of automatics
 
-  logic [3:0] local_rate, remote_rate_int;
+  // internal rate encodings
+
+  localparam [3:0] /* auto enum int_rate_info */
+    RATE_FULL		= 4'h1,
+    RATE_HALF		= 4'h2,
+    RATE_QUARTER	= 4'h4;
+
+
+  logic [3:0]         /* auto enum int_rate_info */
+                      local_rate, remote_rate;
+
+  /*AUTOASCIIENUM("local_rate", "local_rate_ascii", "")*/
+  // Beginning of automatic ASCII enum decoding
+  reg [95:0]            local_rate_ascii;       // Decode of local_rate
+  always @(local_rate) begin
+    case ({local_rate})
+      RATE_FULL:    local_rate_ascii = "rate_full   ";
+      RATE_HALF:    local_rate_ascii = "rate_half   ";
+      RATE_QUARTER: local_rate_ascii = "rate_quarter";
+      default:      local_rate_ascii = "%Error      ";
+    endcase // case ({local_rate})
+  end
+  // End of automatics
+  /*AUTOASCIIENUM("remote_rate", "remote_rate_ascii", "")*/
+  // Beginning of automatic ASCII enum decoding
+  reg [95:0]            remote_rate_ascii;      // Decode of remote_rate
+  always @(remote_rate) begin
+    case ({remote_rate})
+      RATE_FULL:    remote_rate_ascii = "rate_full   ";
+      RATE_HALF:    remote_rate_ascii = "rate_half   ";
+      RATE_QUARTER: remote_rate_ascii = "rate_quarter";
+      default:      remote_rate_ascii = "%Error      ";
+    endcase // case ({remote_rate})
+  end
+  // End of automatics
+
+  wire                local_rate_f = x16_f2 | x8_f2 | x4_f2 | x16_f1 | x8_f1 | x4_f1 | x2_f1 | x1_f1;
+  wire                local_rate_h = x16_h2 | x8_h2 | x4_h2 | x16_h1 | x8_h1 | x4_h1 | x2_h1 | x1_h1;
+  wire                local_rate_q = x16_q2 | x8_q2 | x4_q2;
 
   always_comb
     begin
       case ({local_rate_f, local_rate_h, local_rate_q})
-        3'b100: local_rate = FULL;
-        3'b010: local_rate = HALF;
-        3'b001: local_rate = QUARTER;
-        default: local_rate = FULL;
+        3'b100: local_rate = RATE_FULL;
+        3'b010: local_rate = RATE_HALF;
+        3'b001: local_rate = RATE_QUARTER;
+        default: local_rate = RATE_FULL;
       endcase // case ({local_rate_f, local_rate_h, local_rate_q})
-/* -----\/----- EXCLUDED -----\/-----
-      case (remote_rate)
-        PORT_FULL: remote_rate_int = FULL;
-        PORT_HALF: remote_rate_int = HALF;
-        PORT_QUARTER: remote_rate_int = QUARTER;
-        default: remote_rate_int = FULL;
-      endcase // case (remote_rate)
- -----/\----- EXCLUDED -----/\----- */
-      // symmetric until TB changes are done
-      assign remote_rate_int = local_rate;
+      case (remote_rate_port)
+        PORT_FULL: remote_rate = RATE_FULL;
+        PORT_HALF: remote_rate = RATE_HALF;
+        PORT_QUARTER: remote_rate = RATE_QUARTER;
+        default: remote_rate = RATE_FULL;
+      endcase // case (remote_rate_port)
+    end
+
+  localparam RX_FIFO_DEPTH = 16'd32;
+  localparam BASE_STB_INTV = 3 * RX_FIFO_DEPTH;  // 3 is the recommended factor
+
+  always_comb
+    begin
+      lpif_tx_stb_intv = BASE_STB_INTV;
+//      lpif_rx_stb_intv = BASE_STB_INTV * remote_rate / local_rate;
+      lpif_rx_stb_intv = (BASE_STB_INTV << remote_rate[3:1]) >> local_rate[3:1];
     end
 
   /* strobe_gen_w_delay AUTO_TEMPLATE (
    .clk         (com_clk),
    .rst_n       (rst_n),
    .user_strobe (tx_stb_userbit),
-   .interval    (STB_INTERVAL),
+   .interval    (lpif_tx_stb_intv),
    .delay_value (STB_DELAY),
    .user_marker (|tx_mrk_userbit[]),
    .online      (tx_online),
@@ -1288,7 +1345,7 @@ module lpif_txrx
        // Inputs
        .clk                             (com_clk),               // Templated
        .rst_n                           (rst_n),                 // Templated
-       .interval                        (STB_INTERVAL),          // Templated
+       .interval                        (lpif_tx_stb_intv),      // Templated
        .delay_value                     (STB_DELAY),             // Templated
        .user_marker                     (|tx_mrk_userbit),       // Templated
        .online                          (tx_online));             // Templated
@@ -1296,7 +1353,6 @@ module lpif_txrx
   /* marker_gen AUTO_TEMPLATE (
    .clk         (com_clk),
    .rst_n       (rst_n),
-   .remote_rate (remote_rate_int[]),
    .user_marker (tx_mrk_userbit[]),
    ); */
 
@@ -1309,7 +1365,7 @@ module lpif_txrx
        .clk                             (com_clk),               // Templated
        .rst_n                           (rst_n),                 // Templated
        .local_rate                      (local_rate[3:0]),
-       .remote_rate                     (remote_rate_int[3:0]));  // Templated
+       .remote_rate                     (remote_rate[3:0]));
 
 endmodule // lpif_txrx
 

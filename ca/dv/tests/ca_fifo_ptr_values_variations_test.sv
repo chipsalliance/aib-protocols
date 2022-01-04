@@ -89,11 +89,14 @@ task ca_fifo_ptr_values_variations_test_c::run_test(uvm_phase phase);
       bit result = 0;
 
       `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "START test...", UVM_LOW);
+ 
+      ca_cfg.ca_die_a_rx_tb_in_cfg.ca_fifo_ptr_values_variations_test  = 1;
+      ca_cfg.ca_die_b_rx_tb_in_cfg.ca_fifo_ptr_values_variations_test  = 1;
+
       ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
       ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
 
       ca_vseq.start(ca_top_env.virt_seqr); // Default value of fifo_ptr*  configured here 
-
       `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
       `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
@@ -138,7 +141,6 @@ task ca_fifo_ptr_values_variations_test_c::run_test(uvm_phase phase);
 
      `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "ca_traffic_seq started ..\n", UVM_LOW);
       ca_traffic_seq.start(ca_top_env.virt_seqr);
-      //ca_vseq.start(ca_top_env.virt_seqr);
      `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "ca_traffic_seq ended ..\n", UVM_LOW);
 
      `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "wait_started for second drv_tfr_complete ..\n", UVM_LOW);

@@ -135,22 +135,24 @@ module ca_tx_strb
         else
           begin
             if (tx_state_gen_stb)
-              if ((stb_intv_count == 16'h1) & ~tx_stb_rcvr)
-                stb_intv_count <= tx_stb_intv;
-              else if (|stb_intv_count)
-                stb_intv_count <= stb_intv_count - 1'b1;
+              begin
+                if ((stb_intv_count == 16'h1) & ~tx_stb_rcvr)
+                  stb_intv_count <= tx_stb_intv;
+                else
+                  stb_intv_count <= stb_intv_count - 1'b1;
+              end
           end
       end
 
   // TX state machine, in com_clk domain
 
-  localparam [2:0] /* auto enum state_info */
-    TX_IDLE	= 3'h0,
-    TX_ONLINE	= 3'h1,
-    TX_GEN_STB	= 3'h2,
-    TX_DONE	= 3'h3;
+  localparam [1:0] /* auto enum state_info */
+    TX_IDLE	= 2'h0,
+    TX_ONLINE	= 2'h1,
+    TX_GEN_STB	= 2'h2,
+    TX_DONE	= 2'h3;
 
-  logic [2:0]                                       /* auto enum state_info */
+  logic [1:0]                                       /* auto enum state_info */
                                                     tx_state, d_tx_state;
 
   /*AUTOASCIIENUM("tx_state", "tx_state_ascii", "")*/

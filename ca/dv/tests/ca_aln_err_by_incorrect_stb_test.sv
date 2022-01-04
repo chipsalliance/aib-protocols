@@ -133,17 +133,6 @@ task ca_aln_err_by_incorrect_stb_test_c::aln_err_chk();
            shift_stb_intv_complt =1;
                test_end = 1;
                disable fork; 
-
-         // wait (ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1);
-         //      test_end = 1;
-         //      disable fork; 
-         //      `uvm_info("ca_aln_err_by_incorrect_stb_test ::run_phase", "END test...\n", UVM_LOW);
-           //  if(update_do_compare == 0) begin
-           //    sbd_counts_only_clear();
-           //   `uvm_info("ca_aln_err_by_incorrect_stb_test", "after align_error gone,align_done come,start SCOREBOARD comparision...", UVM_LOW);
-           //    ca_top_env.ca_scoreboard.do_compare = 1;
-           //    update_do_compare = 1;
-           //  end
         end
    join_none
 

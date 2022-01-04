@@ -32,6 +32,7 @@ interface ca_gen_if (input clk, rst_n);
     // signal declaration...
     //---------------------------------------------------
     logic                                         aib_ready;
+    logic                                         force0_tx_rx_online=1'b0;
 
     // modports... 
     //---------------------------------------------------

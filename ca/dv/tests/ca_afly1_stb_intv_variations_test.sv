@@ -17,8 +17,9 @@
 //
 // Functional Descript: Channel Alignment Testbench File
 // TEST_CASE_DESCRIPTION
-// align_fly = 1 , tx_stb_intv  changes from one value to other value
-//
+// {align_fly = 1}, tx_stb_intv value randomized in this test case.
+// Traffic ( tx_stb_intv as per sailrock) => Traffic ( randomized value of tx_stb_intv ) 
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 `ifndef _CA_AFLY1_STB_INTV_TEST_
@@ -87,8 +88,14 @@ task ca_afly1_stb_intv_variations_test_c::run_test(uvm_phase phase);
      bit result = 0;
 
      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "START test...", UVM_LOW);
-     ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 1;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 1;
+     ca_cfg.ca_die_a_tx_tb_in_cfg.stop_stb_checker    =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.stop_stb_checker    =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker    =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker    =   1;
+
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly           =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly           =   1;
+
      ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
      ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
 
@@ -102,28 +109,53 @@ task ca_afly1_stb_intv_variations_test_c::run_test(uvm_phase phase);
      result =  ck_xfer_cnt_b(1);
      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
 
-     repeat(20)@ (posedge vif.clk);
-   //  foreach (tx_stb_intv[i]) begin
-   //     if(i >= 20)  tx_stb_intv[i] = i;  
-   //  end
-   ////// ++++++++++++++++++++++++ another value for stb_intv++++++++++++++++++++ ////
-   //   tx_stb_intv.shuffle();
-   //   foreach(tx_stb_intv[i])begin
-   //       ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv    =  tx_stb_intv[i];
-   //       ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv    =  tx_stb_intv[i];
-   //   end 
-          ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv    =  $urandom_range(65, 100);
-          ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv    =  $urandom_range(70, 120);
-      ca_cfg.configure();
+        sbd_counts_clear();
+        ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
+        ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
+        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
+        ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
 
-      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase",$sformatf("tx_stb_intv = %h,tx_stb_bit_sel= %h,tx_stb_wd_sel=%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv,ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel,ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel),UVM_LOW);
-      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase",$sformatf("tx_stb_intv = %h,tx_stb_bit_sel= %h,tx_stb_wd_sel=%h configured..\n", ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel),UVM_LOW);
+        ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(96, 250);
+        ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(96, 250);
+        ca_cfg.configure();
 
-      sbd_counts_clear();
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase",$sformatf("DIE_A tx_stb_intv = %h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv),UVM_LOW);
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase",$sformatf("DIE_B tx_stb_intv = %h configured..\n", ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv),UVM_LOW);
+
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in SBD started ..\n", UVM_LOW);
+        ca_top_env.ca_scoreboard.generate_stb_beat();
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+        ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+        ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+
+          if(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv > ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv) begin
+             tx_stb_intv_bkp = ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv;
+          end else begin
+             tx_stb_intv_bkp = ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv;
+          end
+
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", $sformatf("tx_stb_intv_bkp = %0d..\n",tx_stb_intv_bkp), UVM_LOW);
+
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "tx_stb_intv_bkp_wait started..\n", UVM_LOW);
+       repeat(4*tx_stb_intv_bkp)@ (posedge vif.clk);
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "tx_stb_intv_bkp_wait ended..\n", UVM_LOW);
+
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+       ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+       ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
+
+      `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+       ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
+       ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
+       ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;
+       ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor    =   0;
 
       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "ca_traffic_seq started ..\n", UVM_LOW);
-       //ca_traffic_seq.start(ca_top_env.virt_seqr);
-       ca_vseq.start(ca_top_env.virt_seqr);
+       ca_traffic_seq.start(ca_top_env.virt_seqr);
       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "ca_traffic_seq ended ..\n", UVM_LOW);
 
       `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase", "wait_started for second drv_tfr_complete ..\n", UVM_LOW);

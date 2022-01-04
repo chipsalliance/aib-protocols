@@ -285,6 +285,12 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                              ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
                              ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
                         end
+                        if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 1)begin
+                           if(ca_cfg.ca_die_a_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  //check if requested count of transfer done at Tx driver
+                                ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                                ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                           end
+                        end
                      end
             "DIE_B": begin
                       `ifndef CA_ASYMMETRIC
@@ -296,10 +302,16 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                         end
                         //if(beat_cnt == rx_tb_in_item.last_tx_cnt_b) rx_out_cnt_die_b = beat_cnt * rx_tb_in_item.cnt_mul;
                       `endif
-                        if(rx_out_cnt_die_b == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  
-                             ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
-                             ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
-                             //$display("DIE_B rx_cnt %0f,cfg.last_tx_cnt_b  %0d",rx_out_cnt_die_b,ca_cfg.ca_die_b_rx_tb_in_cfg.last_tx_cnt_b);
+                        if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0)begin
+                           if(rx_out_cnt_die_b == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  
+                                ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                                ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                           end
+                        end else begin 
+                           if(ca_cfg.ca_die_b_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
+                                ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                                ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                           end
                         end
                      end
             default: begin
@@ -496,14 +508,18 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
             `uvm_info("verify_rx_dout", $sformatf("xfer_cnt: %0d %s tx_din -- > AIB --> %s rx_dout Pass",
             xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);
         end
-        else begin
+        else begin /// show error 
             `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", act_item.my_name));
             src_item.dprint();
             `uvm_warning("verify_rx_dout", $sformatf("%s ACTUAL beat RX_DOUT data:", act_item.my_name));
             act_item.dprint();
+
             `uvm_warning("verify_rx_dout", $sformatf("%s stb mask:", act_item.my_name));
+
+            ////Configured STB
             if(act_item.my_name == "DIE_A") die_a_rx_stb_item.dprint();
             else die_b_rx_stb_item.dprint();
+
             `uvm_error("verify_tx_dout", $sformatf("xfer_cnt: %0d %s tx_din --> AIB --> %s rx_dout MISMATCH see above for error",
             xfer_cnt, src_item.my_name, act_item.my_name));
         end
@@ -537,6 +553,7 @@ function void ca_scoreboard_c::check_phase(uvm_phase phase);
     bit pass = 1;
     ca_data_pkg::ca_seq_item_c   item;
 
+       if ((ca_cfg.ca_die_b_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0)) begin
     super.check_phase(phase);
     `uvm_info("CHECK_PHASE", $sformatf("Starting scoreboard check_phase..."), UVM_LOW);
     
@@ -550,6 +567,8 @@ function void ca_scoreboard_c::check_phase(uvm_phase phase);
     end
     else begin
         `uvm_error("check_phase", ">> FAIL <<  Please see above msg\n"); 
+    end
+
     end
 
 endfunction : check_phase 

@@ -113,7 +113,7 @@ module lpif_lsm
       SB_LINK_RETRAIN_REQ: sb_ustrm_ascii = "sb_link_retrain_req";
       SB_LINK_RETRAIN_STS: sb_ustrm_ascii = "sb_link_retrain_sts";
       default:             sb_ustrm_ascii = "%Error             ";
-    endcase
+    endcase // case ({sb_ustrm})
   end
   // End of automatics
 
@@ -135,7 +135,7 @@ module lpif_lsm
       SB_LINK_RETRAIN_REQ: sb_dstrm_ascii = "sb_link_retrain_req";
       SB_LINK_RETRAIN_STS: sb_dstrm_ascii = "sb_link_retrain_sts";
       default:             sb_dstrm_ascii = "%Error             ";
-    endcase
+    endcase // case ({sb_dstrm})
   end
   // End of automatics
 
@@ -144,17 +144,10 @@ module lpif_lsm
   localparam [3:0] /* auto enum req_info */
     REQ_NOP		= 4'h0,
     REQ_ACTIVE		= 4'h1,
-    REQ_ACTIVE_L0S	= 4'h2,
-    REQ_DAPM		= 4'h3,
     REQ_IDLE_L1_1	= 4'h4,
-    REQ_IDLE_L1_2	= 4'h5,
-    REQ_IDLE_L1_3	= 4'h6,
-    REQ_IDLE_L1_4	= 4'h7,
     REQ_SLEEP_L2	= 4'h8,
     REQ_LinkReset	= 4'h9,
-    REQ_Reserved	= 4'hA,
-    REQ_RETRAIN		= 4'hB,
-    REQ_DISABLE		= 4'hC;
+    REQ_RETRAIN		= 4'hB;
 
   logic [3:0]         /* auto enum req_info */
                       state_req;
@@ -165,24 +158,17 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("state_req", "state_req_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           state_req_ascii;        // Decode of state_req
+  reg [103:0]           state_req_ascii;        // Decode of state_req
   always @(state_req) begin
     case ({state_req})
-      REQ_NOP:        state_req_ascii = "req_nop       ";
-      REQ_ACTIVE:     state_req_ascii = "req_active    ";
-      REQ_ACTIVE_L0S: state_req_ascii = "req_active_l0s";
-      REQ_DAPM:       state_req_ascii = "req_dapm      ";
-      REQ_IDLE_L1_1:  state_req_ascii = "req_idle_l1_1 ";
-      REQ_IDLE_L1_2:  state_req_ascii = "req_idle_l1_2 ";
-      REQ_IDLE_L1_3:  state_req_ascii = "req_idle_l1_3 ";
-      REQ_IDLE_L1_4:  state_req_ascii = "req_idle_l1_4 ";
-      REQ_SLEEP_L2:   state_req_ascii = "req_sleep_l2  ";
-      REQ_LinkReset:  state_req_ascii = "req_linkreset ";
-      REQ_Reserved:   state_req_ascii = "req_reserved  ";
-      REQ_RETRAIN:    state_req_ascii = "req_retrain   ";
-      REQ_DISABLE:    state_req_ascii = "req_disable   ";
-      default:        state_req_ascii = "%Error        ";
-    endcase
+      REQ_NOP:       state_req_ascii = "req_nop      ";
+      REQ_ACTIVE:    state_req_ascii = "req_active   ";
+      REQ_IDLE_L1_1: state_req_ascii = "req_idle_l1_1";
+      REQ_SLEEP_L2:  state_req_ascii = "req_sleep_l2 ";
+      REQ_LinkReset: state_req_ascii = "req_linkreset";
+      REQ_RETRAIN:   state_req_ascii = "req_retrain  ";
+      default:       state_req_ascii = "%Error       ";
+    endcase // case ({state_req})
   end
   // End of automatics
 
@@ -191,17 +177,11 @@ module lpif_lsm
   localparam [3:0] /* auto enum sts_info */
     STS_RESET		= 4'h0,
     STS_ACTIVE		= 4'h1,
-    STS_ACTIVE_L0S	= 4'h2,
-    STS_Reserved	= 4'h3,
     STS_IDLE_L1_1	= 4'h4,
-    STS_IDLE_L1_2	= 4'h5,
-    STS_IDLE_L1_3	= 4'h6,
-    STS_IDLE_L1_4	= 4'h7,
     STS_SLEEP_L2	= 4'h8,
     STS_LinkReset	= 4'h9,
     STS_LinkError	= 4'hA,
-    STS_RETRAIN		= 4'hB,
-    STS_DISABLE		= 4'hC;
+    STS_RETRAIN		= 4'hB;
 
   logic [3:0]         /* auto enum sts_info */
                       state_sts;
@@ -209,24 +189,18 @@ module lpif_lsm
 
   /*AUTOASCIIENUM("state_sts", "state_sts_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [111:0]           state_sts_ascii;        // Decode of state_sts
+  reg [103:0]           state_sts_ascii;        // Decode of state_sts
   always @(state_sts) begin
     case ({state_sts})
-      STS_RESET:      state_sts_ascii = "sts_reset     ";
-      STS_ACTIVE:     state_sts_ascii = "sts_active    ";
-      STS_ACTIVE_L0S: state_sts_ascii = "sts_active_l0s";
-      STS_Reserved:   state_sts_ascii = "sts_reserved  ";
-      STS_IDLE_L1_1:  state_sts_ascii = "sts_idle_l1_1 ";
-      STS_IDLE_L1_2:  state_sts_ascii = "sts_idle_l1_2 ";
-      STS_IDLE_L1_3:  state_sts_ascii = "sts_idle_l1_3 ";
-      STS_IDLE_L1_4:  state_sts_ascii = "sts_idle_l1_4 ";
-      STS_SLEEP_L2:   state_sts_ascii = "sts_sleep_l2  ";
-      STS_LinkReset:  state_sts_ascii = "sts_linkreset ";
-      STS_LinkError:  state_sts_ascii = "sts_linkerror ";
-      STS_RETRAIN:    state_sts_ascii = "sts_retrain   ";
-      STS_DISABLE:    state_sts_ascii = "sts_disable   ";
-      default:        state_sts_ascii = "%Error        ";
-    endcase
+      STS_RESET:     state_sts_ascii = "sts_reset    ";
+      STS_ACTIVE:    state_sts_ascii = "sts_active   ";
+      STS_IDLE_L1_1: state_sts_ascii = "sts_idle_l1_1";
+      STS_SLEEP_L2:  state_sts_ascii = "sts_sleep_l2 ";
+      STS_LinkReset: state_sts_ascii = "sts_linkreset";
+      STS_LinkError: state_sts_ascii = "sts_linkerror";
+      STS_RETRAIN:   state_sts_ascii = "sts_retrain  ";
+      default:       state_sts_ascii = "%Error       ";
+    endcase // case ({state_sts})
   end
   // End of automatics
 
@@ -235,7 +209,6 @@ module lpif_lsm
   wire                state_req_nop		= (lp_state_req == REQ_NOP);
   wire                state_req_active		= (lp_state_req == REQ_ACTIVE);
   wire                state_req_linkreset	= (lp_state_req == REQ_LinkReset);
-  wire                state_req_disable		= (lp_state_req == REQ_DISABLE);
   wire                state_req_retrain		= (lp_state_req == REQ_RETRAIN);
   wire                state_req_idle_l1_1	= (lp_state_req == REQ_IDLE_L1_1);
   wire                state_req_sleep_l2	= (lp_state_req == REQ_SLEEP_L2);
@@ -284,9 +257,10 @@ module lpif_lsm
                                      sb_ustrm_link_retrain_req | sb_ustrm_link_error |
                                      (state_req_change &
                                       (state_req_retrain | state_req_idle_l1_1| state_req_sleep_l2 |
-                                       state_req_linkreset | state_req_disable)
+                                       state_req_linkreset)
                                       )
                                      );
+  wire                exit_active_sb = (state_req_idle_l1_1 | state_req_sleep_l2 | state_req_linkreset);
   // pl_speedmode encoding
 
   localparam [2:0]
@@ -303,63 +277,57 @@ module lpif_lsm
     LSM_ACTIVE		= 5'h4,
     LSM_ACTIVE_b	= 5'h5,
     LSM_ACTIVE_c	= 5'h6,
-    LSM_ACTIVE_L0S	= 5'h7,
-    LSM_DAPM		= 5'h8,
-    LSM_IDLE_L1_1	= 5'h9,
-    LSM_IDLE_L1_2	= 5'hA,
-    LSM_IDLE_L1_3	= 5'hB,
-    LSM_IDLE_L1_4	= 5'hC,
-    LSM_SLEEP_L2	= 5'hD,
-    LSM_LinkReset_a	= 5'hE,
-    LSM_LinkReset	= 5'hF,
-    LSM_LinkError	= 5'h10,
-    LSM_RETRAIN_a	= 5'h11,
-    LSM_RETRAIN_b	= 5'h12,
-    LSM_RETRAIN_c	= 5'h13,
-    LSM_RETRAIN		= 5'h14,
-    LSM_DISABLE		= 5'h15,
-    LSM_SB_ACK		= 5'h16;
+    LSM_IDLE_L1_1	= 5'h7,
+    LSM_SLEEP_L2	= 5'h8,
+    LSM_LinkReset_a	= 5'h9,
+    LSM_LinkReset	= 5'hA,
+    LSM_LinkError	= 5'hB,
+    LSM_RETRAIN_a	= 5'hC,
+    LSM_RETRAIN_b	= 5'hD,
+    LSM_RETRAIN_c	= 5'hE,
+    LSM_RETRAIN		= 5'hF,
+    LSM_DISABLE		= 5'h10,
+    LSM_SB_ACK		= 5'h11,
+    LSM_SB_ACK_STALLREQ	= 5'h12;
 
   logic [4:0]         /* auto enum lsm_state_info */
                       lsm_state, d_lsm_state;
 
   /*AUTOASCIIENUM("lsm_state", "lsm_state_ascii", "")*/
   // Beginning of automatic ASCII enum decoding
-  reg [119:0]           lsm_state_ascii;        // Decode of lsm_state
+  reg [151:0]           lsm_state_ascii;        // Decode of lsm_state
   always @(lsm_state) begin
     case ({lsm_state})
-      LSM_RESET:       lsm_state_ascii = "lsm_reset      ";
-      LSM_RESET_a:     lsm_state_ascii = "lsm_reset_a    ";
-      LSM_RESET_b:     lsm_state_ascii = "lsm_reset_b    ";
-      LSM_ACTIVE_a:    lsm_state_ascii = "lsm_active_a   ";
-      LSM_ACTIVE:      lsm_state_ascii = "lsm_active     ";
-      LSM_ACTIVE_b:    lsm_state_ascii = "lsm_active_b   ";
-      LSM_ACTIVE_c:    lsm_state_ascii = "lsm_active_c   ";
-      LSM_ACTIVE_L0S:  lsm_state_ascii = "lsm_active_l0s ";
-      LSM_DAPM:        lsm_state_ascii = "lsm_dapm       ";
-      LSM_IDLE_L1_1:   lsm_state_ascii = "lsm_idle_l1_1  ";
-      LSM_IDLE_L1_2:   lsm_state_ascii = "lsm_idle_l1_2  ";
-      LSM_IDLE_L1_3:   lsm_state_ascii = "lsm_idle_l1_3  ";
-      LSM_IDLE_L1_4:   lsm_state_ascii = "lsm_idle_l1_4  ";
-      LSM_SLEEP_L2:    lsm_state_ascii = "lsm_sleep_l2   ";
-      LSM_LinkReset_a: lsm_state_ascii = "lsm_linkreset_a";
-      LSM_LinkReset:   lsm_state_ascii = "lsm_linkreset  ";
-      LSM_LinkError:   lsm_state_ascii = "lsm_linkerror  ";
-      LSM_RETRAIN_a:   lsm_state_ascii = "lsm_retrain_a  ";
-      LSM_RETRAIN_b:   lsm_state_ascii = "lsm_retrain_b  ";
-      LSM_RETRAIN_c:   lsm_state_ascii = "lsm_retrain_c  ";
-      LSM_RETRAIN:     lsm_state_ascii = "lsm_retrain    ";
-      LSM_DISABLE:     lsm_state_ascii = "lsm_disable    ";
-      LSM_SB_ACK:      lsm_state_ascii = "lsm_sb_ack     ";
-      default:         lsm_state_ascii = "%Error         ";
-    endcase
+      LSM_RESET:           lsm_state_ascii = "lsm_reset          ";
+      LSM_RESET_a:         lsm_state_ascii = "lsm_reset_a        ";
+      LSM_RESET_b:         lsm_state_ascii = "lsm_reset_b        ";
+      LSM_ACTIVE_a:        lsm_state_ascii = "lsm_active_a       ";
+      LSM_ACTIVE:          lsm_state_ascii = "lsm_active         ";
+      LSM_ACTIVE_b:        lsm_state_ascii = "lsm_active_b       ";
+      LSM_ACTIVE_c:        lsm_state_ascii = "lsm_active_c       ";
+      LSM_IDLE_L1_1:       lsm_state_ascii = "lsm_idle_l1_1      ";
+      LSM_SLEEP_L2:        lsm_state_ascii = "lsm_sleep_l2       ";
+      LSM_LinkReset_a:     lsm_state_ascii = "lsm_linkreset_a    ";
+      LSM_LinkReset:       lsm_state_ascii = "lsm_linkreset      ";
+      LSM_LinkError:       lsm_state_ascii = "lsm_linkerror      ";
+      LSM_RETRAIN_a:       lsm_state_ascii = "lsm_retrain_a      ";
+      LSM_RETRAIN_b:       lsm_state_ascii = "lsm_retrain_b      ";
+      LSM_RETRAIN_c:       lsm_state_ascii = "lsm_retrain_c      ";
+      LSM_RETRAIN:         lsm_state_ascii = "lsm_retrain        ";
+      LSM_DISABLE:         lsm_state_ascii = "lsm_disable        ";
+      LSM_SB_ACK:          lsm_state_ascii = "lsm_sb_ack         ";
+      LSM_SB_ACK_STALLREQ: lsm_state_ascii = "lsm_sb_ack_stallreq";
+      default:             lsm_state_ascii = "%Error             ";
+    endcase // case ({lsm_state})
   end
   // End of automatics
 
   // lsm state decodes
 
   assign lsm_state_active = (pl_state_sts == STS_ACTIVE);
+  assign d_pl_phyinl1 = (d_pl_state_sts == STS_IDLE_L1_1);
   assign d_pl_phyinl2 = (d_pl_state_sts == STS_SLEEP_L2);
+  assign d_pl_phyinrecenter = (d_pl_state_sts == STS_RETRAIN);
 
   always_ff @(posedge lclk or negedge rst_n)
     if (~rst_n)
@@ -370,8 +338,6 @@ module lpif_lsm
   always_comb
     begin : lsm_state_next
       d_lsm_state = lsm_state;
-      d_pl_phyinl1 = 1'b0;
-      d_pl_phyinrecenter = 1'b0;
       d_lsm_dstrm_state = lsm_dstrm_state;
       d_lsm_speedmode = lsm_speedmode;
       lsm_cg_req = 1'b0;
@@ -397,11 +363,16 @@ module lpif_lsm
               d_lsm_state = sb_ustrm_active_req ? LSM_RESET_b : LSM_RESET_a;
           end
           LSM_RESET_b: begin
-            d_lsm_dstrm_state = SB_ACTIVE_STS;
             if (~sb_ustrm_active_req)
               begin
                 d_linkreset2reset = 1'b0;
                 d_lsm_state = LSM_RESET_a;
+              end
+            else
+              begin
+                d_lsm_dstrm_state = SB_ACTIVE_STS;
+                lsm_cg_req = 1'b1;
+                d_lsm_state = LSM_ACTIVE_a;
               end
           end
           LSM_RESET_a: begin
@@ -428,11 +399,6 @@ module lpif_lsm
                   d_state_req_change = 1'b0;
                   d_lsm_state = LSM_LinkReset;
                 end
-              else if (state_req_disable & state_req_change)
-                begin
-                  d_state_req_change = 1'b0;
-                  d_lsm_state = LSM_DISABLE;
-                end
               else if (sb_ustrm_link_error)
                 d_lsm_state = LSM_LinkError;
             end // UNMATCHED !!
@@ -454,12 +420,12 @@ module lpif_lsm
             if (exit_active)
               begin
                 d_state_req_change = 1'b0;
-                lsm_stall_req = 1'b1;
+                lsm_stall_req = ~exit_active_sb;
                 d_lsm_state = LSM_ACTIVE_b;
               end
           end
           LSM_ACTIVE_b: begin
-            if (pl_stallreq & lp_stallack)
+            if ((pl_stallreq & lp_stallack) | exit_active_sb)
               begin
                 if (state_req_retrain | coldstart)
                   begin
@@ -499,16 +465,13 @@ module lpif_lsm
                   d_lsm_state = LSM_LinkReset_a;
                 else if (sb_ustrm_link_retrain_req)
                   d_lsm_state = LSM_RETRAIN;
-                else if (state_req_disable)
-                  d_lsm_state = LSM_DISABLE;
                 else if (sb_ustrm_link_error)
                   d_lsm_state = LSM_LinkError;
-              end // if (pl_stallreq & lp_stallack)
+              end // if ((pl_stallreq & lp_stallack) | exit_active_sb)
           end // case: LSM_ACTIVE_b
           LSM_IDLE_L1_1: begin
             d_pl_state_sts = STS_IDLE_L1_1;
             d_lsm_dstrm_state = SB_L1_STS;
-            d_pl_phyinl1 = 1'b1;
             if (sb_ustrm_active_req)
               d_lsm_state = LSM_RETRAIN_a;
             else if ((state_req_active | state_req_retrain) & state_req_change)
@@ -530,11 +493,6 @@ module lpif_lsm
               begin
                 d_lsm_state = LSM_LinkReset_a;
               end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
@@ -543,88 +501,10 @@ module lpif_lsm
           // L1 substates are not implemented
           //
           LSM_IDLE_L1_2: begin
-            d_pl_state_sts = STS_IDLE_L1_2;
-            d_lsm_dstrm_state = SB_L1_STS;
-            d_pl_phyinl1 = 1'b1;
-            if (sb_ustrm_active_req)
-              d_lsm_state = LSM_RETRAIN_a;
-            else if ((state_req_active | state_req_retrain) & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_exit_lp = 1'b1;
-                d_lsm_dstrm_state = SB_ACTIVE_REQ;
-                d_lsm_return_state = LSM_RETRAIN_a;
-                d_lsm_state = LSM_SB_ACK;
-              end
-            else if (state_req_linkreset & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-                d_lsm_state = LSM_LinkReset_a;
-              end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
-            else if (sb_ustrm_link_error)
-              d_lsm_state = LSM_LinkError;
           end
           LSM_IDLE_L1_3: begin
-            d_pl_state_sts = STS_IDLE_L1_3;
-            d_lsm_dstrm_state = SB_L1_STS;
-            d_pl_phyinl1 = 1'b1;
-            if (sb_ustrm_active_req)
-              d_lsm_state = LSM_RETRAIN_a;
-            else if ((state_req_active | state_req_retrain) & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_exit_lp = 1'b1;
-                d_lsm_dstrm_state = SB_ACTIVE_REQ;
-                d_lsm_return_state = LSM_RETRAIN_a;
-                d_lsm_state = LSM_SB_ACK;
-              end
-            else if (state_req_linkreset & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-                d_lsm_state = LSM_LinkReset_a;
-              end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
-            else if (sb_ustrm_link_error)
-              d_lsm_state = LSM_LinkError;
           end
           LSM_IDLE_L1_4: begin
-            d_pl_state_sts = STS_IDLE_L1_4;
-            d_lsm_dstrm_state = SB_L1_STS;
-            d_pl_phyinl1 = 1'b1;
-            if (sb_ustrm_active_req)
-              d_lsm_state = LSM_RETRAIN_a;
-            else if ((state_req_active | state_req_retrain) & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_exit_lp = 1'b1;
-                d_lsm_dstrm_state = SB_ACTIVE_REQ;
-                d_lsm_return_state = LSM_RETRAIN_a;
-                d_lsm_state = LSM_SB_ACK;
-              end
-            else if (state_req_linkreset & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_dstrm_state = SB_LINK_RESET_REQ;
-                d_lsm_state = LSM_LinkReset_a;
-              end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
-            else if (sb_ustrm_link_error)
-              d_lsm_state = LSM_LinkError;
           end
  -----/\----- EXCLUDED -----/\----- */
           LSM_SLEEP_L2: begin
@@ -654,11 +534,6 @@ module lpif_lsm
               begin
                 d_lsm_state = LSM_LinkReset_a;
               end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
@@ -678,18 +553,13 @@ module lpif_lsm
                 d_linkreset2reset = 1'b1;
                 d_lsm_state = LSM_RESET;
               end
-            else if ((state_req_active | state_req_disable) & state_req_change)
+            else if (state_req_active & state_req_change)
               begin
                 d_linkreset2reset = 1'b1;
                 d_state_req_change = 1'b0;
                 d_lsm_dstrm_state = SB_ACTIVE_REQ;
                 d_lsm_return_state = LSM_RESET;
                 d_lsm_state = LSM_SB_ACK;
-              end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
               end
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
@@ -716,7 +586,6 @@ module lpif_lsm
           LSM_RETRAIN: begin
             d_lsm_speedmode = SPEEDMODE_GEN5;
             lsm_cg_req = 1'b1;
-            d_pl_phyinrecenter = 1'b1;
             d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
             if ((state_req_active  & state_req_change) | coldstart | lsm_exit_lp)
               begin
@@ -736,11 +605,6 @@ module lpif_lsm
                 d_lsm_dstrm_state = SB_LINK_RESET_REQ;
                 d_lsm_state = LSM_LinkReset_a;
               end
-            else if (state_req_disable & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_DISABLE;
-              end
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
           end
@@ -749,24 +613,32 @@ module lpif_lsm
           // DISABLE is not implemented
           //
           LSM_DISABLE: begin
-            d_pl_state_sts = STS_DISABLE;
-            if (sb_ustrm_link_error)
-              d_lsm_state = LSM_LinkError;
-            else if (state_req_active & state_req_change)
-              begin
-                d_state_req_change = 1'b0;
-                d_lsm_state = LSM_RESET;
-              end
           end
  -----/\----- EXCLUDED -----/\----- */
           LSM_SB_ACK: begin
             if (sb_ack)
               begin
-                if (lsm_return_state == LSM_ACTIVE_a)
-                  lsm_cg_req = 1'b1;
-                if (lsm_return_state == LSM_SLEEP_L2)
-                  d_pl_state_sts = STS_SLEEP_L2;
+                if (exit_active)
+                  begin
+                    lsm_stall_req = 1'b1;
+                    d_lsm_state = LSM_SB_ACK_STALLREQ;
+                  end
+                else
+                  begin
+                    if (lsm_return_state == LSM_ACTIVE_a)
+                      lsm_cg_req = 1'b1;
+                    if (lsm_return_state == LSM_SLEEP_L2)
+                      d_pl_state_sts = STS_SLEEP_L2;
+                    d_lsm_state = lsm_return_state;
+                  end
+              end
+          end
+          LSM_SB_ACK_STALLREQ: begin
+            if (pl_stallreq & lp_stallack)
+              begin
                 d_lsm_state = lsm_return_state;
+                if (lsm_return_state == LSM_IDLE_L1_1)
+                  d_pl_state_sts = STS_IDLE_L1_1;
               end
           end
           default: d_lsm_state = LSM_RESET;

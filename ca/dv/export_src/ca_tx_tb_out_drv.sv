@@ -41,7 +41,8 @@ class ca_tx_tb_out_drv_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm
     bit                         tx_online = 0;
     int                         tx_cnt = 0;
     bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  idle_data = 0; 
-
+    int                          tx_stb_rcvr_wait_cnt;
+    bit                          tx_stb_rcvr_en_done;
     // queues for holding seq items for injection into RTL
     ca_data_pkg::ca_seq_item_c    tx_q[$];
     ca_data_pkg::ca_seq_item_c    stb_item;
@@ -101,14 +102,13 @@ endtask : run_phase
 task ca_tx_tb_out_drv_c::get_item_from_seq();
     
     ca_data_pkg::ca_seq_item_c    req_item;
-    int                           req_cnt = 0;
     
     forever begin @(posedge vif.clk)
         while(tx_q.size() < max_tb_inj_depth) begin
             seq_item_port.get_next_item(req_item);
-            req_cnt++;
+            cfg.req_cnt++;
             `uvm_info("get_item_from_seq", $sformatf("%s rx-ing %0d pkt from seq tx_q: %0d/%0d", 
-                my_name, req_cnt, tx_q.size(), max_tb_inj_depth), UVM_MEDIUM);
+                my_name, cfg.req_cnt, tx_q.size(), max_tb_inj_depth), UVM_MEDIUM);
             tx_q.push_back(req_item);
             seq_item_port.item_done();
         end // while
@@ -192,12 +192,27 @@ task  ca_tx_tb_out_drv_c::drv_tx();
             calc_stb = 1;
             drv_tx_cfg_to_vif();
             if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin
-                tx_item = tx_q.pop_front();
-                set_item(tx_item);
-                tx_item.build_tx_beat(stb_item);
-                got_tx = 1;
-                cfg.align_done_assert = 1; 
-            end
+                if (cfg.ca_stb_rcvr_aft_aln_done_test  == 1) begin /// to control tx_din drive under tx_stb_rcvr test ONLY
+                    if(tx_stb_rcvr_wait_cnt < cfg.tx_stb_intv*2) begin
+                       tx_stb_rcvr_wait_cnt += 1;
+                    end else if ((tx_stb_rcvr_wait_cnt <= cfg.tx_stb_intv*4)&&(tx_stb_rcvr_wait_cnt >= cfg.tx_stb_intv*2) && (tx_stb_rcvr_en_done == 0)) begin
+                       cfg.align_done_assert = 1; 
+                       tx_stb_rcvr_wait_cnt += 1;
+                       if (tx_stb_rcvr_wait_cnt == cfg.tx_stb_intv*4)  tx_stb_rcvr_en_done = 1'b1;
+                    end else if (tx_stb_rcvr_en_done) begin
+                        tx_item = tx_q.pop_front();
+                        set_item(tx_item);
+                        tx_item.build_tx_beat(stb_item);
+                        got_tx = 1;
+                    end
+                end else begin ///all tests other than tx_stb_rcvr test
+                    tx_item = tx_q.pop_front();
+                    set_item(tx_item);
+                    tx_item.build_tx_beat(stb_item);
+                    got_tx = 1;
+                    cfg.align_done_assert = 1; 
+                end
+            end //got_tx==0
         
             if(got_tx == 1)  begin
                 idle_data = 0;
@@ -463,7 +478,7 @@ function void ca_tx_tb_out_drv_c::check_phase(uvm_phase phase);
 
     `uvm_info("check_phase", $sformatf("Starting ca_tx_tb_out_drv check_phase..."), UVM_LOW);
                 
-    if(((cfg.stop_strobes_inject == 0) && (cfg.stb_error_test == 0) && (cfg.align_error_test == 0) ) && ((got_tx == 1) || (tx_q.size() > 0))) begin
+    if(((cfg.stop_strobes_inject == 0) && (cfg.stb_error_test == 0) && (cfg.align_error_test == 0) && (cfg.ca_tx_online_test == 0) ) && ((got_tx == 1) || (tx_q.size() > 0))) begin
         `uvm_warning("check_phase", $sformatf("%s ca_tx_tb_out thread active: in transcation: %s queued : %0d", 
             my_name, got_tx ? "T":"F", tx_q.size()));
          pass = 0;

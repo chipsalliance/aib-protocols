@@ -45,8 +45,11 @@ class ca_rx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     int                      stb_cnt = 0;
     int                      stb_beat_cnt = 0;
     bit                      stb_sync = 0;
-    
-    bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  exp_stb_data = 0; 
+    int                      first_time_rst;
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlymark_data = 0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlystb_data  = 0; 
+    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    markstb_data  = 0; 
+    bit   [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    exp_stb_data  = 0; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -61,10 +64,12 @@ class ca_rx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     
     extern function void verify_rx_stb();
     extern function void gen_stb_beat();
+    extern function void test_call_gen_stb_beat();
     extern function void set_item(ca_data_pkg::ca_seq_item_c  item);
     
     extern task mon_rx(); 
     extern task mon_err_sig();
+    extern task mon_fifo_sig();
     
     extern virtual function void check_phase(uvm_phase phase);
 
@@ -96,8 +101,13 @@ endfunction: build_phase
 task ca_rx_tb_in_mon_c::run_phase(uvm_phase phase);
     
     fork
-        mon_rx();
+       if((cfg.stop_monitor == 0) && (cfg.align_error_test == 0))begin
+          mon_rx();
+       end
         mon_err_sig();
+        if(cfg.ca_fifo_ptr_values_variations_test == 1)begin 
+          mon_fifo_sig();
+        end
     join 
 
 endtask : run_phase
@@ -125,6 +135,21 @@ function void ca_rx_tb_in_mon_c::gen_stb_beat();
 
 endfunction : gen_stb_beat
 
+function void ca_rx_tb_in_mon_c::test_call_gen_stb_beat();
+
+    ///CLEAR required variables HERE
+     rx_cnt         = 0;
+     stb_cnt        = 0;
+     stb_sync       = 0;
+     first_time_rst = 0;
+     markstb_data   = 0;
+     onlystb_data   = 0;
+     onlymark_data  = 0;
+     //calc_stb_beat computation will be in below one
+      this.gen_stb_beat();
+
+endfunction : test_call_gen_stb_beat
+
 //----------------------------------------------
 task ca_rx_tb_in_mon_c::mon_rx(); 
 
@@ -140,11 +165,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
     bit [2:0]                                     clk_cnt;
     bit                                           rx_data_rdy  = 0;
     bit                                           rx_compare_start=0;
-    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlymark_data=0; 
-    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlystb_data=0; 
-    logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    markstb_data=0; 
     int                                           index, stb_bit_pos;
-    int                                           first_time_rst;
     forever begin @(posedge vif.clk)
         
        if (vif.rst_n == 1'b1) begin
@@ -211,6 +232,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
           end
         end //for first_time_rst 
 
+     if(cfg.stop_monitor == 0)begin  
         if(vif.rst_n === 1'b0) begin 
             // reset state
             rx_active = 0;
@@ -234,6 +256,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
             rx_data_prev[2] = rx_data_prev[1];             
             rx_data_prev[1] = rx_data_prev[0];             
             rx_data_prev[0] = rx_data;             
+           // $display("ca_rx_tb_in_mon_c ::: onlystb_data = %h onlymark_data = %h markstb_data %h,rx_data %h,rx_data_prev[0] %h,time %0t,my_name %s",onlystb_data,onlymark_data,markstb_data,rx_data,rx_data_prev[0],$time,my_name);
 
 `ifndef CA_ASYMMETRIC
  if((|rx_data !== 1'b0) && ((^rx_data) !== 1'bx)) begin 
@@ -261,7 +284,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
                      end
                      2'b10: begin
                              //display("rx_tb_in_mon.sv 10 inside H2H,Q2Q loop,time %0t",$time);
-                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0))begin //dont check stbs after align_done case
+                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0))begin //dont check stbs after align_done case
                                 verify_rx_stb();  // stb only
                              end
                      end
@@ -272,11 +295,11 @@ task ca_rx_tb_in_mon_c::mon_rx();
                                   ca_item.add_stb = 1;
                                   aport.write(ca_item);
                               end
-                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
+                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
                                  verify_rx_stb();  
                               end
                           end else begin
-                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0)) begin //dont check stbs after align_done case
+                              if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
                                  verify_rx_stb();  
                               end
                               ca_item.add_stb = 1;
@@ -291,7 +314,6 @@ task ca_rx_tb_in_mon_c::mon_rx();
                  endcase
             end // if        
 `else
-            //$display("ca_rx_tb_in_mon_c ::: onlystb_data = %h onlymark_data = %h markstb_data %h,rx_data %h,time %0t,my_name %s",onlystb_data,onlymark_data,markstb_data,rx_data,$time,my_name);
            
            if((rx_compare_start == 1'b1) && ((onlystb_data == rx_data) || (onlymark_data == rx_data) || (markstb_data == rx_data) || (rx_data == 0)) )begin 
                rx_compare_start = 0; ///marks end-of actual Rx data out from DUT
@@ -375,6 +397,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
             end // if rx_data!=x   
 `endif //CA_ASYMMETRIC
         end // non reset 
+ end //stop_monitor == 0
     end // clk
 endtask : mon_rx
 
@@ -405,7 +428,41 @@ function void ca_rx_tb_in_mon_c::verify_rx_stb();
 
 endfunction : verify_rx_stb
 
-    
+//---------------------------------------------
+task ca_rx_tb_in_mon_c::mon_fifo_sig(); 
+
+    forever begin @(posedge vif.clk)
+
+        if(vif.rst_n === 1'b0) begin 
+            // reset state
+            end
+        else if(vif.rx_online === 1'b1) begin // non reset state
+              
+                if(vif.fifo_full   == 1'b1) begin
+                  //     ch_full++;
+                   `uvm_info("mon_fifo_sig", "ca_fifo_ptr_values_variations_test :: ca_fifo_full is seen:\n", UVM_NONE);
+                end
+ 
+                if(vif.fifo_pfull  == 1'b1) begin
+                    //   ch_pfull++;
+                   `uvm_info("mon_fifo_sig", "ca_fifo_ptr_values_variations_test :: ca_fifo_pfull is seen:\n", UVM_NONE);
+                end 
+
+                if(vif.fifo_pempty == 1'b1) begin
+                      // ch_pempty++;
+                   `uvm_info("mon_fifo_sig", "ca_fifo_ptr_values_variations_test :: ca_fifo_pempty is seen:\n", UVM_NONE);
+                end 
+
+                if(vif.fifo_empty  == 1'b1) begin
+                      // ch_empty++;
+                   `uvm_info("mon_fifo_sig", "ca_fifo_ptr_values_variations_test :: ca_fifo_empty is seen:\n", UVM_NONE);
+                end 
+
+        end //rx_online 
+     end //forever
+ 
+endtask : mon_fifo_sig   
+ 
 //---------------------------------------------
 task ca_rx_tb_in_mon_c::mon_err_sig(); 
 
@@ -465,7 +522,7 @@ function void ca_rx_tb_in_mon_c::check_phase(uvm_phase phase);
     bit pass = 1;
     if(rx_active == 1) `uvm_error("check_phase", $sformatf("TX pkt rx_active still active at EOT!"));
     
-    if ((cfg.stb_error_test == 0) && (cfg.align_error_test == 0) && (vif.align_done !== 1'b1)) begin
+    if ((cfg.stb_error_test == 0) && (cfg.align_error_test == 0) && (cfg.ca_tx_online_test == 0) && (vif.align_done !== 1'b1)) begin
        if(cfg.no_external_stb_test == 0)begin
          `uvm_error("check_phase", $sformatf("%s align_done NEVER asserted! act: %0h", my_name, vif.align_done));
        end else begin

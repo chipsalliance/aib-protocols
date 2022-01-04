@@ -40,8 +40,7 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit              tx_online      = 1;    // default
     bit              tx_stb_en      = `CA_TX_STB_EN;    // default
     bit              tx_stb_rcvr    = 0;    // default
-    //rand bit [7:0]   tx_stb_intv ;
-    bit [7:0]        tx_stb_intv    = `CA_TX_STB_INTV ;
+    bit [15:0]       tx_stb_intv   = `CA_TX_STB_INTV ;
     rand int         bit_shift ;
     int              bits_per_channel = 0;
     bit              stb_error_test;
@@ -52,6 +51,9 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit              shift_stb_bit_pos_en;
     int              max_wd_sel = 0 ; 
     bit              ca_afly1_stb_incorrect_intv_test;
+    bit              ca_tx_online_test;
+    int              req_cnt;
+    bit              ca_stb_rcvr_aft_aln_done_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

@@ -18,8 +18,10 @@
 // Functional Descript: Channel Alignment Testbench File
 //
 // TEST CASE DESCRIPTION
-// By configuring in sailrock_cfg.txt FIFO_DEPTH = 8 and interchannel skew as 0A01, 
-// align_err achieved  in this test case (num of active ch=2)
+// By configuring in sailrock_cfg.txt  FIFO_DEPTH as {8} and interchannel skew as {0A01} 
+// align_err achieved  in this test case (num of active ch = 8).
+// In general, By configuring interchannel skew value more than FIFO_DEPTH align_err
+// can be achieved.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 `ifndef _CA_ALIGN_ERROR_TEST_

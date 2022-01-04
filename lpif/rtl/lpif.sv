@@ -34,7 +34,7 @@ module lpif
     parameter MEM_CACHE_STREAM_ID = 8'h1,
     parameter IO_STREAM_ID = 8'h2,
     parameter ARB_MUX_STREAM_ID = 8'h3,
-    parameter ASYM = 0,
+    parameter PTM_RX_DELAY = 4,
     localparam LPIF_VALID_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 2 : 1),
     localparam LPIF_CRC_WIDTH = ((LPIF_DATA_WIDTH == 128) ? 32 : 16)
     )
@@ -64,6 +64,7 @@ module lpif
    input logic [3:0]                                lp_state_req,
    output logic [3:0]                               pl_state_sts,
    input logic                                      lp_tmstmp,
+   input logic [7:0]                                lp_tmstmp_stream,
    input logic                                      lp_linkerror,
    output logic                                     pl_quiesce,
    input logic                                      lp_flushed_all,
@@ -105,7 +106,6 @@ module lpif
    input logic [1:0]                                lp_pri,
 
    // AIB Interface
-   input logic                                      m_wr_clk,
    output logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0] data_in_f,
    output logic                                     ns_mac_rdy,
    input logic                                      fs_mac_rdy,
@@ -121,9 +121,7 @@ module lpif
    input logic                                      m_gen2_mode,
    input logic                                      i_conf_done,
    input logic [AIB_LANES-1:0]                      power_on_reset,
-   input logic                                      com_clk,
    input logic [(AIB_LANES*AIB_BITS_PER_LANE)-1:0]  dout,
-   input logic                                      rst_n,
 
    // Channel Alignment
    input logic                                      align_done,
@@ -135,10 +133,10 @@ module lpif
    output logic                                     align_fly,
    output logic [7:0]                               tx_stb_wd_sel,
    output logic [39:0]                              tx_stb_bit_sel,
-   output logic [7:0]                               tx_stb_intv,
+   output logic [15:0]                              tx_stb_intv,
    output logic [7:0]                               rx_stb_wd_sel,
    output logic [39:0]                              rx_stb_bit_sel,
-   output logic [7:0]                               rx_stb_intv,
+   output logic [15:0]                              rx_stb_intv,
    output logic [5:0]                               fifo_full_val,
    output logic [5:0]                               fifo_pfull_val,
    output logic [2:0]                               fifo_empty_val,
@@ -167,6 +165,8 @@ module lpif
   logic [1:0]           dstrm_protid;           // From lpif_ctl_i of lpif_ctl.v
   logic [3:0]           dstrm_state;            // From lpif_ctl_i of lpif_ctl.v
   logic                 dstrm_valid;            // From lpif_ctl_i of lpif_ctl.v
+  logic [15:0]          lpif_rx_stb_intv;       // From lpif_txrx_i of lpif_txrx.v
+  logic [15:0]          lpif_tx_stb_intv;       // From lpif_txrx_i of lpif_txrx.v
   logic [3:0]           lsm_dstrm_state;        // From lpif_lsm_i of lpif_lsm.v
   logic [2:0]           lsm_speedmode;          // From lpif_lsm_i of lpif_lsm.v
   logic                 lsm_state_active;       // From lpif_lsm_i of lpif_lsm.v
@@ -323,6 +323,7 @@ module lpif
   /* lpif_txrx AUTO_TEMPLATE (
    .com_clk                (lclk),
    .rst_n                  (reset),
+   .remote_rate_port       (remote_rate[]),
    .init_downstream_credit (8'hff),
    ); */
 
@@ -364,6 +365,8 @@ module lpif
      .ustrm_crc                         (ustrm_crc[LPIF_CRC_WIDTH-1:0]),
      .ustrm_crc_valid                   (ustrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .ustrm_valid                       (ustrm_valid),
+     .lpif_tx_stb_intv                  (lpif_tx_stb_intv[15:0]),
+     .lpif_rx_stb_intv                  (lpif_rx_stb_intv[15:0]),
      .rx_upstream_debug_status          (rx_upstream_debug_status[31:0]),
      .tx_downstream_debug_status        (tx_downstream_debug_status[31:0]),
      // Inputs
@@ -372,7 +375,7 @@ module lpif
      .tx_online                         (tx_online),
      .rx_online                         (rx_online),
      .m_gen2_mode                       (m_gen2_mode),
-     .remote_rate                       (remote_rate[1:0]),
+     .remote_rate_port                  (remote_rate[1:0]),      // Templated
      .delay_x_value                     (delay_x_value[15:0]),
      .delay_y_value                     (delay_y_value[15:0]),
      .delay_z_value                     (delay_z_value[15:0]),
@@ -440,7 +443,8 @@ module lpif
       .LPIF_PIPELINE_STAGES             (LPIF_PIPELINE_STAGES),
       .MEM_CACHE_STREAM_ID              (MEM_CACHE_STREAM_ID),
       .IO_STREAM_ID                     (IO_STREAM_ID),
-      .ARB_MUX_STREAM_ID                (ARB_MUX_STREAM_ID))
+      .ARB_MUX_STREAM_ID                (ARB_MUX_STREAM_ID),
+      .PTM_RX_DELAY                     (PTM_RX_DELAY))
   lpif_ctl_i
     (/*AUTOINST*/
      // Outputs
@@ -485,10 +489,10 @@ module lpif
      .align_fly                         (align_fly),
      .tx_stb_wd_sel                     (tx_stb_wd_sel[7:0]),
      .tx_stb_bit_sel                    (tx_stb_bit_sel[39:0]),
-     .tx_stb_intv                       (tx_stb_intv[7:0]),
+     .tx_stb_intv                       (tx_stb_intv[15:0]),
      .rx_stb_wd_sel                     (rx_stb_wd_sel[7:0]),
      .rx_stb_bit_sel                    (rx_stb_bit_sel[39:0]),
-     .rx_stb_intv                       (rx_stb_intv[7:0]),
+     .rx_stb_intv                       (rx_stb_intv[15:0]),
      .fifo_full_val                     (fifo_full_val[5:0]),
      .fifo_pfull_val                    (fifo_pfull_val[5:0]),
      .fifo_empty_val                    (fifo_empty_val[2:0]),
@@ -515,6 +519,7 @@ module lpif
      .ustrm_crc_valid                   (ustrm_crc_valid[LPIF_VALID_WIDTH-1:0]),
      .ustrm_valid                       (ustrm_valid),
      .lp_tmstmp                         (lp_tmstmp),
+     .lp_tmstmp_stream                  (lp_tmstmp_stream[7:0]),
      .lp_linkerror                      (lp_linkerror),
      .lp_flushed_all                    (lp_flushed_all),
      .lp_rcvd_crc_err                   (lp_rcvd_crc_err),
@@ -537,6 +542,8 @@ module lpif
      .fifo_pfull                        (fifo_pfull),
      .fifo_empty                        (fifo_empty),
      .fifo_pempty                       (fifo_pempty),
+     .lpif_tx_stb_intv                  (lpif_tx_stb_intv[15:0]),
+     .lpif_rx_stb_intv                  (lpif_rx_stb_intv[15:0]),
      .lsm_dstrm_state                   (lsm_dstrm_state[3:0]),
      .lsm_speedmode                     (lsm_speedmode[2:0]),
      .lsm_state_active                  (lsm_state_active));
