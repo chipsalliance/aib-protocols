@@ -45,12 +45,12 @@ localparam CMD_AUTO_WRITE       = 4'h7;
 // Convert mosi to receiver buffer
 ///////////////////////////////////////////////////////////
 logic [31:0] rx_data, tx_data;
-logic [BUF_ADWIDTH+4:0] full_counter;
+logic [BUF_ADWIDTH+4+1:0] full_counter;  //Extra bit is for overflow protection.
 logic  dword0,cmd_valid;
 logic [3:0] cmd;
 logic [16:0] csr_addr_dw;
 
-wire [BUF_ADWIDTH-1:0] wd_count = full_counter[BUF_ADWIDTH+4:5];
+wire [BUF_ADWIDTH:0] wd_count = full_counter[BUF_ADWIDTH+4+1:5];
 wire [4:0] bit_count = full_counter[4:0];
 logic [BUF_ADWIDTH-1:0]  burst_len;
 wire        last_bit  = (&bit_count);

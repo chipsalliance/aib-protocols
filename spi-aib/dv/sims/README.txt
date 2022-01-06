@@ -41,9 +41,11 @@ Test bench(top_tb.sv) description. See user_guide under doc for detail.
 Three test vectors provided 
 spi-aib/dv/test/
 test_cases/
-├── basic_spi_test.inc  --Cover all basic spi commands
-|── fifo2x_test.inc     --Program dut_master1, dut_master2, dut_slave2 all 24 channels and run traffic for pair1 and pair2.
-|── app_reg_test.inc    --Test Application Register Block.
+├── basic_spi_test.inc   --Cover all basic spi commands
+|── fifo2x_test.inc      --Program dut_master1, dut_master2, dut_slave2 all 24 channels and run traffic for pair1 and pair2.
+|── app_reg_test.inc     --Test Application Register Block.
+|── wrap_around_test.inc --Test Application Register Block with 256 auto write and 256 auto read (overflow test)
+|── non_auto_test.inc    --Test equivalent of auto write and auto test with multi-step configuration
 
 Commands to run vcs:
 go to sims directory.

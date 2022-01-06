@@ -42,7 +42,8 @@ wire [31:0] din  = writedata [31:0];
 wire        sel_user_csr = ((addr[12:0] >= 13'h200)  && (addr[12:0] < (13'h200  + 4*CTRL_NUM)));    //0x200-0x600
 wire        sel_status   = ((addr[12:0] >= 13'h1000) && (addr[12:0] < (13'h1000 + 4*STAT_NUM)));   //0x1000-0x1040
 wire        we_user_csr  = we & sel_user_csr;
-
+wire [12:0] addr_minus200= addr - 13'h200;
+wire [12:0] addr_minus1000= addr -13'h1000;
 
 // synchronous process for the read
 always @(negedge avmm_rst_n ,posedge avmm_clk)  begin 
@@ -53,7 +54,7 @@ always @(negedge avmm_rst_n ,posedge avmm_clk)  begin
            readdatavalid <= 1'b0;
    end else   begin
            readdata[31:0] <= rdata_comb[31:0];
-           if (we_user_csr) user_csr[addr[CTRL_ADWIDTH-1:2]] <= din;
+           if (we_user_csr) user_csr[addr_minus200[12:2]] <= din;  
            read_dly <= {read_dly[1:0], read};
            readdatavalid <= read_dly[0] & ~read_dly[1];
    end
@@ -70,9 +71,9 @@ always @ (*)
 begin
    
    if (sel_status) 
-        rdata_comb[31:0] = user_status[addr[4:2]];
+        rdata_comb[31:0] = user_status[addr_minus1000[12:2]];
    else if (sel_user_csr) 
-        rdata_comb[31:0] = user_csr[addr[7:2]];
+        rdata_comb[31:0] = user_csr[addr_minus200[12:2]];
    else 
         rdata_comb = 32'h0;
 end
