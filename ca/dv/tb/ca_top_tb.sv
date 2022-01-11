@@ -79,12 +79,17 @@ module ca_top_tb;
     reg    slv_rd_clk   = 1'b0;
     reg    slv_wr_clk   = 1'b0;
 
+    reg [`MLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_m,   aib_ddelay_out_m,  aib_no_ddelay_out_m;
+    reg [`SLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_s,   aib_ddelay_out_s,  aib_no_ddelay_out_s;
+    reg [`CA_NUM_CHAN-1:0]                s_rx_align_done_d, m_rx_align_done_d, fs_mac_rdy_d;
     // wires
     //--------------------------------------------------------------
     wire   tb_reset_l;
 
     wire   die_a_align_done;
     wire   die_b_align_done;
+    logic [23:0]		master_ver1_tx_transfer_en;
+    logic [23:0]		master_ver1_rx_transfer_en;
 
     wire [`CA_NUM_CHAN-1:0] ms_tx_transfer_en_d, ms_rx_transfer_en_d;
     wire [`CA_NUM_CHAN-1:0] sl_tx_transfer_en_d, sl_rx_transfer_en_d;
@@ -141,6 +146,10 @@ module ca_top_tb;
 
     logic       slave_user_stb;
     logic       master_user_stb;
+    bit [3:0]   slv_gear_4bit, msr_gear_4bit;
+    assign      slv_gear_4bit = `SLV_GEAR;
+    assign      msr_gear_4bit = `MSR_GEAR;
+
 marker_gen marker_gen_im
      (/*AUTOINST*/
       // Outputs
@@ -149,8 +158,8 @@ marker_gen marker_gen_im
       // Inputs
       .clk                              (msr_wr_clk),            // Templated
       .rst_n                            (tb_reset_l),            // Templated
-      .local_rate                       (`MSR_GEAR),             // Templated
-      .remote_rate                      (`SLV_GEAR));            // Templated
+      .local_rate                       (msr_gear_4bit),         // Templated
+      .remote_rate                      (slv_gear_4bit));        // Templated
 
  marker_gen marker_gen_is
      (/*AUTOINST*/
@@ -159,11 +168,9 @@ marker_gen marker_gen_im
       // Inputs
       .clk                              (slv_wr_clk),                        // Templated
       .rst_n                            (tb_reset_l),                        // Templated
-      .local_rate                       (`SLV_GEAR),                         // Templated
-      .remote_rate                      (`MSR_GEAR));                        // Templated
+      .local_rate                       (slv_gear_4bit),         // Templated
+      .remote_rate                      (msr_gear_4bit));        // Templated
 
-   //logic [7:0] strobe_gen_m_interval;
-   //logic [7:0] strobe_gen_s_interval;
 
    // Should be remote side's expected interval, multiplied by Remote Rate / Local Rate.
    assign ca_die_a_tx_tb_in_if.strobe_gen_m_interval = ((ca_s_if.rx_stb_intv * `SLV_GEAR) / `MSR_GEAR);
@@ -195,22 +202,102 @@ assign ca_die_b_tx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
 assign ca_die_a_rx_tb_in_if.user_stb    = ca_die_a_tx_tb_out_if.user_stb;
 assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
 
+  `ifdef MS_AIB_GEN1  // Master ver1 dont have transfer_en Terry Fix ??
+   // RX/TX may appear swapped below, but that is right. tx_transfer_en = ..... rx_transfer_en and vice versa.
+  assign master_ver1_tx_transfer_en [23:0] =
+     {ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_23.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_22.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_21.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_20.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_19.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_18.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_17.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_16.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_15.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_14.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_13.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_12.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_11.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_10.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_9.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_8.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_7.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_6.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_5.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_4.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_3.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_2.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_1.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_0.c3aibadapt.adapt_rxchnl.rxrst_ctl.rx_hrdrst_hssi_rx_transfer_en };
+
+   assign master_ver1_rx_transfer_en [23:0] =
+     {ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_23.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_22.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_21.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_20.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_19.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_18.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_17.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_16.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_15.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_14.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_13.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_12.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_11.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_10.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_9.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_8.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_7.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_6.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_5.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_4.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_3.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_2.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_1.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en ,
+      ca_top_tb.aib_m0.dut.u_aib_top.u_c3aibadapt_wrap_top.u_c3aibadapt_0.c3aibadapt.adapt_txchnl.txrst_ctl.tx_hrdrst_hssi_tx_transfer_en };
+  `endif // MS_AIB_GEN1  // Master ver1 dont have transfer_en Terry Fix ??
+
+
+
 `ifdef CA_YELLOW_OVAL
         assign ca_die_a_rx_tb_in_if.rx_dout  = ca_m_if.rx_dout;
         assign ca_die_b_rx_tb_in_if.rx_dout  = ca_s_if.rx_dout;
         assign ca_m_if.tx_din                = ca_die_a_tx_tb_out_if.tx_din;
         assign ca_s_if.tx_din                = ca_die_b_tx_tb_out_if.tx_din;
-   `ifdef AIB_DATA_DELAY
+ `ifdef AIB_DATA_DELAY
+   `ifdef MS_AIB_GEN1  // Master ver1 dont have transfer_en Terry Fix ??
+       assign ca_die_a_tx_tb_out_if.tx_online         = &{master_ver1_tx_transfer_en[`CA_NUM_CHAN-1:0],master_ver1_rx_transfer_en[`CA_NUM_CHAN-1:0]};
+       assign ca_die_a_rx_tb_in_if.rx_online          = &{master_ver1_tx_transfer_en[`CA_NUM_CHAN-1:0],master_ver1_rx_transfer_en[`CA_NUM_CHAN-1:0]};
+   `else
         assign ca_die_a_tx_tb_out_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
         assign ca_die_a_rx_tb_in_if.rx_online         = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+    `endif
         assign ca_die_b_tx_tb_out_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
         assign ca_die_b_rx_tb_in_if.rx_online         = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
    `else
-        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
-        assign ca_die_a_rx_tb_in_if.rx_online         = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
-        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
-        assign ca_die_b_rx_tb_in_if.rx_online         = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+  `ifdef MS_AIB_GEN1  // Master ver1 dont have transfer_en Terry Fix ??
+       assign ca_die_a_tx_tb_out_if.tx_online         = &{master_ver1_tx_transfer_en[`CA_NUM_CHAN-1:0],master_ver1_rx_transfer_en[`CA_NUM_CHAN-1:0]};
+       assign ca_die_a_rx_tb_in_if.rx_online          = &{master_ver1_tx_transfer_en[`CA_NUM_CHAN-1:0],master_ver1_rx_transfer_en[`CA_NUM_CHAN-1:0]};
+   `else
+       assign ca_die_a_tx_tb_out_if.tx_online         = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
+       assign ca_die_a_rx_tb_in_if.rx_online          = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
    `endif
+        assign ca_die_b_tx_tb_out_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
+        assign ca_die_b_rx_tb_in_if.rx_online         = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+   `endif  
+
+//
+// `ifdef AIB_DATA_DELAY
+//        assign ca_die_a_tx_tb_out_if.tx_online        = &ms_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+//        assign ca_die_a_rx_tb_in_if.rx_online         = &ms_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+//        assign ca_die_b_tx_tb_out_if.tx_online        = &sl_tx_transfer_en_d[`CA_NUM_CHAN-1:0];
+//        assign ca_die_b_rx_tb_in_if.rx_online         = &sl_rx_transfer_en_d[`CA_NUM_CHAN-1:0];
+//   `else
+//        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_m0.ms_tx_transfer_en[`CA_NUM_CHAN-1:0];
+//        assign ca_die_a_rx_tb_in_if.rx_online         = &aib_mac_if_m0.ms_rx_transfer_en[`CA_NUM_CHAN-1:0];  
+//        assign ca_die_a_tx_tb_out_if.tx_online        = &aib_mac_if_s0.sl_tx_transfer_en[`CA_NUM_CHAN-1:0]; 
+//        assign ca_die_b_rx_tb_in_if.rx_online         = &aib_mac_if_s0.sl_rx_transfer_en[`CA_NUM_CHAN-1:0]; 
+//   `endif
         assign ca_die_a_tx_tb_in_if.tx_online         = ca_die_a_tx_tb_out_if.tx_online; 
         assign ca_die_b_tx_tb_in_if.tx_online         = ca_die_b_tx_tb_out_if.tx_online;
         //force0_tx_rx_online will be used in tx_online_test 
@@ -271,6 +358,27 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign ca_s_if.rx_stb_bit_sel 	= ca_die_b_rx_tb_in_if.rx_stb_bit_sel;
         assign ca_s_if.rx_stb_intv	= ca_die_b_rx_tb_in_if.rx_stb_intv;
 
+        assign gen_if.die_a_align_error    = ca_m_if.align_err;
+        assign gen_if.die_b_align_error    = ca_s_if.align_err;
+        assign gen_if.die_a_align_done     = ca_m_if.align_done;
+        assign gen_if.die_b_align_done     = ca_s_if.align_done;
+        assign gen_if.die_a_rx_stb_pos_err = ca_m_if.rx_stb_pos_err;         
+        assign gen_if.die_b_rx_stb_pos_err = ca_s_if.rx_stb_pos_err;         
+        assign gen_if.die_a_rx_stb_pos_coding_err = ca_m_if.rx_stb_pos_coding_err;  
+        assign gen_if.die_b_rx_stb_pos_coding_err = ca_s_if.rx_stb_pos_coding_err; 
+    genvar ch;
+    generate
+       for(ch=0; ch< `TB_DIE_A_NUM_CHANNELS; ch++) begin 
+        assign gen_if.die_a_fifo_full[ch]      = ca_m_if.fifo_full[ch];  
+        assign gen_if.die_b_fifo_full[ch]      = ca_s_if.fifo_full[ch];  
+        assign gen_if.die_a_fifo_pfull[ch]     = ca_m_if.fifo_pfull[ch];  
+        assign gen_if.die_b_fifo_pfull[ch]     = ca_s_if.fifo_pfull[ch];  
+        assign gen_if.die_a_fifo_empty[ch]     = ca_m_if.fifo_empty[ch];  
+        assign gen_if.die_b_fifo_empty[ch]     = ca_s_if.fifo_empty[ch];  
+        assign gen_if.die_a_fifo_pempty[ch]    = ca_m_if.fifo_pempty[ch];  
+        assign gen_if.die_b_fifo_pempty[ch]    = ca_s_if.fifo_pempty[ch];  
+       end
+  endgenerate
 /////////////////////////  DUT instantiation started  ////////////////////////////////////////
 
   ca_if #( .DWIDTH (`TB_DIE_A_BUS_BIT_WIDTH),   .CHNL_NUM (`CA_NUM_CHAN))
@@ -696,10 +804,6 @@ int aib_delay_mem[`MAX_NUM_CHANNELS*2];
          end //for j
      end
 
-    reg [`MLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_m,   aib_ddelay_out_m,  aib_no_ddelay_out_m;
-    reg [`SLLPHY_WIDTH*`CA_NUM_CHAN-1 :0] aib_ddelay_in_s,   aib_ddelay_out_s,  aib_no_ddelay_out_s;
-    reg [`CA_NUM_CHAN-1:0]                s_rx_align_done_d, m_rx_align_done_d, fs_mac_rdy_d;
-///////////////////////////////////////////N////////////////////////////////////////////////
 
 genvar i;
     generate

@@ -1,3 +1,5 @@
+`ifndef _COMMON_SYNCFIFO_SV
+`define _COMMON_SYNCFIFO_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -339,3 +341,5 @@ endmodule // syncfifo //
 //Module:	syncfifo
 //$Id$
 ////////////////////////////////////////////////////////////
+
+`endif

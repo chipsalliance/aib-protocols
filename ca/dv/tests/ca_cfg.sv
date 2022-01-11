@@ -49,6 +49,7 @@ class ca_cfg_c extends uvm_object;
     chan_delay_cfg_c     ca_die_a_delay_cfg[`MAX_NUM_CHANNELS];
  
     bit                  stb_error_test; 
+    bit [15:0]           intv_offset;
     //------------------------------------------
     // constraints
     //------------------------------------------

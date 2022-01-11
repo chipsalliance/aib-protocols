@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_TX_CRED_SV
+`define _COMMON_LL_TX_CRED_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -211,3 +213,4 @@ else if (ASYMMETRIC_CREDIT == 1'b0)
 assign dbg_curr_i_credit = tx_credit_reg;
 
 endmodule // tx_cred //
+`endif

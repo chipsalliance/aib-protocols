@@ -95,6 +95,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     extern function void proc_tx_tb_in_err(ca_data_pkg::ca_seq_item_c  tx_tb_in_item);
     extern function void proc_rx_tb_in_err(ca_data_pkg::ca_seq_item_c  rx_tb_in_item);
+    extern function void proc_rx_tb_in_aln_err(ca_data_pkg::ca_seq_item_c  rx_tb_in_item);
     extern function void generate_stb_beat( );
     
     //------------------------------------------
@@ -267,8 +268,11 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
 
     `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing from RTL: %s --> TB rx_dout \n", rx_tb_in_item.my_name), UVM_MEDIUM);
 
-    if((rx_tb_in_item.stb_pos_err == 1) || (rx_tb_in_item.stb_pos_coding_err == 1) || (rx_tb_in_item.align_err == 1)) begin
+    if((rx_tb_in_item.stb_pos_err == 1) || (rx_tb_in_item.stb_pos_coding_err == 1)) begin
         proc_rx_tb_in_err(rx_tb_in_item);
+    end 
+    else if(rx_tb_in_item.align_err == 1) begin
+        proc_rx_tb_in_aln_err(rx_tb_in_item);
     end
     else begin // non error taffic
         case(rx_tb_in_item.my_name)
@@ -354,10 +358,19 @@ endfunction : proc_tx_tb_in_err
 function void ca_scoreboard_c::proc_rx_tb_in_err( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
 
      if((ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))  begin
-        `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d align_err: %0d",
-            rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err, rx_tb_in_item.align_err));
+        `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d ",
+            rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err));
      end 
 endfunction : proc_rx_tb_in_err
+
+//------------------------------------------
+function void ca_scoreboard_c::proc_rx_tb_in_aln_err( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
+
+     if((ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))  begin
+        `uvm_error("proc_rx_tb_in_aln_err", $sformatf("%s UNEXPECTED ERROR: align_err: %0d",
+            rx_tb_in_item.my_name, rx_tb_in_item.align_err));
+     end 
+endfunction : proc_rx_tb_in_aln_err
 
 //=========================================================================================
 function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_item);
@@ -427,9 +440,16 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
              `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout pass", act_item.my_name, xfer_cnt), UVM_MEDIUM);
              // store act_item for rx rtl out / rx tb in checking
               `ifdef CA_ASYMMETRIC 
-                if(act_item.tx_data_rdy == 1)begin
-                    act_item.databytes = act_item.tx_data_fin;
+                  if(act_item.tx_data_rdy == 1)begin
+                      act_item.databytes = act_item.tx_data_fin;
               `endif
+               `ifndef CA_ASYMMETRIC 
+                 `ifdef GEN1
+                       if((`TB_DIE_A_BUS_BIT_WIDTH == 80) && (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin //HALF RATE
+                           act_item.databytes = act_item.tx_data_bkp;
+                       end
+                 `endif
+               `endif
                     if(act_item.my_name == "DIE_A") begin 
                         `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_B rx_dout", act_item.my_name, xfer_cnt), UVM_MEDIUM);
                         die_b_exp_rx_dout_q.push_back(act_item);    
@@ -509,7 +529,7 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
             xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);
         end
         else begin /// show error 
-            `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", act_item.my_name));
+            `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", src_item.my_name));
             src_item.dprint();
             `uvm_warning("verify_rx_dout", $sformatf("%s ACTUAL beat RX_DOUT data:", act_item.my_name));
             act_item.dprint();

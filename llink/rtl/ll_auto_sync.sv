@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_AUTO_SYNC_SV
+`define _COMMON_LL_AUTO_SYNC_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -42,6 +44,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 
     // Receive Control
     input logic                                 rx_online           ,
+    input logic                                 rx_online_holdoff   ,
     input logic [15:0]                          delay_x_value       ,
     output logic                                rx_online_delay
 
@@ -171,6 +174,7 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
 ////////////////////////////////////////////////////////////
 // Generate delay of RX Online
 
+  logic                 rxon_holdoff_hold_reg;
   logic                 rx_delayed_online;
 
    level_delay level_delay_i_xvalue
@@ -183,13 +187,22 @@ module ll_auto_sync #(parameter MARKER_WIDTH=1, PERSISTENT_MARKER=1'b1, PERSISTE
       .enable				(rx_online),		 // Templated
       .delay_value			(delay_x_value[15:0]));	 // Templated
 
+  always @(posedge clk_wr or negedge rst_wr_n)
+  if (!rst_wr_n)
+    rxon_holdoff_hold_reg <= 1'b1;
+  else if (~rx_delayed_online)
+    rxon_holdoff_hold_reg <= rxon_holdoff_hold_reg;
+  else if (~rx_online_holdoff)
+    rxon_holdoff_hold_reg <= 1'b0;
+
 // Test rst of logic we're good to begin transmission
-  assign rx_online_delay     = DISABLE_RX_AUTOSYNC ? rx_online : rx_delayed_online ;
+  assign rx_online_delay     = DISABLE_RX_AUTOSYNC ? rx_online : (rxon_holdoff_hold_reg ? 1'b0 : rx_delayed_online) ;
 
 // Generate delay of RX Online
 ////////////////////////////////////////////////////////////
 
 endmodule
+`endif
 
 
 

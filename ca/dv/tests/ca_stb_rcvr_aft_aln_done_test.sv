@@ -141,8 +141,16 @@ task ca_stb_rcvr_aft_aln_done_test_c::run_test(uvm_phase phase);
      bit result=0;
 
     `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "START test...", UVM_LOW);
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =   1;
      ca_cfg.ca_die_a_tx_tb_out_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
      ca_cfg.ca_die_b_tx_tb_out_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.ca_stb_rcvr_aft_aln_done_test = 1;
+      // $display("stb_rcvr %0d",ca_cfg.ca_die_a_rx_tb_in_cfg.ca_stb_rcvr_aft_aln_done_test);
+      // $display("stb_rcvr %0d",ca_cfg.ca_die_b_rx_tb_in_cfg.ca_stb_rcvr_aft_aln_done_test);
      ca_cfg.ca_die_a_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_rx_tb_in_cfg.with_external_stb_test   = 1;
@@ -195,7 +203,7 @@ task ca_stb_rcvr_aft_aln_done_test_c::run_test(uvm_phase phase);
      sbd_counts_clear;
 
      `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "before ca_traffic_seq starts ..\n", UVM_LOW);
-      ca_traffic_seq.start(ca_top_env.virt_seqr);
+      ca_vseq.start(ca_top_env.virt_seqr);
       `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "after ca_traffic_seq starts ..\n", UVM_LOW);
 
      `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);

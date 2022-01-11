@@ -121,6 +121,7 @@ module axi_lite_a32_d32_master_top  (
   logic                                          tx_auto_stb_userbit           ;
   logic                                          tx_online_delay               ;
   logic                                          rx_online_delay               ;
+  logic                                          rx_online_holdoff             ;
   logic [   1:   0]                              tx_mrk_userbit                ; // No TX User Marker, so tie off
   logic                                          tx_stb_userbit                ; // No TX User Strobe, so tie off
   assign tx_mrk_userbit                     = '0                                 ;
@@ -131,6 +132,8 @@ module axi_lite_a32_d32_master_top  (
 
 //////////////////////////////////////////////////////////////////
 // Auto Sync
+
+  assign rx_online_holdoff                  = 1'b0                               ;
 
    ll_auto_sync #(.MARKER_WIDTH(2),
                   .PERSISTENT_MARKER(1'b1),
@@ -150,6 +153,7 @@ module axi_lite_a32_d32_master_top  (
       .tx_mrk_userbit                   (tx_mrk_userbit),
       .tx_stb_userbit                   (tx_stb_userbit),
       .rx_online                        (rx_online),
+      .rx_online_holdoff                (rx_online_holdoff),
       .delay_x_value                    (delay_x_value[15:0]));
 
 // Auto Sync

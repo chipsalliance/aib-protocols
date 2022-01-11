@@ -77,12 +77,15 @@ module lpif_txrx_x4_asym2_half_master_top  (
   logic                                          tx_auto_stb_userbit           ;
   logic                                          tx_online_delay               ;
   logic                                          rx_online_delay               ;
+  logic                                          rx_online_holdoff             ;
 
 // Interconnect Wires
 //////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////
 // Auto Sync
+
+  assign rx_online_holdoff                  = 1'b0                               ;
 
    ll_auto_sync #(.MARKER_WIDTH(2),
                   .PERSISTENT_MARKER(1'b1),
@@ -101,6 +104,7 @@ module lpif_txrx_x4_asym2_half_master_top  (
       .tx_mrk_userbit                   (tx_mrk_userbit),
       .tx_stb_userbit                   (tx_stb_userbit),
       .rx_online                        (rx_online),
+      .rx_online_holdoff                (rx_online_holdoff),
       .delay_x_value                    (delay_x_value[15:0]));
 
 // Auto Sync

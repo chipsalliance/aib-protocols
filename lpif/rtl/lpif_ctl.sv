@@ -151,6 +151,7 @@ module lpif_ctl
 
    // misc
 
+   input logic                          tx_mrk_userbit_vld,
    output logic                         ctl_link_up,
    input logic                          lsm_state_active,
    output logic                         ctl_phy_err
@@ -266,7 +267,13 @@ module lpif_ctl
   logic [1:0]                           pl_trdy_cnt, d_pl_trdy_cnt;
 
   generate
-    if (X16_Q2 | X16_H2 | X16_F2 | X16_H1 | X16_F1)
+    if (X16_Q2 | X16_F2 | X16_H1 | X16_F1)
+      always_comb
+        begin
+          d_pl_trdy = (pl_trdy & (|lp_valid)) | (lsm_state_active & tx_mrk_userbit_vld);
+          //          d_pl_trdy = lsm_state_active;
+        end
+    if (X16_H2)
       always_comb
         begin
           d_pl_trdy = lsm_state_active;
@@ -548,7 +555,7 @@ module lpif_ctl
 
   always_comb
     begin
-      for (int i = 0; i < 32; i++)
+      for (int i = 0; i < NUM_DWORDS; i++)
         begin
           lp_data_dw[i] = lp_data[i*32+:32];
           lp_data0_dw[i] = lp_data0[i*32+:32];
@@ -582,7 +589,8 @@ module lpif_ctl
         begin
           d_pl_data = ustrm_data;
           d_pl_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_dvalid;
-          d_pl_crc_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_crc_valid;
+//          d_pl_crc_valid = (ustrm_data_xfr_flg & ustrm_data_xfr_done) | ustrm_crc_valid;
+          d_pl_crc_valid = ustrm_crc_valid;
           d_pl_crc = ustrm_crc;
         end
     if (X8_Q2 | X8_H1)
@@ -764,7 +772,28 @@ module lpif_ctl
         end
   endgenerate
 
-  // pl_lnk_cfg encodings
+// lp_data + lp_crc + lp_crc_valid + lp_valid + lp_stream
+  localparam LP_FIFO_WIDTH = (LPIF_DATA_WIDTH*8)+LPIF_CRC_WIDTH+LPIF_VALID_WIDTH+LPIF_VALID_WIDTH+8;
+  localparam LP_FIFO_DEPTH = 4;
+  localparam FIFO_WIDTH_MSB = LP_FIFO_WIDTH-1;
+  localparam FIFO_COUNT_MSB = 2;
+
+  logic [LP_FIFO_WIDTH-1:0] lp_fifo_wrdata;
+  logic [LP_FIFO_WIDTH-1:0] lp_fifo_rddata;
+  logic [2:0]               lp_fifo_numfilled, lp_fifo_numempty;
+  logic                     lp_fifo_push, lp_fifo_pop, lp_fifo_full, lp_fifo_empty;
+  logic                     lp_fifo_underflow_pulse, lp_fifo_overflow_pulse;
+  logic [LPIF_DATA_WIDTH*8-1:0] lp_fifo_data;
+  logic [LPIF_CRC_WIDTH-1:0]    lp_fifo_crc;
+  logic [LPIF_VALID_WIDTH-1:0]  lp_fifo_crc_valid;
+  logic [LPIF_VALID_WIDTH-1:0]  lp_fifo_valid;
+  logic [7:0]                   lp_fifo_stream;
+
+  logic                         fifo_not_empty;
+  wire                          lp_fifo_not_empty = |lp_fifo_numfilled;
+  logic                         tx_mrk_userbit_vld_del;
+
+   // pl_lnk_cfg encodings
 
   localparam [2:0]
     LNK_CFG_X1	= 3'b000,
@@ -828,21 +857,21 @@ module lpif_ctl
 
   always_comb
     begin : protocol_id
-      case (lp_stream)
+      case (lp_fifo_stream)
         MEM_CACHE_STREAM_ID: protid = PROTID_CACHE;
         IO_STREAM_ID: protid = PROTID_IO;
         ARB_MUX_STREAM_ID: protid = PROTID_ARB_MUX;
         default: MEM_CACHE_STREAM_ID: protid = PROTID_CACHE;
-      endcase // case (lp_stream)
+      endcase // case (lp_fifo_stream)
     end
 
   logic [7:0] pl_stream_int;
   logic [7:0] d_pl_stream;
   assign d_pl_stream = pl_stream_int;
 
-  assign pl_stream_mem_cache_stream_id = (pl_stream == MEM_CACHE_STREAM_ID);
-  assign pl_stream_io_stream_id = (pl_stream == IO_STREAM_ID);
-  assign pl_stream_arb_mux_stream_id = (pl_stream == ARB_MUX_STREAM_ID);
+  wire        pl_stream_mem_cache_stream_id = (pl_stream == MEM_CACHE_STREAM_ID);
+  wire        pl_stream_io_stream_id = (pl_stream == IO_STREAM_ID);
+  wire        pl_stream_arb_mux_stream_id = (pl_stream == ARB_MUX_STREAM_ID);
 
   always_comb
     begin : pl_stream_id
@@ -944,12 +973,6 @@ module lpif_ctl
       if (~rst_n)
         begin
           dstrm_state <= 4'b0;
-          dstrm_protid <= 2'b0;
-          dstrm_data <= {LPIF_DATA_WIDTH*8{1'b0}};
-          dstrm_dvalid <= {LPIF_VALID_WIDTH{1'b0}};
-          dstrm_crc <= {LPIF_CRC_WIDTH{1'b0}};
-          dstrm_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
-          dstrm_valid <= 1'b0;
 
           lp_data0 <= {LPIF_DATA_WIDTH*8{1'b0}};
 
@@ -976,12 +999,6 @@ module lpif_ctl
       else
         begin
           dstrm_state <= lsm_dstrm_state;
-          dstrm_protid <= d_dstrm_protid[1:0];
-          dstrm_data <= d_dstrm_data;
-          dstrm_dvalid <= d_dstrm_dvalid;
-          dstrm_crc <= d_dstrm_crc;
-          dstrm_crc_valid <= d_dstrm_crc_valid;
-          dstrm_valid <= d_dstrm_valid;
 
           lp_data0 <=(lp_irdy & pl_trdy) ? lp_data : lp_data0;
 
@@ -1011,8 +1028,8 @@ module lpif_ctl
 
   genvar   i_ptm_delay;
   generate
-    logic [0:0]   lp_tmstmp_delay        [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
-    logic [7:0]   lp_tmstmp_stream_delay [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
+    logic [0:0] lp_tmstmp_delay        [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
+    logic [7:0] lp_tmstmp_stream_delay [0:PTM_RX_DELAY-1+1]; // PTM_RX_DELAY depth + 1 for the initial value
 
     assign lp_tmstmp_delay        [0] = lp_tmstmp;
     assign lp_tmstmp_stream_delay [0] = lp_tmstmp_stream;
@@ -1023,45 +1040,129 @@ module lpif_ctl
     for (i_ptm_delay = 0; i_ptm_delay < PTM_RX_DELAY; i_ptm_delay++)
       begin : gen_blk_ptm_delay
 
-          always_ff @(posedge lclk or negedge rst_n)
-            begin
-              if (~rst_n)
-                begin
-                  lp_tmstmp_delay        [i_ptm_delay+1] <= 1'b0;
-                  lp_tmstmp_stream_delay [i_ptm_delay+1] <= 8'b0;
-                end
-              else
-                begin
-                  lp_tmstmp_delay        [i_ptm_delay+1] <= lp_tmstmp_delay        [i_ptm_delay];
-                  lp_tmstmp_stream_delay [i_ptm_delay+1] <= lp_tmstmp_stream_delay [i_ptm_delay];
-                end // else: !if(~rst_n)
-            end // always_ff @ (posedge lclk or negedge rst_n)
+        always_ff @(posedge lclk or negedge rst_n)
+          begin
+            if (~rst_n)
+              begin
+                lp_tmstmp_delay        [i_ptm_delay+1] <= 1'b0;
+                lp_tmstmp_stream_delay [i_ptm_delay+1] <= 8'b0;
+              end
+            else
+              begin
+                lp_tmstmp_delay        [i_ptm_delay+1] <= lp_tmstmp_delay        [i_ptm_delay];
+                lp_tmstmp_stream_delay [i_ptm_delay+1] <= lp_tmstmp_stream_delay [i_ptm_delay];
+              end
+          end
       end
   endgenerate
 
 
-// // FIXME, this is a quick hack test for the above logic.
-// // It should be removed once the TB can drive.
-// initial
-// begin
-//   force lp_tmstmp = 1'b0;
-//   force lp_tmstmp_stream = 8'b0;
-//
-//   forever
-//   begin
-//     repeat (100) @(posedge lclk);
-//     force lp_tmstmp = lp_tmstmp + 1;
-//     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
-//     repeat (10) @(posedge lclk);
-//     force lp_tmstmp = lp_tmstmp + 1;
-//     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
-//     repeat (100) @(posedge lclk);
-//   end
-//
-//
-// end
+  // // FIXME, this is a quick hack test for the above logic.
+  // // It should be removed once the TB can drive.
+  // initial
+  // begin
+  //   force lp_tmstmp = 1'b0;
+  //   force lp_tmstmp_stream = 8'b0;
+  //
+  //   forever
+  //   begin
+  //     repeat (100) @(posedge lclk);
+  //     force lp_tmstmp = lp_tmstmp + 1;
+  //     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
+  //     repeat (10) @(posedge lclk);
+  //     force lp_tmstmp = lp_tmstmp + 1;
+  //     force lp_tmstmp_stream = lp_tmstmp_stream + 1;
+  //     repeat (100) @(posedge lclk);
+  //   end
+  //
+  //
+  // end
 
+  assign lp_fifo_wrdata = {lp_data, lp_crc, lp_crc_valid, lp_valid, lp_stream};
+  assign {lp_fifo_data, lp_fifo_crc, lp_fifo_crc_valid, lp_fifo_valid, lp_fifo_stream} =  lp_fifo_rddata;
 
+  assign lp_fifo_push = lp_irdy & |lp_valid & pl_trdy;
+  assign lp_fifo_pop = lp_fifo_not_empty & ((tx_mrk_userbit_vld_del | x16_h2 | x16_q2) | fifo_not_empty);
+
+  always_ff @(posedge lclk or negedge rst_n)
+    begin
+      if (~rst_n)
+        begin
+          fifo_not_empty <= 1'b0;
+          tx_mrk_userbit_vld_del <= 1'b0;
+        end
+      else
+        begin
+          if (lp_fifo_pop & lp_fifo_not_empty)
+            fifo_not_empty <= 1'b1;
+          else if (~lp_fifo_not_empty)
+            fifo_not_empty <= 1'b0;
+          tx_mrk_userbit_vld_del <= tx_mrk_userbit_vld;
+        end
+    end
+
+  /* syncfifo AUTO_TEMPLATE (
+   .FIFO_WIDTH_WID  (LP_FIFO_WIDTH),
+   .FIFO_DEPTH_WID  (LP_FIFO_DEPTH),
+   .clk_core        (lclk),
+   .rst_core_n      (rst_n),
+   .soft_reset      (1'b0),
+   .rddata          (lp_fifo_rddata[]),
+   .numfilled       (lp_fifo_numfilled[]),
+   .numempty        (lp_fifo_numempty[]),
+   .wrdata          (lp_fifo_wrdata[]),
+   .write_push      (lp_fifo_push),
+   .read_pop        (lp_fifo_pop),
+   .full            (lp_fifo_full),
+   .empty           (lp_fifo_empty),
+   .overflow_pulse  (lp_fifo_overflow_pulse),
+   .underflow_pulse (lp_fifo_underflow_pulse),
+   ); */
+
+  syncfifo
+    #(/*AUTOINSTPARAM*/
+      // Parameters
+      .FIFO_WIDTH_WID                   (LP_FIFO_WIDTH),         // Templated
+      .FIFO_DEPTH_WID                   (LP_FIFO_DEPTH))         // Templated
+  syncfifo_i
+    (/*AUTOINST*/
+     // Outputs
+     .rddata                            (lp_fifo_rddata[FIFO_WIDTH_MSB:0]), // Templated
+     .numfilled                         (lp_fifo_numfilled[FIFO_COUNT_MSB:0]), // Templated
+     .numempty                          (lp_fifo_numempty[FIFO_COUNT_MSB:0]), // Templated
+     .full                              (lp_fifo_full),          // Templated
+     .empty                             (lp_fifo_empty),         // Templated
+     .overflow_pulse                    (lp_fifo_overflow_pulse), // Templated
+     .underflow_pulse                   (lp_fifo_underflow_pulse), // Templated
+     // Inputs
+     .clk_core                          (lclk),                  // Templated
+     .rst_core_n                        (rst_n),                 // Templated
+     .soft_reset                        (1'b0),                  // Templated
+     .write_push                        (lp_fifo_push),          // Templated
+     .wrdata                            (lp_fifo_wrdata[FIFO_WIDTH_MSB:0]), // Templated
+     .read_pop                          (lp_fifo_pop));           // Templated
+
+  always_comb
+    begin
+      if (lp_fifo_pop)
+        begin
+          dstrm_valid = 1'b1;
+          dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{lp_fifo_not_empty}};
+          dstrm_data = lp_fifo_data;
+          dstrm_crc_valid = lp_fifo_crc_valid & {LPIF_VALID_WIDTH{lp_fifo_not_empty}};
+          dstrm_crc = lp_fifo_crc;
+          dstrm_protid = protid;
+        end
+      else
+        begin
+          dstrm_valid = 1'b0;
+          dstrm_dvalid = {LPIF_VALID_WIDTH{1'b0}};
+          dstrm_data = {LPIF_VALID_WIDTH*8{1'b0}};
+          dstrm_crc_valid = {LPIF_VALID_WIDTH{1'b0}};
+          dstrm_crc = {LPIF_CRC_WIDTH{1'b0}};
+          dstrm_protid = 2'b0;
+        end
+    end
 
 endmodule // lpif_ctl
 

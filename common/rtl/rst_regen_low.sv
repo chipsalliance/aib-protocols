@@ -1,3 +1,5 @@
+`ifndef _COMMON_RST_REGEN_LOW_SV
+`define _COMMON_RST_REGEN_LOW_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -38,3 +40,5 @@ module rst_regen_low
      );
 
 endmodule // rst_regen_low
+
+`endif

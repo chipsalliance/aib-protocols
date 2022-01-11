@@ -143,7 +143,7 @@ module ca_rx_align
       begin : rx_online_syncs
         if (SYNC_FIFO)
           begin
-            assign rx_online_sync[i] = rx_online;
+            assign rx_online_sync[i] = rx_online_delay_x;
           end
         else
           begin
@@ -511,7 +511,7 @@ module ca_rx_align
                 if (stb_intv_count[i] == 16'h1)
                   begin
                     if (~stb_det[i])
-                      align_err_stb_intv[i] <= align_fly;
+                      align_err_stb_intv[i] <= 1'b1;
                     stb_intv_count[i] <= rx_stb_intv;
                   end
                 else

@@ -1,3 +1,5 @@
+`ifndef _COMMON_STROBE_GEN_W_DELAY_SV
+`define _COMMON_STROBE_GEN_W_DELAY_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -58,3 +60,4 @@ endmodule // strobe_gen_w_delay //
 //$Id$
 ////////////////////////////////////////////////////////////
 
+`endif

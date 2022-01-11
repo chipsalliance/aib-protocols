@@ -1,258 +1,374 @@
 ////1
 //python3 run_all_sim.py copy -d dec_TEST_f2f -cfg sailrock_cfg.txt
 //cd ../dec_TEST_f2f
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 // 
 ////2
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_h2h -cfg sailrock_cfg.txt
 //cd ../dec_TEST_h2h
-//cp ../examples/sailrock_cfg_M2S2_GEN2_H2H.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_H2H_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////3 
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_q2q -cfg sailrock_cfg.txt
 //cd ../dec_TEST_q2q
-//cp ../examples/sailrock_cfg_M2S2_GEN2_Q2Q.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_Q2Q_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c 
 //
 ////4
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_f2q -cfg sailrock_cfg.txt
 //cd ../dec_TEST_f2q
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2Q.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2Q_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c 
 //
 // //5
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_q2f -cfg sailrock_cfg.txt
 //cd ../dec_TEST_q2f
-//cp ../examples/sailrock_cfg_M2S2_GEN2_Q2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_Q2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c 
 //
 ////6 
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_h2f -cfg sailrock_cfg.txt
 //cd ../dec_TEST_h2f
-//cp ../examples/sailrock_cfg_M2S2_GEN2_H2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_H2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////7
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_f2h -cfg sailrock_cfg.txt
 //cd ../dec_TEST_f2h
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2H.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2H_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////8
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_h2q -cfg sailrock_cfg.txt
 //cd ../dec_TEST_h2q
-//cp ../examples/sailrock_cfg_M2S2_GEN2_H2Q.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_H2Q_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c 
 //
 ////9
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_q2h -cfg sailrock_cfg.txt
 //cd ../dec_TEST_q2h
-//cp ../examples/sailrock_cfg_M2S2_GEN2_Q2H.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_Q2H_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////10
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_gen1_f2h -cfg sailrock_cfg.txt
 //cd ../dec_TEST_gen1_f2h
-//cp ../examples/sailrock_cfg_M2S1_GEN1_F2H.txt sailrock_cfg.txt
+//cp ../examples/M2S1_GEN1_F2H_sailrock_cfg.txt sailrock_cfg.txt
 //./run_sim
-
+//
 ////11
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_q2qch24 -cfg sailrock_cfg.txt
 //cd ../dec_TEST_q2qch24
-//cp ../examples/sailrock_cfg_M2S2_GEN2_Q2Q_CH24.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_Q2Q_CH24_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
-
+//
 ////12 
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_RDEN_DLY2  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_RDEN_DLY2
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_rden_dly2.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_rden_dly2_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////13
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_RDEN_DLY4  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_RDEN_DLY4
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_rden_dly4.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_rden_dly4_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////14
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_RDEN_DLY6  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_RDEN_DLY6
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_rden_dly6.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_rden_dly6_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////15
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_FIFO_DEPTH16  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_FIFO_DEPTH16
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_fifo_depth16.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_fifo_depth16_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////16
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_ALIGN_FLY_1_BASIC -cfg sailrock_cfg.txt
 //cd ../dec_TEST_ALIGN_FLY_1_BASIC
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_ALIGN_FLY_1.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_ALIGN_FLY_1_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////17
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_DELAY_0  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_DELAY_0
-//cp ../examples/sailrock_cfg_delay_0.txt sailrock_cfg.txt
+//cp ../examples/delay_0_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////18
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_DELAY_0101  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_DELAY_0101
-//cp ../examples/sailrock_cfg_delay_01010101.txt sailrock_cfg.txt
+//cp ../examples/delay_01010101_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////19
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_DELAY_00015  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_DELAY_00015
-//cp ../examples/sailrock_cfg_delay_00000015.txt sailrock_cfg.txt
+//cp ../examples/delay_00000015_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////20
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_DELAY_15150  -cfg sailrock_cfg.txt
 //cd ../dec_TEST_DELAY_15150
-//cp ../examples/sailrock_cfg_delay_015151515.txt sailrock_cfg.txt
+//cp ../examples/delay_015151515_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////21
 //cd ../scripts/
-//python3 run_all_sim.py copy -d dec_TEST_DELAY_WRNUMFILLED  -cfg sailrock_cfg.txt
-//cd ../dec_TEST_DELAY_WRNUMFILLED
-//cp ../examples/sailrock_cfg_delay_toggle1.txt sailrock_cfg.txt
+//python3 run_all_sim.py copy -d dec_TEST_DELAY_WRNUMFILLED_RD_NUMFILLED  -cfg sailrock_cfg.txt
+//cd ../dec_TEST_DELAY_WRNUMFILLED_RD_NUMFILLED
+//cp ../examples/inter_ch_skew15_32_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
-//
+////
 ////22
 //cd ../scripts/
-//python3 run_all_sim.py copy -d TEST_sync_fifo0 -cfg sailrock_cfg.txt
-//cd ../TEST_sync_fifo0
-//cp ../examples/sailrock_cfg_sync_fifo0.txt sailrock_cfg.txt
+//python3 run_all_sim.py copy -d dec_TEST_sync_fifo0 -cfg sailrock_cfg.txt
+//cd ../dec_TEST_sync_fifo0
+//cp ../examples/sync_fifo0_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
 //
 ////23
 //cd ../scripts/
-//python3 run_all_sim.py copy -d TEST_sync_fifo0_afly1 -cfg sailrock_cfg.txt
-//cd ../TEST_sync_fifo0_afly1
-//cp ../examples/sailrock_cfg_sync_fifo0_afly1.txt sailrock_cfg.txt
+//python3 run_all_sim.py copy -d dec_TEST_sync_fifo0_afly1 -cfg sailrock_cfg.txt
+//cd ../dec_TEST_sync_fifo0_afly1
+//cp ../examples/sync_fifo0_afly1_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_basic_test_c
-//
+/////////////////////////////////////////////////////////////////////////////
 ////24
 //cd ../scripts/
-//python3 run_all_sim.py copy -d TEST_FULL_PFULL -cfg sailrock_cfg.txt
-//cd ../TEST_FULL_PFULL
-//cp ../examples/sailrock_cfg_full_pfull.txt sailrock_cfg.txt
+//python3 run_all_sim.py copy -d dec_TEST_FULL_PFULL -cfg sailrock_cfg.txt
+//cd ../dec_TEST_FULL_PFULL
+//cp ../examples/full_pfull_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_fifo_ptr_values_variations_test_c
-//
+////
 ////25
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_ERROR -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_ERROR
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_strobe_error_test_c 
-//
+
 ////26
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_HLH -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_HLH
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_enb_high_low_high_test_c
 ////27
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_WD_SEL -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_WD_SEL
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_wd_sel_test_c  
 ////28
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_INTV_POS -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_INTV_POS
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_intv_stb_pos_test_c 
 ////29
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_NO_EXTERNAL_STB -cfg sailrock_cfg.txt
 //cd ../dec_TEST_NO_EXTERNAL_STB
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_no_external_strobes_test_c
 ////30
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_FIFO_PTR_VALUE -cfg sailrock_cfg.txt
 //cd ../dec_TEST_FIFO_PTR_VALUE
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_fifo_ptr_values_variations_test_c
 ////31
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_RCVR -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_RCVR
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_rcvr_enb_test_c
 ////32
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_WITH_EXTERNAL_STROBES -cfg sailrock_cfg.txt
 //cd ../dec_TEST_WITH_EXTERNAL_STROBES
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_with_external_strobes_test_c
 ////33
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_ALIGN_ERROR_BY_STB -cfg sailrock_cfg.txt
 //cd ../dec_TEST_ALIGN_ERROR_BY_STB
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_aln_err_by_incorrect_stb_test_c
 ////34
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_AFLY_TOGGLING -cfg sailrock_cfg.txt
 //cd ../dec_TEST_AFLY_TOGGLING
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_afly_toggling_test_c
 ////35
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_ALIGN_FLY1_SOFT_RESET -cfg sailrock_cfg.txt
 //cd ../dec_TEST_ALIGN_FLY1_SOFT_RESET
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F_ALIGN_FLY_1.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_ALIGN_FLY1_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_afly1_stb_incorrect_intv_test_c 
-
+////36
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_RCVR_AFT_ALNDONE -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_RCVR_AFT_ALNDONE
-//cp ../examples/sailrock_cfg_2ch.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_rcvr_aft_aln_done_test_c
-
+////37
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_AFLY1_STB_INTV_VARIATIONS -cfg sailrock_cfg.txt
 //cd ../dec_TEST_AFLY1_STB_INTV_VARIATIONS
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_afly1_stb_intv_variations_test_c
-
+////38
 //cd ../scripts/
 //python3 run_all_sim.py copy -d dec_TEST_STB_WD_SEL_Q2Q -cfg sailrock_cfg.txt
 //cd ../dec_TEST_STB_WD_SEL_Q2Q
-//cp ../examples/sailrock_cfg_M2S2_GEN2_Q2Q_CH24.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_Q2Q_CH24_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_stb_wd_sel_Q2Q_test_c 
-
+////39
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_RDEN_DLY -cfg sailrock_cfg.txt
+//cd ../dec_TEST_RDEN_DLY
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_rden_dly_test_c
+////40
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_DELAY_X -cfg sailrock_cfg.txt
+//cd ../dec_TEST_DELAY_X
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_delay_x_xz_values_test_c
+////41
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_TOGGLE -cfg sailrock_cfg.txt
+//cd ../dec_TEST_TOGGLE
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_toggle_cover_test_c
+////42
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_TRAFFIC_RESET_TRAFFIC -cfg sailrock_cfg.txt
+//cd ../dec_TEST_TRAFFIC_RESET_TRAFFIC
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_traffic_reset_traffic_test_c
+////43
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_RESET_DURING_TRAFFIC -cfg sailrock_cfg.txt
+//cd ../dec_TEST_RESET_DURING_TRAFFIC
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_reset_during_traffic_test_c
+//////44
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_STB_ALL_BITS -cfg sailrock_cfg.txt
+//cd ../dec_TEST_STB_ALL_BITS
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_stb_all_bit_sel_test_c
+////45
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_STB_WD_STB_BIT_SEL -cfg sailrock_cfg.txt
+//cd ../dec_TEST_STB_WD_STB_BIT_SEL
+//cp ../examples/M2S2_GEN2_Q2Q_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_stb_wd_sel_bit_sel_test_c
+////46
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_ALL_WD_39_STB_BIT_SEL -cfg sailrock_cfg.txt
+//cd ../dec_TEST_ALL_WD_39_STB_BIT_SEL
+//cp ../examples/M2S2_GEN2_Q2Q_MARKER_78_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_all_wd_sel_39th_bit_sel_test_c
+//////47
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_WD_SEL_BIT_SEL_COVER_ONES -cfg sailrock_cfg.txt
+//cd ../dec_TEST_WD_SEL_BIT_SEL_COVER_ONES
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_wd_bit_sel_ones_cover_test_c
+////48
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_ALIGN_ERROR_BY_STB_SYNC_FIFO0 -cfg sailrock_cfg.txt
+//cd ../dec_TEST_ALIGN_ERROR_BY_STB_SYNC_FIFO0
+//cp ../examples/sync_fifo0_afly1_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_aln_err_by_incorrect_stb_test_c
+//////////////////////////////////////////////////////////////////////////////////////////////////
+////49
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_GEN1_F2F -cfg sailrock_cfg.txt
+//cd ../dec_TEST_GEN1_F2F
+//cp ../examples/GEN1_f2f_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+////50
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_GEN1_F2H -cfg sailrock_cfg.txt
+//cd ../dec_TEST_GEN1_F2H
+//cp ../examples/GEN1_f2h_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+////51
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_GEN1_H2H -cfg sailrock_cfg.txt
+//cd ../dec_TEST_GEN1_H2H
+//cp ../examples/GEN1_h2h_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+////52
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_GEN1_H2F -cfg sailrock_cfg.txt
+//cd ../dec_TEST_GEN1_H2F
+//cp ../examples/GEN1_h2f_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//53
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_WALKING_1s_STB_INTV_VARIATIONS -cfg sailrock_cfg.txt
+//cd ../dec_TEST_WALKING_1s_STB_INTV_VARIATIONS
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_stb_intv_variations_test_c
+/////////////////////////////////////////////////////////////////////////////////////////////////
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_STB_INTV_FFFF -cfg sailrock_cfg.txt
+//cd ../dec_TEST_STB_INTV_FFFF
+//cp ../examples/stb_intv_ffff_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+///////////////////////////////////////////////////////////////////////////////////////
+////61
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_FULL_PFULL_CH7 -cfg sailrock_cfg.txt
+//cd ../dec_TEST_FULL_PFULL_CH7
+//cp ../examples/full_pfull_ch7_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_fifo_ptr_values_variations_test_c
+////62
+//cd ../scripts/
+//python3 run_all_sim.py copy -d dec_TEST_ALIGN_ERROR_AFLY0_BY_STB -cfg sailrock_cfg.txt
+//cd ../dec_TEST_ALIGN_ERROR_AFLY0_BY_STB
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_aln_err_afly0_by_incorrect_stb_test_c
+//cd ../scripts/
+//thon3 run_all_sim.py copy -d dec_TEST_DELAY_WRNUMFILLED_RD_NUMFILLED_ch0  -cfg sailrock_cfg.txt
+//cd ../dec_TEST_DELAY_WRNUMFILLED_RD_NUMFILLED_ch0
+//cp ../examples/inter_ch_skew15_32_ch0_sailrock_cfg.txt sailrock_cfg.txt
+//make run_all SCENARIO=ca_basic_test_c
+////63
 //cd ../scripts/
 //python3 run_all_sim.py copy -d TEST_TX_ONLINE -cfg sailrock_cfg.txt
 //cd ../TEST_TX_ONLINE
-//cp ../examples/sailrock_cfg_M2S2_GEN2_F2F.txt sailrock_cfg.txt
+//cp ../examples/M2S2_GEN2_F2F_sailrock_cfg.txt sailrock_cfg.txt
 //make run_all SCENARIO=ca_tx_online_test_c

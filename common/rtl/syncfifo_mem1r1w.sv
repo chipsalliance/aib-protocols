@@ -1,3 +1,5 @@
+`ifndef _COMMON_SYNCFIFO_MEM1R1W_SV
+`define _COMMON_SYNCFIFO_MEM1R1W_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -124,3 +126,5 @@ endmodule // syncfifo_mem1r1w //
 //Module:	syncfifo_mem1r1w
 //$Id$
 ////////////////////////////////////////////////////////////
+
+`endif

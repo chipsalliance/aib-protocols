@@ -183,7 +183,8 @@ task ca_tx_tb_out_mon_c::mon_tx();
         end //rst_n=0
         else if((vif.align_done === 1'b1) && (vif.tx_online === 1'b1)) begin // non reset state (clock posedge)
         `ifndef CA_ASYMMETRIC
-            if((`TB_DIE_A_BUS_BIT_WIDTH == 80) && (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin 
+            if((`TB_DIE_A_BUS_BIT_WIDTH == 40) && (`TB_DIE_B_BUS_BIT_WIDTH == 40) || 
+               (`TB_DIE_A_BUS_BIT_WIDTH == 80) && (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin 
                if ((start_tx_din_to_scbd == 1'b1) && ((vif.tx_din == 0) ||
                    (vif.tx_din == onlystb_data))) begin
                   start_tx_din_to_scbd = 1'b0; ///marks end-of actual Tx data from driver

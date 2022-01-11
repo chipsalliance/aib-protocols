@@ -76,6 +76,10 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit              stop_monitor;
     bit              ca_tx_online_test;
     bit              ca_fifo_ptr_values_variations_test;
+    int              very_first_rx_dout_time;
+    int              very_first_align_done_time;
+    bit              ca_stb_rcvr_aft_aln_done_test;
+    bit              align_error_afly0_test;
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

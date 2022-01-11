@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_TRANSMIT_SV
+`define _COMMON_LL_TRANSMIT_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -194,6 +196,7 @@ else if (txfifo_i_underflow_pulse)
 
 
 endmodule
+`endif
 
 
 

@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_RX_CTRL_SV
+`define _COMMON_LL_RX_CTRL_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -78,4 +80,5 @@ assign rxfifo_i_pop          = user_i_ready & user_i_valid;
 assign tx_i_credit          = rxfifo_i_pop;
 
 endmodule
+`endif
 

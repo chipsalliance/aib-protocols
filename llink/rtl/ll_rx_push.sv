@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_RX_PUSH_SV
+`define _COMMON_LL_RX_PUSH_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -38,4 +40,5 @@ assign rxfifo_i_push = rx_i_pushbit & (!rx_i_push_ovrd) & rx_online;
 
 
 endmodule
+`endif
 

@@ -282,7 +282,8 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                             if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
                             if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
                             //$display("inside stb_inject part1.time,i = %0d,stb_bit_pos = %0d",$time,i,stb_bit_pos);
-                                if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                    
+                                if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin //not for 0th channel
                                     idle_data[i] = 0;
                                 end else begin
                                     idle_data[i] = vif.user_stb;
@@ -354,7 +355,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                                     if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
                                     if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
                                         //$display("inside stb_inject part2.time, i = %0d",$time,i);
-                                        if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                        if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin
                                            tx_data[i] = 0;
                                         end else begin
                                            tx_data[i] = vif.user_stb;
@@ -432,7 +433,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                     for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                         if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
                         if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
-                           if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                           if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin
                               idle_data[i] = 0;
                            end else begin
                               idle_data[i] = vif.user_stb;

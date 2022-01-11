@@ -17,10 +17,9 @@
 //
 // Functional Descript: Channel Alignment Testbench File
 // TESTCASE DESCTIPTION
-// afly configured as 1 very first,stb_enb = 0
-// CA driver drives strobes externally except one channel
-// No align_error seen.change afly 1 => 0 
-// check align_error now.
+// align_fly = 0, tx_stb_enb = 0 =>  CA driver drives strobes externally
+// except one channel. align_error will be seen due to missing stb_interval.  
+// check align_error is asserted and then test ended.
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +41,8 @@ class ca_aln_err_afly0_by_incorrect_stb_test_c extends base_ca_test_c;
     bit             shift_stb_intv_complt; 
     bit             update_do_compare; 
     bit             aft_aln_err; 
+    bit             die_a_aln_err; 
+    bit             die_b_aln_err; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -93,66 +94,42 @@ endtask : run_phase
 task ca_aln_err_afly0_by_incorrect_stb_test_c::aln_err_chk();
 
    fork 
-       begin ////
+       begin 
            wait(ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1) ;
-           repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv)@(posedge vif.clk);
+           repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv*2)@(posedge vif.clk);
+           ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly               = 1;
+           ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly               = 1;
            ca_cfg.ca_die_a_tx_tb_out_cfg.shift_stb_intv_enb     = 1;
            ca_cfg.ca_die_b_tx_tb_out_cfg.shift_stb_intv_enb     = 1;
        end
    join_none
 
    fork 
-       begin ////
-           wait(shift_stb_intv_complt == 1) ;
-           repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv*1)@(posedge vif.clk);
-           ca_cfg.ca_die_a_tx_tb_out_cfg.shift_stb_intv_enb =  0;
-           ca_cfg.ca_die_b_tx_tb_out_cfg.shift_stb_intv_enb =  0;
-           repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv*1)@(posedge vif.clk);
-           repeat(10)@(posedge vif.clk);
-           test_end = 1;
+       begin
+            wait(gen_if.die_b_align_error == 1);
+              ca_top_env.ca_scoreboard.do_compare = 0;
+              sbd_counts_clear();
+              die_a_aln_err = 1;
+              `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
        end
    join_none
 
    fork 
        begin
-           wait(ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1) ;
-           repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv)@(posedge vif.clk);
-           repeat(10)@(posedge vif.clk);
-	   if(~((ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 0) && 
-                (ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 0))) begin
-               //uvm_error here
-           end
-           ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 0;
-           ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 0;
-           `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "No align_error seen after some clk with afly1...", UVM_LOW);
-           repeat(70)@(posedge vif.clk);
-           ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 1;
-           ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 1;
-           repeat(17)@(posedge vif.clk);
-           ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 0;
-           ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 0;
-              
-           wait (ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 1);
-           wait (ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 1);
-           ca_top_env.ca_scoreboard.do_compare = 0; 
-           `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
-           aft_aln_err = 1;
+            wait(gen_if.die_b_align_error == 1);
+              ca_top_env.ca_scoreboard.do_compare = 0;
+              sbd_counts_clear();
+              die_b_aln_err = 1;
+              `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
        end
    join_none
 
    fork 
        begin
-           wait (aft_aln_err == 1);
-           `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "after align_error_check......", UVM_LOW);
-           sbd_counts_clear();
-           repeat(10)@(posedge vif.clk);
-           ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 1;
-           ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 1;
-
-           shift_stb_intv_complt =1;
-           disable fork; 
+            wait((die_a_aln_err == 1) && (die_b_aln_err == 1));
+             test_end = 1;
        end
-   join_none
+  join_none
 
 endtask:aln_err_chk
 
@@ -161,11 +138,6 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::run_test(uvm_phase phase);
      bit result = 0;
 
     `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test ::run_phase", "START test...", UVM_LOW);
-// afly configured as 1 very first,stb_enb = 0
-// CA driver drives strobes externally except one channel
-// No align_error seen.change afly 1 => 0 
-// check align_error now.change afly 0 => 1
-// Resume strobes for all channel. check align_done
 
      ca_cfg.ca_die_a_tx_tb_out_cfg.align_error_test  = 1;
      ca_cfg.ca_die_b_tx_tb_out_cfg.align_error_test  = 1;
@@ -177,9 +149,8 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en              = 0;
      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en              = 0;
 
-     ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly               = 1;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly               = 1;
-
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly               = 0;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly               = 0;
 
      ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
      ca_vseq.start(ca_top_env.virt_seqr);
@@ -192,9 +163,7 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::run_test(uvm_phase phase);
      result =  ck_xfer_cnt_b(1);
     `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test ::run_phase", "SCOREBOARD COMPARISON COMPLETED..\n", UVM_LOW);
      repeat(20)@ (posedge vif.clk);
-
-     //test_end = 1; 
-     //`uvm_info("ca_aln_err_afly0_by_incorrect_stb_test ::run_phase", "END test...\n", UVM_LOW);
+     test_end = 1;
 
 endtask : run_test
 ////////////////////////////////////////////////////////////////

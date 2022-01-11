@@ -1,0 +1,41 @@
+//
+interface_0		master		slave		value				comments
+GLOBAL_GEN2_MODE       	1               1		Gen1, Gen2			0=>Gen1. 1=>Gen2	
+GLOBAL_NUM_OF_CHANNEL	8		8		1-24
+GLOBAL_TX_MODE		fifo_4x         fifo_4x         reg,fifo_1x,fifo_2x,fifo_4x	AIB reg mode will be considered as FULL in LLink
+GLOBAL_RX_MODE		fifo_4x         fifo_4x         reg,fifo_1x,fifo_2x,fifo_4x
+GLOBAL_TX_DBI_EN	0               0		0,1				DBI enable
+GLOBAL_RX_DBI_EN	0               0		0,1
+GLOBAL_TX_WMARKER_EN	1               1		0,1				In Asymmtric mode set0.AIB marker must reverse of LLINK USER marker. 
+GLOBAL_TX_MARKER_LOC	78	        78		39,76,77,78,79			must set to 39 in Gen1
+GLOBAL_RX_MARKER_LOC	78	        78		39,76,77,78,79
+//GLOBAL_MAX_INTER_CH_SKEW 10             10
+GLOBAL_INTER_CH_SKEW_S2M 0x0807060504030201
+GLOBAL_INTER_CH_SKEW_M2S 0x0102030405060708
+
+// aib setting
+aib_ver			2		2		1,2
+aib_channel_enable	0x0000ff	0x0000ff	0x000000-0xffffff		enable bit for 24 channels		
+aib_reg_to_reg_channel	0x000000        0x000000	0x000000-0xffffff
+aib_tx_bit_per_channel	40              40		20,40				ver1 must 20, ver2 must 40
+aib_rx_bit_per_channel	40              40		20,40                           ver1 must 20, ver2 must 40
+aib_rx_walign_en	1               1		0,1				word alignment enable
+aib_tx_swap_en		0               0		0,1
+aib_rx_swap_en		0               0		0,1
+aib_tx_rd_delay		6               6		3-6				aib internal delay ( Phy to Phy)
+aib_rx_rd_delay		6               6		3-6				aib internal delay ( Phy to Phy)
+aib_loop_back_mode	0               0		0,1				aib internal loop back
+// Master same as Slave now
+
+ASYMMETRIC_CA           0                                                               /////MUST BE 0 for Symmetric Mode and 1 for Asymmetric
+// Channel Alignment setting
+CA_ALIGN_FLY            0		0		0,1	      	    		cover in block level?(rmove?)	
+CA_SYNC_FIFO 		1		1		0,1	      	    		cover in block level?(rmove?)	
+CA_RDEN_DLY             0               0	        0				cover in block level(rmove?) 
+CA_FIFO_DEPTH		32		32      	8,16,32				Configured by setting CA parameter AD_WIDTH = Log2Depth
+CA_TX_STB_INTV          8'h64           8'h64   	-				Must be set to a value larger than max inter channel skew.
+CA_RX_STB_INTV          8'h64		8'h64          -                               -
+CA_TX_STB_EN            1
+CA_RX_STB_EN            1
+CA_TX_STB_LOC           8
+CA_RX_STB_LOC           8

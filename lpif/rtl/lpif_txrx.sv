@@ -101,6 +101,8 @@ module lpif_txrx
    output logic [15:0]                  lpif_tx_stb_intv,
    output logic [15:0]                  lpif_rx_stb_intv,
 
+   output logic                         tx_mrk_userbit_vld,
+
    output logic [31:0]                  rx_upstream_debug_status,
    output logic [31:0]                  tx_downstream_debug_status
    );
@@ -109,6 +111,8 @@ module lpif_txrx
 
   logic                                 tx_stb_userbit;
   logic [3:0]                           tx_mrk_userbit;
+
+  assign tx_mrk_userbit_vld = |tx_mrk_userbit;
 
   /* TX & RX datapath */
 
@@ -337,8 +341,27 @@ module lpif_txrx
   assign ustrm_state = ustrm_state_tmp[3:0];
   assign ustrm_protid = ustrm_protid_tmp[1:0];
   assign ustrm_dvalid = ustrm_dvalid_tmp[LPIF_VALID_WIDTH-1:0];
-  assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
-  assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
+//  assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
+//  assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
+
+  generate
+    if (X16_Q2)
+      begin
+//        assign ustrm_crc_valid = {ustrm_crc_valid_tmp[3], ustrm_crc_valid_tmp[1]};
+        assign ustrm_crc_valid = {1'b0, ustrm_crc_valid_tmp[1]};
+        assign ustrm_crc = {ustrm_crc_tmp[63:48], ustrm_crc_tmp[31:16]};
+      end
+    else if (X16_H2)
+      begin
+        assign ustrm_crc_valid = ustrm_crc_valid_tmp[1];
+        assign ustrm_crc = ustrm_crc_tmp[31:16];
+      end
+    else
+      begin
+        assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
+        assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
+      end
+  endgenerate
 
   logic [15:0]                    dstrm_state_tmp;
   logic [7:0]                     dstrm_protid_tmp;
@@ -378,7 +401,7 @@ module lpif_txrx
    lpif_txrx_x1_asym1_half_master_top AUTO_TEMPLATE (
    .clk_wr                 (com_clk),
    .rst_wr_n               (rst_n),
-   .init_downstream_credit (8'hff),
+   .init_downstream_credit (8'h00),
    .ustrm_valid            (ustrm_valid_tmp[]),
    .ustrm_state            (ustrm_state_tmp[]),
    .ustrm_protid           (ustrm_protid_tmp[]),
@@ -419,7 +442,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[319:0]),
              .rx_phy1                   (rx_phy1[319:0]),
              .rx_phy2                   (rx_phy2[319:0]),
@@ -462,7 +485,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[159:0]),
              .rx_phy1                   (rx_phy1[159:0]),
              .rx_phy2                   (rx_phy2[159:0]),
@@ -505,7 +528,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .rx_phy2                   (rx_phy2[79:0]),
@@ -546,7 +569,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[319:0]),
              .rx_phy1                   (rx_phy1[319:0]),
              .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
@@ -585,7 +608,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[159:0]),
              .rx_phy1                   (rx_phy1[159:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
@@ -624,7 +647,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
@@ -662,7 +685,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[319:0]),
              .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
              .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
@@ -699,7 +722,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[159:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
@@ -736,7 +759,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
@@ -788,7 +811,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .rx_phy2                   (rx_phy2[79:0]),
@@ -855,7 +878,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[39:0]),
              .rx_phy1                   (rx_phy1[39:0]),
              .rx_phy2                   (rx_phy2[39:0]),
@@ -914,7 +937,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .rx_phy2                   (rx_phy2[79:0]),
@@ -965,7 +988,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[39:0]),
              .rx_phy1                   (rx_phy1[39:0]),
              .rx_phy2                   (rx_phy2[39:0]),
@@ -1012,7 +1035,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .rx_phy2                   (rx_phy2[79:0]),
@@ -1055,7 +1078,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[39:0]),
              .rx_phy1                   (rx_phy1[39:0]),
              .rx_phy2                   (rx_phy2[39:0]),
@@ -1096,7 +1119,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
@@ -1135,7 +1158,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[39:0]),
              .rx_phy1                   (rx_phy1[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
@@ -1174,7 +1197,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[79:0]),
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
@@ -1213,7 +1236,7 @@ module lpif_txrx
              .rst_wr_n                  (rst_n),                 // Templated
              .tx_online                 (tx_online),
              .rx_online                 (rx_online),
-             .init_downstream_credit    (8'hff),                 // Templated
+             .init_downstream_credit    (8'h00),                 // Templated
              .rx_phy0                   (rx_phy0[39:0]),
              .rx_phy1                   (rx_phy1[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
@@ -1333,7 +1356,7 @@ module lpif_txrx
    .user_strobe (tx_stb_userbit),
    .interval    (lpif_tx_stb_intv),
    .delay_value (STB_DELAY),
-   .user_marker (|tx_mrk_userbit[]),
+   .user_marker (tx_mrk_userbit_vld),
    .online      (tx_online),
    ); */
 
@@ -1347,7 +1370,7 @@ module lpif_txrx
        .rst_n                           (rst_n),                 // Templated
        .interval                        (lpif_tx_stb_intv),      // Templated
        .delay_value                     (STB_DELAY),             // Templated
-       .user_marker                     (|tx_mrk_userbit),       // Templated
+       .user_marker                     (tx_mrk_userbit_vld),    // Templated
        .online                          (tx_online));             // Templated
 
   /* marker_gen AUTO_TEMPLATE (

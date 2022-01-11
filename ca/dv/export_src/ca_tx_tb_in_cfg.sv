@@ -55,6 +55,7 @@ class ca_tx_tb_in_cfg_c extends uvm_object;
     bit              ca_toggle_test;
     bit              ca_tx_online_test;
     bit              stop_stb_checker;
+    bit              align_error_afly0_test;
     bit              stop_monitor;
     //------------------------------------------
     // UVM Factory Registration Macro

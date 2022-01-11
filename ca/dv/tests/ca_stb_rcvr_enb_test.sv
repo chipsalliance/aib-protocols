@@ -103,6 +103,10 @@ task ca_stb_rcvr_enb_test_c::run_test(uvm_phase phase);
      bit result=0;
 
     `uvm_info("ca_stb_rcvr_enb_test ::run_phase", "START test...", UVM_LOW);
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =   1;
      ca_cfg.ca_die_a_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_rx_tb_in_cfg.with_external_stb_test   = 1;
