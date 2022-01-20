@@ -172,23 +172,19 @@ module two_axi_mm_chiplet (
    /* axi_mm_a32_d128_packet_master_top AUTO_TEMPLATE ".*_i\(.+\)"  (
       .user_\(.*\)			(user1_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(2'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
+      .tx_mrk_userbit			(2'b2),
+      .tx_stb_userbit			(1'b1),
 
-      .init_ar_credit			(8'd8),
-      .init_aw_credit			(8'd8),
-      .init_w_credit			(8'd128),
-
-      .disable_dbi			(1'b0),
+      .init_ar_credit			(8'd0),
+      .init_aw_credit			(8'd0),
+      .init_w_credit			(8'd0),
 
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (16'd32),
+      .delay_y_value                    (16'd9000),
+      .delay_z_value                    (16'd8000),
 
       .tx_phy\(.\)                      (tx_phy_master_\1[]),
       .rx_phy\(.\)			(rx_phy_master_\1[]),
@@ -219,9 +215,9 @@ module two_axi_mm_chiplet (
       .rst_wr_n				(rst_wr_n),
       .tx_online			(1'b1),			 // Templated
       .rx_online			(1'b1),			 // Templated
-      .init_ar_credit			(8'd8),			 // Templated
-      .init_aw_credit			(8'd8),			 // Templated
-      .init_w_credit			(8'd128),		 // Templated
+      .init_ar_credit			(8'd0),			 // Templated
+      .init_aw_credit			(8'd0),			 // Templated
+      .init_w_credit			(8'd0),			 // Templated
       .rx_phy0				(rx_phy_master_0[79:0]), // Templated
       .user_arid			(user1_arid[3:0]),	 // Templated
       .user_arsize			(user1_arsize[2:0]),	 // Templated
@@ -243,33 +239,27 @@ module two_axi_mm_chiplet (
       .user_rready			(user1_rready),		 // Templated
       .user_bready			(user1_bready),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(2'b0),			 // Templated
-      .tx_stb_userbit			(1'b0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value			(16'd32),		 // Templated
+      .delay_y_value			(16'd9000),		 // Templated
+      .delay_z_value			(16'd8000));		 // Templated
 
 
 
    /* axi_mm_a32_d128_packet_slave_top AUTO_TEMPLATE ".*_i\(.+\)"  (
       .user_\(.*\)			(user2_\1[]),
 
-      .rx_mrk_userbit			(),
-      .rx_stb_userbit			(),
-      .tx_mrk_userbit			(2'b0),  // No Markers
-      .tx_stb_userbit			(1'b0),
+      .tx_mrk_userbit			(2'b2),
+      .tx_stb_userbit			(1'b1),
 
-      .init_b_credit			(8'h8),
-      .init_r_credit			(8'd128),
-
-      .disable_dbi			(1'b0),
+      .init_b_credit			(8'h0),
+      .init_r_credit			(8'd0),
 
       .rx_online			(1'b1), // Tied ONLINE high
       .tx_online			(1'b1), // Tied ONLINE high
 
-      .delay_x_value                    (8'd20),        // Word Alignment Time or 0 in Multi-Channel case (tie RX_ONLINE to CA.ALIGN_DONE)
-      .delay_xz_value                   (8'd24),        // Word Alignment Time + a little
-      .delay_yz_value                   (8'd48),        // Channel Alignment Time + a little
+      .delay_x_value                    (16'd32),
+      .delay_y_value                    (16'd9000),
+      .delay_z_value                    (16'd8000),
 
       .tx_phy\(.\)                      (tx_phy_slave_\1[]),
       .rx_phy\(.\)			(rx_phy_slave_\1[]),
@@ -308,8 +298,8 @@ module two_axi_mm_chiplet (
       .rst_wr_n				(rst_wr_n),
       .tx_online			(1'b1),			 // Templated
       .rx_online			(1'b1),			 // Templated
-      .init_r_credit			(8'd128),		 // Templated
-      .init_b_credit			(8'h8),			 // Templated
+      .init_r_credit			(8'd0),			 // Templated
+      .init_b_credit			(8'h0),			 // Templated
       .rx_phy0				(rx_phy_slave_0[79:0]),	 // Templated
       .user_arready			(user2_arready),	 // Templated
       .user_awready			(user2_awready),	 // Templated
@@ -323,11 +313,9 @@ module two_axi_mm_chiplet (
       .user_bresp			(user2_bresp[1:0]),	 // Templated
       .user_bvalid			(user2_bvalid),		 // Templated
       .m_gen2_mode			(m_gen2_mode),
-      .tx_mrk_userbit			(2'b0),			 // Templated
-      .tx_stb_userbit			(1'b0),			 // Templated
-      .delay_x_value			(8'd20),		 // Templated
-      .delay_xz_value			(8'd24),		 // Templated
-      .delay_yz_value			(8'd48));		 // Templated
+      .delay_x_value			(16'd32),		 // Templated
+      .delay_y_value			(16'd9000),		 // Templated
+      .delay_z_value			(16'd8000));		 // Templated
 
    /* fake_phy AUTO_TEMPLATE ".*_i\(.+\)"  (
       .rx_phy_slave_1			(),

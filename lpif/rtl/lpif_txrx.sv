@@ -136,7 +136,7 @@ module lpif_txrx
   logic [319:0]                         ll_tx_phy15;
 
   generate
-    if (X16_H1 || X16_F1)
+    if (X16_H1 | X16_F1)
       begin
         if (X16_H1)
           begin
@@ -176,10 +176,10 @@ module lpif_txrx
             assign tx_phy14 = {280'b0, ll_tx_phy14[39:0]};
             assign tx_phy15  = {280'b0, ll_tx_phy15[39:0]};
           end
-      end // if (X16_H1 || X16_F1)
-    else if (X8_H1 || X8_H1 || X4_F1)
+      end // if (X16_H1 | X16_F1)
+    else if (X8_H1 | X8_F1)
       begin
-        if (X8_H1 || X8_H1)
+        if (X8_H1)
           begin
             assign tx_phy0  = {240'b0, ll_tx_phy0[79:0]};
             assign tx_phy1  = {240'b0, ll_tx_phy1[79:0]};
@@ -190,7 +190,7 @@ module lpif_txrx
             assign tx_phy6  = {240'b0, ll_tx_phy6[79:0]};
             assign tx_phy7  = {240'b0, ll_tx_phy7[79:0]};
           end
-        else if (X4_F1)
+        else if (X8_F1)
           begin
             assign tx_phy0  = {280'b0, ll_tx_phy0[39:0]};
             assign tx_phy1  = {280'b0, ll_tx_phy1[39:0]};
@@ -210,7 +210,7 @@ module lpif_txrx
         assign tx_phy14 = 320'b0;
         assign tx_phy15 = 320'b0;
       end
-    else if (X16_Q2 || X16_H2 || X16_F2 || X4_H1)
+    else if (X16_Q2 | X16_H2 | X16_F2 | X4_H1 | X4_F1)
       begin
         if (X16_Q2)
           begin
@@ -226,12 +226,19 @@ module lpif_txrx
             assign tx_phy2  = {160'b0, ll_tx_phy2[159:0]};
             assign tx_phy3  = {160'b0, ll_tx_phy3[159:0]};
           end
-        else if (X16_F2 || X4_H1)
+        else if (X16_F2 | X4_H1)
           begin
             assign tx_phy0  = {240'b0, ll_tx_phy0[79:0]};
             assign tx_phy1  = {240'b0, ll_tx_phy1[79:0]};
             assign tx_phy2  = {240'b0, ll_tx_phy2[79:0]};
             assign tx_phy3  = {240'b0, ll_tx_phy3[79:0]};
+          end
+        else if (X4_F1)
+          begin
+            assign tx_phy0  = {280'b0, ll_tx_phy0[39:0]};
+            assign tx_phy1  = {280'b0, ll_tx_phy1[39:0]};
+            assign tx_phy2  = {280'b0, ll_tx_phy2[39:0]};
+            assign tx_phy3  = {280'b0, ll_tx_phy3[39:0]};
           end
         assign tx_phy4  = 320'b0;
         assign tx_phy5  = 320'b0;
@@ -245,27 +252,8 @@ module lpif_txrx
         assign tx_phy13 = 320'b0;
         assign tx_phy14 = 320'b0;
         assign tx_phy15 = 320'b0;
-      end
-    else if (X2_F1)
-      begin
-        assign tx_phy0  = {280'b0, ll_tx_phy0[39:0]};
-        assign tx_phy1  = {280'b0, ll_tx_phy1[39:0]};
-        assign tx_phy2  = {280'b0, ll_tx_phy2[39:0]};
-        assign tx_phy3  = 320'b0;
-        assign tx_phy4  = 320'b0;
-        assign tx_phy5  = 320'b0;
-        assign tx_phy6  = 320'b0;
-        assign tx_phy7  = 320'b0;
-        assign tx_phy8  = 320'b0;
-        assign tx_phy9  = 320'b0;
-        assign tx_phy10 = 320'b0;
-        assign tx_phy11 = 320'b0;
-        assign tx_phy12 = 320'b0;
-        assign tx_phy13 = 320'b0;
-        assign tx_phy14 = 320'b0;
-        assign tx_phy15 = 320'b0;
-      end
-    else if (X8_Q2 || X8_H2 || X8_F2 || X4_F2 || X2_H1 || X1_H1 | X1_F1)
+      end // if (X16_Q2 | X16_H2 | X16_F2 | X4_H1 | X4_F1)
+    else if (X8_Q2 | X8_H2 | X8_F2 | X2_H1 | X1_F1)
       begin
         if (X8_Q2)
           begin
@@ -277,12 +265,12 @@ module lpif_txrx
             assign tx_phy0  = {160'b0, ll_tx_phy0[159:0]};
             assign tx_phy1  = {160'b0, ll_tx_phy1[159:0]};
           end
-        else if (X8_F2 || X4_F2 || X2_H1 || X1_H1)
+        else if (X8_F2 | X2_H1)
           begin
             assign tx_phy0  = {240'b0, ll_tx_phy0[79:0]};
             assign tx_phy1  = {240'b0, ll_tx_phy1[79:0]};
           end
-        else if (X1_F1)
+        else if (X2_F1 | X1_F1)
           begin
             assign tx_phy0  = {280'b0, ll_tx_phy0[39:0]};
             assign tx_phy1  = {280'b0, ll_tx_phy1[39:0]};
@@ -302,7 +290,7 @@ module lpif_txrx
         assign tx_phy14 = 320'b0;
         assign tx_phy15 = 320'b0;
       end
-    else if (X4_Q2 || X4_H2)
+    else if (X4_Q2 | X4_H2 | X4_F2)
       begin
         if (X4_Q2)
           begin
@@ -311,6 +299,10 @@ module lpif_txrx
         else if (X4_H2)
           begin
             assign tx_phy0  = {160'b0, ll_tx_phy0[159:0]};
+          end
+        else if (X4_F2)
+          begin
+            assign tx_phy0  = {240'b0, ll_tx_phy0[79:0]};
           end
         assign tx_phy1  = 320'b0;
         assign tx_phy2  = 320'b0;

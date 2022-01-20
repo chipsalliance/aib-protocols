@@ -7,13 +7,15 @@ cd -
 LOG=$PROJ_DIR/ca/dv/ca_tb.log
 rm -f $LOG
 
+d_cfg=./scripts/sailrock_cfg.txt
+
 if [ -d RUN_SMOKE_TEST ]; then
     rm -rf RUN_SMOKE_TEST
 fi
 cd ./scripts
-python3 run_all_sim.py copy -d RUN_SMOKE_TEST -cfg sailrock_cfg.txt
+python3 run_all_sim.py copy -d RUN_SMOKE_TEST -cfg $d_cfg
 cd ../RUN_SMOKE_TEST
-./run_sim
+./run_sim             ####alternatively      ./run_sim   [ca_basic_test_c]  [nowaves/cov_nowaves/cov_waves]
 cp ca_tb.log ../
 
 ####xrun -f ca_tb.args

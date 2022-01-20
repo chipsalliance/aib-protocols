@@ -37,7 +37,20 @@ class ca_fifo_ptr_values_variations_test_c extends base_ca_test_c;
     //------------------------------------------
     ca_seq_lib_c        ca_vseq;
     ca_traffic_seq_c    ca_traffic_seq;
- 
+    bit [`TB_DIE_A_NUM_CHANNELS-1:0]      fifo_full_die_a;
+    bit [`TB_DIE_A_NUM_CHANNELS-1:0]      fifo_pfull_die_a;
+    bit [`TB_DIE_A_NUM_CHANNELS-1:0]      fifo_empty_die_a;
+    bit [`TB_DIE_A_NUM_CHANNELS-1:0]      fifo_pempty_die_a;
+    bit [`TB_DIE_B_NUM_CHANNELS-1:0]      fifo_full_die_b;
+    bit [`TB_DIE_B_NUM_CHANNELS-1:0]      fifo_pfull_die_b;
+    bit [`TB_DIE_B_NUM_CHANNELS-1:0]      fifo_empty_die_b;
+    bit [`TB_DIE_B_NUM_CHANNELS-1:0]      fifo_pempty_die_b;
+    int  inter_chan_skew_s2m[`TB_DIE_B_NUM_CHANNELS-1:0];
+    int  inter_chan_skew_m2s[`TB_DIE_A_NUM_CHANNELS-1:0];
+    int  m2s_max_val[$]; 
+    int  s2m_max_val[$]; 
+    bit[191:0]  inter_chan_skew_m2s_act; 
+    bit[191:0]  inter_chan_skew_s2m_act; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -52,6 +65,7 @@ class ca_fifo_ptr_values_variations_test_c extends base_ca_test_c;
     extern function void start_of_simulation( );
     extern task run_phase( uvm_phase phase);
     extern task run_test( uvm_phase phase );
+    extern task ck_fifo_outputs();
  
 endclass:ca_fifo_ptr_values_variations_test_c 
 ////////////////////////////////////////////////////////////
@@ -79,6 +93,7 @@ task ca_fifo_ptr_values_variations_test_c::run_phase(uvm_phase phase);
         run_test(phase);
         global_timer(); // and check for error count
         ck_eot(phase);
+        ck_fifo_outputs();
     join
 
 endtask : run_phase
@@ -151,10 +166,88 @@ task ca_fifo_ptr_values_variations_test_c::run_test(uvm_phase phase);
       result =  ck_xfer_cnt_a(1);
       result =  ck_xfer_cnt_b(1);
      `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "SCOREBOARD comparison completed for second set of traffic ..\n", UVM_LOW);
-
+         `ifdef INTER_CHAN_SKEW_M2S
+              inter_chan_skew_m2s_act = `INTER_CHAN_SKEW_M2S;
+          `endif 
+         `ifdef INTER_CHAN_SKEW_S2M
+              inter_chan_skew_s2m_act = `INTER_CHAN_SKEW_S2M;
+          `endif 
+        for(int ch_no=0;ch_no < `TB_DIE_A_NUM_CHANNELS ; ch_no++)begin
+              inter_chan_skew_m2s[ch_no] = inter_chan_skew_m2s_act[(ch_no*8) +: 8];
+              inter_chan_skew_s2m[ch_no] = inter_chan_skew_s2m_act[(ch_no*8) +: 8];
+              m2s_max_val =  inter_chan_skew_m2s.max();
+              s2m_max_val =  inter_chan_skew_s2m.max();
+        end
+        for(int ch_no=0;ch_no < `TB_DIE_A_NUM_CHANNELS ; ch_no++)begin
+             if (inter_chan_skew_m2s[ch_no] != m2s_max_val[0]) begin 
+                if(fifo_full_die_a[ch_no] == 1) begin
+                `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_full is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
+                end else begin
+               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fufo_full is not seen in ch = %0d,DIE_A", ch_no));
+                end    
+                if(fifo_pfull_die_a[ch_no] == 1) begin
+                `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pfull is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
+                end else begin
+               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_pfull is not seen in ch = %0d,DIE_A", ch_no));
+                end    
+                if(fifo_empty_die_a[ch_no] == 1) begin
+                `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_empty is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
+                end else begin
+               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_empty is not seen in ch = %0d,DIE_A", ch_no));
+                end    
+                if(fifo_pempty_die_a[ch_no] == 1) begin
+                `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pempty is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
+                end else begin
+               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_pempty is not seen in ch = %0d,DIE_A", ch_no));
+                end  
+             end //max check  
+         end //for 
+         for(int ch_no=0;ch_no < `TB_DIE_B_NUM_CHANNELS ; ch_no++)begin
+             if (inter_chan_skew_s2m[ch_no] != s2m_max_val[0]) begin 
+                 if(fifo_full_die_b[ch_no] == 1) begin
+                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_full is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);
+                 end else begin
+                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fufo_full is not seen in ch = %0d,DIE_B", ch_no));
+                 end    
+                 if(fifo_pfull_die_b[ch_no] == 1) begin
+                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pfull is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);
+                 end else begin
+                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_pfull is not seen in ch = %0d,DIE_B", ch_no));
+                 end    
+                 if(fifo_empty_die_b[ch_no] == 1) begin
+                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_empty is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);
+                 end else begin
+                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_empty is not seen in ch = %0d,DIE_B", ch_no));
+                 end    
+                 if(fifo_pempty_die_b[ch_no] == 1) begin
+                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pempty is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);
+                 end else begin
+                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_pempty is not seen in ch = %0d,DIE_B", ch_no));
+                 end    
+            end //max    
+         end //for
       test_end = 1; 
      `uvm_info("ca_fifo_ptr_values_variations_test ::run_phase", "END test...\n", UVM_LOW);
 
 endtask : run_test
+//------------------------------------------
+task ca_fifo_ptr_values_variations_test_c::ck_fifo_outputs();
+
+     forever begin
+        repeat(1)@(posedge vif.clk); 
+       for(int ch=0; ch< `TB_DIE_A_NUM_CHANNELS; ch++) begin 
+         if((gen_if.die_a_fifo_full[ch] == 1)  &&  (fifo_full_die_a[ch] == 0))   fifo_full_die_a[ch]   = 1;
+         if((gen_if.die_b_fifo_full[ch] == 1)  &&  (fifo_full_die_b[ch] == 0))   fifo_full_die_b[ch]   = 1;
+         if((gen_if.die_a_fifo_pfull[ch] == 1) &&  (fifo_pfull_die_a[ch] == 0))  fifo_pfull_die_a[ch]  = 1;
+         if((gen_if.die_b_fifo_pfull[ch] == 1) &&  (fifo_pfull_die_b[ch] == 0))  fifo_pfull_die_b[ch]  = 1;
+    
+         if((gen_if.die_a_fifo_empty[ch] == 1)  && (fifo_empty_die_a[ch] == 0))  fifo_empty_die_a[ch]  = 1;
+         if((gen_if.die_b_fifo_empty[ch] == 1)  && (fifo_empty_die_b[ch] == 0))  fifo_empty_die_b[ch]  = 1;
+         if((gen_if.die_a_fifo_pempty[ch] == 1) && (fifo_pempty_die_a[ch] == 0)) fifo_pempty_die_a[ch] = 1;
+         if((gen_if.die_b_fifo_pempty[ch] == 1) && (fifo_pempty_die_b[ch] == 0)) fifo_pempty_die_b[ch] = 1;
+        end
+     end
+
+endtask :ck_fifo_outputs 
 ////////////////////////////////////////////////////////////////
 `endif

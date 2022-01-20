@@ -510,8 +510,7 @@ module ca_rx_align
               else if (first_stb_det[i])
                 if (stb_intv_count[i] == 16'h1)
                   begin
-                    if (~stb_det[i])
-                      align_err_stb_intv[i] <= 1'b1;
+                    align_err_stb_intv[i] <= 1'b1;
                     stb_intv_count[i] <= rx_stb_intv;
                   end
                 else

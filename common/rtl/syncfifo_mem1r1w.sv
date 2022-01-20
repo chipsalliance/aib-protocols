@@ -79,7 +79,7 @@ reg [FIFO_WIDTH_MSB:0] rddata;
 
 `ifdef FPGA
 
-  integer index0;
+  integer unsigned index0;
 
   always @(posedge clk_write)
   begin
@@ -94,7 +94,7 @@ reg [FIFO_WIDTH_MSB:0] rddata;
 
 `else
 
-  integer index0;
+  integer unsigned index0;
 
   always_ff @(posedge clk_write or negedge rst_write_n)
   if (!rst_write_n)

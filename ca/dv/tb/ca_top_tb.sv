@@ -366,17 +366,21 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
         assign gen_if.die_b_rx_stb_pos_err = ca_s_if.rx_stb_pos_err;         
         assign gen_if.die_a_rx_stb_pos_coding_err = ca_m_if.rx_stb_pos_coding_err;  
         assign gen_if.die_b_rx_stb_pos_coding_err = ca_s_if.rx_stb_pos_coding_err; 
+        assign gen_if.die_a_tx_dout         = ca_m_if.tx_dout;
+        assign gen_if.die_b_tx_dout         = ca_s_if.tx_dout;
+        assign gen_if.die_a_tx_online       = ca_m_if.tx_online;
+        assign gen_if.die_b_tx_online       = ca_s_if.tx_online;
     genvar ch;
     generate
        for(ch=0; ch< `TB_DIE_A_NUM_CHANNELS; ch++) begin 
-        assign gen_if.die_a_fifo_full[ch]      = ca_m_if.fifo_full[ch];  
-        assign gen_if.die_b_fifo_full[ch]      = ca_s_if.fifo_full[ch];  
-        assign gen_if.die_a_fifo_pfull[ch]     = ca_m_if.fifo_pfull[ch];  
-        assign gen_if.die_b_fifo_pfull[ch]     = ca_s_if.fifo_pfull[ch];  
-        assign gen_if.die_a_fifo_empty[ch]     = ca_m_if.fifo_empty[ch];  
-        assign gen_if.die_b_fifo_empty[ch]     = ca_s_if.fifo_empty[ch];  
-        assign gen_if.die_a_fifo_pempty[ch]    = ca_m_if.fifo_pempty[ch];  
-        assign gen_if.die_b_fifo_pempty[ch]    = ca_s_if.fifo_pempty[ch];  
+           assign gen_if.die_a_fifo_full[ch]      = ca_m_if.fifo_full[ch];
+           assign gen_if.die_a_fifo_pfull[ch]     = ca_m_if.fifo_pfull[ch];  
+           assign gen_if.die_a_fifo_empty[ch]     = ca_m_if.fifo_empty[ch];  
+           assign gen_if.die_a_fifo_pempty[ch]    = ca_m_if.fifo_pempty[ch];  
+           assign gen_if.die_b_fifo_full[ch]      = ca_s_if.fifo_full[ch];  
+           assign gen_if.die_b_fifo_pfull[ch]     = ca_s_if.fifo_pfull[ch];  
+           assign gen_if.die_b_fifo_empty[ch]     = ca_s_if.fifo_empty[ch];  
+           assign gen_if.die_b_fifo_pempty[ch]    = ca_s_if.fifo_pempty[ch]; 
        end
   endgenerate
 /////////////////////////  DUT instantiation started  ////////////////////////////////////////

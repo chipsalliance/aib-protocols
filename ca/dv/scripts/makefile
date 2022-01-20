@@ -30,7 +30,7 @@ run_all : run_all_xrun
 #-----------------------------------------------------------------------------
 # user specify Files
 #-----------------------------------------------------------------------------
-PROJ_DIR	= ../../..
+#PROJ_DIR	= ../../..
 xcelium_home	= CDNS-1.2
 
 aib_inc_dir     = ${TESTBENCH_DIR}/{top,data,config,params/aib,macro,tests,aib_uvm/aib_test,aib_uvm/aib_master/aib_master_por,aib_uvm/aib_slave/aib_slave_por,aib_uvm/aib_env/,interface,aib2.0}
@@ -219,6 +219,18 @@ gen_cfg : pre_gen_cfg
 SCENARIO=directed_test
 gen_scenario += $(SCENARIO)
 
+WAVES          =ca_shm.tcl
+COV := disable
+
+ifneq (,$(findstring enable,$(COV)))
+   my_cmd_ca_coverage_enable                     = -coverage All
+   my_cmd_ca_assert_enable                       = -assert
+else
+   my_cmd_ca_coverage_enable                     = ""
+   my_cmd_ca_assert_enable                       = ""
+endif
+
+
 sim :
 	./simv +UVM_TESTNAME=${gen_scenario} $(SEEDCMD) +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} -l ./logs/sim_${GEN_ARG}$(UNIQID).log
 
@@ -308,18 +320,19 @@ my_xlm1 = +incdir+${aib_inc_dir} ${TESTBENCH_DIR}/top/abstract_class_pkg.sv ${TE
 my_x = -f ${TOP_FILES}                          \
        -top ca_top_tb                           \
        +UVM_TESTNAME=${gen_scenario}            \
-       -input ../ca_shm.tcl                     \
+       ${my_cmd_ca_coverage_enable}             \
+       ${my_cmd_ca_assert_enable}               \
        -l ca_tb.log
 
-my_xlm2 = ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f  ${PROJ_DIR}/common/dv/p2p_lite.sv  +incdir+${CA_DV_HOME}/tb/ +incdir+${PROJ_DIR}/common/dv/reset_agent/  +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/ ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv +incdir+${CA_DV_HOME}/export_src/ ${CA_DV_HOME}/local_src/ca_gen_if.sv ${CA_DV_HOME}/export_src/ca_data_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_out_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_out_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_in_pkg.svh ${CA_DV_HOME}/export_src/ca_rx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_rx_tb_in_pkg.svh ${CA_DV_HOME}/ca_pkg.svh ${CA_DV_HOME}/tb/ca_DUT_wrapper.sv ${CA_DV_HOME}/tb/ca_top_tb.sv -top ca_top_tb +UVM_TESTNAME=${gen_scenario} -input ../ca_shm.tcl -l ca_tb.log +UVM_VERBOSITY=UVM_LOW
+my_xlm2 = ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f  ${PROJ_DIR}/common/dv/p2p_lite.sv  +incdir+${CA_DV_HOME}/tb/ +incdir+${PROJ_DIR}/common/dv/reset_agent/  +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/ ${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh ${PROJ_DIR}/common/dv/reset_agent/reset_if.sv ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv +incdir+${CA_DV_HOME}/export_src/ ${CA_DV_HOME}/local_src/ca_gen_if.sv ${CA_DV_HOME}/export_src/ca_data_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_out_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_out_pkg.svh ${CA_DV_HOME}/export_src/ca_tx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_tx_tb_in_pkg.svh ${CA_DV_HOME}/export_src/ca_rx_tb_in_if.sv ${CA_DV_HOME}/export_src/ca_rx_tb_in_pkg.svh ${CA_DV_HOME}/ca_pkg.svh ${CA_DV_HOME}/tb/ca_DUT_wrapper.sv ${CA_DV_HOME}/tb/ca_top_tb.sv -top ca_top_tb +UVM_TESTNAME=${gen_scenario} -input ../ca_shm.tcl -l ca_tb.log +UVM_VERBOSITY=UVM_LOW ${my_cmd_ca_coverage_enable} ${my_cmd_ca_assert_enable}
 
 
 ############################# TARGETS #################################
 all_xrun :	gen_cfg
-	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x} -f ${CA_DV_HOME}/../rtl/ca.f
+	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x} -f ${CA_DV_HOME}/../rtl/ca.f   -input ${CA_DV_HOME}/${WAVES}
 
 all_p2p : gen_cfg
-	  xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS} ${my_xlm2} ${my_cmd_p2p_defines}
+	  xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS} ${my_xlm2} ${my_cmd_p2p_defines} -input ${CA_DV_HOME}/${WAVES}
 
 xcomp_aib : check_log_dir
 	xrun -elaborate +define+INCA ${XRUN_UVM} ${XRUN_COMP_ARGS} ${XRUN_COMP_AIB_FILES} -l ./logs/xcompile_aib.log | tee ./logs/xcompile_all.log

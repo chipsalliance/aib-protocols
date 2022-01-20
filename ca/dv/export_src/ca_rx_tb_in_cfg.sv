@@ -30,6 +30,9 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     //------------------------------------------
     // Data Members
     //------------------------------------------
+   bit [15:0] array_delZ[18] = {16'h8000, 16'h4000, 16'h2000, 16'h1000, 16'h0800, 16'h0400, 16'h0200, 16'h0100, 16'h0080, 16'h0040, 16'h0020, 16'h0010, 16'h0008, 16'h0004, 16'h0002, 16'h0001, 16'h10, 16'h100};
+   bit [15:0] array_delX[18] = {16'h8000, 16'h4000, 16'h2000, 16'h1000, 16'h0800, 16'h0400, 16'h0200, 16'h0100, 16'h0080, 16'h0040, 16'h0020, 16'h0010, 16'h0008, 16'h0004, 16'h0002, 16'h0001, 16'h10, 16'h100};
+
     // Whether env analysis components are used:
     bit    agent_active  = UVM_ACTIVE;
     bit    has_func_cov  = 0;
@@ -45,8 +48,10 @@ class ca_rx_tb_in_cfg_c extends uvm_object;
     bit [2:0]        fifo_empty_val   = `CA_FIFO_EMPTY; 
     bit [2:0]        fifo_pempty_val  = `CA_FIFO_PEMPTY;
     bit [2:0]        rden_dly         = `CA_RDEN_DLY; 
-    bit [15:0]       delay_x_value    = 10; 
-    bit [15:0]       delay_xz_value   = 14; 
+    bit [15:0]       delay_x_value   ;    ///// delay rx_online input of 'CA' to rx_align module delayed rx_online
+    bit [15:0]       delay_xz_value  ;    ///// First Tx Strobe (out) generation delay from DUT after tx_online is '1'
+    rand int         shuffle_cnt;
+   
     rand bit [15:0]   rx_stb_intv;
     bit              tx_stb_rcvr;
     rand int         bit_shift;
@@ -123,6 +128,9 @@ endclass: ca_rx_tb_in_cfg_c
 
 function ca_rx_tb_in_cfg_c::new(string name = "ca_rx_tb_in_cfg");
     super.new(name);
+    //this.shuffle_cnt = randomize(shuffle_cnt);
+    this.delay_x_value    = 10; 
+    this.delay_xz_value   = 14; 
 endfunction
  
 //
@@ -144,12 +152,29 @@ function void ca_rx_tb_in_cfg_c::configure( );
     int max_wd_sel = 0 ; 
     int wd_shift   = 0 ;
 
+    for (int lp=0; lp < $urandom_range(shuffle_cnt,1); lp+=1) begin 
+        this.array_delZ.shuffle();
+        this.array_delX.shuffle();
+    end
+
     if(my_name == "DIE_A" )begin
         master_rate = `MSR_GEAR ;
         slave_rate  = `SLV_GEAR ;
+
+        //if (align_fly) begin
+        //delay_x_value   = this.array_delX[0];
+        //delay_xz_value  = this.array_delZ[0];
+        //$display("\n DIE_A:rx_tb_in_cfg NEW: delay_x_value=%h  delay_xz_value=%h at %0t",delay_x_value,delay_xz_value,$time);
+        //end
     end else begin
         master_rate = `SLV_GEAR ;
         slave_rate  = `MSR_GEAR ;
+
+        //if (align_fly) begin
+        //delay_x_value   = this.array_delX[0];
+        //delay_xz_value  = this.array_delZ[0];
+        //$display("\n DIE_B:rx_tb_in_cfg NEW: delay_x_value=%h  delay_xz_value=%h at %0t",delay_x_value,delay_xz_value,$time);
+        //end
     end
 
 //    if(bits_per_channel == 0) `uvm_fatal("configure", $sformatf("bits_per_channel != 0"));

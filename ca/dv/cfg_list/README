@@ -1,0 +1,10 @@
+This generates an array of randomly generated tests that
+target speciifc sequences and randomize other fields.
+
+Run:
+
+python ca_gen_cfg.py
+
+
+
+

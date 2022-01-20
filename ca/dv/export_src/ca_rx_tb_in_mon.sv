@@ -372,7 +372,14 @@ task ca_rx_tb_in_mon_c::mon_rx();
                  endcase
             end // if        
 `else
-           
+           if((onlystb_data != rx_data) && (onlymark_data != rx_data) && (markstb_data != rx_data)) begin
+               if(rx_dout_time_upd == 0) begin
+                  cfg.very_first_rx_dout_time = $time ; 
+                  rx_dout_time_upd = 1;
+                //$display("monitor_displ very_first_align_done_time = %0d,very_first_rx_dout_time = %0d",cfg.very_first_align_done_time,cfg.very_first_rx_dout_time);
+               end
+            end
+ 
            if((rx_compare_start == 1'b1) && ((onlystb_data == rx_data) || (onlymark_data == rx_data) || (markstb_data == rx_data) || (rx_data == 0)) )begin 
                rx_compare_start = 0; ///marks end-of actual Rx data out from DUT
            end else if((rx_compare_start == 1'b0) && ((onlystb_data != rx_data) && (onlymark_data != rx_data) && (markstb_data != rx_data) && (rx_data != 0))) begin

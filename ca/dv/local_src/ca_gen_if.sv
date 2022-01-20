@@ -49,7 +49,13 @@ interface ca_gen_if (input clk, rst_n);
     logic [`TB_DIE_A_NUM_CHANNELS-1:0]                      die_b_fifo_pfull;
     logic [`TB_DIE_A_NUM_CHANNELS-1:0]                      die_b_fifo_empty;
     logic [`TB_DIE_A_NUM_CHANNELS-1:0]                      die_b_fifo_pempty;
+    
+    logic [`TB_DIE_A_BUS_BIT_WIDTH*`TB_DIE_A_NUM_CHANNELS-1:0]    die_a_tx_dout;
+    logic [`TB_DIE_B_BUS_BIT_WIDTH*`TB_DIE_B_NUM_CHANNELS-1:0]    die_b_tx_dout;
 
+    logic                                         die_a_tx_online;
+    logic                                         die_b_tx_online;
+    int                 delay_xz_value; 
     // modports... 
     //---------------------------------------------------
     modport mon (  

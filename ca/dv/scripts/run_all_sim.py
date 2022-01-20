@@ -1,3 +1,4 @@
+#! /p/psg/ctools/python/3.8.10/8/linux64/suse11/bin/python3
 import sys
 import os
 import subprocess
@@ -13,8 +14,8 @@ import fileinput
 default_cfgname = "sailrock_cfg.txt"
 default_changelist = "index_table_list.txt"
 default_runsim_name = "run_sim"
-default_mname = "makefile.default"
-out_mname ="makefile"
+default_mname = "makefile"
+out_mname ="makefile_temp"
 
 def replace_string(list, toRetVal, random_v, rnum):
   r_fields = re.findall(r'\S+', list)
@@ -113,7 +114,7 @@ def writeToFile(cfgfiles, permutations, replaceLine, output_dir, default_cfgname
       Cfgoutfile.write(line_tmpcfg)
     Cfgoutfile.close()
     tmpcfg = cfgfiles.copy()
-    shutil.copy2(out_mname,new_dirname)
+    shutil.copy2(out_mname,new_dirname+"/makefile")
     shutil.copy2(default_runsim_name,new_dirname)
     pcount += 1
 
@@ -138,15 +139,15 @@ p_parser.add_argument("--dirname","-d", required=True,action="store", help = " D
 parser_rand = subparsers.add_parser('random', parents=[p_parser], help='Run Randomization')
 parser_rand.add_argument("--random_num","-rn", required=True, type=int, action="store", help = " Generate how many cases.")
 parser_rand.add_argument("--tcfgfile","-t", required=True, action="store", help = " Target_Config_File")
-parser_rand.add_argument("--cfgfilename","-cfg", type=str, required=False, action="store", default = default_cfgname, help = " Default CFG filename")
+parser_rand.add_argument("--cfgfilename","-cfg", type=str, required=True, action="store", default = default_cfgname, help = " Default CFG filename")
 
 parser_reg = subparsers.add_parser('regression', parents=[p_parser], help='Run Regression')
 parser_reg.add_argument("--random_num","-rn", required=False, type=int, action="store", help = " Generate how many cases.")
 parser_reg.add_argument("--tcfgfile","-t", required=True, action="store", help = " Target_Config_File")
-parser_reg.add_argument("--cfgfilename","-cfg", type=str, required=False, action="store", default = default_cfgname, help = " Default CFG filename")
+parser_reg.add_argument("--cfgfilename","-cfg", type=str, required=True, action="store", default = default_cfgname, help = " Default CFG filename")
 
 parser_copy = subparsers.add_parser('copy', parents=[p_parser], help='Run Same setting as default')
-parser_copy.add_argument("--cfgfilename","-cfg", type=str, required=False, action="store", default = default_cfgname, help = " Default CFG filename")
+parser_copy.add_argument("--cfgfilename","-cfg", type=str, required=True, action="store", default = default_cfgname, help = " Default CFG filename")
 
 parser_good = subparsers.add_parser('good', parents=[p_parser], help='Run all good cfg in config/good directory')
 parser_good.add_argument("--run","-run", required=False, action="store_true", help = " run simulation in each directory.")
@@ -154,6 +155,7 @@ parser_good.add_argument("--run","-run", required=False, action="store_true", he
 args = parser.parse_args()
 
 output_dir = os.path.join(os.getcwd(), '..', args.dirname)
+default_cfgname = os.path.join(os.getcwd(), '..', args.cfgfilename)
 
 ## check directory
 if not os.path.isdir(output_dir):
@@ -166,18 +168,19 @@ else:
   gd = os.makedirs(output_dir,exist_ok=True)
 
   ## change makefile proj_dir
-  three_up = os.path.normpath(os.path.join(os.getcwd(), *([".."] * 4)) )
-  old_string = 'PROJ_DIR	= '
-  new_string = old_string + three_up + '\n'
+  #three_up = os.path.normpath(os.path.join(os.getcwd(), *([".."] * 4)) )
+  #old_string = 'PROJ_DIR	= '
+  #new_string = old_string + three_up + '\n'
   ## print(new_string)
-  shutil.copy2(default_mname,out_mname)
-  ReplaceStringInFile(out_mname,old_string,new_string)
+shutil.copy2(default_mname,out_mname)
+  #ReplaceStringInFile(out_mname,old_string,new_string)
 
 if (args.command == 'copy') :
-  print(' Generate Directory %s' %output_dir)
+  print(' Using config file %s' %default_cfgname)
+  print(' Using output_dir %s' %output_dir)
   gd = os.makedirs(output_dir,exist_ok=True)
-  shutil.copy2(default_cfgname,output_dir)
-  shutil.copy2(out_mname,output_dir)
+  shutil.copy2(default_cfgname,output_dir+"/sailrock_cfg.txt")
+  shutil.copy2(out_mname,output_dir+"/makefile")
   shutil.copy2(default_runsim_name,output_dir)
 
 elif (args.command == 'good') :
@@ -190,7 +193,7 @@ elif (args.command == 'good') :
     print(wndir)
     wngd = os.makedirs(wndir,exist_ok=True)
     shutil.copy2(woldname,wnewname)
-    shutil.copy2(out_mname,wndir)
+    shutil.copy2(out_mname,wndir+"/makefile")
     shutil.copy2(default_runsim_name,wndir)
     if args.run :
       cwdpath = os.getcwd()

@@ -100,6 +100,9 @@ task ca_stb_intv_walking_ones_test_c::run_test(uvm_phase phase);
     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
 
+    ca_cfg.ca_knobs.tx_xfer_cnt_die_a = 65500;
+    ca_cfg.ca_knobs.tx_xfer_cnt_die_b = 65500;
+
     ca_vseq.start(ca_top_env.virt_seqr); //stb_bit_sel = 0 by default 
 
     `uvm_info("ca_stb_intv_walking_ones_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);

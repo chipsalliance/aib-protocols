@@ -3,6 +3,7 @@
 -v ${PROJ_DIR}/lpif/rtl/lpif_lpbk.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_lsm.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_txrx.sv
+-v ${PROJ_DIR}/lpif/rtl/lpif_prot_neg.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_pipeline.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_pipe_stage.sv
 -v ${PROJ_DIR}/lpif/rtl/lpif_txrx_asym/lpif_txrx_x16_asym1_full_master_concat.sv

@@ -1,0 +1,12 @@
+#!/bin/tcsh
+
+
+
+
+## Build TB
+/usr/bin/emacs -batch axi_mm_a32_d128_packet_tb.sv -f verilog-auto -f save-buffer
+perl -pi -e '$VARIABLE=1 if (/AUTOREGINPUT/); $VARIABLE=0 if ($VARIABLE&&/End of automatics/);   s/;/=0;/ if ($VARIABLE);' axi_mm_a32_d128_packet_tb.sv
+
+
+#Run Sim
+xmverilog -f axi_mm_a32_d128_packet_tb.f $*
