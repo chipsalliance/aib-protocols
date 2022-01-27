@@ -24,7 +24,7 @@
 cmd to run test:
 -----------------------------------------------------------------------------------------
 1. Go to directory '/design/ca/dv/scripts'
-2. Use command :   python3 run_all_sim.py copy -d MY_TEST1 -cfg sailrock_cfg.txt
+2. Use command :   python3 run_all_sim.py copy -d MY_TEST1 -cfg  ./scripts/sailrock_cfg.txt
    This will help create a directory named <MY_TEST1> in parallel to 'scripts' under 'dv' folder.
    User may choose any name in place of MY_TEST1
 3. Go to directory '../MY_TEST1'
@@ -47,7 +47,7 @@ cmd to run test:
            ./run_sim  ca_basic_test_c   cov_nowaves
 
 5. Regression mode:
-          #A] Nightly run mode :
+          #]  Nightly run mode :
               [/ca/dv/run_nightly.sh  :: Alter line # 'cov_wave_opt=nowaves'  to  'cov_wave_opt=cov_nowaves' if Coverage is needed Enabled]
               Go to:  /ca/dv/ 
               Run command:  sh ./run_nightly.sh
@@ -57,28 +57,7 @@ cmd to run test:
                      /ca/dv/nightly/test_*/cov_work   {with cov_nowaves option used}
                         {user needs to merge all test_*/cov_work to observe coverage with IMC (cadence)}
                      /ca/dv/nightly_results.txt
-
-          #B] Constrained Random sailrock regression mode :
-              [/ca/dv/run_regression.sh  :: Alter line # 'run_cmd= ... nowaves'  to 'run_cmd= ... cov_nowaves' if Coverage is needed Enabled]
-              Go to:          /ca/dv/cfg_list
-              [Edit file 'ca_gen_cfg.py' line# MAX_SAILROCK_TO_GEN = 999   for max needed sailrock_cfg.txt to be generated] << optional step
-              Run command:    python  ca_gen_cfg.py     {sailrock generation}
-              Results path:   /ca/dv/cfg_list/sailrock_array/   <<<test_nnn_*_sailrock_cfg.txt>>>  where nnn is progressive integer
-
-              To run actual regression:
-              Go to:          /ca/dv/
-              Run command:    
-                              sh ./run_regression.sh
-
-              Results path:
-                             /ca/dv/regression/test_nnn_*/ca_tb.log
-                             /ca/dv/regression/test_nnn_*/cov_work   {with cov_nowaves option used}
-                                {user needs to merge all test_*/cov_work to observe coverage with IMC (cadence)}
-                             /ca/dv/regression_results.txt
-
-
 ------------------------------------------------------------------------------------------
-
 ----------------------
 CA Directory Structure 
 ----------------------
@@ -108,21 +87,21 @@ design
         │   ├── GEN1_f2h_sailrock_cfg.txt
         │   ├── GEN1_h2f_sailrock_cfg.txt
         │   ├── GEN1_h2h_sailrock_cfg.txt
-        │   ├── inter_ch_skew15_32_ch0_sailrock_c
-        │   ├── inter_ch_skew15_32_sailrock_cfg.t
+        │   ├── inter_ch_skew15_32_ch0_sailrock_cfg.txt
+        │   ├── inter_ch_skew15_32_sailrock_cfg.txt
         │   ├── m2s1_f2h_sailrock_cfg.txt
         │   ├── M2S1_GEN1_F2H_sailrock_cfg.txt
-        │   ├── M2S2_GEN2_F2F_align_error_fifo16_
-        │   ├── M2S2_GEN2_F2F_align_error_fifo32_
-        │   ├── M2S2_GEN2_F2F_align_error_fifo8_s
-        │   ├── M2S2_GEN2_F2F_ALIGN_FLY1_sailrock
-        │   ├── M2S2_GEN2_F2F_fifo_depth16_sailro
-        │   ├── M2S2_GEN2_F2F_fifo_depth8_sailroc
-        │   ├── M2S2_GEN2_F2F_no_ch_delay_async_f
-        │   ├── M2S2_GEN2_F2F_no_ch_delay_sync_fi
-        │   ├── M2S2_GEN2_F2F_rden_dly2_sailrock_
-        │   ├── M2S2_GEN2_F2F_rden_dly4_sailrock_
-        │   ├── M2S2_GEN2_F2F_rden_dly6_sailrock_
+        │   ├── M2S2_GEN2_F2F_align_error_fifo16_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_align_error_fifo32_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_align_error_fifo8_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_ALIGN_FLY1_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_fifo_depth16_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_fifo_depth8_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_no_ch_delay_async_fifo_afly_x_xz_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_no_ch_delay_sync_fifo_afly_x_xz_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_rden_dly2_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_rden_dly4_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_F2F_rden_dly6_sailrock_cfg.txt
         │   ├── M2S2_GEN2_F2F_sailrock_cfg.txt
         │   ├── M2S2_GEN2_F2H_sailrock_cfg.txt
         │   ├── M2S2_GEN2_F2Q_sailrock_cfg.txt
@@ -131,8 +110,8 @@ design
         │   ├── M2S2_GEN2_H2Q_sailrock_cfg.txt
         │   ├── M2S2_GEN2_Q2F_sailrock_cfg.txt
         │   ├── M2S2_GEN2_Q2H_sailrock_cfg.txt
-        │   ├── M2S2_GEN2_Q2Q_CH24_sailrock_cfg.t
-        │   ├── M2S2_GEN2_Q2Q_MARKER_78_sailrock_
+        │   ├── M2S2_GEN2_Q2Q_CH24_sailrock_cfg.txt
+        │   ├── M2S2_GEN2_Q2Q_MARKER_78_sailrock_cfg.txt
         │   ├── M2S2_GEN2_Q2Q_sailrock_cfg.txt
         │   ├── num_ch2_sailrock_cfg.txt
         │   ├── sync_fifo0_afly1_sailrock_cfg.txt
@@ -172,12 +151,21 @@ design
         │   │   ├── chan_delay_pkg.svh
         │   │   ├── chan_delay_seq_item.sv
         │   │   └── chan_delay_seqr.sv
+        │   ├── ca_reset_agent
+        │   │   ├── ca_reset_agent.sv
+        │   │   ├── ca_reset_cfg.sv
+        │   │   ├── ca_reset_drv.sv
+        │   │   ├── ca_reset_if.sv
+        │   │   ├── ca_reset_mon.sv
+        │   │   ├── ca_reset_pkg.svh
+        │   │   ├── ca_reset_seq.sv
+        │   │   ├── ca_reset_seq_item.sv
+        │   │   └── ca_reset_seqr.sv
         ├── imc.cmd
         ├── local_src
         │   ├── ca_gen_if.sv
         ├── README   <<< THIS FILE>>>
         ├── run_nightly.sh
-        ├── run_regression.sh
         ├── run_smoke.sh
         ├── scripts
         │   ├── aib_cfg_default.txt
@@ -208,17 +196,17 @@ design
         │   ├── ca_top_tb.sv
         ├── tests
         │   ├── base_ca_test.sv
-        │   ├── ca_afly1_stb_incorrect_intv_test.
-        │   ├── ca_afly1_stb_intv_variations_test
+        │   ├── ca_afly1_stb_incorrect_intv_test.sv
+        │   ├── ca_afly1_stb_intv_variations_test.sv
         │   ├── ca_afly_toggling_test.sv
         │   ├── ca_align_error_test.sv
-        │   ├── ca_all_wd_sel_39th_bit_sel_test.s
-        │   ├── ca_aln_err_afly0_by_incorrect_stb
-        │   ├── ca_aln_err_by_incorrect_stb_test.
+        │   ├── ca_all_wd_sel_39th_bit_sel_test.sv
+        │   ├── ca_aln_err_afly0_by_incorrect_stb_test.sv
+        │   ├── ca_aln_err_by_incorrect_stb_test.sv
         │   ├── ca_basic_test.sv
         │   ├── ca_cfg.sv
         │   ├── ca_delay_x_xz_values_test.sv
-        │   ├── ca_fifo_ptr_values_variations_tes
+        │   ├── ca_fifo_ptr_values_variations_test.sv
         │   ├── ca_knobs.sv
         │   ├── ca_no_external_strobes_test.sv
         │   ├── ca_rden_dly_test.sv

@@ -464,6 +464,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
                         ca_item.cnt_mul   = 1;
                       end
                 end
+                rx_data_fin_prev = rx_data_fin ; 
                 ///////////////////////////////////////////////////////////////////
                 if(rx_data_rdy == 1 ) begin //when '1' indicates monitor is ready to push rx-data-out to SCBD
                     for(int i = 0; i < i_max; i++) begin
@@ -474,7 +475,26 @@ task ca_rx_tb_in_mon_c::mon_rx();
                     rx_data_rdy = 0 ;
                     ca_item.last_tx_cnt_a = cfg.last_tx_cnt_a;
                     ca_item.last_tx_cnt_b = cfg.last_tx_cnt_b;
-                    aport.write(ca_item); // data only
+
+                   case(ca_item.is_stb_beat(stb_item))
+                     2'b01: begin
+                             ca_item.add_stb = 0;
+                             if(onlymark_data != rx_data_fin_prev) begin
+                                 aport.write(ca_item);
+                             end
+                     end
+                     2'b11: begin // both data and stb
+                                // ca_item.add_stb = 1;
+                             if(markstb_data != rx_data_fin_prev) begin
+                                ca_item.add_stb = 1;
+                                aport.write(ca_item);
+                             end
+                     end
+                     default: begin
+                         ca_item.dprint();
+                         `uvm_error("mon_rx_tb_in", $sformatf("BAD case in is_stb_beat for above beat"));
+                     end
+                   endcase
                 end//rx_data_rdy
             end // if rx_data!=x   
 `endif //CA_ASYMMETRIC

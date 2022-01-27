@@ -208,7 +208,12 @@ sub process_command
   close (CMD_FILE);
 
   $PENDING{$QNAME} = 1;
-  $QSUB = sprintf ("qsub -cwd -V -o $CMD_FILE_DIR -e $CMD_FILE_DIR $RESOURCE -N $QNAME $QFILE");
+  
+  ## On BLR servers, we restrict ourselves to the long-reg queue
+  $QUEUE = "";
+  $QUEUE = "-q long-reg.q" if (`date +%Z` =~ "IST");
+  
+  $QSUB = sprintf ("qsub -cwd -V -o $CMD_FILE_DIR $QUEUE -e $CMD_FILE_DIR $RESOURCE -N $QNAME $QFILE");
   printf ("$QSUB\n")    if ( $ECHO) ;
   system ("$QSUB")      if (!$DEBUG);
 

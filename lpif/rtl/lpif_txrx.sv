@@ -253,7 +253,7 @@ module lpif_txrx
         assign tx_phy14 = 320'b0;
         assign tx_phy15 = 320'b0;
       end // if (X16_Q2 | X16_H2 | X16_F2 | X4_H1 | X4_F1)
-    else if (X8_Q2 | X8_H2 | X8_F2 | X2_H1 | X1_F1)
+    else if (X8_Q2 | X8_H2 | X8_F2 | X2_H1 | X2_F1 | X1_F1)
       begin
         if (X8_Q2)
           begin
@@ -322,52 +322,105 @@ module lpif_txrx
       end
   endgenerate
 
-  logic [15:0]                    ustrm_state_tmp;
-  logic [7:0]                     ustrm_protid_tmp;
-  logic [3:0]                     ustrm_dvalid_tmp;
-  logic [63:0]                    ustrm_crc_tmp;
-  logic [3:0]                     ustrm_crc_valid_tmp;
-  logic [3:0]                     ustrm_valid_tmp;
-
-  assign ustrm_valid = ustrm_valid_tmp[0];
-  assign ustrm_state = ustrm_state_tmp[3:0];
-  assign ustrm_protid = ustrm_protid_tmp[1:0];
-  assign ustrm_dvalid = ustrm_dvalid_tmp[LPIF_VALID_WIDTH-1:0];
-//  assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
-//  assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
+  logic [(4*4)-1:0]                     ustrm_state_tmp;
+  logic [(4*2)-1:0]                     ustrm_protid_tmp;
+  logic [(4*1)-1:0]                     ustrm_valid_tmp;
+  logic [(2*2)-1:0]                     ustrm_crc_valid_tmp;
+  logic [(2*2)-1:0]                     ustrm_dvalid_tmp;
+  logic [(2*32)-1:0]                    ustrm_crc_tmp;
 
   generate
-    if (X16_Q2)
+    if (X16_Q2 | X8_Q2 | X4_Q2 | X16_H1 | X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
       begin
-//        assign ustrm_crc_valid = {ustrm_crc_valid_tmp[3], ustrm_crc_valid_tmp[1]};
-        assign ustrm_crc_valid = {1'b0, ustrm_crc_valid_tmp[1]};
-        assign ustrm_crc = {ustrm_crc_tmp[63:48], ustrm_crc_tmp[31:16]};
+
+         assign ustrm_state          = ustrm_state_tmp[3:0]  ;
+         assign ustrm_protid         = ustrm_protid_tmp[1:0] ;
+         assign ustrm_valid          = ustrm_valid_tmp[0]    ;
+
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3] , ustrm_crc_valid_tmp[1]} ; 
+         assign ustrm_crc            = { ustrm_crc_tmp[63:48]   , ustrm_crc_tmp[31:16]  } ; 
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[2]    , ustrm_dvalid_tmp[0]   } ; 
+
       end
-    else if (X16_H2)
+    else if (X16_H2 | X8_H2 | X4_H2 | X16_F1 | X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
       begin
-        assign ustrm_crc_valid = ustrm_crc_valid_tmp[1];
-        assign ustrm_crc = ustrm_crc_tmp[31:16];
+
+         assign ustrm_state          = ustrm_state_tmp[3:0]    ; 
+         assign ustrm_protid         = ustrm_protid_tmp[1:0]   ; 
+         assign ustrm_valid          = ustrm_valid_tmp[0]      ;
+
+         assign ustrm_crc_valid      = ustrm_crc_valid_tmp[1]  ;
+         assign ustrm_crc            = ustrm_crc_tmp[31:16]    ;
+         assign ustrm_dvalid         = ustrm_dvalid_tmp[0]     ;
+
       end
-    else
+    else if (X16_F2 | X8_F2 | X4_F2) // Gen2 F
       begin
-        assign ustrm_crc_valid = ustrm_crc_valid_tmp[LPIF_VALID_WIDTH-1:0];
-        assign ustrm_crc = ustrm_crc_tmp[LPIF_CRC_WIDTH-1:0];
+
+         assign ustrm_state          = ustrm_state_tmp[3:0]    ;
+         assign ustrm_protid         = ustrm_protid_tmp[1:0]   ;
+         assign ustrm_valid          = ustrm_valid_tmp[0]      ;
+ 
+         assign ustrm_crc_valid      = ustrm_crc_valid_tmp[0]  ;
+         assign ustrm_crc            = ustrm_crc_tmp[15:0]     ;
+         assign ustrm_dvalid         = ustrm_dvalid_tmp[0]     ;
+
       end
   endgenerate
 
-  logic [15:0]                    dstrm_state_tmp;
-  logic [7:0]                     dstrm_protid_tmp;
-  logic [3:0]                     dstrm_dvalid_tmp;
-  logic [63:0]                    dstrm_crc_tmp;
-  logic [3:0]                     dstrm_crc_valid_tmp;
-  logic [3:0]                     dstrm_valid_tmp;
+  logic [(4*4)-1:0]                     dstrm_state_tmp;
+  logic [(4*2)-1:0]                     dstrm_protid_tmp;
+  logic [(4*1)-1:0]                     dstrm_valid_tmp;
+  logic [(2*2)-1:0]                     dstrm_crc_valid_tmp;
+  logic [(2*2)-1:0]                     dstrm_dvalid_tmp;
+  logic [(2*32)-1:0]                    dstrm_crc_tmp;
 
-  assign dstrm_state_tmp = {4{dstrm_state}};
-  assign dstrm_protid_tmp = {4{dstrm_protid}};
-  assign dstrm_dvalid_tmp = {4{dstrm_dvalid}};
-  assign dstrm_crc_tmp = {4{dstrm_crc}};
-  assign dstrm_crc_valid_tmp = {4{dstrm_crc_valid}};
-  assign dstrm_valid_tmp = {4{dstrm_valid}};
+  generate
+    if (X16_Q2 | X8_Q2 | X4_Q2 | X16_H1 | X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
+      begin
+
+         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
+         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
+         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
+
+         assign dstrm_dvalid_tmp     = {2{dstrm_dvalid}}   ;
+         assign dstrm_crc_valid_tmp  = {2{dstrm_crc_valid[0], 1'b0}} ; // FIXME, I think this needs to be 1 bit
+         assign dstrm_crc_tmp        = {2{dstrm_crc}} ;
+
+      end
+    else if (X16_H2 | X8_H2 | X4_H2 | X16_F1 | X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
+      begin
+
+         // These values are upsized to prevent undriven and unused signals in the _tmp
+         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
+         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
+         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
+
+         assign dstrm_dvalid_tmp     = {2{dstrm_dvalid}}   ;
+         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0], 1'b0} ; // FIXME, I think this needs to be 1 bit
+         assign dstrm_crc_tmp        = {4{dstrm_crc}} ;
+
+      end
+    else if (X16_F2 | X8_F2 | X4_F2) // Gen2 F
+      begin
+
+         // These values are upsized to prevent undriven and unused signals in the _tmp
+         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
+         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
+         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
+
+         assign dstrm_dvalid_tmp     = {4{dstrm_dvalid}}   ;
+         assign dstrm_crc_valid_tmp  = {4{dstrm_crc_valid[0]}} ; // FIXME, I think this needs to be 1 bit
+         assign dstrm_crc_tmp        = {4{dstrm_crc}}       ;
+
+      end
+  endgenerate
+
+
+
+
+
+
 
   // asymmetric datapaths
 
@@ -1337,9 +1390,10 @@ module lpif_txrx
 
   always_comb
     begin
-      lpif_tx_stb_intv = BASE_STB_INTV;
-//      lpif_rx_stb_intv = BASE_STB_INTV * remote_rate / local_rate;
-      lpif_rx_stb_intv = (BASE_STB_INTV << remote_rate[3:1]) >> local_rate[3:1];
+       lpif_rx_stb_intv = BASE_STB_INTV;
+       
+       // The below is implementing lpif_tx_stb_intv = BASE_STB_INTV * remote_rate / local_rate;
+       lpif_tx_stb_intv = (BASE_STB_INTV << remote_rate[3:1]) >> local_rate[3:1];
     end
 
   /* strobe_gen_w_delay AUTO_TEMPLATE (

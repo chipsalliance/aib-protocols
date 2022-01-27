@@ -173,8 +173,8 @@ marker_gen marker_gen_im
 
 
    // Should be remote side's expected interval, multiplied by Remote Rate / Local Rate.
-   assign ca_die_a_tx_tb_in_if.strobe_gen_m_interval = ((ca_s_if.rx_stb_intv * `SLV_GEAR) / `MSR_GEAR);
-   assign ca_die_b_tx_tb_in_if.strobe_gen_s_interval = ((ca_m_if.rx_stb_intv * `MSR_GEAR) / `SLV_GEAR);
+   assign ca_die_a_tx_tb_in_if.strobe_gen_m_interval = ((ca_die_b_rx_tb_in_if.rx_stb_intv * `SLV_GEAR) / `MSR_GEAR);
+   assign ca_die_b_tx_tb_in_if.strobe_gen_s_interval = ((ca_die_a_rx_tb_in_if.rx_stb_intv * `MSR_GEAR) / `SLV_GEAR);
 
    strobe_gen strobe_gen_im (
       .clk      (msr_wr_clk),
@@ -344,7 +344,7 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
    
 	assign ca_m_if.tx_stb_wd_sel	= ca_die_a_tx_tb_out_if.tx_stb_wd_sel;
 	assign ca_m_if.tx_stb_bit_sel 	= ca_die_a_tx_tb_out_if.tx_stb_bit_sel; 
-	assign ca_m_if.tx_stb_intv 	= ca_die_a_tx_tb_out_if.tx_stb_intv;
+	assign ca_m_if.tx_stb_intv 	= ca_die_a_tx_tb_in_if.strobe_gen_m_interval;
 
         assign ca_m_if.rx_stb_wd_sel  	= ca_die_a_rx_tb_in_if.rx_stb_wd_sel;
         assign ca_m_if.rx_stb_bit_sel 	= ca_die_a_rx_tb_in_if.rx_stb_bit_sel;
@@ -352,7 +352,7 @@ assign ca_die_b_rx_tb_in_if.user_stb    = ca_die_b_tx_tb_out_if.user_stb;
 
         assign ca_s_if.tx_stb_wd_sel  	= ca_die_b_tx_tb_out_if.tx_stb_wd_sel; 
         assign ca_s_if.tx_stb_bit_sel 	= ca_die_b_tx_tb_out_if.tx_stb_bit_sel;
-        assign ca_s_if.tx_stb_intv	= ca_die_b_tx_tb_out_if.tx_stb_intv;
+	assign ca_s_if.tx_stb_intv 	= ca_die_b_tx_tb_in_if.strobe_gen_s_interval;
 
         assign ca_s_if.rx_stb_wd_sel	= ca_die_b_rx_tb_in_if.rx_stb_wd_sel;
         assign ca_s_if.rx_stb_bit_sel 	= ca_die_b_rx_tb_in_if.rx_stb_bit_sel;
@@ -620,7 +620,7 @@ endgenerate
 
     chan_delay_if #(.BUS_BIT_WIDTH (`TB_DIE_A_BUS_BIT_WIDTH)) chan_delay_die_a_if (.clk(clk_die_a), .rst_n(tb_reset_l));
     chan_delay_if #(.BUS_BIT_WIDTH (`TB_DIE_B_BUS_BIT_WIDTH)) chan_delay_die_b_if (.clk(clk_die_b), .rst_n(tb_reset_l));
-    reset_if   reset_if_0 (.clk(clk_die_a));
+    ca_reset_if   reset_if_0 (.clk(clk_die_a));
     ca_gen_if  gen_if(.clk(clk_die_a), .rst_n(tb_reset_l));
     assign gen_if.aib_ready = aib_ready;
 
@@ -639,7 +639,7 @@ endgenerate
         uvm_config_db #(virtual ca_tx_tb_in_if #(.BUS_BIT_WIDTH(`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)))::set( null, "*.ca_die_b_tx_tb_in_agent.*", "ca_tx_tb_in_vif", ca_die_b_tx_tb_in_if);
         uvm_config_db #(virtual ca_rx_tb_in_if #(.BUS_BIT_WIDTH(`TB_DIE_B_BUS_BIT_WIDTH), .NUM_CHANNELS(`TB_DIE_B_NUM_CHANNELS)))::set( null, "*.ca_die_b_rx_tb_in_agent.*", "ca_rx_tb_in_vif", ca_die_b_rx_tb_in_if);
         // reset
-        uvm_config_db #(virtual reset_if)::set( null, "*", "reset_vif", reset_if_0);
+        uvm_config_db #(virtual ca_reset_if)::set( null, "*", "reset_vif", reset_if_0);
         uvm_config_db #(virtual ca_gen_if)::set( null, "*", "gen_vif", gen_if);
 
         for(int j = 0; j < `MAX_NUM_CHANNELS; j++) begin

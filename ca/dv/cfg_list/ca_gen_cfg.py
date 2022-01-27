@@ -31,24 +31,24 @@ def is_config_illegal(target_param, local_config):
                                         local_config["tx_marker_loc"] % 40 == 39):
         illegal_config = True
         if ENABLE_DISPLAY_WHY_ILLEGAL:
-            print "tx strobe or tx marker overlaps with DBI"
+            print ("tx strobe or tx marker overlaps with DBI")
     if local_config["rx_dbi"] == 1 and (local_config["rx_strobe_loc"] % 40 == 38 or
                                         local_config["rx_strobe_loc"] % 40 == 39 or
                                         local_config["rx_marker_loc"] % 40 == 38 or
                                         local_config["rx_marker_loc"] % 40 == 39):
         illegal_config = True
         if ENABLE_DISPLAY_WHY_ILLEGAL:
-            print "rx strobe or rx marker overlaps with DBI"
+            print ("rx strobe or rx marker overlaps with DBI")
 
     # This is slightly overconstrained. For Gen2, this could be %80, but %40 is good enough and the odds of a conflict are rare already
     if local_config["tx_strobe_loc"] % 40 == local_config["tx_marker_loc"] % 40 :
         illegal_config = True
         if ENABLE_DISPLAY_WHY_ILLEGAL:
-            print "tx strobe overlaps with tx marker"
+            print ("tx strobe overlaps with tx marker")
     if local_config["rx_strobe_loc"] % 40 == local_config["rx_marker_loc"] % 40 :
         illegal_config = True
         if ENABLE_DISPLAY_WHY_ILLEGAL:
-            print "rx strobe overlaps with rx marker"
+            print ("rx strobe overlaps with rx marker")
 
    
     ### If we are focusing on marker, make sure we are a configuration that uses markers
@@ -63,11 +63,11 @@ def is_config_illegal(target_param, local_config):
         elif local_config['testbench'] == "tb_mf1_sf2.1":
             illegal_config = True
             if ENABLE_DISPLAY_WHY_ILLEGAL:
-                print "targeting to test markers in symm_mf1_sf2.1 TB which doesn't use markers (bad configuration)"
+                print ("targeting to test markers in symm_mf1_sf2.1 TB which doesn't use markers (bad configuration)")
         elif re.search("dyn_tb_mf1_sf2.1", local_config['testbench']):
             illegal_config = True
             if ENABLE_DISPLAY_WHY_ILLEGAL:
-                print "targeting to test markers in dyn_tb_mf1_sf2.1 TB which doesn't use markers (bad configuration)"
+                print ("targeting to test markers in dyn_tb_mf1_sf2.1 TB which doesn't use markers (bad configuration)")
 
     return illegal_config
 
@@ -84,7 +84,7 @@ def main():
 
     test_num=0;
     ##for testbench in ["tb_mf2_sf2", "tb_mh2_sh2", "tb_mq2_sq2", "tb_mf2_sh2", "tb_mh2_sf2", "tb_mf2_sq2", "tb_mq2_sf2", "tb_mq2_sh2", "tb_mh2_sq2", "tb_mf2.1_sf1", "tb_mh2.1_sh1", "tb_mf2.1_sh1", "tb_mh2.1_sf1"]:
-    for testbench in ["tb_mf2_sf2", "tb_mh2_sh2", "tb_mq2_sq2", "tb_mf2_sh2", "tb_mh2_sf2", "tb_mf2_sq2", "tb_mq2_sf2", "tb_mq2_sh2", "tb_mh2_sq2", "tb_mf1_sf2.1", "tb_mh2.1_sh1", "tb_mf2.1_sh1", "tb_mh2.1_sf1"]:
+    for testbench in ["tb_mf2_sf2", "tb_mh2_sh2", "tb_mq2_sq2", "tb_mf2_sh2", "tb_mh2_sf2", "tb_mf2_sq2", "tb_mq2_sf2", "tb_mq2_sh2", "tb_mh2_sq2", "tb_mf2.1_sf1", "tb_mh2.1_sh1", "tb_mf2.1_sh1", "tb_mh2.1_sf1"]:
         master_dict = dict()
 
         create_entry (master_dict , "align_fly"    , [0,1]    )
@@ -388,9 +388,9 @@ def generate_sailrock(local_config):
         print_to_sail("GLOBAL_TX_DBI_EN"       , "0", "0")
         print_to_sail("GLOBAL_RX_DBI_EN"       , "0", "0")
         print_to_sail("////aib setting"        , "", "")
-        print_to_sail("aib_ver"                , "1", "2")
-        print_to_sail("aib_tx_bit_per_channel" , "20", "40")
-        print_to_sail("aib_rx_bit_per_channel" , "20", "40")
+        print_to_sail("aib_ver"                , "2", "1")
+        print_to_sail("aib_tx_bit_per_channel" , "40", "20")
+        print_to_sail("aib_rx_bit_per_channel" , "40", "20")
         print_to_sail("ASYMMETRIC_CA"          , "0" , "0")
 
     elif local_config['testbench'] == "tb_mh2.1_sh1":
@@ -419,9 +419,9 @@ def generate_sailrock(local_config):
         print_to_sail("GLOBAL_TX_DBI_EN"       , "0", "0")
         print_to_sail("GLOBAL_RX_DBI_EN"       , "0", "0")
         print_to_sail("////aib setting"        , "", "")
-        print_to_sail("aib_ver"                , "1", "2")
-        print_to_sail("aib_tx_bit_per_channel" , "20", "40")
-        print_to_sail("aib_rx_bit_per_channel" , "20", "40")
+        print_to_sail("aib_ver"                , "2", "1")
+        print_to_sail("aib_tx_bit_per_channel" , "40", "20")
+        print_to_sail("aib_rx_bit_per_channel" , "40", "20")
         print_to_sail("ASYMMETRIC_CA"          , "1" , "1")
 
     elif local_config['testbench'] == "tb_mh2.1_sf1":
@@ -444,11 +444,11 @@ def generate_sailrock(local_config):
         ch_en_vector = (ch_en_vector*2) + 1
 
     print_to_sail("aib_channel_enable"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
-    if local_config['testbench'] == "tb_mf1_sf2.1":
-        print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
-    else:
-        print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(0)), "{}".format(hex(0)))
-
+    #if local_config['testbench'] == "tb_mf1_sf2.1": ##illegal
+    #    print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
+    #else:
+    #    print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(0)), "{}".format(hex(0)))
+    ##############################################################
     print_to_sail("aib_rx_walign_en"              , 1, 1)
     print_to_sail("aib_tx_swap_en"                , 0, 0)
     print_to_sail("aib_rx_swap_en"                , 0, 0)
@@ -468,23 +468,31 @@ def generate_sailrock(local_config):
 
     ca_sync_fifo = 1;   ##### change to '0' for CA ASYNC FIFO mode
 
-    ## This look complex, but we are just hitting our three windows evenly, skew <8, <16, <32
-    skew_range = random.randrange(0, 2)
-    if skew_range == 0:
-        inter_ch_skew = random.randrange(0, 7)
-    elif skew_range == 1:
-        inter_ch_skew = random.randrange(8, 15)
-    elif skew_range == 2:
-        inter_ch_skew = random.randrange(16, 31)
+    ich_skew = (0, 1, 2);
+    skew_range = random.choices(ich_skew, weights=(70, 20, 10), k=1) 
+    skew_range1 = str(skew_range)[1:-1]
 
-    if skew_range == 0:  
-        ca_fifo_depth = 8
-    elif skew_range == 1:   
+    if skew_range1 == "0":  
+        ca_fifo_depth = 32
+    elif skew_range1 == "1":   
         ca_fifo_depth = 16
     else:
-        ca_fifo_depth = 32
+        ca_fifo_depth = 8
 
-    ca_stb_intv = random.randrange(ca_fifo_depth * 3, ca_fifo_depth *6)
+    inter_ch_skew = 0
+    if skew_range1 == "0":
+        inter_ch_skew = (random.randrange(16, (ca_fifo_depth-local_config["rden_dly"])))
+    elif skew_range1 == "1":
+        inter_ch_skew = (random.randrange(8, (ca_fifo_depth-local_config["rden_dly"])))
+    elif skew_range1 == "2":
+        inter_ch_skew = (random.randrange(0, (ca_fifo_depth-local_config["rden_dly"]))) ##### CA_FIFO_DEPTH >= inter_ch_skew + rden_dly
+
+    ##print ("SKEW  FD  ICH RDEN",skew_range1,ca_fifo_depth,inter_ch_skew,local_config["rden_dly"])
+
+    ca_stb_intv = random.randrange(ca_fifo_depth*3, ca_fifo_depth *6)
+    mod4remain=ca_stb_intv%4;
+    ca_stb_intv=ca_stb_intv+(4-mod4remain);    ###ca_stb_intv always divisible by 4
+    ##print ("FIFOD   STB_INTV ",ca_fifo_depth, ca_stb_intv)
 
     print_to_sail("CA_SYNC_FIFO"     , ca_sync_fifo,  ca_sync_fifo)
     print_to_sail("CA_FIFO_DEPTH"    , ca_fifo_depth, ca_fifo_depth)

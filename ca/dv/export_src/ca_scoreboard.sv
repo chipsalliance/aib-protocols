@@ -73,7 +73,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     // Component Members
     //------------------------------------------
-    uvm_analysis_imp_ca_reset #(reset_seq_item_c, ca_scoreboard_c)  ca_reset_export;
+    uvm_analysis_imp_ca_reset #(ca_reset_seq_item_c, ca_scoreboard_c)  ca_reset_export;
     uvm_analysis_imp_ca_tx_tb_out #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) ca_tx_tb_out_export;
     uvm_analysis_imp_tx_tb_in #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) tx_tb_in_export;
     uvm_analysis_imp_rx_tb_in #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) rx_tb_in_export;
@@ -85,7 +85,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     extern function new(string name = "ca_scoreboard", uvm_component parent = null);
     extern function void build_phase( uvm_phase phase );
-    extern function void write_ca_reset( reset_seq_item_c  trig );
+    extern function void write_ca_reset( ca_reset_seq_item_c  trig );
     extern function void write_ca_tx_tb_out( ca_data_pkg::ca_seq_item_c  tx_tb_out_item );
     extern function void write_tx_tb_in( ca_data_pkg::ca_seq_item_c  tx_tb_in_item );
     extern function void write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
@@ -144,7 +144,7 @@ function void ca_scoreboard_c::build_phase(uvm_phase phase);
 endfunction : build_phase
 
 //------------------------------------------
-function void ca_scoreboard_c::write_ca_reset( reset_seq_item_c  trig );
+function void ca_scoreboard_c::write_ca_reset( ca_reset_seq_item_c  trig );
     
     `uvm_info("write_ca_reset","===> SB RX-ing trig from RESET\n", UVM_MEDIUM);
     generate_stb_beat();

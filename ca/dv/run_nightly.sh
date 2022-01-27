@@ -213,37 +213,37 @@ case "$sailrock_name" in
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_5 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_fifo_ptr_values_variations_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_tx_rx_online_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_5; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_6 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_tx_rx_online_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_no_external_strobes_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_6; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_7 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_no_external_strobes_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_stb_wd_sel_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_7; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_8 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_stb_wd_sel_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_stb_intv_stb_pos_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_8; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_9 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_stb_intv_stb_pos_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_reset_during_traffic_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_9; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_10 -cfg $CONFIG;
                                                            cd -;
-                                                           run_cmd="./run_sim ca_reset_during_traffic_test_c ${cov_wave_opt}"
+                                                           run_cmd="./run_sim ca_stb_rcvr_aft_aln_done_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_10; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
 
                                                            cd scripts;
@@ -323,12 +323,6 @@ case "$sailrock_name" in
                                                            cd -;
                                                            run_cmd="./run_sim  ca_stb_en0_aft_aln_done_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_23; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
-
-                                                           cd scripts;
-                                                           python3 run_all_sim.py copy -d ${DIR}_24 -cfg $CONFIG;
-                                                           cd -;
-                                                           run_cmd="./run_sim ca_stb_rcvr_aft_aln_done_test_c ${cov_wave_opt}"
-                                                           echo "cd ${DIR}_24; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
                                                            ;;
     *)
                                                            cd scripts;
@@ -397,5 +391,5 @@ for CONFIG in `ls .`; do
 done  #for
 echo "+++++++++++++++++++++++++++++++++++++++++ "
 date >> ../nightly_results.txt
-echo Summary:  $test_pass : TESTS PASSED...                $test_err : TESTS FAILED for various reasons
-echo Summary:  $test_pass : TESTS PASSED...                $test_err : TESTS FAILED for various reasons >> ../nightly_results.txt
+echo Summary:  $test_pass :TESTS PASSED...                $test_err :TESTS FAILED {Check /ca/dv/nightly_results.txt}
+echo Summary:  $test_pass :TESTS PASSED...                $test_err :TESTS FAILED  >> ../nightly_results.txt

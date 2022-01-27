@@ -56,8 +56,11 @@ module lpif_prot_neg
 
    output logic [2:0]                                pl_protocol,
    output logic                                      pl_protocol_vld,
-   input  logic                                      renegotiate_n
+   input  logic                                      renegotiate_n,
 
+   output logic                                      pl_inband_pres,
+   output logic                                      pl_portmode,
+   output logic                                      pl_portmode_val
    );
 
 // initial #3000ns $finish;
@@ -95,9 +98,8 @@ module lpif_prot_neg
   // So we tie the lower 5 bits to the local_req/ack/prot signals in each replicated struct.
   // The remote side can chose any alignment and get good data
   generate
-  begin : blk_gen
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  2000)) // Gen2 F
-    begin
+    begin :gen_block_gen2f
      assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
@@ -105,7 +107,7 @@ module lpif_prot_neg
     end
 
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  1000)) // Gen2 H
-    begin
+    begin :gen_block_gen2h
      assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
@@ -118,7 +120,7 @@ module lpif_prot_neg
     end
 
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  500)) // Gen2 Q
-    begin
+    begin :gen_block_gen2q
      assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
@@ -137,11 +139,11 @@ module lpif_prot_neg
      assign txrx_dstrm_data [ 768+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 768+REQ_LOC  +:     1] ;
      assign txrx_dstrm_data [ 768+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 768+ACK_LOC  +:     1] ;
      assign txrx_dstrm_data [ 768+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 768+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 768+5        +: 256-5]     =                               ctrl_dstrm_data [ 768          +: 256-5] ;
+     assign txrx_dstrm_data [ 768+5        +: 256-5]     =                               ctrl_dstrm_data [ 768+5        +: 256-5] ;
     end
   
     if ((AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  1000)) // Gen1 F
-    begin
+    begin :gen_block_gen1f
      assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
@@ -149,7 +151,7 @@ module lpif_prot_neg
     end
 
     if ((AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500)) // Gen1 H
-    begin
+    begin :gen_block_gen1h
      assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
      assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
@@ -160,8 +162,6 @@ module lpif_prot_neg
      assign txrx_dstrm_data [ 512+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 512+PROT_LOC +:     3] ;
      assign txrx_dstrm_data [ 512+5        +: 512-5]     =                               ctrl_dstrm_data [ 512+5        +: 512-5] ;
     end
-
-  end
   endgenerate
 
 // State Machine
@@ -310,6 +310,32 @@ module lpif_prot_neg
   end
 
 // Drive signals
+////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////
+// Related Signals
+
+  always @(posedge lclk or negedge reset)
+  if (~reset)
+  begin
+    pl_inband_pres  <= 1'h0;
+    pl_portmode_val <= 1'h0;
+    pl_portmode     <= 1'h0;
+  end
+  else if (~renegotiate_n)
+  begin
+    pl_inband_pres  <= 1'h0;
+    pl_portmode_val <= 1'h0;
+    pl_portmode     <= 1'h0;
+  end
+  else if (ctl_link_up & renegotiate_n)
+  begin
+    pl_inband_pres  <= 1'h1;
+    pl_portmode_val <= 1'h1;
+    pl_portmode     <= 1'h1;
+  end
+
+// Related Signals
 ////////////////////////////////////////////////////////////
 
 endmodule

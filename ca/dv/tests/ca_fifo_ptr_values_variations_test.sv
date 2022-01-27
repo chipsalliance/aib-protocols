@@ -183,7 +183,7 @@ task ca_fifo_ptr_values_variations_test_c::run_test(uvm_phase phase);
                 if(fifo_full_die_a[ch_no] == 1) begin
                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_full is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
                 end else begin
-               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fufo_full is not seen in ch = %0d,DIE_A", ch_no));
+               `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_full is not seen in ch = %0d,DIE_A", ch_no));
                 end    
                 if(fifo_pfull_die_a[ch_no] == 1) begin
                 `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pfull is seen in ch_no = %0d,DIE_A ..",ch_no), UVM_LOW);
@@ -207,7 +207,7 @@ task ca_fifo_ptr_values_variations_test_c::run_test(uvm_phase phase);
                  if(fifo_full_die_b[ch_no] == 1) begin
                  `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_full is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);
                  end else begin
-                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fufo_full is not seen in ch = %0d,DIE_B", ch_no));
+                `uvm_warning("ca_fifo_ptr_values_variations_test", $sformatf("fifo_full is not seen in ch = %0d,DIE_B", ch_no));
                  end    
                  if(fifo_pfull_die_b[ch_no] == 1) begin
                  `uvm_info("ca_fifo_ptr_values_variations_test", $sformatf ("fifo_pfull is seen in ch_no = %0d,DIE_B ..",ch_no), UVM_LOW);

@@ -31,8 +31,8 @@ class ca_knobs_c extends uvm_object;
     //------------------------------------------
     // test knobs
 
-    int         GLOBAL_TIMEOUT                  = 300000;
-    int         stop_err_cnt                    = 200;
+    int         GLOBAL_TIMEOUT                  = 2000000; ///1msec considering 0.5nsec clock period
+    int         stop_err_cnt                    = 20;
     rand int    tx_xfer_cnt_die_a;
     rand int    tx_xfer_cnt_die_b;
 

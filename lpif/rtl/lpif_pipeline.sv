@@ -48,7 +48,6 @@ module lpif_pipeline
    input  logic [3:0]                               lp_state_req,
    input  logic [7:0]                               lp_cfg,
    input  logic [7:0]                               lp_stream,
-   input  logic [7:0]                               lp_tmstmp_stream,
    input  logic                                     lp_cfg_vld,
    input  logic                                     lp_clk_ack,
    input  logic                                     lp_device_present,
@@ -61,7 +60,6 @@ module lpif_pipeline
    input  logic                                     lp_linkerror,
    input  logic                                     lp_rcvd_crc_err,
    input  logic                                     lp_stallack,
-   input  logic                                     lp_tmstmp,
    input  logic                                     lp_wake_req,
 
    output logic [LPIF_VALID_WIDTH-1:0]              lp_prime_valid,
@@ -70,7 +68,6 @@ module lpif_pipeline
    output logic [3:0]                               lp_prime_state_req,
    output logic [7:0]                               lp_prime_cfg,
    output logic [7:0]                               lp_prime_stream,
-   output logic [7:0]                               lp_prime_tmstmp_stream,
    output logic                                     lp_prime_cfg_vld,
    output logic                                     lp_prime_clk_ack,
    output logic                                     lp_prime_device_present,
@@ -83,7 +80,6 @@ module lpif_pipeline
    output logic                                     lp_prime_linkerror,
    output logic                                     lp_prime_rcvd_crc_err,
    output logic                                     lp_prime_stallack,
-   output logic                                     lp_prime_tmstmp,
    output logic                                     lp_prime_wake_req,
 
    output logic [LPIF_VALID_WIDTH-1:0]              pl_valid,
@@ -95,9 +91,7 @@ module lpif_pipeline
    output logic [2:0]                               pl_speedmode,
    output logic [3:0]                               pl_state_sts,
    output logic [7:0]                               pl_cfg,
-   output logic [7:0]                               pl_ptm_rx_delay,
    output logic [7:0]                               pl_stream,
-   output logic [7:0]                               pl_tmstmp_stream,
    output logic [LPIF_CRC_WIDTH-1:0]                pl_crc,
    output logic [LPIF_DATA_WIDTH*8-1:0]             pl_data,
    output logic [LPIF_VALID_WIDTH-1:0]              pl_crc_valid,
@@ -121,7 +115,6 @@ module lpif_pipeline
    output logic                                     pl_setlbms,
    output logic                                     pl_stallreq,
    output logic                                     pl_surprise_lnk_down,
-   output logic                                     pl_tmstmp,
    output logic                                     pl_trainerror,
    output logic                                     pl_wake_ack,
 
@@ -134,9 +127,7 @@ module lpif_pipeline
    input  logic [2:0]                               pl_prime_speedmode,
    input  logic [3:0]                               pl_prime_state_sts,
    input  logic [7:0]                               pl_prime_cfg,
-   input  logic [7:0]                               pl_prime_ptm_rx_delay,
    input  logic [7:0]                               pl_prime_stream,
-   input  logic [7:0]                               pl_prime_tmstmp_stream,
    input  logic [LPIF_CRC_WIDTH-1:0]                pl_prime_crc,
    input  logic [LPIF_DATA_WIDTH*8-1:0]             pl_prime_data,
    input  logic [LPIF_VALID_WIDTH-1:0]              pl_prime_crc_valid,
@@ -160,7 +151,6 @@ module lpif_pipeline
    input  logic                                     pl_prime_setlbms,
    input  logic                                     pl_prime_stallreq,
    input  logic                                     pl_prime_surprise_lnk_down,
-   input  logic                                     pl_prime_tmstmp,
    input  logic                                     pl_prime_trainerror,
    input  logic                                     pl_prime_wake_ack
    );
@@ -181,7 +171,6 @@ module lpif_pipeline
                                    2                     + // lp_pri
                                    4                     + // lp_state_req
                                    8                     + // lp_cfg
-                                   8                     + // lp_tmstmp_stream
                                    1                     + // lp_cfg_vld
                                    1                     + // lp_clk_ack
                                    1                     + // lp_device_present
@@ -191,7 +180,6 @@ module lpif_pipeline
                                    1                     + // lp_linkerror
                                    1                     + // lp_rcvd_crc_err
                                    1                     + // lp_stallack
-                                   1                     + // lp_tmstmp
                                    1                     ; // lp_wake_req
 
     localparam PL_DATA_DELAY_WID =
@@ -203,9 +191,7 @@ module lpif_pipeline
                                    3                     + // pl_speedmode
                                    4                     + // pl_state_sts
                                    8                     + // pl_cfg
-                                   8                     + // pl_ptm_rx_delay
                                    8                     + // pl_stream
-                                   8                     + // pl_tmstmp_stream
                                    LPIF_CRC_WIDTH        + // pl_crc
                                    LPIF_DATA_WIDTH*8     + // pl_data
                                    LPIF_VALID_WIDTH      + // pl_crc_valid
@@ -229,7 +215,6 @@ module lpif_pipeline
                                    1                     + // pl_setlbms
                                    1                     + // pl_stallreq
                                    1                     + // pl_surprise_lnk_down
-                                   1                     + // pl_tmstmp
                                    1                     + // pl_trainerror
                                    1                     ; // pl_wake_ack
 
@@ -244,7 +229,6 @@ module lpif_pipeline
                                          lp_pri            ,
                                          lp_state_req      ,
                                          lp_cfg            ,
-                                         lp_tmstmp_stream  ,
                                          lp_cfg_vld        ,
                                          lp_clk_ack        ,
                                          lp_device_present ,
@@ -254,14 +238,12 @@ module lpif_pipeline
                                          lp_linkerror      ,
                                          lp_rcvd_crc_err   ,
                                          lp_stallack       ,
-                                         lp_tmstmp         ,
                                          lp_wake_req       };
 
     assign {lp_prime_irdy           ,
             lp_prime_pri            ,
             lp_prime_state_req      ,
             lp_prime_cfg            ,
-            lp_prime_tmstmp_stream  ,
             lp_prime_cfg_vld        ,
             lp_prime_clk_ack        ,
             lp_prime_device_present ,
@@ -271,7 +253,6 @@ module lpif_pipeline
             lp_prime_linkerror      ,
             lp_prime_rcvd_crc_err   ,
             lp_prime_stallack       ,
-            lp_prime_tmstmp         ,
             lp_prime_wake_req       } = lp_delay_data_pipeline [LPIF_PIPELINE_STAGES];
 
 
@@ -311,9 +292,7 @@ module lpif_pipeline
                                          pl_prime_speedmode         ,
                                          pl_prime_state_sts         ,
                                          pl_prime_cfg               ,
-                                         pl_prime_ptm_rx_delay      ,
                                          pl_prime_stream            ,
-                                         pl_prime_tmstmp_stream     ,
                                          pl_prime_crc               ,
                                          pl_prime_data              ,
                                          pl_prime_crc_valid         ,
@@ -337,7 +316,6 @@ module lpif_pipeline
                                          pl_prime_setlbms           ,
                                          pl_prime_stallreq          ,
                                          pl_prime_surprise_lnk_down ,
-                                         pl_prime_tmstmp            ,
                                          pl_prime_trainerror        ,
                                          pl_prime_wake_ack          };
 
@@ -349,9 +327,7 @@ module lpif_pipeline
             pl_speedmode         ,
             pl_state_sts         ,
             pl_cfg               ,
-            pl_ptm_rx_delay      ,
             pl_stream            ,
-            pl_tmstmp_stream     ,
             pl_crc               ,
             pl_data              ,
             pl_crc_valid         ,
@@ -375,7 +351,6 @@ module lpif_pipeline
             pl_setlbms           ,
             pl_stallreq          ,
             pl_surprise_lnk_down ,
-            pl_tmstmp            ,
             pl_trainerror        ,
             pl_wake_ack          } = pl_delay_data_pipeline [LPIF_PIPELINE_STAGES];
 

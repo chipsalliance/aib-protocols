@@ -34,7 +34,7 @@ run_all : run_all_xrun
 xcelium_home	= CDNS-1.2
 
 aib_inc_dir     = ${TESTBENCH_DIR}/{top,data,config,params/aib,macro,tests,aib_uvm/aib_test,aib_uvm/aib_master/aib_master_por,aib_uvm/aib_slave/aib_slave_por,aib_uvm/aib_env/,interface,aib2.0}
-ca_tb_inc_dir   = ${CA_DV_HOME}/{tb,export_src,export_src/chan_delay_agent,../../common/dv/reset_agent}
+ca_tb_inc_dir   = ${CA_DV_HOME}/{tb,export_src,export_src/chan_delay_agent,export_src/ca_reset_agent}
 
 #-----------------------------------------------------------------
 # SEED defaults to random

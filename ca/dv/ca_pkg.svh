@@ -42,7 +42,7 @@ package ca_pkg;
     
     // agent pkgs 
     //--------------------------------------------------- 
-    import reset_pkg::*;
+    import ca_reset_pkg::*;
     import chan_delay_pkg::*;
     import ca_tx_tb_out_pkg::*;
     import ca_tx_tb_in_pkg::*;

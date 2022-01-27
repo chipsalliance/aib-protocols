@@ -175,8 +175,9 @@ task  ca_tx_tb_out_drv_c::drv_tx();
     bit [7:0]                                 count;
     bit                                       calc_stb = 1;
     bit                                       marker_b4_data_done, marker_b4_data_done_p;
+    bit                                       wait_xz_delay_over;
     int                                       index, stb_bit_pos; 
-    int                                       ch; 
+    int                                       ch, xz_delay_cnt; 
     
     forever begin @(posedge vif.clk)
         if(vif.rst_n === 1'b0) begin // reset state
@@ -186,6 +187,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
             end
             drv_tx_idle();
             tx_cnt = 0;
+            wait_xz_delay_over = 1'b0;
             while(tx_q.size() > 0) tx_item = tx_q.pop_front(); 
         end // reset
         else begin // non reset state
@@ -417,6 +419,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                 end //for
              `endif //CA_ASYMMETRIC
 ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
+/////////// Wait for Z delay only ONCE HERE
                 if ((cfg.tx_stb_en == 1'b0) && (cfg.stop_strobes_inject == 0)) begin
                     index = 0;
                     for (int i=0; i<40; i+=1) begin
@@ -430,17 +433,27 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                     end else begin
                         stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
                     end
+
                     for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                         if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
                         if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
                            if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin
                               idle_data[i] = 0;
                            end else begin
-                              idle_data[i] = vif.user_stb;
+                               if (~wait_xz_delay_over) begin
+                                   idle_data[i] = 0;
+                               end else begin //Do not inject external strobe until xz_delay is over (when tx_stb_en==0 and not tx_online==1 yet)
+                                   idle_data[i] = vif.user_stb;
+                               end
                            end
                         end
                     end //for
-                end //if (ca_cfg.tx_stb_en == 0)
+                    if(xz_delay_cnt == cfg.delay_xz_value) begin
+                        wait_xz_delay_over = 1'b1;
+                    end else begin
+                        if (tx_online) xz_delay_cnt += 1;
+                    end
+                end //if (cfg.tx_stb_en == 0)
 
                 drv_tx_idle();
             end //send IDLE

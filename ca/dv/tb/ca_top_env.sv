@@ -47,7 +47,7 @@ class ca_top_env_c extends uvm_env;
     chan_delay_agent_c       #(.BUS_BIT_WIDTH(`TB_DIE_B_BUS_BIT_WIDTH))                                        chan_delay_die_b_agent[`MAX_NUM_CHANNELS];
 
 
-    reset_agent_c         reset_agent;
+    ca_reset_agent_c      reset_agent;
     ca_scoreboard_c       ca_scoreboard;
     virt_seqr_c           virt_seqr;
 
@@ -96,7 +96,7 @@ function void ca_top_env_c::build_phase( uvm_phase phase );
         chan_delay_die_b_agent[i]   = chan_delay_agent_c#(.BUS_BIT_WIDTH(`TB_DIE_B_BUS_BIT_WIDTH))::type_id::create($sformatf("chan_delay_die_b_agent_%0d", i), this);
     end
 
-    reset_agent = reset_agent_c::type_id::create("reset_agent", this);
+    reset_agent = ca_reset_agent_c::type_id::create("reset_agent", this);
         
     virt_seqr = virt_seqr_c::type_id::create("virt_seqr", this);
     

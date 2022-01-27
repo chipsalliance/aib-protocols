@@ -48,7 +48,8 @@ class ca_tx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     int                      stb_beat_cnt = 0;
     bit                      stb_sync = 0;
     bit[1:0]                 is_stb_mark=0; 
-    int                      first_time_rst; 
+    int                      first_time_rst;
+    bit[15:0]                l_tx_stb_intv; 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlymark_data = 0; 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    onlystb_data  = 0; 
     logic [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]    markstb_data  = 0; 
@@ -263,7 +264,11 @@ task ca_tx_tb_in_mon_c::mon_tx();
                         end
                      end
                 `endif 
-            
+                 if(my_name == "DIE_A") begin
+                      l_tx_stb_intv = vif.strobe_gen_m_interval;
+                 end else begin
+                      l_tx_stb_intv = vif.strobe_gen_s_interval;
+                 end
       `ifndef CA_ASYMMETRIC
            if((|tx_data !== 1'b0) && ((^tx_data) !== 1'bx)) begin 
                 tx_cnt++;
@@ -436,12 +441,7 @@ task ca_tx_tb_in_mon_c::mon_tx();
                       ca_item.tx_data_rdy = 1;
                 end
                //////////////////////////////////////////////////////////////////////////////////////////
-                 if(my_name == "DIE_A") begin
-                     cfg.tx_stb_intv = vif.strobe_gen_m_interval;
-                 end else begin
-                     cfg.tx_stb_intv = vif.strobe_gen_s_interval;
-                 end
-                 $display("TX::interval m %0d,s %0d",vif.strobe_gen_m_interval,vif.strobe_gen_s_interval);
+               //  $display("TX::interval m %0d,s %0d",vif.strobe_gen_m_interval,vif.strobe_gen_s_interval);
 
                  tx_data_fin_prev = tx_data_fin;
 
@@ -452,7 +452,31 @@ task ca_tx_tb_in_mon_c::mon_tx();
                          tx_data_fin = tx_data_fin >> 8;
                      end // for
                  end //end if tx_data_rdy
-                aport.write(ca_item); 
+                case(ca_item.is_stb_beat(stb_item))
+                     2'b01: begin
+                             ca_item.add_stb = 0;
+                             if(onlymark_data != tx_data_fin_prev) begin
+                                 aport.write(ca_item);
+                             end
+                     end
+                     2'b10: begin
+                             if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
+                                 verify_tx_stb();  // stb only
+                             end
+                     end
+                     2'b11: begin // both data and stb
+                             ca_item.add_stb = 1;
+                             if(markstb_data != tx_data_fin_prev) begin
+                                 if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
+                                   verify_tx_stb();  
+                                 end
+                                 aport.write(ca_item);
+                             end
+                     end
+                     default: begin
+                         `uvm_error("mon_tx_tb_in", $sformatf("BAD case in is_stb"));
+                     end
+                 endcase
              end // if tx_data != x
  `endif
         end // non reset 
@@ -499,24 +523,20 @@ function void ca_tx_tb_in_mon_c::verify_tx_stb();
     stb_beat_cnt++;
     if(stb_sync == 0) begin
         stb_sync = 1;
-        if(stb_cnt >= 2 * cfg.tx_stb_intv) begin
+        if(stb_cnt >= 2 * l_tx_stb_intv)begin
             `uvm_error("verify_tx_stb", $sformatf("INIT: %s did NOT rx stb tx_dout beat within tx_stb_intv: %0d | act: %0d",
-              my_name, cfg.tx_stb_intv, stb_cnt));
+              my_name, l_tx_stb_intv, stb_cnt));
         end
     end
     else begin // sync
-
-//`ifndef CA_ASYMMETRIC
-        if(stb_cnt != cfg.tx_stb_intv) begin 
+        if(stb_cnt != l_tx_stb_intv) begin 
          `uvm_error("verify_tx_stb", $sformatf("%s TX did NOT rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
-              my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt));
+              my_name, stb_beat_cnt, l_tx_stb_intv, stb_cnt));
         end  
         else begin
           `uvm_info("verify_tx_stb", $sformatf("%s rx stb_cnt: %0d tx_dout beat within tx_stb_intv: %0d | act: %0d",
-              my_name, stb_beat_cnt, cfg.tx_stb_intv, stb_cnt), UVM_MEDIUM);
+              my_name, stb_beat_cnt,l_tx_stb_intv, stb_cnt), UVM_MEDIUM);
         end
-//`else //TBD  
-//`endif
    end
 
     stb_cnt = 0; 
