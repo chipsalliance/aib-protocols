@@ -45,8 +45,13 @@ localparam X4_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && ((
 localparam X2_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (((AIB_VERSION == 2) && (AIB_GENERATION == 1)) || (AIB_VERSION == 1)) && (AIB_LANES ==  2) && (AIB_BITS_PER_LANE == 80));
 localparam X2_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (((AIB_VERSION == 2) && (AIB_GENERATION == 1)) || (AIB_VERSION == 1)) && (AIB_LANES ==  2) && (AIB_BITS_PER_LANE == 40));
 
+// X1_H1 and X1_F1 are deprecated
+/* -----\/----- EXCLUDED -----\/-----
 localparam X1_H1 =  ((LPIF_CLOCK_RATE ==  500) && (LPIF_DATA_WIDTH == 128) && (((AIB_VERSION == 2) && (AIB_GENERATION == 1)) || (AIB_VERSION == 1)) && (AIB_LANES ==  2) && (AIB_BITS_PER_LANE == 80));
 localparam X1_F1 =  ((LPIF_CLOCK_RATE == 1000) && (LPIF_DATA_WIDTH ==  64) && (((AIB_VERSION == 2) && (AIB_GENERATION == 1)) || (AIB_VERSION == 1)) && (AIB_LANES ==  2) && (AIB_BITS_PER_LANE == 40));
+ -----/\----- EXCLUDED -----/\----- */
+localparam X1_H1 =  0;
+localparam X1_F1 =  0;
 
 wire        x16_q2 = X16_Q2;
 wire        x16_h2 = X16_H2;

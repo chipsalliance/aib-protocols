@@ -128,10 +128,10 @@ module lpif
    // Channel Alignment
    input logic                                      align_done,
    input logic                                      align_err,
-   input logic                                      fifo_full,
-   input logic                                      fifo_pfull,
-   input logic                                      fifo_empty,
-   input logic                                      fifo_pempty,
+   input logic [AIB_LANES-1:0]                      fifo_full,
+   input logic [AIB_LANES-1:0]                      fifo_pfull,
+   input logic [AIB_LANES-1:0]                      fifo_empty,
+   input logic [AIB_LANES-1:0]                      fifo_pempty,
    output logic                                     align_fly,
    output logic [7:0]                               tx_stb_wd_sel,
    output logic [39:0]                              tx_stb_bit_sel,
@@ -183,6 +183,103 @@ end
 
 
 
+// FIXME, remove this when VIP is ready
+// // This is a temporary assertion until the VIP flow control issues is fixed.
+// // case 01287362
+// logic [LPIF_DATA_WIDTH*8-1:0]             prev2_lpdata;
+// logic [LPIF_VALID_WIDTH-1:0]              prev2_lpvalid;
+// logic [LPIF_CRC_WIDTH-1:0]                prev2_lpcrc;
+// logic [LPIF_VALID_WIDTH-1:0]              prev2_lpcrc_valid;
+// logic                                     prev2_lpirdy;
+// logic                                     prev2_pltrdy;
+// logic                                     prev2_forcing_lp_hack;
+// 
+// always @(negedge lclk or negedge reset)
+// if (!reset)
+// begin
+//   prev2_lpirdy      <= lp_irdy     ;
+//   prev2_lpdata      <= lp_data     ;
+//   prev2_lpvalid     <= lp_valid     ;
+//   prev2_lpcrc       <= lp_crc       ;
+//   prev2_lpcrc_valid <= lp_crc_valid ;
+//   prev2_pltrdy      <= pl_trdy ;
+//   prev2_forcing_lp_hack   <= 1'b0;
+// end
+// else
+// begin
+// 
+//   if ((pl_trdy == 1'b1) && (prev2_pltrdy == 1'b1))
+//   begin
+//      prev2_lpirdy      = lp_irdy      ;
+//      prev2_lpdata      = lp_data      ;
+//      prev2_lpvalid     = lp_valid     ;
+//      prev2_lpcrc       = lp_crc       ;
+//      prev2_lpcrc_valid = lp_crc_valid ;
+//      prev2_forcing_lp_hack   = 1'b0;
+// 
+//      prev2_pltrdy      = pl_trdy ;
+//   end
+//   else if ((pl_trdy == 1'b1) && (prev2_pltrdy == 1'b0))
+//   begin
+//      release lp_irdy      ;
+//      release lp_data      ;
+//      release lp_valid     ;
+//      release lp_crc       ;
+//      release lp_crc_valid ;
+//      prev2_forcing_lp_hack   = 1'b0;
+// 
+//      #1ps;
+// 
+//      if ( (prev2_pltrdy ==  1'b0     ) &
+//                                          ((lp_irdy      !=  prev2_lpirdy      ) |
+//                                           (lp_data      !=  prev2_lpdata      ) |
+//                                           (lp_valid     !=  prev2_lpvalid     ) |
+//                                           (lp_crc       !=  prev2_lpcrc       ) |
+//                                           (lp_crc_valid !=  prev2_lpcrc_valid ) )  )
+//      begin
+//          $display ("HAND_WRITTEN_ASSERT_ERROR: VIP is deasserting lp_valid while pl_trdy is low at time %t, but the hack in module %m corrected it.", $time);
+//          force lp_irdy       = prev2_lpirdy      ;
+//          force lp_data       = prev2_lpdata      ;
+//          force lp_valid      = prev2_lpvalid     ;
+//          force lp_crc        = prev2_lpcrc       ;
+//          force lp_crc_valid  = prev2_lpcrc_valid ;
+//          prev2_forcing_lp_hack   = 1'b1;
+//          @(negedge lclk);
+//          release lp_irdy      ;
+//          release lp_data      ;
+//          release lp_valid     ;
+//          release lp_crc       ;
+//          release lp_crc_valid ;
+//          prev2_forcing_lp_hack   = 1'b0;
+//      end
+// 
+//      prev2_lpirdy      = lp_irdy      ;
+//      prev2_lpdata      = lp_data      ;
+//      prev2_lpvalid     = lp_valid     ;
+//      prev2_lpcrc       = lp_crc       ;
+//      prev2_lpcrc_valid = lp_crc_valid ;
+// 
+//      prev2_pltrdy      = pl_trdy ;
+//   end
+//   else if ((pl_trdy == 1'b0) && (prev2_pltrdy == 1'b1))
+//   begin
+//      prev2_lpirdy      = lp_irdy      ;
+//      prev2_lpdata      = lp_data      ;
+//      prev2_lpvalid     = lp_valid     ;
+//      prev2_lpcrc       = lp_crc       ;
+//      prev2_lpcrc_valid = lp_crc_valid ;
+// 
+//      prev2_pltrdy      = pl_trdy ;
+// 
+//      force lp_irdy       = prev2_lpirdy      ;
+//      force lp_data       = prev2_lpdata      ;
+//      force lp_valid      = prev2_lpvalid     ;
+//      force lp_crc        = prev2_lpcrc       ;
+//      force lp_crc_valid  = prev2_lpcrc_valid ;
+//      prev2_forcing_lp_hack   = 1'b1;
+//   end
+// end
+// 
 
 
 
@@ -204,6 +301,7 @@ end
   logic [1:0]		dstrm_protid;		// From lpif_ctl_i of lpif_ctl.v
   logic [3:0]		dstrm_state;		// From lpif_ctl_i of lpif_ctl.v
   logic			dstrm_valid;		// From lpif_ctl_i of lpif_ctl.v
+  logic			flit_in_queue;		// From lpif_ctl_i of lpif_ctl.v
   logic [7:0]		lp_prime_cfg;		// From lpif_pipeline_i of lpif_pipeline.v
   logic			lp_prime_cfg_vld;	// From lpif_pipeline_i of lpif_pipeline.v
   logic			lp_prime_clk_ack;	// From lpif_pipeline_i of lpif_pipeline.v
@@ -482,6 +580,10 @@ end
   lpif_txrx_i
     (/*AUTOINST*/
      // Outputs
+     .fifo_full_val			(fifo_full_val[5:0]),
+     .fifo_pfull_val			(fifo_pfull_val[5:0]),
+     .fifo_empty_val			(fifo_empty_val[2:0]),
+     .fifo_pempty_val			(fifo_pempty_val[2:0]),
      .tx_phy0				(tx_phy0[319:0]),
      .tx_phy1				(tx_phy1[319:0]),
      .tx_phy2				(tx_phy2[319:0]),
@@ -520,6 +622,10 @@ end
      .delay_x_value			(delay_x_value[15:0]),
      .delay_y_value			(delay_y_value[15:0]),
      .delay_z_value			(delay_z_value[15:0]),
+     .fifo_full				(fifo_full[AIB_LANES-1:0]),
+     .fifo_pfull			(fifo_pfull[AIB_LANES-1:0]),
+     .fifo_empty			(fifo_empty[AIB_LANES-1:0]),
+     .fifo_pempty			(fifo_pempty[AIB_LANES-1:0]),
      .rx_phy0				(rx_phy0[319:0]),
      .rx_phy1				(rx_phy1[319:0]),
      .rx_phy2				(rx_phy2[319:0]),
@@ -735,6 +841,7 @@ end
     (/*AUTOINST*/
      // Outputs
      .pl_trdy				(pl_prime_trdy),	 // Templated
+     .flit_in_queue			(flit_in_queue),
      .dstrm_state			(dstrm_state[3:0]),
      .dstrm_protid			(dstrm_protid[1:0]),
      .dstrm_data			(ctrl_dstrm_data[LPIF_DATA_WIDTH*8-1:0]), // Templated
@@ -774,10 +881,6 @@ end
      .rx_stb_wd_sel			(rx_stb_wd_sel[7:0]),
      .rx_stb_bit_sel			(rx_stb_bit_sel[39:0]),
      .rx_stb_intv			(rx_stb_intv[15:0]),
-     .fifo_full_val			(fifo_full_val[5:0]),
-     .fifo_pfull_val			(fifo_pfull_val[5:0]),
-     .fifo_empty_val			(fifo_empty_val[2:0]),
-     .fifo_pempty_val			(fifo_pempty_val[2:0]),
      .rden_dly				(rden_dly[2:0]),
      .tx_online				(tx_online),
      .rx_online				(rx_online),
@@ -792,6 +895,7 @@ end
      .lp_crc_valid			(lp_prime_crc_valid[LPIF_VALID_WIDTH-1:0]), // Templated
      .lp_valid				(lp_prime_valid[LPIF_VALID_WIDTH-1:0]), // Templated
      .lp_stream				(lp_prime_stream[7:0]),	 // Templated
+     .lp_stallack			(lp_prime_stallack),	 // Templated
      .ustrm_state			(ustrm_state[3:0]),
      .ustrm_protid			(ustrm_protid[1:0]),
      .ustrm_data			(ctrl_ustrm_data[LPIF_DATA_WIDTH*8-1:0]), // Templated
@@ -819,10 +923,6 @@ end
      .power_on_reset			(power_on_reset[AIB_LANES-1:0]),
      .align_done			(align_done),
      .align_err				(align_err),
-     .fifo_full				(fifo_full),
-     .fifo_pfull			(fifo_pfull),
-     .fifo_empty			(fifo_empty),
-     .fifo_pempty			(fifo_pempty),
      .lpif_tx_stb_intv			(lpif_tx_stb_intv[15:0]),
      .lpif_rx_stb_intv			(lpif_rx_stb_intv[15:0]),
      .lsm_dstrm_state			(lsm_dstrm_state[3:0]),
@@ -860,6 +960,7 @@ end
      .rst_n				(reset),		 // Templated
      .lp_state_req			(lp_prime_state_req[3:0]), // Templated
      .ustrm_state			(ustrm_state[3:0]),
+     .flit_in_queue			(flit_in_queue),
      .ctl_link_up			(negotiation_link_up),	 // Templated
      .ctl_phy_err			(ctl_phy_err),
      .lp_exit_cg_ack			(lp_prime_exit_cg_ack),	 // Templated

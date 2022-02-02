@@ -63,9 +63,7 @@ module lpif_prot_neg
    output logic                                      pl_portmode_val
    );
 
-// initial #3000ns $finish;
-
-
+`include "lpif_configs.svh"
 
 ////////////////////////////////////////////////////////////
 // Break Into Useful Bits of Info
@@ -93,6 +91,26 @@ module lpif_prot_neg
 
   assign in_negotiation = ~negotiation_link_up;
 
+  localparam TXRX_DATA_WIDTH =  X16_Q2 ? (1024 / 1) :
+                                X16_H2 ? (512  / 1) :
+                                X16_F2 ? (256  / 1) :
+                                X8_Q2  ? (1024 / 2) :
+                                X8_H2  ? (512  / 2) :
+                                X8_F2  ? (256  / 2) :
+                                X4_Q2  ? (1024 / 4) :
+                                X4_H2  ? (512  / 4) :
+                                X4_F2  ? (256  / 4) :
+                                X16_H1 ? (1024 / 1) :
+                                X16_F1 ? (512  / 1) :
+                                X8_H1  ? (1024 / 2) :
+                                X8_F1  ? (512  / 2) :
+                                X4_H1  ? (1024 / 4) :
+                                X4_F1  ? (512  / 4) :
+                                X2_H1  ? (1024 / 8) :
+                                X2_F1  ? (512  / 8) :
+                                X1_H1  ? (1024 / 16) :
+                                X1_F1  ? (512  / 16) : (512  / 16);
+
   // We always pass the upper bits of downstream data directly to TXRX.
   // For transmit, we need to transmit on each replicated struct.
   // So we tie the lower 5 bits to the local_req/ack/prot signals in each replicated struct.
@@ -100,67 +118,67 @@ module lpif_prot_neg
   generate
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  2000)) // Gen2 F
     begin :gen_block_gen2f
-     assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
-     assign txrx_dstrm_data [   0+5        +: 256-5]     =                               ctrl_dstrm_data [ 0+5          +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + 5        +: ((TXRX_DATA_WIDTH)/1)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + 5        +: ((TXRX_DATA_WIDTH)/1)-5] ;
     end
 
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  1000)) // Gen2 H
     begin :gen_block_gen2h
-     assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
-     assign txrx_dstrm_data [   0+5        +: 256-5]     =                               ctrl_dstrm_data [ 0+5          +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] ;
 
-     assign txrx_dstrm_data [ 256+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 256+REQ_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 256+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 256+ACK_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 256+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 256+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 256+5        +: 256-5]     =                               ctrl_dstrm_data [ 256+5        +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] ;
     end
 
     if ((AIB_GENERATION == 2) && (LPIF_CLOCK_RATE ==  500)) // Gen2 Q
     begin :gen_block_gen2q
-     assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
-     assign txrx_dstrm_data [   0+5        +: 256-5]     =                               ctrl_dstrm_data [ 0+5          +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*0) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] ;
 
-     assign txrx_dstrm_data [ 256+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 256+REQ_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 256+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 256+ACK_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 256+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 256+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 256+5        +: 256-5]     =                               ctrl_dstrm_data [ 256+5        +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*1) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] ;
 
-     assign txrx_dstrm_data [ 512+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 512+REQ_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 512+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 512+ACK_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 512+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 512+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 512+5        +: 256-5]     =                               ctrl_dstrm_data [ 512+5        +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*2) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] ;
 
-     assign txrx_dstrm_data [ 768+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 768+REQ_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 768+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 768+ACK_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 768+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 768+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 768+5        +: 256-5]     =                               ctrl_dstrm_data [ 768+5        +: 256-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/4)*3) + 5        +: ((TXRX_DATA_WIDTH)/4)-5] ;
     end
   
     if ((AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  1000)) // Gen1 F
     begin :gen_block_gen1f
-     assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
-     assign txrx_dstrm_data [   0+5        +: 512-5]     =                               ctrl_dstrm_data [ 0+5          +: 512-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + 5        +: ((TXRX_DATA_WIDTH)/1)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/1)*0) + 5        +: ((TXRX_DATA_WIDTH)/1)-5] ;
     end
 
     if ((AIB_GENERATION == 1) && (LPIF_CLOCK_RATE ==  500)) // Gen1 H
     begin :gen_block_gen1h
-     assign txrx_dstrm_data [   0+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 0+REQ_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 0+ACK_LOC    +:     1] ;
-     assign txrx_dstrm_data [   0+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 0+PROT_LOC   +:     3] ;
-     assign txrx_dstrm_data [   0+5        +: 512-5]     =                               ctrl_dstrm_data [ 0+5          +: 512-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*0) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] ;
 
-     assign txrx_dstrm_data [ 512+REQ_LOC  +:     1]     = in_negotiation ? local_req  : ctrl_dstrm_data [ 512+REQ_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 512+ACK_LOC  +:     1]     = in_negotiation ? local_ack  : ctrl_dstrm_data [ 512+ACK_LOC  +:     1] ;
-     assign txrx_dstrm_data [ 512+PROT_LOC +:     3]     = in_negotiation ? local_prot : ctrl_dstrm_data [ 512+PROT_LOC +:     3] ;
-     assign txrx_dstrm_data [ 512+5        +: 512-5]     =                               ctrl_dstrm_data [ 512+5        +: 512-5] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + REQ_LOC  +:                       1] = in_negotiation ? local_req  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + REQ_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + ACK_LOC  +:                       1] = in_negotiation ? local_ack  : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + ACK_LOC  +:                       1] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + PROT_LOC +:                       3] = in_negotiation ? local_prot : ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + PROT_LOC +:                       3] ;
+     assign txrx_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] =                               ctrl_dstrm_data [ (((TXRX_DATA_WIDTH)/2)*1) + 5        +: ((TXRX_DATA_WIDTH)/2)-5] ;
     end
   endgenerate
 

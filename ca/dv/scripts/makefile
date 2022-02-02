@@ -46,7 +46,8 @@ ifeq ($(SEED), )
 else
   rseed := $(SEED)
 endif
-SEEDCMD = +ntb_random_seed=$(rseed)
+SEEDCMD  = +ntb_random_seed=$(rseed)
+SEEDXRUN = -svseed $(rseed)
 
 ifeq ($(UNIQ), ON)
     UNIQID = _$(rseed)
@@ -232,7 +233,7 @@ endif
 
 
 sim :
-	./simv +UVM_TESTNAME=${gen_scenario} $(SEEDCMD) +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} -l ./logs/sim_${GEN_ARG}$(UNIQID).log
+	./simv +UVM_TESTNAME=${gen_scenario} $(SEEDCMD) +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} -l ./logs/ca_tb.log
 
 .EXPORT_ALL_VARIABLES:
 
@@ -329,7 +330,7 @@ my_xlm2 = ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh -f ${CA_DV_HOME}/../rtl/ca.f
 
 ############################# TARGETS #################################
 all_xrun :	gen_cfg
-	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x} -f ${CA_DV_HOME}/../rtl/ca.f   -input ${CA_DV_HOME}/${WAVES}
+	xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS}  +incdir+${aib_inc_dir} ${XRUN_SIM_ARGS} ${XRUN_COMP_AIB_FILES} ${my_cmd_aib_defines} ${my_x} -f ${CA_DV_HOME}/../rtl/ca.f   -input ${CA_DV_HOME}/${WAVES} ${SEEDXRUN}
 
 all_p2p : gen_cfg
 	  xrun  ${XRUN_UVM} ${XRUN_COMP_ARGS} ${my_xlm2} ${my_cmd_p2p_defines} -input ${CA_DV_HOME}/${WAVES}

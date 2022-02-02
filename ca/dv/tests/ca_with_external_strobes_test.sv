@@ -34,7 +34,9 @@ class ca_with_external_strobes_test_c extends base_ca_test_c;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    ca_seq_lib_c    ca_vseq;
+    ca_seq_lib_c        ca_vseq;
+    ca_traffic_seq_c    ca_traffic_seq;
+    int                 tx_stb_intv_bkp;
  
     //------------------------------------------
     // Component Members
@@ -88,11 +90,11 @@ task ca_with_external_strobes_test_c::ck_align_done();
      forever begin
         repeat(1)@(posedge vif.clk);
            // After aligndone stop_strobes_inject and dont feed external strobes
-             if(ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1)begin
-                ca_cfg.ca_die_a_tx_tb_out_cfg.stop_strobes_inject = 1;
-             end
-             if(ca_cfg.ca_die_b_tx_tb_out_cfg.align_done_assert == 1)begin
+             if(gen_if.die_a_align_done == 1)begin
                 ca_cfg.ca_die_b_tx_tb_out_cfg.stop_strobes_inject = 1;
+             end
+             if(gen_if.die_b_align_done == 1)begin
+                ca_cfg.ca_die_a_tx_tb_out_cfg.stop_strobes_inject = 1;
              end 
      end
 endtask: ck_align_done
@@ -104,15 +106,20 @@ task ca_with_external_strobes_test_c::run_test(uvm_phase phase);
      bit result=0;
 
     `uvm_info("ca_with_external_strobes_test ::run_phase", "START test...", UVM_LOW);
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =   1;
      ca_cfg.ca_die_a_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_rx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_rx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en               = 0;
      ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en               = 0;
-     ca_vseq = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_vseq         = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_traffic_seq  = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
      ca_vseq.start(ca_top_env.virt_seqr);
-    `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+    `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_started for 1st drv_tfr_complete..\n", UVM_LOW);
      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
      `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
      result =  ck_xfer_cnt_a(1);
@@ -125,8 +132,24 @@ task ca_with_external_strobes_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_a_tx_tb_out_cfg.stop_strobes_inject     = 0;
      ca_cfg.ca_die_b_tx_tb_out_cfg.stop_strobes_inject     = 0;
      sbd_counts_clear;
-
-      ca_vseq.start(ca_top_env.virt_seqr);
+       if(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv > ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv) begin
+          tx_stb_intv_bkp = ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv;
+       end else begin
+          tx_stb_intv_bkp = ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv;
+       end
+      fork 
+          begin
+///// Wait for 2 strb intervals here
+             repeat(tx_stb_intv_bkp)@ (posedge vif.clk);
+          end
+          begin
+///// Wait on align_err here as we have stopped injecting external strobes after align_done and tx_stb_en=0 configured
+            wait(gen_if.die_a_align_error == 1);
+            wait(gen_if.die_b_align_error == 1);
+          end
+      join
+      repeat(10)@ (posedge vif.clk);
+      ca_traffic_seq.start(ca_top_env.virt_seqr);
      `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
      `uvm_info("ca_with_external_strobes_test ::run_phase", "wait_ended for 2nd drv_tfr_complete ..\n", UVM_LOW);
@@ -134,6 +157,8 @@ task ca_with_external_strobes_test_c::run_test(uvm_phase phase);
       result =  ck_xfer_cnt_a(1);
       result =  ck_xfer_cnt_b(1);
      `uvm_info("ca_with_external_strobes_test ::run_phase", "Scoreboard comparison completed for second set of traffic ..\n", UVM_LOW);
+      wait(gen_if.die_a_align_error == 1);
+      wait(gen_if.die_b_align_error == 1);
      test_end = 1; 
      `uvm_info("ca_with_external_strobes_test ::run_phase", "END test...\n", UVM_LOW);
 

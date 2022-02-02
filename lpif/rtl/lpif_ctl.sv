@@ -50,6 +50,9 @@ module lpif_ctl
    input logic [7:0]                    lp_stream,
    output logic                         pl_trdy,
 
+   output logic                         flit_in_queue,
+   input logic                          lp_stallack,
+
    output logic [3:0]                   dstrm_state,
    output logic [1:0]                   dstrm_protid,
    output logic [LPIF_DATA_WIDTH*8-1:0] dstrm_data,
@@ -117,10 +120,6 @@ module lpif_ctl
    // Channel Alignment
    input logic                          align_done,
    input logic                          align_err,
-   input logic                          fifo_full,
-   input logic                          fifo_pfull,
-   input logic                          fifo_empty,
-   input logic                          fifo_pempty,
    output logic                         align_fly,
    output logic [7:0]                   tx_stb_wd_sel,
    output logic [39:0]                  tx_stb_bit_sel,
@@ -128,10 +127,6 @@ module lpif_ctl
    output logic [7:0]                   rx_stb_wd_sel,
    output logic [39:0]                  rx_stb_bit_sel,
    output logic [15:0]                  rx_stb_intv,
-   output logic [5:0]                   fifo_full_val,
-   output logic [5:0]                   fifo_pfull_val,
-   output logic [2:0]                   fifo_empty_val,
-   output logic [2:0]                   fifo_pempty_val,
    output logic [2:0]                   rden_dly,
    output logic                         tx_online,
    output logic                         rx_online,
@@ -182,10 +177,6 @@ module lpif_ctl
   assign rx_stb_wd_sel = 8'h1;    // these must match the value in the config file
   assign rx_stb_bit_sel = 40'h2;
   assign rx_stb_intv = lpif_rx_stb_intv;
-  assign fifo_full_val = 6'h1F;
-  assign fifo_pfull_val = 6'h10;
-  assign fifo_empty_val = 3'h0;
-  assign fifo_pempty_val = 3'h4;
   assign rden_dly = 3'h0;
 
   // misc
@@ -246,19 +237,22 @@ module lpif_ctl
   logic [LPIF_VALID_WIDTH-1:0]          lp_fifo_crc_valid;
   logic [LPIF_VALID_WIDTH-1:0]          lp_fifo_valid;
   logic [7:0]                           lp_fifo_stream;
-  logic                                 lp_fifo_pop1;
 
   logic                                 fifo_not_empty;
   logic                                 tx_mrk_userbit_vld_del;
+  logic                                 aib_aligned_to_tx;
+  logic                                 clear_to_tx;
   wire                                  lp_fifo_almost_full = (lp_fifo_numfilled == 3'h3);
 
-  assign pl_trdy = lsm_state_active & ~lp_fifo_full;
+  assign pl_trdy = lsm_state_active & ~lp_fifo_full ;
+
+  assign flit_in_queue = |lp_valid | (~lp_fifo_empty);
 
   always_comb
     begin
       lp_data_max_beat = num_xfr_beats;
       d_lp_data_beat = lp_data_beat;
-      lp_data_count_en = ~lp_fifo_empty;
+      lp_data_count_en = clear_to_tx;
       if (lp_data_count_en )
         d_lp_data_beat = ~|lp_data_beat ? lp_data_max_beat : lp_data_beat - 1'b1;
       else if (lp_fifo_empty)
@@ -287,18 +281,29 @@ module lpif_ctl
   logic [LPIF_CRC_WIDTH-1:0]            d_pl_crc;
   logic [LPIF_VALID_WIDTH-1:0]          d_pl_crc_valid;
   logic [LPIF_VALID_WIDTH-1:0]          d_pl_valid;
+  logic [0:0]                           d_pl_hold_valid;
+  logic [0:0]                           pl_hold_valid;
 
   always_comb
     begin
       ustrm_data_max_beat = num_xfr_beats;
       ustrm_data_xfr_done = ~|ustrm_data_beat;
+
       d_ustrm_data_xfr_flg = ustrm_data_xfr_flg;
       d_ustrm_data_beat = ustrm_data_beat;
       ustrm_data_count_en = ustrm_valid | ustrm_data_xfr_flg;
+
       if (ustrm_data_xfr_done)
         d_ustrm_data_xfr_flg = 1'b0;
       else if (ustrm_valid)
         d_ustrm_data_xfr_flg = 1'b1;
+
+
+   // FIXME< cleanup
+   //if (ustrm_valid)
+ 
+ 
+ 
       if (ustrm_data_xfr_done)
         d_ustrm_data_beat = ustrm_data_max_beat;
       else if (ustrm_data_count_en & !ustrm_data_xfr_done)
@@ -316,115 +321,295 @@ module lpif_ctl
           d_pl_crc_valid = ustrm_crc_valid;
           d_pl_crc = ustrm_crc;
         end
-    if (X8_Q2 | X8_H1)
+
+    if (X8_Q2)
       always_comb
         begin
-          d_pl_valid = pl_valid;
-          d_pl_data = pl_data;
-          d_pl_crc_valid = pl_crc_valid;
-          d_pl_crc = pl_crc;
-          if (ustrm_valid)
-            begin
-              case (ustrm_data_beat)
-                4'h0: begin
-                  d_pl_valid = ustrm_dvalid;
-                  d_pl_data[0*512+:512] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid[0];
-                  d_pl_crc[0*16+:16] = ustrm_crc[15:0];
-                end
-                4'h1: begin
-                  d_pl_valid = 2'b0;
-                  d_pl_data[1*512+:512] = ustrm_data;
-                  d_pl_crc_valid = 2'b0;
-                  d_pl_crc[1*16+:16] = ustrm_crc[15:0];
-                end
-                default: begin
-                  d_pl_valid = ustrm_dvalid;
-                  d_pl_data[0*512+:512] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid[0];
-                  d_pl_crc[0*16+:16] = ustrm_crc[15:0];
-                end
-              endcase // case (ustrm_data_beat)
+          d_pl_valid      = pl_valid      ;
+          d_pl_hold_valid = pl_hold_valid ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[1] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_valid[0] = pl_hold_valid[0];
+              d_pl_data[1*512+:512] = ustrm_data;
+              d_pl_crc_valid = pl_crc_valid | ustrm_crc_valid[0];
+              d_pl_crc[1*16+:16] = ustrm_crc[0*16+:16];
             end
-          else
-            begin
-              d_pl_valid = 2'h0;
-              d_pl_crc_valid = 2'h0;
+            4'h1: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[0*512+:512] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[0*16+:16];
             end
+            default: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[0*512+:512] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[0*16+:16];
+            end
+          endcase // case (ustrm_data_beat)
         end
-    if (X8_H2 | X8_F1)
+    if (X8_H2)
       always_comb
         begin
-          d_pl_valid = pl_valid;
-          d_pl_data = pl_data;
-          d_pl_crc_valid = pl_crc_valid;
-          d_pl_crc = pl_crc;
-          if (ustrm_valid)
-            begin
-              case (ustrm_data_beat)
-                4'h0: begin
-                  d_pl_valid = ustrm_dvalid;
-                  d_pl_data[0*256+:256] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid[0];
-                  d_pl_crc[0*8+:8] = ustrm_crc[7:0];
-                end
-                4'h1: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[1*256+:256] = ustrm_data;
-                  d_pl_crc_valid = 1'b0;
-                  d_pl_crc[1*8+:8] = ustrm_crc[7:0];
-                end
-                default: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[0*256+:256] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid[0];
-                  d_pl_crc[0*8+:8] = ustrm_crc[7:0];
-                end
-              endcase // case (ustrm_data_beat)
+          d_pl_valid      = pl_valid      ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[1*256+:256] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[0*16+:16];
             end
-          else
-            begin
-              d_pl_valid = 1'b0;
+            4'h1: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*256+:256] = ustrm_data;
               d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*16+:16] = 16'h0;
             end
+            default: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*256+:256] = ustrm_data;
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*16+:16] = ustrm_crc[0*16+:16];
+            end
+          endcase // case (ustrm_data_beat)
         end
     if (X8_F2)
       always_comb
         begin
-          d_pl_valid = pl_valid;
-          d_pl_data = pl_data;
-          d_pl_crc_valid = pl_crc_valid;
-          d_pl_crc = pl_crc;
-          if (ustrm_valid)
-            begin
-              case (ustrm_data_beat)
-                4'h0: begin
-                  d_pl_valid = 1'b1;
-                  d_pl_data[0*128+:128] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid;
-                  d_pl_crc[0*8+:8] = ustrm_crc[7:0];
-                end
-                4'h1: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[1*128+:128] = ustrm_data;
-                  d_pl_crc_valid = 1'b0;
-                  d_pl_crc[1*8+:8] = ustrm_crc[7:0];
-                end
-                default: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[0*128+:128] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid;
-                  d_pl_crc[0*8+:8] = ustrm_crc[7:0];
-                end
-              endcase // case (ustrm_data_beat)
+          d_pl_valid      = pl_valid      ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[1*128+:128] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[1*8+:8] = ustrm_crc[0*8+:8];
             end
-          else
-            begin
-              d_pl_valid = 1'b0;
+            4'h1: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*128+:128] = ustrm_data;
               d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*8+:8] = ustrm_crc[0*8+:8];
             end
+            default: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*128+:128] = ustrm_data;
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*8+:8] = ustrm_crc[0*8+:8];
+            end
+          endcase // case (ustrm_data_beat)
         end
-    if (X4_Q2 | X4_H1)
+
+    if (X4_Q2)
+      always_comb
+        begin
+          d_pl_valid      = pl_valid      ;
+          d_pl_hold_valid = pl_hold_valid ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[1] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_valid[0] = pl_hold_valid[0];
+              d_pl_data[3*256+:256] = ustrm_data[0*256+:256];
+              d_pl_crc_valid = pl_crc_valid | ustrm_crc_valid[0];
+              d_pl_crc[1*16+:16] = ustrm_crc[0*16+:16];
+            end
+            4'h1: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = pl_hold_valid[0];
+              d_pl_data[2*256+:256] = ustrm_data[0*256+:256];
+              d_pl_crc_valid = pl_crc_valid;
+              d_pl_crc = pl_crc;
+            end
+            4'h2: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[1*256+:256] = ustrm_data[0*256+:256];
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[0*16+:16];
+            end
+            4'h3: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = 2'b0;
+              d_pl_data[0*256+:256] = ustrm_data[0*256+:256];
+              d_pl_crc_valid = pl_crc_valid;
+              d_pl_crc = pl_crc;
+            end
+            default: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[0*256+:256] = ustrm_data[0*256+:256];
+              d_pl_crc_valid = ustrm_crc_valid[0];
+            end
+          endcase // case (ustrm_data_beat)
+        end
+    if (X4_H2)
+      always_comb
+        begin
+          d_pl_valid      = pl_valid      ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[3*128+:128] = ustrm_data[0*128+:128];
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[1*8+:8] = ustrm_crc[0*8+:8];
+            end
+            4'h1: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[2*128+:128] = ustrm_data[0*128+:128];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*8+:8] = ustrm_crc[0*8+:8];
+            end
+            4'h2: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[1*128+:128] = ustrm_data[0*128+:128];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc = pl_crc;
+            end
+            4'h3: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*128+:128] = ustrm_data[0*128+:128];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc = pl_crc;
+            end
+            default: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*128+:128] = ustrm_data[0*128+:128];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc = pl_crc;
+            end
+          endcase // case (ustrm_data_beat)
+        end
+
+    if (X4_F2)
+      always_comb
+        begin
+          d_pl_valid      = pl_valid      ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[3*64+:64] = ustrm_data[0*64+:64];
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[3*4+:4] = ustrm_crc[0*4+:4];
+            end
+            4'h1: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[2*64+:64] = ustrm_data[0*64+:64];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[2*4+:4] = ustrm_crc[0*4+:4];
+            end
+            4'h2: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[1*64+:64] = ustrm_data[0*64+:64];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[1*4+:4] = ustrm_crc[0*4+:4];
+            end
+            4'h3: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*64+:64] = ustrm_data[0*64+:64];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*4+:4] = ustrm_crc[0*4+:4];
+            end
+            default: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*64+:64] = ustrm_data[0*64+:64];
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*4+:4] = ustrm_crc[0*4+:4];
+            end
+          endcase // case (ustrm_data_beat)
+        end
+
+
+
+
+
+
+
+    if (X8_H1)
+      always_comb
+        begin
+          d_pl_valid      = pl_valid      ;
+          d_pl_hold_valid = pl_hold_valid ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[1] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_valid[0] = pl_hold_valid[0];
+              d_pl_data[1*512+:512] = ustrm_data;
+              d_pl_crc_valid = pl_crc_valid | ustrm_crc_valid[0];
+              d_pl_crc[1*16+:16] = ustrm_crc[15:0];
+            end
+            4'h1: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[0*512+:512] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[15:0];
+            end
+            default: begin
+              d_pl_valid[1:0] = 2'b0;
+              d_pl_hold_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[0*512+:512] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[15:0];
+            end
+          endcase // case (ustrm_data_beat)
+        end
+    if (X8_F1)
+      always_comb
+        begin
+          d_pl_valid      = pl_valid      ;
+          d_pl_data       = pl_data       ;
+          d_pl_crc_valid  = pl_crc_valid  ;
+          d_pl_crc        = pl_crc        ;
+          case (ustrm_data_beat)
+            4'h0: begin
+              d_pl_valid[0] = ustrm_valid & ustrm_dvalid[0];
+              d_pl_data[1*256+:256] = ustrm_data;
+              d_pl_crc_valid = ustrm_crc_valid[0];
+              d_pl_crc[0*16+:16] = ustrm_crc[15:0];
+            end
+            4'h1: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*256+:256] = ustrm_data;
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*16+:16] = 16'h0;
+            end
+            default: begin
+              d_pl_valid[0] = 1'b0;
+              d_pl_data[0*256+:256] = ustrm_data;
+              d_pl_crc_valid = 1'b0;
+              d_pl_crc[0*16+:16] = ustrm_crc[15:0];
+            end
+          endcase // case (ustrm_data_beat)
+        end
+
+    if (X4_H1)
       always_comb
         begin
           d_pl_valid = pl_valid;
@@ -472,7 +657,13 @@ module lpif_ctl
               d_pl_crc_valid = 1'b0;
             end
         end // always_comb
-    if (X4_H2 | X4_F1)
+
+
+
+
+
+
+    if ( X4_F1)
       always_comb
         begin
           d_pl_valid = pl_valid;
@@ -520,54 +711,7 @@ module lpif_ctl
               d_pl_crc_valid = 1'b0;
             end
         end // always_comb
-    if (X4_F2)
-      always_comb
-        begin
-          d_pl_valid = pl_valid;
-          d_pl_data = pl_data;
-          d_pl_crc_valid = pl_crc_valid;
-          d_pl_crc = pl_crc;
-          if (ustrm_valid)
-            begin
-              case (ustrm_data_beat)
-                4'h0: begin
-                  d_pl_valid = 1'b1;
-                  d_pl_data[0*64+:64] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid;
-                  d_pl_crc[0*4+:4] = ustrm_crc[3:0];
-                end
-                4'h1: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[1*64+:64] = ustrm_data;
-                  d_pl_crc_valid = 1'b0;
-                  d_pl_crc[1*4+:4] = ustrm_crc[3:0];
-                end
-                4'h2: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[2*64+:64] = ustrm_data;
-                  d_pl_crc_valid = 1'b0;
-                  d_pl_crc[2*4+:4] = ustrm_crc[3:0];
-                end
-                4'h3: begin
-                  d_pl_valid = 1'b0;
-                  d_pl_data[3*4+:64] = ustrm_data;
-                  d_pl_crc_valid = 1'b0;
-                  d_pl_crc[3*4+:4] = ustrm_crc[3:0];
-                end
-                default: begin
-                  d_pl_valid = 1'b1;
-                  d_pl_data[0+:64] = ustrm_data;
-                  d_pl_crc_valid = ustrm_crc_valid;
-                  d_pl_crc[0+:4] = ustrm_crc[3:0];
-                end
-              endcase // case (ustrm_data_beat)
-            end
-          else
-            begin
-              d_pl_valid = 1'b0;
-              d_pl_crc_valid = 1'b0;
-            end
-        end // always_comb
+
     if (X2_H1)
       always_comb
         begin
@@ -1142,6 +1286,7 @@ module lpif_ctl
           pl_speedmode <= 3'b0;
 
           pl_valid <= {LPIF_VALID_WIDTH{1'b0}};
+          pl_hold_valid <= 1'b0;
           pl_data <= {LPIF_DATA_WIDTH*8{1'b0}};
           pl_crc_valid <= {LPIF_VALID_WIDTH{1'b0}};
           pl_crc <= {LPIF_CRC_WIDTH{1'b0}};
@@ -1161,6 +1306,7 @@ module lpif_ctl
           pl_speedmode <= lsm_speedmode;
 
           pl_valid <= d_pl_valid;
+          pl_hold_valid <= d_pl_hold_valid;
           pl_data <= d_pl_data;
           pl_crc_valid <= d_pl_crc_valid;
           pl_crc <= d_pl_crc;
@@ -1213,37 +1359,59 @@ module lpif_ctl
   assign lp_fifo_wrdata = {lp_data,      lp_crc,      lp_crc_valid,      lp_valid,      lp_stream};
   assign                  {lp_fifo_data, lp_fifo_crc, lp_fifo_crc_valid, lp_fifo_valid, lp_fifo_stream} =  lp_fifo_rddata;
 
-  assign lp_fifo_push = lp_irdy & |lp_valid & pl_trdy;
+  assign lp_fifo_push = |lp_valid & pl_trdy;
 
-  generate
-    if (X16_Q2 | X16_H2 | X16_F2 | X16_F1 | X16_H1)
-      begin
-        assign lp_fifo_pop = ~lp_fifo_empty & (tx_mrk_userbit_vld_del | fifo_not_empty);
-      end
-    else
-      begin
-        assign lp_fifo_pop = ~lp_fifo_empty & (tx_mrk_userbit_vld_del | fifo_not_empty) & (lp_data_beat == 4'h0);
-      end
-  endgenerate
+  assign lp_fifo_pop = clear_to_tx & (lp_data_beat == 4'h0);
+//   generate
+//     if (X16_Q2 | X16_H2 | X16_F2 | X16_F1 | X16_H1)
+//       begin
+//         assign lp_fifo_pop = ~lp_fifo_empty & (tx_mrk_userbit_vld_del | fifo_not_empty);
+//       end
+//     else
+//       begin
+//         assign lp_fifo_pop = ~lp_fifo_empty & (lp_data_beat == 4'h0);
+//       end
+//   endgenerate
 
   always_ff @(posedge lclk or negedge rst_n)
     begin
       if (~rst_n)
         begin
-          fifo_not_empty <= 1'b0;
+//          fifo_not_empty <= 1'b0;
           tx_mrk_userbit_vld_del <= 1'b0;
-          lp_fifo_pop1 <= 1'b0;
         end
       else
         begin
-          if (lp_fifo_pop & ~lp_fifo_empty)
-            fifo_not_empty <= 1'b1;
-          else if (lp_fifo_empty)
-            fifo_not_empty <= 1'b0;
+//          if (lp_fifo_pop & ~lp_fifo_empty)
+//            fifo_not_empty <= 1'b1;
+//          else if (lp_fifo_empty)
+//            fifo_not_empty <= 1'b0;
+
           tx_mrk_userbit_vld_del <= tx_mrk_userbit_vld;
-          lp_fifo_pop1 <= lp_fifo_pop;
         end
     end
+
+
+  // We change aib_aligned_to_tx on marker bit so it is available the cycle after marker
+  // which is lsbit of AIB word
+  always_ff @(posedge lclk or negedge rst_n)
+    begin
+      if (~rst_n)
+        begin
+          aib_aligned_to_tx <= 1'b0;
+        end
+      else
+        begin if (tx_mrk_userbit_vld)
+          aib_aligned_to_tx <= (lp_fifo_push | ~lp_fifo_empty);
+        end
+        begin if (lp_fifo_pop & (~lp_fifo_push) & (lp_fifo_numfilled == 1))
+          aib_aligned_to_tx <= 1'b0;
+        end
+    end
+
+  assign clear_to_tx = aib_aligned_to_tx & ~lp_fifo_empty;
+
+
 
   /* syncfifo_reg AUTO_TEMPLATE (
    .FIFO_WIDTH_WID  (LP_FIFO_WIDTH),
@@ -1296,9 +1464,9 @@ module lpif_ctl
             if (lp_fifo_pop)
               begin
                 dstrm_valid = 1'b1;
-                dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+                dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
                 dstrm_data = lp_fifo_data;
-                dstrm_crc_valid = lp_fifo_crc_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+                dstrm_crc_valid = lp_fifo_crc_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
                 dstrm_crc = lp_fifo_crc;
                 dstrm_protid = protid;
               end
@@ -1317,21 +1485,24 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*512+:512];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*16+:16];
-              end
-              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[1];
                 dstrm_data = lp_fifo_data[1*512+:512];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
                 dstrm_crc = lp_fifo_crc[1*16+:16];
               end
+              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[0];
+                dstrm_data = lp_fifo_data[0*512+:512];
+                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc = lp_fifo_crc[0*16+:16];
+              end
               default: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[0*512+:512];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
                 dstrm_crc = lp_fifo_crc[0*16+:16];
@@ -1343,24 +1514,27 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*256+:256];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*8+:8];
-              end
-              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[1*256+:256];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[1*8+:8];
+                dstrm_crc = lp_fifo_crc[0*16+:16]; // We purposely replicated the CRC (index=0*16 is correct)
               end
-              default: begin
+              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[0*256+:256];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*8+:8];
+                dstrm_crc = lp_fifo_crc[0*16+:16];
+              end
+              default: begin
+                dstrm_dvalid = 1'b0;
+                dstrm_data = lp_fifo_data[0*256+:256];
+                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc = lp_fifo_crc[0*16+:16];
               end
             endcase // case (lp_data_beat)
           end
@@ -1369,21 +1543,24 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*128+:128];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*8+:8];
-              end
-              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[1*128+:128];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
                 dstrm_crc = lp_fifo_crc[1*8+:8];
               end
+              4'h1: begin
+                dstrm_dvalid = 1'b0;
+                dstrm_data = lp_fifo_data[0*128+:128];
+                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc = lp_fifo_crc[0*8+:8];
+              end
               default: begin
+                dstrm_dvalid = 1'b0;
                 dstrm_data = lp_fifo_data[0*128+:128];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
                 dstrm_crc = lp_fifo_crc[0*8+:8];
@@ -1395,34 +1572,39 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*256+:256];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*8+:8];
-              end
-              4'h1: begin
-                dstrm_data = lp_fifo_data[1*256+:256];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[1*8+:8];
-              end
-              4'h2: begin
-                dstrm_data = lp_fifo_data[2*256+:256];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[2*8+:8];
-              end
-              4'h3: begin
+                dstrm_dvalid = {1'b0, lp_fifo_valid[1]};
                 dstrm_data = lp_fifo_data[3*256+:256];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[3*8+:8];
+                dstrm_crc = lp_fifo_crc[1*16+:16];
+              end
+              4'h1: begin
+                dstrm_dvalid = {1'b0, lp_fifo_valid[1]};
+                dstrm_data = lp_fifo_data[2*256+:256];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 16'h0;
+              end
+              4'h2: begin
+                dstrm_dvalid = {1'b0, lp_fifo_valid[0]};
+                dstrm_data = lp_fifo_data[1*256+:256];
+                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc = lp_fifo_crc[0*16+:16];
+              end
+              4'h3: begin
+                dstrm_dvalid = {1'b0, lp_fifo_valid[0]};
+                dstrm_data = lp_fifo_data[0*256+:256];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 16'h0;
               end
               default: begin
+                dstrm_dvalid = {1'b0, lp_fifo_valid[0]};
                 dstrm_data = lp_fifo_data[0*256+:256];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*8+:8];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 16'h0;
               end
             endcase // case (lp_data_beat)
           end
@@ -1431,34 +1613,40 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*128+:128];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*4+:4];
-              end
-              4'h1: begin
-                dstrm_data = lp_fifo_data[1*128+:128];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[1*4+:4];
-              end
-              4'h2: begin
-                dstrm_data = lp_fifo_data[2*128+:128];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[2*4+:4];
-              end
-              4'h3: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[3*128+:128];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[3*4+:4];
+                dstrm_crc = lp_fifo_crc[1*8+:8];
+              end
+              4'h1: begin
+                dstrm_dvalid = lp_fifo_valid[0];
+                dstrm_data = lp_fifo_data[2*128+:128];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc = lp_fifo_crc[0*8+:8];
+              end
+              4'h2: begin
+                dstrm_dvalid = lp_fifo_valid[0];
+                dstrm_data = lp_fifo_data[1*128+:128];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 8'h0;
+              end
+              4'h3: begin
+                dstrm_dvalid = lp_fifo_valid[0];
+                dstrm_data = lp_fifo_data[0*128+:128];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 8'h0;
               end
               default: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[0*128+:128];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*4+:4];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = 8'h0;
               end
             endcase // case (lp_data_beat)
           end
@@ -1467,33 +1655,38 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
             dstrm_protid = protid;
+
             case (lp_data_beat)
               4'h0: begin
-                dstrm_data = lp_fifo_data[0*64+:64];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[0*4+:4];
-              end
-              4'h1: begin
-                dstrm_data = lp_fifo_data[1*64+:64];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[1*4+:4];
-              end
-              4'h2: begin
-                dstrm_data = lp_fifo_data[2*64+:64];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
-                dstrm_crc = lp_fifo_crc[2*4+:4];
-              end
-              4'h3: begin
+                dstrm_dvalid = lp_fifo_valid[0];
                 dstrm_data = lp_fifo_data[3*64+:64];
                 dstrm_crc_valid = lp_fifo_crc_valid[0];
                 dstrm_crc = lp_fifo_crc[3*4+:4];
               end
-              default: begin
+              4'h1: begin
+                dstrm_dvalid = 1'b0;
+                dstrm_data = lp_fifo_data[2*64+:64];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = lp_fifo_crc[2*4+:4];
+              end
+              4'h2: begin
+                dstrm_dvalid = 1'b0;
+                dstrm_data = lp_fifo_data[1*64+:64];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = lp_fifo_crc[1*4+:4];
+              end
+              4'h3: begin
+                dstrm_dvalid = 1'b0;
                 dstrm_data = lp_fifo_data[0*64+:64];
-                dstrm_crc_valid = lp_fifo_crc_valid[0];
+                dstrm_crc_valid = 1'b0;
+                dstrm_crc = lp_fifo_crc[0*4+:4];
+              end
+              default: begin
+                dstrm_dvalid = 1'b0;
+                dstrm_data = lp_fifo_data[0*64+:64];
+                dstrm_crc_valid = 1'b0;
                 dstrm_crc = lp_fifo_crc[0*4+:4];
               end
             endcase // case (lp_data_beat)
@@ -1503,8 +1696,8 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1529,8 +1722,8 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1555,8 +1748,8 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1591,8 +1784,8 @@ module lpif_ctl
       begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1627,8 +1820,8 @@ module lpif_ctl
        begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1683,8 +1876,8 @@ module lpif_ctl
        begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1739,8 +1932,8 @@ module lpif_ctl
        begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin
@@ -1835,8 +2028,8 @@ module lpif_ctl
        begin
         always_comb
           begin
-            dstrm_valid = |lp_fifo_valid & ~lp_fifo_empty;
-            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{~lp_fifo_empty}};
+            dstrm_valid = |lp_fifo_valid & clear_to_tx;
+            dstrm_dvalid = lp_fifo_valid & {LPIF_VALID_WIDTH{clear_to_tx}};
             dstrm_protid = protid;
             case (lp_data_beat)
               4'h0: begin

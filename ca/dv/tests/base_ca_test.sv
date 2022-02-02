@@ -219,8 +219,8 @@ task base_ca_test_c::global_timer();
     fork
        begin
          #30us; ///GEN1 needs more time for (online and then align_done)
-         if((gen_if.die_a_align_done == 0)  && (gen_if.die_b_align_done == 0)) begin
-             `uvm_fatal("NO_ALIGN_DONE TIMER", $sformatf("\n ***> [DIE_A/DIE_B] ALIGN_DONE is not asserted within expected time [25usec] %0t <***\n", $time));
+         if((gen_if.die_a_align_done == 0)  || (gen_if.die_b_align_done == 0)) begin
+             `uvm_fatal("NO_ALIGN_DONE TIMER", $sformatf("\n ***> [DIE_A/DIE_B] ALIGN_DONE is not asserted within expected time [30usec] %0t <***\n", $time));
          end
        end
     join_none

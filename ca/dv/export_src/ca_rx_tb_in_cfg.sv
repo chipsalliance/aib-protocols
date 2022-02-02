@@ -130,7 +130,7 @@ function ca_rx_tb_in_cfg_c::new(string name = "ca_rx_tb_in_cfg");
     super.new(name);
     //this.shuffle_cnt = randomize(shuffle_cnt);
     this.delay_x_value    = 10; 
-    this.delay_xz_value   = 127; 
+    this.delay_xz_value   = 1024; 
 endfunction
  
 //

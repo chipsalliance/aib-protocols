@@ -83,7 +83,6 @@ def main():
         shutil.rmtree("./sailrock_array")
 
     test_num=0;
-    ##for testbench in ["tb_mf2_sf2", "tb_mh2_sh2", "tb_mq2_sq2", "tb_mf2_sh2", "tb_mh2_sf2", "tb_mf2_sq2", "tb_mq2_sf2", "tb_mq2_sh2", "tb_mh2_sq2", "tb_mf2.1_sf1", "tb_mh2.1_sh1", "tb_mf2.1_sh1", "tb_mh2.1_sf1"]:
     for testbench in ["tb_mf2_sf2", "tb_mh2_sh2", "tb_mq2_sq2", "tb_mf2_sh2", "tb_mh2_sf2", "tb_mf2_sq2", "tb_mq2_sf2", "tb_mq2_sh2", "tb_mh2_sq2", "tb_mf2.1_sf1", "tb_mh2.1_sh1", "tb_mf2.1_sh1", "tb_mh2.1_sf1"]:
         master_dict = dict()
 
@@ -202,7 +201,21 @@ def generate_sailrock(local_config):
     if not os.path.exists("./sailrock_array"):
         os.makedirs("./sailrock_array")
 
-    sailrock_name = ("test_{:03}_{}_{}_{}".format (local_config["test_num"], local_config["testbench"], local_config["target_param"], local_config[local_config["target_param"]] ) )
+
+    if (local_config['testbench'] == "tb_mf2_sf2"   or
+        local_config['testbench'] == "tb_mh2_sh2"   or
+        local_config['testbench'] == "tb_mq2_sq2"   or
+        local_config['testbench'] == "tb_mf2.1_sf1" or
+        local_config['testbench'] == "tb_mh2.1_sh1"):
+            asym_cfg=0
+    else:
+            asym_cfg=1
+
+    if((asym_cfg==1) and (local_config["target_param"]=="stb_en")):
+        sailrock_name = ("test_{:03}_{}_{}_{}".format (local_config["test_num"], local_config["testbench"], local_config["target_param"], 0 ) )
+    else:
+        sailrock_name = ("test_{:03}_{}_{}_{}".format (local_config["test_num"], local_config["testbench"], local_config["target_param"], local_config[local_config["target_param"]] ) )
+
     sailrock_name   = "./sailrock_array/"+sailrock_name + "_sailrock_cfg.txt"
     global g_sail_file
     g_sail_file       = open(sailrock_name, "w+")
@@ -234,8 +247,6 @@ def generate_sailrock(local_config):
         number_of_channel=random.choice(number_list)
     else:
         number_of_channel=random.choice(number_list_1)
-
-
 
     g_sail_file.write("//\n")
     print_to_sail("interface_0", "master", "slave")
@@ -388,9 +399,9 @@ def generate_sailrock(local_config):
         print_to_sail("GLOBAL_TX_DBI_EN"       , "0", "0")
         print_to_sail("GLOBAL_RX_DBI_EN"       , "0", "0")
         print_to_sail("////aib setting"        , "", "")
-        print_to_sail("aib_ver"                , "2", "1")
-        print_to_sail("aib_tx_bit_per_channel" , "40", "20")
-        print_to_sail("aib_rx_bit_per_channel" , "40", "20")
+        print_to_sail("aib_ver"                , "1", "2")
+        print_to_sail("aib_tx_bit_per_channel" , "20", "40")
+        print_to_sail("aib_rx_bit_per_channel" , "20", "40")
         print_to_sail("ASYMMETRIC_CA"          , "0" , "0")
 
     elif local_config['testbench'] == "tb_mh2.1_sh1":
@@ -410,8 +421,8 @@ def generate_sailrock(local_config):
 
 
     elif local_config['testbench'] == "tb_mf2.1_sh1":
-        print_to_sail("GLOBAL_TX_MODE"         , "reg", "fifo_2x")
-        print_to_sail("GLOBAL_RX_MODE"         , "reg", "fifo_2x")
+        print_to_sail("GLOBAL_TX_MODE"         , "fifo_1x", "fifo_2x")
+        print_to_sail("GLOBAL_RX_MODE"         , "fifo_1x", "fifo_2x")
         print_to_sail("GLOBAL_GEN2_MODE"       , "0", "0")
         print_to_sail("GLOBAL_TX_WMARKER_EN"   , "0", "0")
         print_to_sail("GLOBAL_TX_MARKER_LOC"   , "39", "39")
@@ -425,8 +436,8 @@ def generate_sailrock(local_config):
         print_to_sail("ASYMMETRIC_CA"          , "1" , "1")
 
     elif local_config['testbench'] == "tb_mh2.1_sf1":
-        print_to_sail("GLOBAL_TX_MODE"         , "fifo_2x", "fifo_1x")
-        print_to_sail("GLOBAL_RX_MODE"         , "fifo_2x", "fifo_1x")
+        print_to_sail("GLOBAL_TX_MODE"         , "reg", "fifo_2x")
+        print_to_sail("GLOBAL_RX_MODE"         , "reg", "fifo_2x")
         print_to_sail("GLOBAL_GEN2_MODE"       , "0", "0")
         print_to_sail("GLOBAL_TX_WMARKER_EN"   , "0", "0")
         print_to_sail("GLOBAL_TX_MARKER_LOC"   , "39", "39")
@@ -434,9 +445,9 @@ def generate_sailrock(local_config):
         print_to_sail("GLOBAL_TX_DBI_EN"       , "0", "0")
         print_to_sail("GLOBAL_RX_DBI_EN"       , "0", "0")
         print_to_sail("////aib setting"        , "", "")
-        print_to_sail("aib_ver"                , "2", "2")
-        print_to_sail("aib_tx_bit_per_channel" , "40", "40")
-        print_to_sail("aib_rx_bit_per_channel" , "40", "40")
+        print_to_sail("aib_ver"                , "1", "2")
+        print_to_sail("aib_tx_bit_per_channel" , "20", "40")
+        print_to_sail("aib_rx_bit_per_channel" , "20", "40")
         print_to_sail("ASYMMETRIC_CA"          , "1" , "1")
 
     ch_en_vector = 0
@@ -444,10 +455,11 @@ def generate_sailrock(local_config):
         ch_en_vector = (ch_en_vector*2) + 1
 
     print_to_sail("aib_channel_enable"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
-    #if local_config['testbench'] == "tb_mf1_sf2.1": ##illegal
-    #    print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
-    #else:
-    #    print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(0)), "{}".format(hex(0)))
+    if ((local_config['testbench'] == "tb_mf2.1_sf1")or(local_config['testbench'] == "tb_mf2.1_sh1")):
+        #print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(ch_en_vector)))
+        print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(ch_en_vector)), "{}".format(hex(0)))
+    else:
+        print_to_sail("aib_reg_to_reg_channel"     ,"{}".format(hex(0)), "{}".format(hex(0)))
     ##############################################################
     print_to_sail("aib_rx_walign_en"              , 1, 1)
     print_to_sail("aib_tx_swap_en"                , 0, 0)
@@ -458,11 +470,19 @@ def generate_sailrock(local_config):
     print_to_sail("// Channel Alignment setting"  , "", "")
     print_to_sail("CA_ALIGN_FLY"                  , local_config["align_fly"], local_config["align_fly"]) 
     print_to_sail("CA_RDEN_DLY"                   , local_config["rden_dly"], local_config["rden_dly"]) 
-    print_to_sail("CA_TX_STB_EN"                  , local_config["stb_en"], local_config["stb_en"]) 
-    print_to_sail("CA_RX_STB_EN"                  , local_config["stb_en"], local_config["stb_en"]) 
-    print_to_sail("CA_TX_STB_LOC"                 , local_config["stb_loc"], local_config["stb_loc"]) 
-    print_to_sail("CA_RX_STB_LOC"                 , local_config["stb_loc"], local_config["stb_loc"]) 
+    if (asym_cfg==1) :
+        print_to_sail("CA_TX_STB_EN"                  , 0, 0) 
+        print_to_sail("CA_RX_STB_EN"                  , 0, 0) 
+    else:
+        print_to_sail("CA_TX_STB_EN"                  , local_config["stb_en"], local_config["stb_en"]) 
+        print_to_sail("CA_RX_STB_EN"                  , local_config["stb_en"], local_config["stb_en"]) 
 
+    if ((local_config["stb_loc"]==39) and ((local_config['testbench'] == "tb_mf2.1_sf1")or(local_config['testbench'] == "tb_mh2.1_sh1")or(local_config['testbench'] == "tb_mf2.1_sh1")or(local_config['testbench'] == "tb_mh2.1_sf1"))):   ####avoiding GEN1 marker location for strobe
+        print_to_sail("CA_TX_STB_LOC"                 ,local_config["stb_loc"]-2, local_config["stb_loc"]-2) 
+        print_to_sail("CA_RX_STB_LOC"                 , local_config["stb_loc"]-2, local_config["stb_loc"]-2) 
+    else:
+        print_to_sail("CA_TX_STB_LOC"                 , local_config["stb_loc"], local_config["stb_loc"]) 
+        print_to_sail("CA_RX_STB_LOC"                 , local_config["stb_loc"], local_config["stb_loc"]) 
 
     g_sail_file.write("")
 

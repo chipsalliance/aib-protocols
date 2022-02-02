@@ -48,6 +48,15 @@ module lpif_txrx
    input logic [15:0]                   delay_y_value,
    input logic [15:0]                   delay_z_value,
 
+   input logic [AIB_LANES-1:0]          fifo_full,      // unused
+   input logic [AIB_LANES-1:0]          fifo_pfull,     // unused
+   input logic [AIB_LANES-1:0]          fifo_empty,     // unused
+   input logic [AIB_LANES-1:0]          fifo_pempty,    // unused
+   output logic [5:0]                   fifo_full_val,
+   output logic [5:0]                   fifo_pfull_val,
+   output logic [2:0]                   fifo_empty_val,
+   output logic [2:0]                   fifo_pempty_val,
+
    input logic [319:0]                  rx_phy0,
    input logic [319:0]                  rx_phy1,
    input logic [319:0]                  rx_phy2,
@@ -70,7 +79,7 @@ module lpif_txrx
    input logic [LPIF_DATA_WIDTH*8-1:0]  dstrm_data,
    input logic [LPIF_VALID_WIDTH-1:0]   dstrm_dvalid,
    input logic [LPIF_CRC_WIDTH-1:0]     dstrm_crc,
-   input logic [LPIF_VALID_WIDTH-1:0]   dstrm_crc_valid,
+   input logic [LPIF_VALID_WIDTH-1:0]   dstrm_crc_valid,  // FIXME , I think this needs to be 1 bit
    input logic                          dstrm_valid,
 
    output logic [319:0]                 tx_phy0,
@@ -108,6 +117,10 @@ module lpif_txrx
    );
 
   /*AUTOWIRE*/
+
+
+// FIXME remove initial #3us $finish;
+
 
   logic                                 tx_stb_userbit;
   logic [3:0]                           tx_mrk_userbit;
@@ -325,12 +338,98 @@ module lpif_txrx
   logic [(4*4)-1:0]                     ustrm_state_tmp;
   logic [(4*2)-1:0]                     ustrm_protid_tmp;
   logic [(4*1)-1:0]                     ustrm_valid_tmp;
-  logic [(2*2)-1:0]                     ustrm_crc_valid_tmp;
-  logic [(2*2)-1:0]                     ustrm_dvalid_tmp;
-  logic [(2*32)-1:0]                    ustrm_crc_tmp;
+  logic [(4*1)-1:0]                     ustrm_crc_valid_tmp;
+  logic [(4*1)-1:0]                     ustrm_dvalid_tmp;
+  logic [(4*16)-1:0]                    ustrm_crc_tmp;
+  logic [(4*256)-1:0]                   ustrm_data_tmp;
+
+  assign ustrm_state          = ustrm_state_tmp[3:0]  ;
+  assign ustrm_protid         = ustrm_protid_tmp[1:0] ;
+  assign ustrm_valid          = ustrm_valid_tmp[0]    ;
 
   generate
-    if (X16_Q2 | X8_Q2 | X4_Q2 | X16_H1 | X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
+
+    if (X16_Q2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[3]      , ustrm_dvalid_tmp[1]      } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3]   , ustrm_crc_valid_tmp[1]   } ;  // FIXME, this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[3*16+:16]  , ustrm_crc_tmp[1*16+:16]  } ; 
+         assign ustrm_data           = { ustrm_data_tmp[768+:256] , ustrm_data_tmp[512+:256] , ustrm_data_tmp[256+:256] , ustrm_data_tmp[0+:256] } ; 
+      end
+    else if (X16_H2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1]       } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]    } ;  // FIXME, this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[1*16+:16]   } ; 
+         assign ustrm_data           = { ustrm_data_tmp[256+:256] , ustrm_data_tmp[0+:256] } ; 
+      end
+    else if (X16_F2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]    } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0] } ;  // FIXME, this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:16]   } ; 
+         assign ustrm_data           = { ustrm_data_tmp[0+:256] } ; 
+      end
+
+    else if (X8_Q2)
+      begin
+         assign ustrm_dvalid         = { 1'b0, ustrm_dvalid_tmp[3]        } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3]     } ;  // FIXME, this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[3*8+:8]      , ustrm_crc_tmp[2*8+:8]    } ;
+         assign ustrm_data           = { ustrm_data_tmp[3*128+:128] , ustrm_data_tmp[2*128+:128] , ustrm_data_tmp[1*128+:128] , ustrm_data_tmp[0*128+:128] } ;
+      end
+    else if (X8_H2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*8+:8]      , ustrm_crc_tmp[0*8+:8]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*128+:128] , ustrm_data_tmp[0*128+:128] } ;
+      end
+    else if (X8_F2)
+      begin
+         assign ustrm_dvalid         = {ustrm_dvalid_tmp[0]    } ;
+         assign ustrm_crc_valid      = {ustrm_crc_valid_tmp[0] } ;
+         assign ustrm_crc            = {ustrm_crc_tmp[0+:8]    } ;
+         assign ustrm_data           = {ustrm_data_tmp[0+:128] } ;
+      end
+
+    else if (X4_Q2)
+      begin
+         assign ustrm_dvalid         = { 1'b0, ustrm_dvalid_tmp[3]            } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3]   } ;                        // FIXME , this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[3*4+:4]    , ustrm_crc_tmp[2*4+:4]    ,  ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    }      ;
+         assign ustrm_data           = { ustrm_data_tmp[3*64+:64] , ustrm_data_tmp[2*64+:64] ,  ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] }      ;
+      end
+    else if (X4_H2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1]      } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]   } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    }  ;
+         assign ustrm_data           = { ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] }  ;
+      end
+    else if (X4_F2)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]      } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]   } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:4]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:64]    } ;
+      end
+    else if (X16_H1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1] , ustrm_dvalid_tmp[0]      } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1] , ustrm_crc_valid_tmp[0]   } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*16+:16]    , ustrm_crc_tmp[0*16+:16]    }  ;
+         assign ustrm_data           = { ustrm_data_tmp[1*512+:512] , ustrm_data_tmp[0*512+:512] }  ;
+      end
+    else if (X16_F1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]      } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]   } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:16]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:512]    } ;
+      end
+
+    else if ( X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
       begin
 
          assign ustrm_state          = ustrm_state_tmp[3:0]  ;
@@ -342,7 +441,7 @@ module lpif_txrx
          assign ustrm_dvalid         = { ustrm_dvalid_tmp[2]    , ustrm_dvalid_tmp[0]   } ; 
 
       end
-    else if (X16_H2 | X8_H2 | X4_H2 | X16_F1 | X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
+    else if ( X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
       begin
 
          assign ustrm_state          = ustrm_state_tmp[3:0]    ; 
@@ -354,64 +453,140 @@ module lpif_txrx
          assign ustrm_dvalid         = ustrm_dvalid_tmp[0]     ;
 
       end
-    else if (X16_F2 | X8_F2 | X4_F2) // Gen2 F
-      begin
-
-         assign ustrm_state          = ustrm_state_tmp[3:0]    ;
-         assign ustrm_protid         = ustrm_protid_tmp[1:0]   ;
-         assign ustrm_valid          = ustrm_valid_tmp[0]      ;
- 
-         assign ustrm_crc_valid      = ustrm_crc_valid_tmp[0]  ;
-         assign ustrm_crc            = ustrm_crc_tmp[15:0]     ;
-         assign ustrm_dvalid         = ustrm_dvalid_tmp[0]     ;
-
-      end
   endgenerate
 
   logic [(4*4)-1:0]                     dstrm_state_tmp;
   logic [(4*2)-1:0]                     dstrm_protid_tmp;
   logic [(4*1)-1:0]                     dstrm_valid_tmp;
-  logic [(2*2)-1:0]                     dstrm_crc_valid_tmp;
-  logic [(2*2)-1:0]                     dstrm_dvalid_tmp;
-  logic [(2*32)-1:0]                    dstrm_crc_tmp;
+  logic [(4*1)-1:0]                     dstrm_crc_valid_tmp;
+  logic [(4*1)-1:0]                     dstrm_dvalid_tmp;
+  logic [(4*16)-1:0]                     dstrm_crc_tmp;
+  logic [(4*256)-1:0]                     dstrm_data_tmp;
+
+
+//   assign dstrm_state_tmp      = {4{dstrm_state}}     ;
+//   assign dstrm_protid_tmp     = {4{dstrm_protid}}    ;
+//   assign dstrm_valid_tmp      = {4{dstrm_valid}}     ;
+//   assign dstrm_crc_valid_tmp  = {4{dstrm_crc_valid[0]}} ; // FIXME, I think this needs to be 1 bit
+// 
+//   assign dstrm_dvalid_tmp    = { ((LPIF_DATA_WIDTH == 128) ? 2 : 4) {dstrm_dvalid}}    ;
+//   assign dstrm_crc_tmp       = { ((LPIF_DATA_WIDTH == 128) ? 2 : 4) {dstrm_crc}} ;
+// 
+
+  // These values are upsized to prevent undriven signals in the _tmp even though they would be unused
+  assign dstrm_state_tmp      = {4{dstrm_state}}    ;
+  assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
+  assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
 
   generate
-    if (X16_Q2 | X8_Q2 | X4_Q2 | X16_H1 | X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
+    if (X16_Q2)
       begin
-
-         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
-         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
-         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
-
-         assign dstrm_dvalid_tmp     = {2{dstrm_dvalid}}   ;
-         assign dstrm_crc_valid_tmp  = {2{dstrm_crc_valid[0], 1'b0}} ; // FIXME, I think this needs to be 1 bit
-         assign dstrm_crc_tmp        = {2{dstrm_crc}} ;
-
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[1]        , dstrm_dvalid[1]        , dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   , dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[16+:16]      , 16'h0                  , dstrm_crc[0+:16]       , 16'h0                  } ;
+         assign dstrm_data_tmp       = { dstrm_data[3*256+:256] , dstrm_data[2*256+:256] , dstrm_data[1*256+:256] , dstrm_data[0*256+:256] } ;
       end
-    else if (X16_H2 | X8_H2 | X4_H2 | X16_F1 | X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
+    else if (X16_H2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:16]       , 16'h0                  } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*256+:256] , dstrm_data[0*256+:256] } ;
+      end
+    else if (X16_F2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]    } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0] } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:16]   } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:256] } ;
+      end
+
+    else if (X8_Q2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        , dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   , 1'b0                   , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*8+:8]      , dstrm_crc[0*8+:8]      , 8'h0                   , 8'h0                   } ;
+         assign dstrm_data_tmp       = { dstrm_data[3*128+:128] , dstrm_data[2*128+:128] , dstrm_data[1*128+:128] , dstrm_data[0*128+:128] } ;
+      end
+    else if (X8_H2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*8+:8]      , dstrm_crc[0*8+:8]      } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*128+:128] , dstrm_data[0*128+:128] } ;
+      end
+    else if (X8_F2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:8]        } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:128]     } ;
+      end
+
+    else if (X4_Q2)
+      begin
+         assign dstrm_dvalid_tmp    = { dstrm_dvalid[0]      , dstrm_dvalid[0]      , dstrm_dvalid[0]      , dstrm_dvalid[0]      } ;
+         assign dstrm_crc_valid_tmp = { dstrm_crc_valid[0]   , 1'b0                 , 1'b0                 , 1'b0                 } ;
+         assign dstrm_crc_tmp       = { dstrm_crc[3*4+:4]    , dstrm_crc[2*4+:4]    , dstrm_crc[1*4+:4]    , dstrm_crc[0*4+:4]    } ;
+         assign dstrm_data_tmp      = { dstrm_data[3*64+:64] , dstrm_data[2*64+:64] , dstrm_data[1*64+:64] , dstrm_data[0*64+:64] } ;
+      end
+    else if (X4_H2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*4+:4]      , dstrm_crc[0*4+:4]      } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*64+:64]   , dstrm_data[0*64+:64]   } ;
+      end
+    else if (X4_F2)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:4]        } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:64]      } ;
+      end
+
+    else if (X16_H1)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[1]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , dstrm_crc_valid[0]       } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*16+:16]    , dstrm_crc[0*16+:16]    } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*512+:512] , dstrm_data[0*512+:512] } ;
+      end
+    else if (X16_F1)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:16]       } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:512]     } ;
+      end
+
+    else if (X8_F1 | X8_H1)
+      begin
+         //X8 has 8 bit rep struct
+         assign dstrm_dvalid_tmp     = {dstrm_dvalid[1]    , dstrm_dvalid[1]  , dstrm_dvalid[0]    , dstrm_dvalid[0] } ;
+         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0] , 1'b0             , dstrm_crc_valid[0] , 1'b0            } ;
+         assign dstrm_crc_tmp        = {dstrm_crc[31:16]   , dstrm_crc[31:16] , dstrm_crc[15:0]    , dstrm_crc[15:0] } ;
+      end
+
+
+
+
+    else if (X4_F1 | X4_H1)
+      begin
+         //X4 has 8 bit rep struct
+         assign dstrm_dvalid_tmp     = {dstrm_dvalid[0]    , dstrm_dvalid[0]  , dstrm_dvalid[0]    , dstrm_dvalid[0] } ;
+         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0] , 1'b0             , dstrm_crc_valid[0] , 1'b0            } ;
+         assign dstrm_crc_tmp        = {dstrm_crc[15:0]    , dstrm_crc[15:0] , dstrm_crc[15:0]    , dstrm_crc[15:0] } ;
+      end
+
+
+    else if (X8_F1 | X4_F1 | X2_F1) // Gen2 H or Gen1 F
       begin
 
-         // These values are upsized to prevent undriven and unused signals in the _tmp
-         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
-         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
-         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
-
-         assign dstrm_dvalid_tmp     = {2{dstrm_dvalid}}   ;
+         // These values are upsized to prevent undriven signals in the _tmp even though they would be unused
+         assign dstrm_dvalid_tmp     = {4{dstrm_dvalid[0]}}   ;
          assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0], 1'b0} ; // FIXME, I think this needs to be 1 bit
-         assign dstrm_crc_tmp        = {4{dstrm_crc}} ;
-
-      end
-    else if (X16_F2 | X8_F2 | X4_F2) // Gen2 F
-      begin
-
-         // These values are upsized to prevent undriven and unused signals in the _tmp
-         assign dstrm_state_tmp      = {4{dstrm_state}}    ;
-         assign dstrm_protid_tmp     = {4{dstrm_protid}}   ;
-         assign dstrm_valid_tmp      = {4{dstrm_valid}}    ;
-
-         assign dstrm_dvalid_tmp     = {4{dstrm_dvalid}}   ;
-         assign dstrm_crc_valid_tmp  = {4{dstrm_crc_valid[0]}} ; // FIXME, I think this needs to be 1 bit
-         assign dstrm_crc_tmp        = {4{dstrm_crc}}       ;
+         assign dstrm_crc_tmp        = {4{dstrm_crc[15:0]}} ;
 
       end
   endgenerate
@@ -450,11 +625,13 @@ module lpif_txrx
    .ustrm_valid            (ustrm_valid_tmp[]),
    .ustrm_state            (ustrm_state_tmp[]),
    .ustrm_protid           (ustrm_protid_tmp[]),
+   .ustrm_data             (ustrm_data_tmp[]),
    .ustrm_dvalid           (ustrm_dvalid_tmp[]),
    .ustrm_crc              (ustrm_crc_tmp[]),
    .ustrm_crc_valid        (ustrm_crc_valid_tmp[]),
    .dstrm_valid            (dstrm_valid_tmp[]),
    .dstrm_state            (dstrm_state_tmp[]),
+   .dstrm_data             (dstrm_data_tmp[]),
    .dstrm_protid           (dstrm_protid_tmp[]),
    .dstrm_dvalid           (dstrm_dvalid_tmp[]),
    .dstrm_crc              (dstrm_crc_tmp[]),
@@ -475,7 +652,7 @@ module lpif_txrx
              .tx_phy3                   (ll_tx_phy3[319:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
              .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
-             .ustrm_data                (ustrm_data[1023:0]),
+             .ustrm_data                (ustrm_data_tmp[1023:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[63:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
@@ -494,7 +671,7 @@ module lpif_txrx
              .rx_phy3                   (rx_phy3[319:0]),
              .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
              .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
-             .dstrm_data                (dstrm_data[1023:0]),
+             .dstrm_data                (dstrm_data_tmp[1023:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[63:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
@@ -518,7 +695,7 @@ module lpif_txrx
              .tx_phy3                   (ll_tx_phy3[159:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_data                (ustrm_data_tmp[511:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -537,7 +714,7 @@ module lpif_txrx
              .rx_phy3                   (rx_phy3[159:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_data                (dstrm_data_tmp[511:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -561,7 +738,7 @@ module lpif_txrx
              .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_data                (ustrm_data_tmp[255:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -580,7 +757,7 @@ module lpif_txrx
              .rx_phy3                   (rx_phy3[79:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_data                (dstrm_data_tmp[255:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -602,7 +779,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[319:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
              .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
-             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_data                (ustrm_data_tmp[511:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
@@ -619,7 +796,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[319:0]),
              .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
              .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
-             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_data                (dstrm_data_tmp[511:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
@@ -641,7 +818,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[159:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_data                (ustrm_data_tmp[255:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -658,7 +835,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[159:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_data                (dstrm_data_tmp[255:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -680,7 +857,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_data                (ustrm_data_tmp[127:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -697,7 +874,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_data                (dstrm_data_tmp[127:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -718,7 +895,7 @@ module lpif_txrx
              .tx_phy0                   (ll_tx_phy0[319:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[15:0]), // Templated
              .ustrm_protid              (ustrm_protid_tmp[7:0]), // Templated
-             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_data                (ustrm_data_tmp[255:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[3:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[3:0]), // Templated
@@ -734,7 +911,7 @@ module lpif_txrx
              .rx_phy0                   (rx_phy0[319:0]),
              .dstrm_state               (dstrm_state_tmp[15:0]), // Templated
              .dstrm_protid              (dstrm_protid_tmp[7:0]), // Templated
-             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_data                (dstrm_data_tmp[255:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[3:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[3:0]), // Templated
@@ -755,7 +932,7 @@ module lpif_txrx
              .tx_phy0                   (ll_tx_phy0[159:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_data                (ustrm_data_tmp[127:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -771,7 +948,7 @@ module lpif_txrx
              .rx_phy0                   (rx_phy0[159:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_data                (dstrm_data_tmp[127:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -792,7 +969,7 @@ module lpif_txrx
              .tx_phy0                   (ll_tx_phy0[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_data                (ustrm_data_tmp[63:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -808,7 +985,7 @@ module lpif_txrx
              .rx_phy0                   (rx_phy0[79:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_data                (dstrm_data_tmp[63:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -844,7 +1021,7 @@ module lpif_txrx
              .tx_phy15                  (ll_tx_phy15[79:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[1023:0]),
+             .ustrm_data                (ustrm_data_tmp[1023:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[31:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -875,7 +1052,7 @@ module lpif_txrx
              .rx_phy15                  (rx_phy15[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[1023:0]),
+             .dstrm_data                (dstrm_data_tmp[1023:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[31:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -911,7 +1088,7 @@ module lpif_txrx
              .tx_phy15                  (ll_tx_phy15[39:0]),     // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_data                (ustrm_data_tmp[511:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -942,7 +1119,7 @@ module lpif_txrx
              .rx_phy15                  (rx_phy15[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_data                (dstrm_data_tmp[511:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -970,7 +1147,7 @@ module lpif_txrx
              .tx_phy7                   (ll_tx_phy7[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[511:0]),
+             .ustrm_data                (ustrm_data_tmp[511:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[15:0]),   // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -993,7 +1170,7 @@ module lpif_txrx
              .rx_phy7                   (rx_phy7[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[511:0]),
+             .dstrm_data                (dstrm_data_tmp[511:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[15:0]),   // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -1021,7 +1198,7 @@ module lpif_txrx
              .tx_phy7                   (ll_tx_phy7[39:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_data                (ustrm_data_tmp[255:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -1044,7 +1221,7 @@ module lpif_txrx
              .rx_phy7                   (rx_phy7[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_data                (dstrm_data_tmp[255:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -1068,7 +1245,7 @@ module lpif_txrx
              .tx_phy3                   (ll_tx_phy3[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[255:0]),
+             .ustrm_data                (ustrm_data_tmp[255:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[7:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -1087,7 +1264,7 @@ module lpif_txrx
              .rx_phy3                   (rx_phy3[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[255:0]),
+             .dstrm_data                (dstrm_data_tmp[255:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[7:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -1111,7 +1288,7 @@ module lpif_txrx
              .tx_phy3                   (ll_tx_phy3[39:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_data                (ustrm_data_tmp[127:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -1130,7 +1307,7 @@ module lpif_txrx
              .rx_phy3                   (rx_phy3[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_data                (dstrm_data_tmp[127:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -1152,7 +1329,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[127:0]),
+             .ustrm_data                (ustrm_data_tmp[127:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[3:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -1169,7 +1346,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[127:0]),
+             .dstrm_data                (dstrm_data_tmp[127:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[3:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -1191,7 +1368,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_data                (ustrm_data_tmp[63:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[1:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -1208,7 +1385,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_data                (dstrm_data_tmp[63:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[1:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -1230,7 +1407,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[79:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[7:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[3:0]), // Templated
-             .ustrm_data                (ustrm_data[63:0]),
+             .ustrm_data                (ustrm_data_tmp[63:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[1:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[1:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[1:0]), // Templated
@@ -1247,7 +1424,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[79:0]),
              .dstrm_state               (dstrm_state_tmp[7:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[3:0]), // Templated
-             .dstrm_data                (dstrm_data[63:0]),
+             .dstrm_data                (dstrm_data_tmp[63:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[1:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[1:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[1:0]), // Templated
@@ -1269,7 +1446,7 @@ module lpif_txrx
              .tx_phy1                   (ll_tx_phy1[39:0]),      // Templated
              .ustrm_state               (ustrm_state_tmp[3:0]),  // Templated
              .ustrm_protid              (ustrm_protid_tmp[1:0]), // Templated
-             .ustrm_data                (ustrm_data[31:0]),
+             .ustrm_data                (ustrm_data_tmp[31:0]),
              .ustrm_dvalid              (ustrm_dvalid_tmp[0:0]), // Templated
              .ustrm_crc                 (ustrm_crc_tmp[0:0]),    // Templated
              .ustrm_crc_valid           (ustrm_crc_valid_tmp[0:0]), // Templated
@@ -1286,7 +1463,7 @@ module lpif_txrx
              .rx_phy1                   (rx_phy1[39:0]),
              .dstrm_state               (dstrm_state_tmp[3:0]),  // Templated
              .dstrm_protid              (dstrm_protid_tmp[1:0]), // Templated
-             .dstrm_data                (dstrm_data[31:0]),
+             .dstrm_data                (dstrm_data_tmp[31:0]),
              .dstrm_dvalid              (dstrm_dvalid_tmp[0:0]), // Templated
              .dstrm_crc                 (dstrm_crc_tmp[0:0]),    // Templated
              .dstrm_crc_valid           (dstrm_crc_valid_tmp[0:0]), // Templated
@@ -1385,8 +1562,13 @@ module lpif_txrx
       endcase // case (remote_rate_port)
     end
 
-  localparam RX_FIFO_DEPTH = 16'd32;
+  localparam RX_FIFO_DEPTH = 16'd8;
   localparam BASE_STB_INTV = 3 * RX_FIFO_DEPTH;  // 3 is the recommended factor
+
+  assign fifo_full_val   = RX_FIFO_DEPTH;
+  assign fifo_pfull_val  = RX_FIFO_DEPTH-4;
+  assign fifo_pempty_val = 3'h4;
+  assign fifo_empty_val  = 3'h0;
 
   always_comb
     begin

@@ -308,13 +308,13 @@ task ca_tx_tb_in_mon_c::mon_tx();
                        `ifdef GEN2
                            if(((`TB_DIE_A_BUS_BIT_WIDTH == 160) && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) || 
                               ((`TB_DIE_A_BUS_BIT_WIDTH == 320) && (`TB_DIE_B_BUS_BIT_WIDTH == 320)))begin
-                               //$display("tx_tb_in_mon.sv 2'b11 inside H2H,Q2Q loop,time %0t markstb_data=%h",$time,markstb_data);
-                               if(markstb_data != tx_data_prev[0]) begin
+                               //$display("tx_tb_in_mon.sv 2'b11 inside H2H,Q2Q loop,time %0t markstb_data=%h, my_name %0s,tx_data_prev[0] = %h",$time,markstb_data,my_name,tx_data_prev[0]);
                                  if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
                                    verify_tx_stb();  
                                  end
+                                 if(markstb_data != tx_data_prev[0]) begin
                                    aport.write(ca_item);
-                               end
+                                 end
                            end else begin
                                if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0))begin //dont check stbs after align_done case
                                   verify_tx_stb();  

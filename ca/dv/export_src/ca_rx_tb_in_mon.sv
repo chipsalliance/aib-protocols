@@ -267,7 +267,7 @@ task ca_rx_tb_in_mon_c::mon_rx();
             rx_data_prev[2] = rx_data_prev[1];             
             rx_data_prev[1] = rx_data_prev[0];             
             rx_data_prev[0] = rx_data;             
-          // $display("ca_rx_tb_in_mon_c ::: onlystb_data = %h onlymark_data = %h markstb_data %h,rx_data %h,rx_data_prev[0] %h,time %0t,my_name %s",onlystb_data,onlymark_data,markstb_data,rx_data,rx_data_prev[0],$time,my_name);
+            //$display("ca_rx_tb_in_mon_c ::: onlystb_data = %h onlymark_data = %h markstb_data %h,rx_data %h,rx_data_prev[0] %h,time %0t,my_name %s",onlystb_data,onlymark_data,markstb_data,rx_data,rx_data_prev[0],$time,my_name);
 
            `ifdef GEN1
                //MARKERS will be removed from AIB.So,for comparison 0 is updated at marker bit position

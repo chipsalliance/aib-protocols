@@ -31,6 +31,8 @@ module lpif_lsm
 
    input logic [3:0]  ustrm_state,
 
+   input logic        flit_in_queue,
+
    input logic        ctl_link_up,
    input logic        ctl_phy_err,
    output logic       lsm_state_active,
@@ -250,7 +252,7 @@ module lpif_lsm
   wire                sb_link_reset_ack = (sb_ustrm_link_reset_sts & sb_dstrm_link_reset_req);
   wire                sb_link_retrain_ack = (sb_ustrm_link_retrain_sts & sb_dstrm_link_retrain_req);
   wire                sb_ack = sb_l1_ack | sb_active_ack | sb_l2_ack | sb_link_reset_ack |
-                      sb_link_retrain_ack;
+                      sb_link_retrain_ack | (sb_dstrm_active_req & sb_ustrm_active_req);
 
   wire                exit_active = (coldstart |
                                      sb_ustrm_l1_req | sb_ustrm_l2_req | sb_ustrm_link_reset_req |
@@ -286,9 +288,8 @@ module lpif_lsm
     LSM_RETRAIN_b	= 5'hD,
     LSM_RETRAIN_c	= 5'hE,
     LSM_RETRAIN		= 5'hF,
-    LSM_DISABLE		= 5'h10,
-    LSM_SB_ACK		= 5'h11,
-    LSM_SB_ACK_STALLREQ	= 5'h12;
+    LSM_SB_ACK		= 5'h10,
+    LSM_SB_ACK_STALLREQ	= 5'h11;
 
   logic [4:0]         /* auto enum lsm_state_info */
                       lsm_state, d_lsm_state;
@@ -314,7 +315,6 @@ module lpif_lsm
       LSM_RETRAIN_b:       lsm_state_ascii = "lsm_retrain_b      ";
       LSM_RETRAIN_c:       lsm_state_ascii = "lsm_retrain_c      ";
       LSM_RETRAIN:         lsm_state_ascii = "lsm_retrain        ";
-      LSM_DISABLE:         lsm_state_ascii = "lsm_disable        ";
       LSM_SB_ACK:          lsm_state_ascii = "lsm_sb_ack         ";
       LSM_SB_ACK_STALLREQ: lsm_state_ascii = "lsm_sb_ack_stallreq";
       default:             lsm_state_ascii = "%Error             ";
@@ -360,31 +360,15 @@ module lpif_lsm
           LSM_RESET: begin
             d_pl_state_sts = STS_RESET;
             if (ctl_link_up)
-              d_lsm_state = sb_ustrm_active_req ? LSM_RESET_b : LSM_RESET_a;
-          end
-          LSM_RESET_b: begin
-            if (~sb_ustrm_active_req)
               begin
-                d_linkreset2reset = 1'b0;
+                d_pl_lnk_up = 1'b1;
                 d_lsm_state = LSM_RESET_a;
-              end
-            else
-              begin
-                d_lsm_dstrm_state = SB_ACTIVE_STS;
-                lsm_cg_req = 1'b1;
-                d_lsm_state = LSM_ACTIVE_a;
               end
           end
           LSM_RESET_a: begin
             begin
-              d_pl_lnk_up = 1'b1;
               d_lsm_dstrm_state = SB_NULL;
               if (coldstart)
-                begin
-                  lsm_cg_req = 1'b1;
-                  d_lsm_state = LSM_ACTIVE_a;
-                end
-              else if (sb_ustrm_active_req)
                 begin
                   lsm_cg_req = 1'b1;
                   d_lsm_state = LSM_ACTIVE_a;
@@ -396,6 +380,7 @@ module lpif_lsm
                 end
               else if (state_req_linkreset & state_req_change)
                 begin
+                  d_pl_state_sts = STS_LinkReset;
                   d_state_req_change = 1'b0;
                   d_lsm_state = LSM_LinkReset;
                 end
@@ -413,6 +398,7 @@ module lpif_lsm
               begin
                 d_pl_state_sts = STS_ACTIVE;
                 d_lsm_dstrm_state = SB_ACTIVE_STS;
+                d_lsm_speedmode = SPEEDMODE_GEN5;
                 d_lsm_state = LSM_ACTIVE;
               end
           end
@@ -425,7 +411,7 @@ module lpif_lsm
               end
           end
           LSM_ACTIVE_b: begin
-            if ((pl_stallreq & lp_stallack) | exit_active_sb)
+            if ((pl_stallreq & lp_stallack & ~flit_in_queue) | exit_active_sb)
               begin
                 if (state_req_retrain | coldstart)
                   begin
@@ -467,7 +453,7 @@ module lpif_lsm
                   d_lsm_state = LSM_RETRAIN;
                 else if (sb_ustrm_link_error)
                   d_lsm_state = LSM_LinkError;
-              end // if ((pl_stallreq & lp_stallack) | exit_active_sb)
+              end // if ((pl_stallreq & lp_stallack & ~flit_in_queue) | exit_active_sb)
           end // case: LSM_ACTIVE_b
           LSM_IDLE_L1_1: begin
             d_pl_state_sts = STS_IDLE_L1_1;
@@ -634,7 +620,7 @@ module lpif_lsm
               end
           end
           LSM_SB_ACK_STALLREQ: begin
-            if (pl_stallreq & lp_stallack)
+            if (pl_stallreq & lp_stallack & ~flit_in_queue)
               begin
                 d_lsm_state = lsm_return_state;
                 if (lsm_return_state == LSM_IDLE_L1_1)
@@ -657,7 +643,7 @@ module lpif_lsm
         lsm_dstrm_state <= 4'b0;
         lsm_speedmode <= 3'b0;
         pl_lnk_up <= 1'b0;
-        coldstart <= 1'b1;
+        coldstart <= 1'b0;
         lsm_exit_lp <= 1'b0;
         lsm_return_state <= 4'b0;
         state_req_del <= 4'b0;
@@ -718,7 +704,7 @@ module lpif_lsm
     else
       begin
         lsm_stall_req_del <= lsm_stall_req;
-        lp_stallack_del <= lp_stallack;
+        lp_stallack_del <= lp_stallack & ~flit_in_queue;
         if (lsm_stall_req)
           pl_stallreq <= 1'b1;
         else if (lp_stallack_del)
