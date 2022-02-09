@@ -115,8 +115,8 @@ task ca_afly1_stb_intv_variations_test_c::run_test(uvm_phase phase);
         ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
 
-        ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(96, 250);
-        ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(96, 250);
+        ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(100, 250);
+        ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv      =  $urandom_range(100, 250);
         ca_cfg.configure();
 
        `uvm_info("ca_afly1_stb_intv_variations_test ::run_phase",$sformatf("DIE_A tx_stb_intv = %h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv),UVM_LOW);

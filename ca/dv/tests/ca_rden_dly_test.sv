@@ -107,7 +107,7 @@ task ca_rden_dly_test_c::run_test(uvm_phase phase);
      result =  ck_xfer_cnt_a(1);
      result =  ck_xfer_cnt_b(1);
      `uvm_info("ca_rden_dly_test ::run_phase", "SCOREBOARD COMPARISON FIRST SET COMPLETED..\n", UVM_LOW);
- if ((`TB_DIE_A_BUS_BIT_WIDTH == 80) &&  (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin     
+         if ((`TB_DIE_A_BUS_BIT_WIDTH == 80) &&  (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin     
            if((ca_cfg.ca_die_a_rx_tb_in_cfg.very_first_rx_dout_time - ca_cfg.ca_die_a_rx_tb_in_cfg.very_first_align_done_time) == (15000+ (0*500))) begin
               `uvm_info("ca_rden_dly_test ::run_phase", "RDEN_DLY check proper...\n", UVM_LOW);
            end else begin

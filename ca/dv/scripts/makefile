@@ -129,7 +129,7 @@ VLOG_COMM = vlogan -sverilog -Mdir=csrc_debug +vcs+lic+wait +v2k -full64 -kdb -v
 	-debug_acc+r+w+dmptf -debug_region+cell+encrypt -CFLAGS \
 	+define+SYNOPSYS_SV +define+DESIGNWARE_INCDIR=${DESIGNWARE_HOME} \
 	+define+UVM_PACKER_MAX_BYTES=1500000 +define+UVM_DISABLE_AUTO_ITEM_RECORDING \
-	+define+WAVES -timescale=1ns/1ps +define+directed_test_sequence_length=10 \
+	+define+WAVES_VPD -timescale=1ns/1ps +define+directed_test_sequence_length=10 \
 	+incdir+${aib_inc_dir} +incdir+${ca_tb_inc_dir} ${my_cmd_aib_defines}
 
 VLOG_COMM_DUT = vlogan -sverilog +v2k -full64 -kdb +define+VCS_TIMESCALE_EN
@@ -233,7 +233,7 @@ endif
 
 
 sim :
-	./simv +UVM_TESTNAME=${gen_scenario} $(SEEDCMD) +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} -l ./logs/ca_tb.log
+	./simv +UVM_TESTNAME=${gen_scenario} $(SEEDCMD) +UVM_VERBOSITY=UVM_LOW +AIB_IF_COUNT=1 +AIB_CONFIG_DIR=./ +AIB_MASTER_CONFIG_FILE=${master_cfg_file} +AIB_SLAVE_CONFIG_FILE=${slave_cfg_file} -l ./logs/ca_tb.log -cm line+cond+tgl+fsm+branch+assert
 
 .EXPORT_ALL_VARIABLES:
 

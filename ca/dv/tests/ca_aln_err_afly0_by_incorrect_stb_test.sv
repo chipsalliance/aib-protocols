@@ -99,6 +99,11 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::aln_err_chk();
            repeat(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv*2)@(posedge vif.clk);
            ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly               = 1;
            ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly               = 1;
+           ca_top_env.ca_scoreboard.do_compare                  = 0;
+           ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor            = 1;
+           ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor            = 1;
+           ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor            = 1;
+           ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor            = 1;
            ca_cfg.ca_die_a_tx_tb_out_cfg.shift_stb_intv_enb     = 1;
            ca_cfg.ca_die_b_tx_tb_out_cfg.shift_stb_intv_enb     = 1;
        end
@@ -107,7 +112,6 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::aln_err_chk();
    fork 
        begin
             wait(gen_if.die_b_align_error == 1);
-              ca_top_env.ca_scoreboard.do_compare = 0;
               sbd_counts_clear();
               die_a_aln_err = 1;
               `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
@@ -117,7 +121,6 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::aln_err_chk();
    fork 
        begin
             wait(gen_if.die_b_align_error == 1);
-              ca_top_env.ca_scoreboard.do_compare = 0;
               sbd_counts_clear();
               die_b_aln_err = 1;
               `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);

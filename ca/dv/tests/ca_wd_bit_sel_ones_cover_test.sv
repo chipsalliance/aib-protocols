@@ -158,6 +158,7 @@ task ca_wd_bit_sel_ones_cover_test_c::run_test(uvm_phase phase);
        ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
        ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
       `uvm_info("ca_wd_bit_sel_ones_cover_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+       repeat(tx_stb_intv_bkp)@ (posedge vif.clk);
 
       `uvm_info("ca_wd_bit_sel_ones_cover_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
        ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -170,9 +171,7 @@ task ca_wd_bit_sel_ones_cover_test_c::run_test(uvm_phase phase);
        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor     = 0;
        ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor     = 0;
 
-    `uvm_info("ca_wd_bit_sel_ones_cover_test::run_phase", "ca_vseq startsss..\n", UVM_LOW);
-     ca_traffic_seq.start(ca_top_env.virt_seqr);
-    `uvm_info("ca_wd_bit_sel_ones_cover_test::run_phase", "ca_vseq endsss...\n", UVM_LOW);
+    `uvm_info("ca_wd_bit_sel_ones_cover_test::run_phase", "ca_vseq ends...\n", UVM_LOW);
   endtask : run_test
  
 //------------------------------------------

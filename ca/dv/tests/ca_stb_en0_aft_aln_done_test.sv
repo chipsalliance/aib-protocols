@@ -121,7 +121,7 @@ endtask: chk_align_done
 task ca_stb_en0_aft_aln_done_test_c::aln_err_chk();
      forever begin
         repeat(1)@(posedge vif.clk); 
-          if ((gen_if.die_a_align_error  == 1) || (gen_if.die_b_align_error == 1)) begin
+          if ((gen_if.die_a_align_error  == 1) && (gen_if.die_b_align_error == 1)) begin
                repeat(tx_stb_intv_bkp * 2)@(posedge vif.clk);
                  ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en = 1;
                  ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en = 1;

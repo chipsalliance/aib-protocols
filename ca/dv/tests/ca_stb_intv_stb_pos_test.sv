@@ -127,7 +127,7 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
         end
        `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", $sformatf("tx_stb_intv_bkp = %0d..\n",tx_stb_intv_bkp), UVM_LOW);
  
-        tx_stb_intv  =  $urandom_range(97, ((i*15) + 97));
+        tx_stb_intv  =  $urandom_range(100, ((i*15) + 97));
         bit_shift    =  $urandom_range(0,36);
         ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv              =  tx_stb_intv;
         ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv              =  tx_stb_intv;

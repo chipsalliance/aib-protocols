@@ -156,138 +156,6 @@ module lpif
    );
 
 
-
-// This is a temporary assertion until the VIP flow control issues is fixed.
-// case 01287362
-logic [LPIF_VALID_WIDTH-1:0] prev_lpvalid;
-logic                        prev_pltrdy;
-
-always @(posedge lclk or negedge reset)
-if (!reset)
-begin
-  prev_lpvalid <= lp_valid;
-  prev_pltrdy  <= pl_trdy;
-end
-else
-begin
-  if ((prev_lpvalid != lp_valid) &&
-      (prev_pltrdy == 1'b0))
-  begin
-    $display ("HAND_WRITTEN_ASSERT_ERROR: VIP is deasserting lp_valid while pl_trdy is low at time %t", $time);
-  end
-  
-  prev_lpvalid <= lp_valid;
-  prev_pltrdy  <= pl_trdy;
-end
-
-
-
-
-// FIXME, remove this when VIP is ready
-// // This is a temporary assertion until the VIP flow control issues is fixed.
-// // case 01287362
-// logic [LPIF_DATA_WIDTH*8-1:0]             prev2_lpdata;
-// logic [LPIF_VALID_WIDTH-1:0]              prev2_lpvalid;
-// logic [LPIF_CRC_WIDTH-1:0]                prev2_lpcrc;
-// logic [LPIF_VALID_WIDTH-1:0]              prev2_lpcrc_valid;
-// logic                                     prev2_lpirdy;
-// logic                                     prev2_pltrdy;
-// logic                                     prev2_forcing_lp_hack;
-// 
-// always @(negedge lclk or negedge reset)
-// if (!reset)
-// begin
-//   prev2_lpirdy      <= lp_irdy     ;
-//   prev2_lpdata      <= lp_data     ;
-//   prev2_lpvalid     <= lp_valid     ;
-//   prev2_lpcrc       <= lp_crc       ;
-//   prev2_lpcrc_valid <= lp_crc_valid ;
-//   prev2_pltrdy      <= pl_trdy ;
-//   prev2_forcing_lp_hack   <= 1'b0;
-// end
-// else
-// begin
-// 
-//   if ((pl_trdy == 1'b1) && (prev2_pltrdy == 1'b1))
-//   begin
-//      prev2_lpirdy      = lp_irdy      ;
-//      prev2_lpdata      = lp_data      ;
-//      prev2_lpvalid     = lp_valid     ;
-//      prev2_lpcrc       = lp_crc       ;
-//      prev2_lpcrc_valid = lp_crc_valid ;
-//      prev2_forcing_lp_hack   = 1'b0;
-// 
-//      prev2_pltrdy      = pl_trdy ;
-//   end
-//   else if ((pl_trdy == 1'b1) && (prev2_pltrdy == 1'b0))
-//   begin
-//      release lp_irdy      ;
-//      release lp_data      ;
-//      release lp_valid     ;
-//      release lp_crc       ;
-//      release lp_crc_valid ;
-//      prev2_forcing_lp_hack   = 1'b0;
-// 
-//      #1ps;
-// 
-//      if ( (prev2_pltrdy ==  1'b0     ) &
-//                                          ((lp_irdy      !=  prev2_lpirdy      ) |
-//                                           (lp_data      !=  prev2_lpdata      ) |
-//                                           (lp_valid     !=  prev2_lpvalid     ) |
-//                                           (lp_crc       !=  prev2_lpcrc       ) |
-//                                           (lp_crc_valid !=  prev2_lpcrc_valid ) )  )
-//      begin
-//          $display ("HAND_WRITTEN_ASSERT_ERROR: VIP is deasserting lp_valid while pl_trdy is low at time %t, but the hack in module %m corrected it.", $time);
-//          force lp_irdy       = prev2_lpirdy      ;
-//          force lp_data       = prev2_lpdata      ;
-//          force lp_valid      = prev2_lpvalid     ;
-//          force lp_crc        = prev2_lpcrc       ;
-//          force lp_crc_valid  = prev2_lpcrc_valid ;
-//          prev2_forcing_lp_hack   = 1'b1;
-//          @(negedge lclk);
-//          release lp_irdy      ;
-//          release lp_data      ;
-//          release lp_valid     ;
-//          release lp_crc       ;
-//          release lp_crc_valid ;
-//          prev2_forcing_lp_hack   = 1'b0;
-//      end
-// 
-//      prev2_lpirdy      = lp_irdy      ;
-//      prev2_lpdata      = lp_data      ;
-//      prev2_lpvalid     = lp_valid     ;
-//      prev2_lpcrc       = lp_crc       ;
-//      prev2_lpcrc_valid = lp_crc_valid ;
-// 
-//      prev2_pltrdy      = pl_trdy ;
-//   end
-//   else if ((pl_trdy == 1'b0) && (prev2_pltrdy == 1'b1))
-//   begin
-//      prev2_lpirdy      = lp_irdy      ;
-//      prev2_lpdata      = lp_data      ;
-//      prev2_lpvalid     = lp_valid     ;
-//      prev2_lpcrc       = lp_crc       ;
-//      prev2_lpcrc_valid = lp_crc_valid ;
-// 
-//      prev2_pltrdy      = pl_trdy ;
-// 
-//      force lp_irdy       = prev2_lpirdy      ;
-//      force lp_data       = prev2_lpdata      ;
-//      force lp_valid      = prev2_lpvalid     ;
-//      force lp_crc        = prev2_lpcrc       ;
-//      force lp_crc_valid  = prev2_lpcrc_valid ;
-//      prev2_forcing_lp_hack   = 1'b1;
-//   end
-// end
-// 
-
-
-
-
-
-
-
-
   /*AUTOWIRE*/
   // Beginning of automatic wires (for undeclared instantiated-module outputs)
   logic			ctl_link_up;		// From lpif_ctl_i of lpif_ctl.v
@@ -374,8 +242,6 @@ end
   logic			ustrm_valid;		// From lpif_txrx_i of lpif_txrx.v
   // End of automatics
 
-  assign pl_clk_req = 1'b0; // FIX THIS
-
   logic [319:0]                                     tx_phy0, tx_phy1, tx_phy2, tx_phy3;
   logic [319:0]                                     tx_phy4, tx_phy5, tx_phy6, tx_phy7;
   logic [319:0]                                     tx_phy8, tx_phy9, tx_phy10, tx_phy11;
@@ -385,6 +251,9 @@ end
   logic [319:0]                                     rx_phy4, rx_phy5, rx_phy6, rx_phy7;
   logic [319:0]                                     rx_phy8, rx_phy9, rx_phy10, rx_phy11;
   logic [319:0]                                     rx_phy12, rx_phy13, rx_phy14, rx_phy15;
+
+  // No self initiation of clock
+  assign pl_clk_req = 1'b0;
 
   generate
     always_comb

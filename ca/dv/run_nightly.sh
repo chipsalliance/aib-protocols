@@ -330,6 +330,12 @@ case "$sailrock_name" in
                                                            cd -;
                                                            run_cmd="./run_sim ca_basic_test_c ${cov_wave_opt}"
                                                            echo "cd $DIR; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
+
+                                                           cd scripts;
+                                                           python3 run_all_sim.py copy -d ${DIR}_basic_afly1 -cfg $CONFIG;
+                                                           cd -;
+                                                           run_cmd="./run_sim ca_basic_afly1_test_c ${cov_wave_opt}"
+                                                           echo "cd ${DIR}_basic_afly1; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
                                                            ;;
 
 esac  ###sailrock_name
@@ -353,38 +359,38 @@ test_pass=0;
 for CONFIG in `ls .`; do
        echo "CONFIG NAME   $CONFIG"
        testname_temp=`grep -ir "UVM_TESTNAME" ${CONFIG}/ca_tb.log`
-       seed_value=`grep -ir "-svseed" ${CONFIG}/ca_tb.log`
+       seed_value=`grep -r "svseed" ${CONFIG}/ca_tb.log`
        echo "$testname_temp" >temp.txt
        testname=$(cut --complement -d "=" -f 1 temp.txt )
        rm temp.txt
        if  [ ! -f ${CONFIG}/ca_tb.log ] ;  then
-         echo ERROR: $CONFIG $testname with SEED ${seed_value} did not run
-         echo ERROR: $CONFIG $testname with SEED ${seed_value} did not run. >> ../nightly_results.txt
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} did not run
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} did not run. >> ../nightly_results.txt
          test_err=$(($test_err+1));
          echo " "
        elif `grep -qE "xmsim: \*E,ASRTST" ${CONFIG}/ca_tb.log`; then
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} Assertion Failure
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} Assertion Failure. >> ../nightly_results.txt
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} Assertion Failure
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} Assertion Failure. >> ../nightly_results.txt
          test_err=$(($test_err+1));
          echo " "
-       elif `grep -qE "errors with the code \*E" ${CONFIG}/ca_tb.log` || `grep -qE "\*E" ${CONFIG}/ca_tb.log` ; then
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} compilation errors
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} compilation errors. >> ../nightly_results.txt
+       elif `grep -qE "errors  with the code \*E" ${CONFIG}/ca_tb.log` || `grep -qE "\*E" ${CONFIG}/ca_tb.log` ; then
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} compilation errors
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} compilation errors. >> ../nightly_results.txt
          test_err=$(($test_err+1));
          echo " "
        elif `grep -qE "TRNULLID: NULL pointer dereference" ${CONFIG}/ca_tb.log` ; then
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} NULL POINTER errors
-         echo ERROR: ${CONFIG} $testname with SEED ${seed_value} NULL POINTER errors. >> ../nightly_results.txt
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} NULL POINTER errors
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} NULL POINTER errors. >> ../nightly_results.txt
          test_err=$(($test_err+1));
          echo " "
        elif ! `grep -qE "UVM_ERROR\s*:\s*0" ${CONFIG}/ca_tb.log` || ! `grep -qE "UVM_FATAL\s*:\s*0" ${CONFIG}/ca_tb.log`;  then
-         echo ERROR: $CONFIG $testname with SEED ${seed_value} did not finish
-         echo ERROR: $CONFIG $testname with SEED ${seed_value} did not finish. >> ../nightly_results.txt
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} did not finish
+         echo ERROR: ${CONFIG} $testname  with  ${seed_value} did not finish. >> ../nightly_results.txt
          test_err=$(($test_err+1));
          echo " "
        else
-         echo pass:  ${CONFIG} $testname with SEED ${seed_value} completed successfully
-         echo pass:  ${CONFIG} $testname with SEED ${seed_value} completed successfully. >> ../nightly_results.txt
+         echo pass:  ${CONFIG} $testname  with  ${seed_value} completed successfully
+         echo pass:  ${CONFIG} $testname  with  ${seed_value} completed successfully. >> ../nightly_results.txt
          test_pass=$(($test_pass+1));
          echo " "
        fi

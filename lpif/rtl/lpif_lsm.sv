@@ -71,9 +71,7 @@ module lpif_lsm
   logic               lsm_cg_req;
   logic               lsm_stall_req;
 
-  logic               coldstart, d_coldstart;
   logic               lsm_exit_lp, d_lsm_exit_lp;
-  logic               linkreset2reset, d_linkreset2reset;
 
   // sideband state encodings
 
@@ -252,16 +250,20 @@ module lpif_lsm
   wire                sb_link_reset_ack = (sb_ustrm_link_reset_sts & sb_dstrm_link_reset_req);
   wire                sb_link_retrain_ack = (sb_ustrm_link_retrain_sts & sb_dstrm_link_retrain_req);
   wire                sb_ack = sb_l1_ack | sb_active_ack | sb_l2_ack | sb_link_reset_ack |
-                      sb_link_retrain_ack | (sb_dstrm_active_req & sb_ustrm_active_req);
+                      sb_link_retrain_ack |
+                      (sb_dstrm_active_req & sb_ustrm_active_req) |
+                      (sb_dstrm_l1_req & sb_ustrm_l1_req) |
+                      (sb_dstrm_l2_req & sb_ustrm_l2_req) |
+                      (sb_dstrm_link_reset_req & sb_ustrm_link_reset_req);
 
-  wire                exit_active = (coldstart |
-                                     sb_ustrm_l1_req | sb_ustrm_l2_req | sb_ustrm_link_reset_req |
-                                     sb_ustrm_link_retrain_req | sb_ustrm_link_error |
-                                     (state_req_change &
-                                      (state_req_retrain | state_req_idle_l1_1| state_req_sleep_l2 |
-                                       state_req_linkreset)
-                                      )
-                                     );
+  wire                exit_active = lsm_state_active &
+                      (sb_ustrm_l1_req | sb_ustrm_l2_req | sb_ustrm_link_reset_req |
+                       sb_ustrm_link_retrain_req | sb_ustrm_link_error |
+                       (state_req_change &
+                        (state_req_retrain | state_req_idle_l1_1| state_req_sleep_l2 |
+                         state_req_linkreset)
+                        )
+                       );
   wire                exit_active_sb = (state_req_idle_l1_1 | state_req_sleep_l2 | state_req_linkreset);
   // pl_speedmode encoding
 
@@ -343,12 +345,10 @@ module lpif_lsm
       lsm_cg_req = 1'b0;
       lsm_stall_req = 1'b0;
       d_pl_lnk_up = pl_lnk_up;
-      d_coldstart = coldstart;
       d_lsm_exit_lp = lsm_exit_lp;
       d_pl_state_sts = pl_state_sts;
       d_lsm_return_state = lsm_return_state;
       d_state_req_change = state_req_change ? 1'b1 : ((state_req != state_req_del) & !state_req_nop);
-      d_linkreset2reset = linkreset2reset;
       if (ctl_phy_err)
         begin
           d_pl_state_sts = STS_LinkError;
@@ -368,14 +368,8 @@ module lpif_lsm
           LSM_RESET_a: begin
             begin
               d_lsm_dstrm_state = SB_NULL;
-              if (coldstart)
+              if (state_req_active & state_req_change)
                 begin
-                  lsm_cg_req = 1'b1;
-                  d_lsm_state = LSM_ACTIVE_a;
-                end
-              else if ((state_req_active & state_req_change) | linkreset2reset)
-                begin
-                  d_linkreset2reset = 1'b0;
                   d_lsm_state = LSM_ACTIVE_c;
                 end
               else if (state_req_linkreset & state_req_change)
@@ -406,14 +400,14 @@ module lpif_lsm
             if (exit_active)
               begin
                 d_state_req_change = 1'b0;
-                lsm_stall_req = ~exit_active_sb;
+//                lsm_stall_req = ~exit_active_sb;
                 d_lsm_state = LSM_ACTIVE_b;
               end
           end
           LSM_ACTIVE_b: begin
             if ((pl_stallreq & lp_stallack & ~flit_in_queue) | exit_active_sb)
               begin
-                if (state_req_retrain | coldstart)
+                if (state_req_retrain)
                   begin
                     d_pl_state_sts = STS_RETRAIN;
                     d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
@@ -534,18 +528,10 @@ module lpif_lsm
           LSM_LinkReset: begin
             // entered when software writes a register or when remote phy requests
             d_lsm_dstrm_state = SB_LINK_RESET_STS;
-            if (sb_ustrm_active_req)
+            if (state_req_active & state_req_change)
               begin
-                d_linkreset2reset = 1'b1;
-                d_lsm_state = LSM_RESET;
-              end
-            else if (state_req_active & state_req_change)
-              begin
-                d_linkreset2reset = 1'b1;
                 d_state_req_change = 1'b0;
-                d_lsm_dstrm_state = SB_ACTIVE_REQ;
-                d_lsm_return_state = LSM_RESET;
-                d_lsm_state = LSM_SB_ACK;
+                d_lsm_state = LSM_RESET;
               end
             else if (sb_ustrm_link_error)
               d_lsm_state = LSM_LinkError;
@@ -563,7 +549,7 @@ module lpif_lsm
             d_lsm_state = LSM_RETRAIN_c;
           end
           LSM_RETRAIN_c: begin
-            if ((sb_ustrm_active_req | coldstart | lsm_exit_lp | sb_ustrm_link_retrain_sts) & ~lp_exit_cg_ack)
+            if ((sb_ustrm_active_req | lsm_exit_lp | sb_ustrm_link_retrain_sts) & ~lp_exit_cg_ack)
               begin
                 d_pl_state_sts = STS_RETRAIN;
                 d_lsm_state = LSM_RETRAIN;
@@ -573,10 +559,9 @@ module lpif_lsm
             d_lsm_speedmode = SPEEDMODE_GEN5;
             lsm_cg_req = 1'b1;
             d_lsm_dstrm_state = SB_LINK_RETRAIN_STS;
-            if ((state_req_active  & state_req_change) | coldstart | lsm_exit_lp)
+            if ((state_req_active  & state_req_change) | lsm_exit_lp)
               begin
                 d_state_req_change = 1'b0;
-                d_coldstart = 1'b0;
                 d_lsm_exit_lp = 1'b0;
                 d_lsm_state = LSM_ACTIVE_a;
               end
@@ -643,12 +628,10 @@ module lpif_lsm
         lsm_dstrm_state <= 4'b0;
         lsm_speedmode <= 3'b0;
         pl_lnk_up <= 1'b0;
-        coldstart <= 1'b0;
         lsm_exit_lp <= 1'b0;
         lsm_return_state <= 4'b0;
         state_req_del <= 4'b0;
         state_req_change <= 1'b0;
-        linkreset2reset <= 1'b0;
       end
     else
       begin
@@ -659,12 +642,10 @@ module lpif_lsm
         lsm_dstrm_state <= d_lsm_dstrm_state;
         lsm_speedmode <= d_lsm_speedmode;
         pl_lnk_up <= d_pl_lnk_up;
-        coldstart <= d_coldstart;
         lsm_exit_lp <= d_lsm_exit_lp;
         lsm_return_state <= d_lsm_return_state;
         state_req_del <= state_req;
         state_req_change <= d_state_req_change;
-        linkreset2reset <= d_linkreset2reset;
       end
 
   // exit_cg req/ack

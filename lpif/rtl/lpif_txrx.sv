@@ -118,10 +118,6 @@ module lpif_txrx
 
   /*AUTOWIRE*/
 
-
-// FIXME remove initial #3us $finish;
-
-
   logic                                 tx_stb_userbit;
   logic [3:0]                           tx_mrk_userbit;
 
@@ -395,17 +391,17 @@ module lpif_txrx
 
     else if (X4_Q2)
       begin
-         assign ustrm_dvalid         = { 1'b0, ustrm_dvalid_tmp[3]            } ; 
-         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3]   } ;                        // FIXME , this should be 1 bit
-         assign ustrm_crc            = { ustrm_crc_tmp[3*4+:4]    , ustrm_crc_tmp[2*4+:4]    ,  ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    }      ;
-         assign ustrm_data           = { ustrm_data_tmp[3*64+:64] , ustrm_data_tmp[2*64+:64] ,  ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] }      ;
+         assign ustrm_dvalid         = { 1'b0 , ustrm_dvalid_tmp[3] } ; 
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3]     } ;                        // FIXME , this should be 1 bit
+         assign ustrm_crc            = { ustrm_crc_tmp[3*4+:4]    , ustrm_crc_tmp[2*4+:4]    ,  ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    } ;
+         assign ustrm_data           = { ustrm_data_tmp[3*64+:64] , ustrm_data_tmp[2*64+:64] ,  ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] } ;
       end
     else if (X4_H2)
       begin
          assign ustrm_dvalid         = { ustrm_dvalid_tmp[1]      } ;
          assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]   } ;
-         assign ustrm_crc            = { ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    }  ;
-         assign ustrm_data           = { ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] }  ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*4+:4]    , ustrm_crc_tmp[0*4+:4]    } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] } ;
       end
     else if (X4_F2)
       begin
@@ -416,43 +412,64 @@ module lpif_txrx
       end
     else if (X16_H1)
       begin
-         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1] , ustrm_dvalid_tmp[0]      } ;
-         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1] , ustrm_crc_valid_tmp[0]   } ;
-         assign ustrm_crc            = { ustrm_crc_tmp[1*16+:16]    , ustrm_crc_tmp[0*16+:16]    }  ;
-         assign ustrm_data           = { ustrm_data_tmp[1*512+:512] , ustrm_data_tmp[0*512+:512] }  ;
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[1]        , ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]     , ustrm_crc_valid_tmp[0]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*16+:16]    , ustrm_crc_tmp[0*16+:16]    } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*512+:512] , ustrm_data_tmp[0*512+:512] } ;
       end
     else if (X16_F1)
       begin
-         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]      } ;
-         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]   } ;
-         assign ustrm_crc            = { ustrm_crc_tmp[0+:16]      } ;
-         assign ustrm_data           = { ustrm_data_tmp[0+:512]    } ;
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:16]       } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:512]     } ;
       end
 
-    else if ( X8_H1 | X4_H1 | X2_H1 | X1_H1) // Gen2 Q or Gen1 H
+    else if (X8_H1)
       begin
-
-         assign ustrm_state          = ustrm_state_tmp[3:0]  ;
-         assign ustrm_protid         = ustrm_protid_tmp[1:0] ;
-         assign ustrm_valid          = ustrm_valid_tmp[0]    ;
-
-         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[3] , ustrm_crc_valid_tmp[1]} ; 
-         assign ustrm_crc            = { ustrm_crc_tmp[63:48]   , ustrm_crc_tmp[31:16]  } ; 
-         assign ustrm_dvalid         = { ustrm_dvalid_tmp[2]    , ustrm_dvalid_tmp[0]   } ; 
-
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*8+:8]      , ustrm_crc_tmp[0*8+:8]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*256+:256] , ustrm_data_tmp[0*256+:256] } ;
       end
-    else if ( X8_F1 | X4_F1 | X2_F1 | X1_F1) // Gen2 H or Gen1 F
+    else if (X8_F1)
       begin
-
-         assign ustrm_state          = ustrm_state_tmp[3:0]    ; 
-         assign ustrm_protid         = ustrm_protid_tmp[1:0]   ; 
-         assign ustrm_valid          = ustrm_valid_tmp[0]      ;
-
-         assign ustrm_crc_valid      = ustrm_crc_valid_tmp[1]  ;
-         assign ustrm_crc            = ustrm_crc_tmp[31:16]    ;
-         assign ustrm_dvalid         = ustrm_dvalid_tmp[0]     ;
-
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:8]        } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:256]     } ;
       end
+
+    else if (X4_H1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*4+:4]      , ustrm_crc_tmp[0*4+:4]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*128+:128] , ustrm_data_tmp[0*128+:128] } ;
+      end
+    else if (X4_F1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:4]        } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:128]     } ;
+      end
+
+    else if (X2_H1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[1]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[1*2+:2]      , ustrm_crc_tmp[0*2+:2]      } ;
+         assign ustrm_data           = { ustrm_data_tmp[1*64+:64] , ustrm_data_tmp[0*64+:64] } ;
+      end
+    else if (X2_F1)
+      begin
+         assign ustrm_dvalid         = { ustrm_dvalid_tmp[0]        } ;
+         assign ustrm_crc_valid      = { ustrm_crc_valid_tmp[0]     } ;
+         assign ustrm_crc            = { ustrm_crc_tmp[0+:2]        } ;
+         assign ustrm_data           = { ustrm_data_tmp[0+:64]     } ;
+      end
+
   endgenerate
 
   logic [(4*4)-1:0]                     dstrm_state_tmp;
@@ -560,35 +577,51 @@ module lpif_txrx
          assign dstrm_data_tmp       = { dstrm_data[0+:512]     } ;
       end
 
-    else if (X8_F1 | X8_H1)
+    else if (X8_H1)
       begin
-         //X8 has 8 bit rep struct
-         assign dstrm_dvalid_tmp     = {dstrm_dvalid[1]    , dstrm_dvalid[1]  , dstrm_dvalid[0]    , dstrm_dvalid[0] } ;
-         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0] , 1'b0             , dstrm_crc_valid[0] , 1'b0            } ;
-         assign dstrm_crc_tmp        = {dstrm_crc[31:16]   , dstrm_crc[31:16] , dstrm_crc[15:0]    , dstrm_crc[15:0] } ;
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*8+:8]      , dstrm_crc[0*8+:8]      } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*256+:256] , dstrm_data[0*256+:256] } ;
+      end
+    else if (X8_F1)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:8]        } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:256]     } ;
       end
 
-
-
-
-    else if (X4_F1 | X4_H1)
+    else if (X4_H1)
       begin
-         //X4 has 8 bit rep struct
-         assign dstrm_dvalid_tmp     = {dstrm_dvalid[0]    , dstrm_dvalid[0]  , dstrm_dvalid[0]    , dstrm_dvalid[0] } ;
-         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0] , 1'b0             , dstrm_crc_valid[0] , 1'b0            } ;
-         assign dstrm_crc_tmp        = {dstrm_crc[15:0]    , dstrm_crc[15:0] , dstrm_crc[15:0]    , dstrm_crc[15:0] } ;
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*4+:4]      , dstrm_crc[0*4+:4]      } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*128+:128] , dstrm_data[0*128+:128] } ;
+      end
+    else if (X4_F1)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:4]        } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:128]     } ;
       end
 
-
-    else if (X8_F1 | X4_F1 | X2_F1) // Gen2 H or Gen1 F
+    else if (X2_H1)
       begin
-
-         // These values are upsized to prevent undriven signals in the _tmp even though they would be unused
-         assign dstrm_dvalid_tmp     = {4{dstrm_dvalid[0]}}   ;
-         assign dstrm_crc_valid_tmp  = {dstrm_crc_valid[0], 1'b0} ; // FIXME, I think this needs to be 1 bit
-         assign dstrm_crc_tmp        = {4{dstrm_crc[15:0]}} ;
-
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        , dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     , 1'b0                   } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[1*2+:2]      , dstrm_crc[0*2+:2]      } ;
+         assign dstrm_data_tmp       = { dstrm_data[1*64+:64]   , dstrm_data[0*64+:64]   } ;
       end
+    else if (X2_F1)
+      begin
+         assign dstrm_dvalid_tmp     = { dstrm_dvalid[0]        } ;
+         assign dstrm_crc_valid_tmp  = { dstrm_crc_valid[0]     } ;
+         assign dstrm_crc_tmp        = { dstrm_crc[0+:2]        } ;
+         assign dstrm_data_tmp       = { dstrm_data[0+:64]      } ;
+      end
+
   endgenerate
 
 

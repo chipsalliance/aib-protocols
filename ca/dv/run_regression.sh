@@ -47,28 +47,28 @@ for CONFIG in `ls cfg_list/sailrock_array/*sailrock_cfg.txt`; do
     DIR=${DIR/_sailrock_cfg.txt/}
 
        testname_temp=`grep -ir "UVM_TESTNAME" ${DIR}/ca_tb.log`
-       seed_value=`grep -ir "-svseed" ${DIR}/ca_tb.log`
+       seed_value=`grep -r "svseed" ${DIR}/ca_tb.log`
        echo "$testname_temp" >temp.txt
        testname=$(cut --complement -d "=" -f 1 temp.txt )
        rm temp.txt
         if  [ ! -f ${DIR}/ca_tb.log ] ;  then
-          echo ERROR: $DIR   $testname  with SEED ${seed_value}  did not run
-          echo ERROR: $DIR   $testname  with SEED ${seed_value}  did not run. >> regression_results.txt
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}  did not run
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}  did not run. >> regression_results.txt
         elif `grep -qE "xmsim: \*E,ASRTST" ${DIR}/ca_tb.log`; then
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   Assertion Failure
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   Assertion Failure. >> regression_results.txt
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   Assertion Failure
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   Assertion Failure. >> regression_results.txt
         elif `grep -qE "errors with the code \*E" ${DIR}/ca_tb.log` || `grep -qE "\*E" ${DIR}/ca_tb.log` ; then
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   compilation errors
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   compilation errors. >> regression_results.txt
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   compilation errors
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   compilation errors. >> regression_results.txt
         elif `grep -qE "TRNULLID: NULL pointer dereference" ${DIR}/ca_tb.log` ; then
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   NULL POINTER errors
-          echo ERROR: ${DIR}   $testname with SEED ${seed_value}   NULL POINTER errors. >> regression_results.txt
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   NULL POINTER errors
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   NULL POINTER errors. >> regression_results.txt
         elif ! `grep -qE "UVM_ERROR\s*:\s*0" ${DIR}/ca_tb.log` || ! `grep -qE "UVM_FATAL\s*:\s*0" ${DIR}/ca_tb.log`;  then
-          echo ERROR: $DIR   $testname with SEED ${seed_value}   did not finish
-          echo ERROR: $DIR   $testname with SEED ${seed_value}   did not finish. >> regression_results.txt
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   did not finish
+          echo ERROR: ${DIR}   $testname  with  ${seed_value}   did not finish. >> regression_results.txt
         else
-          echo pass:  ${DIR}   $testname  with SEED ${seed_value}  completed successfully
-          echo pass:  ${DIR}   $testname  with SEED ${seed_value}  completed successfully. >> regression_results.txt
+          echo pass:  ${DIR}   $testname  with  ${seed_value}  completed successfully
+          echo pass:  ${DIR}   $testname  with  ${seed_value}  completed successfully. >> regression_results.txt
         fi
 done
 

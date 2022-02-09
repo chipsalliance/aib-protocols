@@ -778,6 +778,28 @@ endgenerate
     end
 `else
 `endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////// FSDB dump support
+initial
+begin
+    if ($test$plusargs("WAVES_OFF")) begin
+        $display ("WAVE dumping disabled");
+    end else begin
+        `ifdef WAVES_FSDB 
+            $display ("FSDB Wave dumping enabled."); 
+            $fsdbDumpfile("test_top"); 
+            $fsdbDumpvars; 
+        `elsif WAVES_VCD
+            $display ("VCD Wave dumping enabled");
+            $dumpvars;
+        `elsif WAVES_VPD
+            $display ("VPD Wave dumping enabled."); 
+            $vcdpluson; 
+        `endif
+    end
+end // initial begin
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 `ifdef CA_YELLOW_OVAL
 `include "../../../aib/dv/top/aib_vip_top.sv"

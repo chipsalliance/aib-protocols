@@ -100,6 +100,7 @@ package ca_pkg;
     `include "../tests/ca_delay_x_xz_values_test.sv"
     `include "../tests/ca_traffic_reset_traffic_test.sv"
     `include "../tests/ca_reset_during_traffic_test.sv"
+    `include "../tests/ca_basic_afly1_test.sv"
     
 ////////////////////////////////////////////////////////////////////
 endpackage : ca_pkg

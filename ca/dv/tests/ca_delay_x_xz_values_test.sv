@@ -115,10 +115,10 @@ task ca_delay_x_xz_values_test_c::run_test(uvm_phase phase);
        sbd_counts_clear();
 
     ///////////////////////////////////////////////////////////////////
-    for(int i=1;i<11;i++) begin 
+    for(int i=21;i<31;i++) begin 
          vif.reset_l         = 1'b0; /////assert reset to CA
-         gen_if.delay_xz_value      =  i*$urandom_range(11,(i*20));
-         delay_x_value       =  gen_if.delay_xz_value/2;
+         gen_if.delay_xz_value      =  i*$urandom_range(30,(i*20));
+         delay_x_value       =  gen_if.delay_xz_value/8;
 
         // $display("\n TEST::X=%0d  Z=%0d  at %0t",delay_x_value,gen_if.delay_xz_value,$time);
 
