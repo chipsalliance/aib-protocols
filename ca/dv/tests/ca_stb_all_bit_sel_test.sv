@@ -110,24 +110,42 @@ task ca_stb_all_bit_sel_test_c::run_test(uvm_phase phase);
     result =  ck_xfer_cnt_b(1);
     `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "SCOREBOARD COMPARISON FIRST SET COMPLETED..\n", UVM_LOW);
     
+    ca_cfg.override_align_done_timeout = 1; //In high iteration test cases, align_done timeout should not be 60us.so overide timout here.  
+ 
     for(int i=0;i<=40;i++) begin 
 
       if(i<=39) begin // valid stb_bit_sel values verified here.
+       repeat(50)@ (posedge vif.clk);
+       vif.reset_l =1'b0;  //assert reset
+       `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_LOW   ..\n", UVM_LOW);
+       repeat(10)@ (posedge vif.clk);
+
        ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel    = 'h0;
        ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel    = 'h0;
        ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel[i] = 1'b1;
        ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel[i] = 1'b1;
        ca_cfg.configure();
 
+       repeat(50)@ (posedge vif.clk);
+       vif.reset_l =1'b1;  //de-assert reset
+       `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_HIGH   ..\n", UVM_LOW);
        sbd_counts_clear(); 
 
+       ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+       ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
        ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
        ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
        ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
-
+        
+       gen_if.second_traffic_seq = 1; //new_stb_params_cfg
        ca_top_env.ca_scoreboard.generate_stb_beat();
        `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+       `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+       ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+       ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+       `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
 
        `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
        ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -151,9 +169,11 @@ task ca_stb_all_bit_sel_test_c::run_test(uvm_phase phase);
        `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
 
         //user_marker will be updated after some clocks
-        repeat(20)@ (posedge vif.clk);
+        repeat(50)@ (posedge vif.clk);
 
        `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+       ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+       ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
        ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;
@@ -174,6 +194,8 @@ task ca_stb_all_bit_sel_test_c::run_test(uvm_phase phase);
       end // i<= 39 (valid stb_bit_sel values )
       else begin // {i==40  to check toggle coverage of stb_bit_sel [39]= 1 to 0 }
 
+        ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+        ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
         ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;

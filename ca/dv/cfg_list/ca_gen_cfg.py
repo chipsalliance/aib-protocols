@@ -91,6 +91,7 @@ def main():
         create_entry (master_dict , "stb_en"       , [0,1]    )
         create_entry (master_dict , "stb_loc"      , range (0,40)   )
         create_entry (master_dict , "marker_loc"   , [76,77,78,79]  )
+        create_entry (master_dict , "ca_sync_fifo" , [0, 1] )
 
         #constrained_dict = master_dict.copy.deepcopy()
         constrained_dict = dict(master_dict)
@@ -233,8 +234,9 @@ def generate_sailrock(local_config):
 
     g_sail_file.write("\n")
 
-    number_list   = [2, 4, 8]
-    number_list_1 = [1, 2, 4, 8, 16]
+    number_list   = [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+    #number_list   = [2, 4, 8]
+    #number_list_1 = [1, 2, 4, 8, 16]
     if (local_config['testbench'] == "tb_mf2_sf2" or
         local_config['testbench'] == "tb_mh2_sh2" or
         local_config['testbench'] == "tb_mq2_sq2" or
@@ -246,7 +248,7 @@ def generate_sailrock(local_config):
         local_config['testbench'] == "tb_mh2_sq2"):
         number_of_channel=random.choice(number_list)
     else:
-        number_of_channel=random.choice(number_list_1)
+        number_of_channel=random.choice(number_list)  ##number_list_1
 
     g_sail_file.write("//\n")
     print_to_sail("interface_0", "master", "slave")
@@ -469,7 +471,7 @@ def generate_sailrock(local_config):
     print_to_sail("aib_loop_back_mode"            , 0, 0)
     print_to_sail("// Channel Alignment setting"  , "", "")
     print_to_sail("CA_ALIGN_FLY"                  , local_config["align_fly"], local_config["align_fly"]) 
-    print_to_sail("CA_RDEN_DLY"                   , local_config["rden_dly"], local_config["rden_dly"]) 
+    ##print_to_sail("CA_RDEN_DLY"                   , local_config["rden_dly"], local_config["rden_dly"]) 
     if (asym_cfg==1) :
         print_to_sail("CA_TX_STB_EN"                  , 0, 0) 
         print_to_sail("CA_RX_STB_EN"                  , 0, 0) 
@@ -486,7 +488,7 @@ def generate_sailrock(local_config):
 
     g_sail_file.write("")
 
-    ca_sync_fifo = 1;   ##### change to '0' for CA ASYNC FIFO mode
+    ##ca_sync_fifo = 1;   ##### change to '0' for CA ASYNC FIFO mode
 
     ich_skew = (0, 1, 2);
     skew_range = random.choices(ich_skew, weights=(70, 20, 10), k=1) 
@@ -501,23 +503,38 @@ def generate_sailrock(local_config):
 
     inter_ch_skew = 0
     if skew_range1 == "0":
+       rden_del       = local_config["rden_dly"]
+       if local_config["ca_sync_fifo"] == 0:  ##ASYNC_FIFO
+        inter_ch_skew = (random.randrange(0, (ca_fifo_depth-5-local_config["rden_dly"]))) ## -5 accounts for lane clock skews across CH and RTL synchronization clocks
+       else:
         inter_ch_skew = (random.randrange(16, (ca_fifo_depth-local_config["rden_dly"])))
     elif skew_range1 == "1":
+       rden_del       = local_config["rden_dly"]
+       if local_config["ca_sync_fifo"] == 0:
+        inter_ch_skew = (random.randrange(0, (ca_fifo_depth-5-local_config["rden_dly"])))
+       else:
         inter_ch_skew = (random.randrange(8, (ca_fifo_depth-local_config["rden_dly"])))
     elif skew_range1 == "2":
+       if local_config["ca_sync_fifo"] == 0:
+        inter_ch_skew = (random.randint(0, 2))
+        rden_del      = 2-inter_ch_skew
+       else:
         inter_ch_skew = (random.randrange(0, (ca_fifo_depth-local_config["rden_dly"]))) ##### CA_FIFO_DEPTH >= inter_ch_skew + rden_dly
+        rden_del       = local_config["rden_dly"]
 
-    ##print ("SKEW  FD  ICH RDEN",skew_range1,ca_fifo_depth,inter_ch_skew,local_config["rden_dly"])
+    print ("SYNC  SKEW  FD  ICH RDEN   rden  : ",local_config["ca_sync_fifo"],skew_range1,ca_fifo_depth,inter_ch_skew,local_config["rden_dly"],rden_del )
 
     ca_stb_intv = random.randrange(ca_fifo_depth*3, ca_fifo_depth *6)
     mod4remain=ca_stb_intv%4;
     ca_stb_intv=ca_stb_intv+(4-mod4remain);    ###ca_stb_intv always divisible by 4
     ##print ("FIFOD   STB_INTV ",ca_fifo_depth, ca_stb_intv)
 
-    print_to_sail("CA_SYNC_FIFO"     , ca_sync_fifo,  ca_sync_fifo)
+    #print_to_sail("CA_SYNC_FIFO"     , ca_sync_fifo,  ca_sync_fifo) ##now randomized
+    print_to_sail("CA_SYNC_FIFO"     , local_config["ca_sync_fifo"], local_config["ca_sync_fifo"])
     print_to_sail("CA_FIFO_DEPTH"    , ca_fifo_depth, ca_fifo_depth)
     print_to_sail("CA_TX_STB_INTV"   , ca_stb_intv, ca_stb_intv)
     print_to_sail("CA_RX_STB_INTV"   , ca_stb_intv, ca_stb_intv)
+    print_to_sail("CA_RDEN_DLY"      , rden_del, rden_del)
     print_to_sail("GLOBAL_MAX_INTER_CH_SKEW"   , inter_ch_skew)
 
     g_sail_file.write("")

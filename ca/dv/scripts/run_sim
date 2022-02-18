@@ -39,7 +39,8 @@ set new_rep = `echo "MODE := $run_ver"`
 echo "Replace $mfile from ==${rep}== to MODE := $run_ver"
 ## sed -i 's#'$rep'#MODE := '$run_ver'#g' $mfile
 sed -i "s/$rep/$new_rep/g" $mfile
-
+set seed         = 0
+set seed_en      = 0
 set waves_def_en = 0 
 set nowaves      = 0
 set cov_nowaves  = 0
@@ -51,11 +52,20 @@ set scenario = $argv[1]
 else
 set scenario = "ca_basic_test_c"
 endif
-
+set arg_start_point = 2
 ####make SCENARIO=$scenario run_all ###
 ################
-        if ($#argv >= 2 ) then
-            switch ($argv[2])
+        while ($#argv >= $arg_start_point ) 
+            switch ($argv[$arg_start_point])
+                case [0-9]* :   # User SEED value
+                    set nowaves      = 0     # Type of flavour to select the waves and coverage
+                    set vip_waves    = 0
+                    set cov_nowaves  = 0
+                    set cov_waves    = 0
+                    set seed_en      = 1
+                    set seed         = $argv[$arg_start_point]
+                    echo " SEED VALUE"
+                    breaksw
                 case 'nowaves' :  # No waves enabled
                     set nowaves      = 1
                     set cov_nowaves  = 0
@@ -87,7 +97,9 @@ endif
                     make help
                     breaksw
             endsw
-        endif #if ($#argv >= 2)
+	    @ arg_start_point++
+         end  #### while
+
         if( $fatal == 0 ) then  
             if ( $nowaves == 1 ) then    # No Waves
                 echo "NO WAVE DUMP SELECTED "
@@ -110,7 +122,13 @@ endif
                 sed -i "s/$rep/$new_rep/g" $mfile
             endif  #if ($nowaves == 1 )
 	     ## MAKEFILE Argument passing Format 
-	      if ($waves_def_en == 1 ) then
+	      if ($seed_en == 1 && $waves_def_en == 1 ) then
+                  echo "WAVE and SEED SELECTION DONE "
+                  make SCENARIO=$scenario run_all WAVES=$waves SEED=$seed
+              else if ($seed_en == 1 ) then
+                  echo "SEED SELECTION DONE "
+                  make SCENARIO=$scenario run_all SEED=$seed
+              else if ($waves_def_en == 1 ) then
                   echo "WAVE SELECTION DONE "
                   make SCENARIO=$scenario run_all WAVES=$waves
 	      else

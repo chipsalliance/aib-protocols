@@ -173,25 +173,21 @@ task  ca_tx_tb_out_drv_c::drv_tx();
     ca_data_pkg::ca_seq_item_c                tx_item;      
     bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  tx_data; 
     bit [7:0]                                 count;
-    bit                                       calc_stb = 1;
     bit                                       marker_b4_data_done, marker_b4_data_done_p;
+    bit                                       marker_b4_data_done_cleared;
     bit                                       wait_xz_delay_over;
     int                                       index, stb_bit_pos; 
     int                                       ch, xz_delay_cnt; 
     
     forever begin @(posedge vif.clk)
         if(vif.rst_n === 1'b0) begin // reset state
-            if(calc_stb == 1) begin
-                calc_stb = 0;
-                gen_stb_beat();
-            end
+            gen_stb_beat();
             drv_tx_idle();
             tx_cnt = 0;
             wait_xz_delay_over = 1'b0;
             while(tx_q.size() > 0) tx_item = tx_q.pop_front(); 
         end // reset
         else begin // non reset state
-            calc_stb = 1;
             drv_tx_cfg_to_vif();
             if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin
                 if (cfg.ca_stb_rcvr_aft_aln_done_test  == 1) begin /// to control tx_din drive under tx_stb_rcvr test ONLY
@@ -369,6 +365,14 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                         vif.tx_din = tx_data;
                         `uvm_info("drv_tx", $sformatf("%s Driving transfer %0d TB ---> tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
                         got_tx = 0;
+`ifdef CA_ASYMMETRIC
+                        if (tx_q.size() == 0) marker_b4_data_done = 0;
+                        if ((marker_b4_data_done_cleared == 0) && (cfg.tx_q_not_zero == 1)) begin 
+                           marker_b4_data_done = 0 ; /// Tx_q is not ended in this test case.driver transfer should start from  valid data depends on this param only in ca_afly1_stb_incorrect_intv_test_c
+                           marker_b4_data_done_cleared = 1; 
+                        end
+
+`endif
                 end // no delay
             end // got pkt == 1
             else begin //Send IDLE

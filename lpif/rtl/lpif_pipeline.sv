@@ -56,12 +56,13 @@ module lpif_pipeline
    input  logic                                     lp_force_detect,
    input  logic [LPIF_CRC_WIDTH-1:0]                lp_crc,
    input  logic [LPIF_DATA_WIDTH*8-1:0]             lp_data,
-   input  logic [LPIF_VALID_WIDTH-1:0]              lp_crc_valid,
+   input  logic                                     lp_crc_valid,
    input  logic                                     lp_linkerror,
    input  logic                                     lp_rcvd_crc_err,
    input  logic                                     lp_stallack,
    input  logic                                     lp_wake_req,
 
+   output logic                                     lp_prime_trans_valid, // Indicates valid transaction with at least one valid.
    output logic [LPIF_VALID_WIDTH-1:0]              lp_prime_valid,
    output logic                                     lp_prime_irdy,
    output logic [1:0]                               lp_prime_pri,
@@ -76,7 +77,7 @@ module lpif_pipeline
    output logic                                     lp_prime_force_detect,
    output logic [LPIF_CRC_WIDTH-1:0]                lp_prime_crc,
    output logic [LPIF_DATA_WIDTH*8-1:0]             lp_prime_data,
-   output logic [LPIF_VALID_WIDTH-1:0]              lp_prime_crc_valid,
+   output logic                                     lp_prime_crc_valid,
    output logic                                     lp_prime_linkerror,
    output logic                                     lp_prime_rcvd_crc_err,
    output logic                                     lp_prime_stallack,
@@ -94,7 +95,7 @@ module lpif_pipeline
    output logic [7:0]                               pl_stream,
    output logic [LPIF_CRC_WIDTH-1:0]                pl_crc,
    output logic [LPIF_DATA_WIDTH*8-1:0]             pl_data,
-   output logic [LPIF_VALID_WIDTH-1:0]              pl_crc_valid,
+   output logic                                     pl_crc_valid,
    output logic                                     pl_cerror,
    output logic                                     pl_cfg_vld,
    output logic                                     pl_clk_req,
@@ -130,7 +131,7 @@ module lpif_pipeline
    input  logic [7:0]                               pl_prime_stream,
    input  logic [LPIF_CRC_WIDTH-1:0]                pl_prime_crc,
    input  logic [LPIF_DATA_WIDTH*8-1:0]             pl_prime_data,
-   input  logic [LPIF_VALID_WIDTH-1:0]              pl_prime_crc_valid,
+   input  logic                                     pl_prime_crc_valid,
    input  logic                                     pl_prime_cerror,
    input  logic                                     pl_prime_cfg_vld,
    input  logic                                     pl_prime_clk_req,
@@ -160,63 +161,63 @@ module lpif_pipeline
                                    // LPIF_VALID_WIDTH      + // lp_valid
                                    // 1                     + // lp_irdy
                                    // 1                     + // pl_trdy
-                                   LPIF_VALID_WIDTH      + // lp_valid (duplicate)
                                    LPIF_DATA_WIDTH*8     + // lp_data
-                                   8                     + // lp_stream
                                    LPIF_CRC_WIDTH        + // lp_crc
-                                   LPIF_VALID_WIDTH      ; // lp_crc_valid
+                                   8                     + // lp_stream
+                                   1                     + // lp_crc_valid
+                                   LPIF_VALID_WIDTH      ; // lp_valid (duplicate)
 
     localparam LP_DATA_DELAY_WID =
-                                   1                     + // lp_irdy (duplicate ... used to qualify lp_pri)
-                                   2                     + // lp_pri
-                                   4                     + // lp_state_req
-                                   8                     + // lp_cfg
-                                   1                     + // lp_cfg_vld
-                                   1                     + // lp_clk_ack
-                                   1                     + // lp_device_present
-                                   1                     + // lp_exit_cg_ack
-                                   1                     + // lp_flushed_all
-                                   1                     + // lp_force_detect
-                                   1                     + // lp_linkerror
-                                   1                     + // lp_rcvd_crc_err
-                                   1                     + // lp_stallack
-                                   1                     ; // lp_wake_req
+                                   1                     + // lp_irdy (duplicate ... used to qualify lp_pri)    [24]
+                                   2                     + // lp_pri                                            [23:22]
+                                   4                     + // lp_state_req                                      [21:18]
+                                   8                     + // lp_cfg                                            [17:10]
+                                   1                     + // lp_cfg_vld                                        [9]
+                                   1                     + // lp_clk_ack                                        [8]
+                                   1                     + // lp_device_present                                 [7]
+                                   1                     + // lp_exit_cg_ack                                    [6]
+                                   1                     + // lp_flushed_all                                    [5]
+                                   1                     + // lp_force_detect                                   [4]
+                                   1                     + // lp_linkerror                                      [3]
+                                   1                     + // lp_rcvd_crc_err                                   [2]
+                                   1                     + // lp_stallack                                       [1]
+                                   1                     ; // lp_wake_req                                       [0]
 
     localparam PL_DATA_DELAY_WID =
-                                   LPIF_VALID_WIDTH      + // pl_valid
-                                   3                     + // pl_clr_lnkeqreq
-                                   3                     + // pl_lnk_cfg
-                                   3                     + // pl_protocol
-                                   3                     + // pl_set_lnkeqreq
-                                   3                     + // pl_speedmode
-                                   4                     + // pl_state_sts
-                                   8                     + // pl_cfg
-                                   8                     + // pl_stream
-                                   LPIF_CRC_WIDTH        + // pl_crc
-                                   LPIF_DATA_WIDTH*8     + // pl_data
-                                   LPIF_VALID_WIDTH      + // pl_crc_valid
-                                   1                     + // pl_cerror
-                                   1                     + // pl_cfg_vld
-                                   1                     + // pl_clk_req
-                                   1                     + // pl_error
-                                   1                     + // pl_err_pipestg
-                                   1                     + // pl_exit_cg_req
-                                   1                     + // pl_inband_pres
-                                   1                     + // pl_lnk_up
-                                   1                     + // pl_phyinl1
-                                   1                     + // pl_phyinl2
-                                   1                     + // pl_phyinrecenter
-                                   1                     + // pl_portmode
-                                   1                     + // pl_portmode_val
-                                   1                     + // pl_protocol_vld
-                                   1                     + // pl_quiesce
-                                   1                     + // pl_rxframe_errmask
-                                   1                     + // pl_setlabs
-                                   1                     + // pl_setlbms
-                                   1                     + // pl_stallreq
-                                   1                     + // pl_surprise_lnk_down
-                                   1                     + // pl_trainerror
-                                   1                     ; // pl_wake_ack
+                                   LPIF_VALID_WIDTH      + // pl_valid                
+                                   LPIF_CRC_WIDTH        + // pl_crc                  
+                                   LPIF_DATA_WIDTH*8     + // pl_data                 
+                                   3                     + // pl_clr_lnkeqreq         [56:54]
+                                   3                     + // pl_lnk_cfg              [53:51]
+                                   3                     + // pl_protocol             [50:48]
+                                   3                     + // pl_set_lnkeqreq         [47:45]
+                                   3                     + // pl_speedmode            [44:42]
+                                   4                     + // pl_state_sts            [42:39]
+                                   8                     + // pl_cfg                  [38:31]
+                                   8                     + // pl_stream               [30:23]
+                                   1                     + // pl_crc_valid            [22]
+                                   1                     + // pl_cerror               [21]
+                                   1                     + // pl_cfg_vld              [20]
+                                   1                     + // pl_clk_req              [19]
+                                   1                     + // pl_error                [18]
+                                   1                     + // pl_err_pipestg          [17]
+                                   1                     + // pl_exit_cg_req          [16]
+                                   1                     + // pl_inband_pres          [15]
+                                   1                     + // pl_lnk_up               [14]
+                                   1                     + // pl_phyinl1              [13]
+                                   1                     + // pl_phyinl2              [12]
+                                   1                     + // pl_phyinrecenter        [11]
+                                   1                     + // pl_portmode             [10]
+                                   1                     + // pl_portmode_val         [9]
+                                   1                     + // pl_protocol_vld         [8]
+                                   1                     + // pl_quiesce              [7]
+                                   1                     + // pl_rxframe_errmask      [6]
+                                   1                     + // pl_setlabs              [5]
+                                   1                     + // pl_setlbms              [4]
+                                   1                     + // pl_stallreq             [3]
+                                   1                     + // pl_surprise_lnk_down    [2]
+                                   1                     + // pl_trainerror           [1]
+                                   1                     ; // pl_wake_ack             [0]
 
 
 
@@ -285,6 +286,8 @@ module lpif_pipeline
     logic [PL_DATA_DELAY_WID-1:0] pl_delay_data_pipeline [0:LPIF_PIPELINE_STAGES+1-1];
 
     assign pl_delay_data_pipeline [0] = {pl_prime_valid             ,
+                                         pl_prime_crc               ,
+                                         pl_prime_data              ,
                                          pl_prime_clr_lnkeqreq      ,
                                          pl_prime_lnk_cfg           ,
                                          pl_prime_protocol          ,
@@ -293,8 +296,6 @@ module lpif_pipeline
                                          pl_prime_state_sts         ,
                                          pl_prime_cfg               ,
                                          pl_prime_stream            ,
-                                         pl_prime_crc               ,
-                                         pl_prime_data              ,
                                          pl_prime_crc_valid         ,
                                          pl_prime_cerror            ,
                                          pl_prime_cfg_vld           ,
@@ -320,6 +321,8 @@ module lpif_pipeline
                                          pl_prime_wake_ack          };
 
     assign {pl_valid             ,
+            pl_crc               ,
+            pl_data              ,
             pl_clr_lnkeqreq      ,
             pl_lnk_cfg           ,
             pl_protocol          ,
@@ -328,8 +331,6 @@ module lpif_pipeline
             pl_state_sts         ,
             pl_cfg               ,
             pl_stream            ,
-            pl_crc               ,
-            pl_data              ,
             pl_crc_valid         ,
             pl_cerror            ,
             pl_cfg_vld           ,
@@ -394,6 +395,7 @@ module lpif_pipeline
         assign lp_prime_stream    = lp_stream    ;
         assign lp_prime_crc       = lp_crc       ;
         assign lp_prime_crc_valid = lp_crc_valid ;
+        assign lp_prime_trans_valid = lp_irdy & (|lp_valid) ;
     end
     else
     begin
@@ -416,11 +418,11 @@ module lpif_pipeline
       assign lp_pipeline_push  [0] = (lp_pipeline_empty [0] | lp_pipeline_pop [0]) & lp_pipeline_valid [0] ;
       assign lp_pipeline_pop   [0] = lp_pipeline_push [0+1] ;
 
-      assign lp_pipeline_wrdata [0] = {lp_valid      ,
-                                       lp_data       ,
-                                       lp_stream     ,
-                                       lp_crc        ,
-                                       lp_crc_valid  };
+      assign lp_pipeline_wrdata [0] = {lp_data      ,    
+                                       lp_crc       ,    
+                                       lp_stream    ,    
+                                       lp_crc_valid ,    
+                                       lp_valid     };   
 
 
        lpif_pipe_stage #(.DATA_WIDTH(LP_DATA_FLOW_WID)) lpif_pipe_stage_lp_i0 (
@@ -465,13 +467,16 @@ module lpif_pipeline
 
       assign lp_pipeline_wrdata [LPIF_PIPELINE_STAGES] = lp_pipeline_rddata [LPIF_PIPELINE_STAGES-1] ;
 
-      assign {lp_prime_valid_raw  ,
-              lp_prime_data       ,
-              lp_prime_stream     ,
-              lp_prime_crc        ,
-              lp_prime_crc_valid  }      = lp_pipeline_wrdata [LPIF_PIPELINE_STAGES];
+      assign { lp_prime_data      ,
+               lp_prime_crc       ,
+               lp_prime_stream    ,
+               lp_prime_crc_valid ,
+               lp_prime_valid_raw } = lp_pipeline_wrdata [LPIF_PIPELINE_STAGES];
+
 
       assign lp_prime_valid = lp_pipeline_valid [LPIF_PIPELINE_STAGES] ? lp_prime_valid_raw : {LPIF_VALID_WIDTH{1'b0}} ;
+
+      assign lp_prime_trans_valid = lp_pipeline_valid [LPIF_PIPELINE_STAGES] ;
 
 
     end

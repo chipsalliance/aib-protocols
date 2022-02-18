@@ -85,6 +85,7 @@ module ca_top_tb;
     // wires
     //--------------------------------------------------------------
     wire   tb_reset_l;
+    reg    reset_done_once;
 
     wire   die_a_align_done;
     wire   die_b_align_done;
@@ -150,6 +151,15 @@ module ca_top_tb;
     assign      slv_gear_4bit = `SLV_GEAR;
     assign      msr_gear_4bit = `MSR_GEAR;
 
+initial begin
+    reset_done_once = 0;
+    wait(tb_reset_l == 0);
+    wait(tb_reset_l == 1);
+    repeat (2) @(posedge clk_lane_a[0]);
+    reset_done_once = 1; 
+end
+
+
 marker_gen marker_gen_im
      (/*AUTOINST*/
       // Outputs
@@ -157,7 +167,7 @@ marker_gen marker_gen_im
       .user_marker                      (ca_die_a_tx_tb_out_if.user_marker), // Templated
       // Inputs
       .clk                              (msr_wr_clk),            // Templated
-      .rst_n                            (tb_reset_l),            // Templated
+      .rst_n                            (reset_done_once ? 1'b1 : tb_reset_l),            // Templated
       .local_rate                       (msr_gear_4bit),         // Templated
       .remote_rate                      (slv_gear_4bit));        // Templated
 
@@ -167,7 +177,7 @@ marker_gen marker_gen_im
      .user_marker                       (ca_die_b_tx_tb_out_if.user_marker), // Templated
       // Inputs
       .clk                              (slv_wr_clk),                        // Templated
-      .rst_n                            (tb_reset_l),                        // Templated
+      .rst_n                            (reset_done_once ? 1'b1 : tb_reset_l),            // Templated
       .local_rate                       (slv_gear_4bit),         // Templated
       .remote_rate                      (msr_gear_4bit));        // Templated
 
@@ -728,7 +738,7 @@ endgenerate
         for(aclk = 0; aclk < `TB_DIE_A_NUM_CHANNELS; aclk = aclk + 1) begin
             initial begin
                 clk_lane_a[aclk] <= 1'b1;
-                if(`SYNC_FIFO == 0) #(($urandom_range(3,0)) * (250/2)); // random phase shit delays
+                if(`SYNC_FIFO == 0) #(($urandom_range(5,0)) * $urandom_range(5,10)); // random phase shift delays
                 forever begin
                     #(`TB_DIE_A_CLK/2) clk_lane_a[aclk] = ~clk_lane_a[aclk];
                 end
@@ -751,7 +761,7 @@ endgenerate
         for(bclk = 0; bclk < `TB_DIE_B_NUM_CHANNELS; bclk = bclk + 1) begin
             initial begin
                 clk_lane_b[bclk] <= 1'b1;
-                if(`SYNC_FIFO == 0) #(($urandom_range(3,0)) * (250/2)); // random phase shit delays
+                if(`SYNC_FIFO == 0) #(($urandom_range(5,0)) * $urandom_range(5,10)); // random phase shift delays
                 forever begin
                     #(`TB_DIE_B_CLK/2) clk_lane_b[bclk] = ~clk_lane_b[bclk];
                 end

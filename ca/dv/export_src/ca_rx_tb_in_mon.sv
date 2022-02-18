@@ -35,6 +35,7 @@ class ca_rx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     ca_rx_tb_in_cfg_c             cfg;
     ca_data_pkg::ca_seq_item_c    stb_item;
     virtual ca_rx_tb_in_if        #(.BUS_BIT_WIDTH(BUS_BIT_WIDTH), .NUM_CHANNELS(NUM_CHANNELS)) vif;  
+    virtual ca_gen_if             gen_if;
 
     //------------------------------------------
     // Data Members
@@ -96,6 +97,8 @@ function void ca_rx_tb_in_mon_c::build_phase(uvm_phase phase);
     // get the interface
     if( !uvm_config_db #( virtual ca_rx_tb_in_if #(BUS_BIT_WIDTH, NUM_CHANNELS) )::get(this, "" , "ca_rx_tb_in_vif", vif) )  
         `uvm_fatal("build_phase", "unable to get ca_rx_tb_in vif")
+    if( !uvm_config_db #( virtual ca_gen_if)::get(this, "" , "gen_vif", gen_if) )
+        `uvm_fatal("build_phase", "unable to get gen vif")
 
 endfunction: build_phase
 
@@ -146,7 +149,6 @@ function void ca_rx_tb_in_mon_c::test_call_gen_stb_beat();
      first_time_rst = 0;
      markstb_data   = 0;
      onlystb_data   = 0;
-     onlymark_data  = 0;
      align_done_time_upd = 0;
      rx_dout_time_upd    = 0;
      //calc_stb_beat computation will be in below one
@@ -196,16 +198,24 @@ task ca_rx_tb_in_mon_c::mon_rx();
            `ifdef GEN2
                `ifdef CA_ASYMMETRIC ///F2F case do not use Markers
                    if (BUS_BIT_WIDTH == 80) begin //H2F,Q2F 
-                       onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = vif.user_marker;  
-                       markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]     = vif.user_marker; 
+                        if(gen_if.second_traffic_seq == 0)begin
+                         onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = vif.user_marker;  
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]     = vif.user_marker; 
+                        end else begin
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]     =onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]  ;
+                        end
                        markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]             = 1'b1; ///only for asym
                        onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]             = 1'b1; ///only for asym
                    end 
                `endif//CA_ASYMMETRIC
                 if (BUS_BIT_WIDTH == 160) begin //H2H, F2H, Q2H
                   for(int mk=0;mk<=1;mk++)begin ///80,160
-                      onlymark_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC]       = vif.user_marker[mk];  
-                      markstb_data[(ch*BUS_BIT_WIDTH)  + 80 + `CA_TX_MARKER_LOC]       = vif.user_marker[mk]; 
+                       if(gen_if.second_traffic_seq == 0)begin
+                         onlymark_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC]       = vif.user_marker[mk];  
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + 80 + `CA_TX_MARKER_LOC]       = vif.user_marker[mk];
+                       end else begin
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + 80 + `CA_TX_MARKER_LOC]       = onlymark_data[(ch*BUS_BIT_WIDTH) + 80 + `CA_TX_MARKER_LOC]       ;  
+                       end 
                   end
                       markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]              = 1'b1; 
                       onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]              = 1'b1; 
@@ -214,22 +224,34 @@ task ca_rx_tb_in_mon_c::mon_rx();
                   //  onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]  = vif.user_marker[mk]; //1'b1; 
                   //  markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) + `CA_TX_MARKER_LOC]  = vif.user_marker[mk]; //1'b1;
                   //end
-                     onlymark_data[(ch*BUS_BIT_WIDTH) + 240 + `CA_TX_MARKER_LOC]  = 1;//vif.user_marker; 
-                     markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]   = 1;//vif.user_marker; 
+                     if(gen_if.second_traffic_seq == 0)begin
+                        onlymark_data[(ch*BUS_BIT_WIDTH) + 240 + `CA_TX_MARKER_LOC]  = 1;//vif.user_marker; 
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]   = 1;//vif.user_marker;
+                     end else begin
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + 240 +`CA_TX_MARKER_LOC]   = onlymark_data[(ch*BUS_BIT_WIDTH) +240+`CA_TX_MARKER_LOC];//vif.user_marker;
+                     end 
                      markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                = 1'b1; 
                      onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                = 1'b1; 
                 end
            `else //GEN1
                 if(BUS_BIT_WIDTH == 40) begin
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = vif.user_marker;  
-                    markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]          = vif.user_marker; 
+                    if(gen_if.second_traffic_seq == 0)begin
+                       onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = vif.user_marker;  
+                       markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]          = vif.user_marker;
+                     end else begin
+                       markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]          = onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC];
+                     end 
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                 end
               else if(BUS_BIT_WIDTH == 80) begin //40,80 => 80-160, 160-80
                    for(int mk=0;mk<=1;mk++)begin //40,80
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];  
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker[mk]; 
+                    if(gen_if.second_traffic_seq == 0)begin
+                       onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];  
+                       markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker[mk]; 
+                    end else begin
+                       markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]; 
+                    end
                    end
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
@@ -248,7 +270,6 @@ task ca_rx_tb_in_mon_c::mon_rx();
             first_time_rst = 0;
             markstb_data   = 0;
             onlystb_data   = 0;
-            onlymark_data  = 0;
             if(calc_stb == 1) begin
                 calc_stb = 0;
                 gen_stb_beat();

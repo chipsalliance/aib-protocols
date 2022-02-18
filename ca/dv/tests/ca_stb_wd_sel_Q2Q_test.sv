@@ -115,11 +115,19 @@ task ca_stb_wd_sel_Q2Q_test_c::run_test(uvm_phase phase);
     for(int i=1;i<=8;i++) begin 
 
         if(i <= 7)begin 
+            repeat(50)@ (posedge vif.clk);
+            vif.reset_l =1'b0;  //assert reset
+            `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_LOW   ..\n", UVM_LOW);
+            repeat(10)@ (posedge vif.clk);
+
             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel[i] = 1'b1;
             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel[i] = 1'b1;
             ca_cfg.configure();
+            repeat(50)@ (posedge vif.clk);
+            vif.reset_l =1'b1;  //de-assert reset
+            `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_HIGH   ..\n", UVM_LOW);
 
             sbd_counts_clear(); 
 

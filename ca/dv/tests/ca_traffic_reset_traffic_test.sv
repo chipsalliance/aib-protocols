@@ -109,6 +109,7 @@ task ca_traffic_reset_traffic_test_c::run_test(uvm_phase phase);
 
        sbd_counts_clear();
        
+       gen_if.second_traffic_seq = 1; //new_stb_params_cfg
       `uvm_info("ca_traffic_reset_traffic_test ::run_phase", "second ca_vseq started  ..\n", UVM_LOW);
        /////ca_vseq.reset_active_period = 500;
        ca_vseq.start(ca_top_env.virt_seqr);// {reset,traffic}

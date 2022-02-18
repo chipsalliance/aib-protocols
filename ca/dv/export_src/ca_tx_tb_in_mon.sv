@@ -37,6 +37,7 @@ class ca_tx_tb_in_mon_c #(int BUS_BIT_WIDTH=80, int NUM_CHANNELS=2) extends uvm_
     ca_data_pkg::ca_seq_item_c    die_a_exp_rx_dout_q[$];    
     ca_data_pkg::ca_seq_item_c    die_b_exp_rx_dout_q[$]; 
     virtual ca_tx_tb_in_if        #(.BUS_BIT_WIDTH(BUS_BIT_WIDTH), .NUM_CHANNELS(NUM_CHANNELS)) vif;  
+    virtual ca_gen_if             gen_if;
 
     //------------------------------------------
     // Data Members
@@ -97,6 +98,8 @@ function void ca_tx_tb_in_mon_c::build_phase(uvm_phase phase);
     // get the interface
     if( !uvm_config_db #( virtual ca_tx_tb_in_if #(BUS_BIT_WIDTH, NUM_CHANNELS) )::get(this, "" , "ca_tx_tb_in_vif", vif) )  
         `uvm_fatal("build_phase", "unable to get ca_tx_tb_in vif")
+    if( !uvm_config_db #( virtual ca_gen_if)::get(this, "" , "gen_vif", gen_if) )
+        `uvm_fatal("build_phase", "unable to get gen vif")
 
 endfunction: build_phase
 
@@ -144,7 +147,6 @@ function void ca_tx_tb_in_mon_c::test_call_gen_stb_beat();
       first_time_rst   = 0;
       markstb_data     = 0;
       onlystb_data     = 0;
-      onlymark_data    = 0;
      //calc_stb_beat computation will be in below one
       this.gen_stb_beat();
 
@@ -168,6 +170,11 @@ task ca_tx_tb_in_mon_c::mon_tx();
        
         if (vif.rst_n == 1'b1) begin
             first_time_rst = first_time_rst + 1;
+            if(first_time_rst > 5)begin //After 5clks only, we can get user_marker.
+                if((vif.tx_dout == onlystb_data) || (vif.tx_dout == markstb_data)) begin
+                   stb_beat_cnt++;
+                end
+            end
         end
         if (first_time_rst == 5) begin
            //$display("tx_tb_in_mon first_time_rst : %0d, marker %0d,my_name %s,time %0t",first_time_rst,vif.user_marker,my_name,$time);
@@ -188,38 +195,60 @@ task ca_tx_tb_in_mon_c::mon_tx();
              `ifdef GEN2
                `ifdef CA_ASYMMETRIC
                    if (BUS_BIT_WIDTH == 80) begin //F2F
-                       onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]  = vif.user_marker; 
-                       markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]  = vif.user_marker;
+                        if(gen_if.second_traffic_seq == 0)begin
+                         onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]  = vif.user_marker; 
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]  = vif.user_marker;
+                       end else begin
+                          markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]    = onlymark_data[(ch*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC];
+                       end
                        markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]          = 1'b1; ///only for asym
                        onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]          = 1'b1; ///only for asym
                    end 
                `endif//CA_ASYMMETRIC
                 if (BUS_BIT_WIDTH == 160) begin 
                   for(int mk=0;mk<=1;mk++)begin ///80,160
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];  
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) +`CA_TX_MARKER_LOC]     = vif.user_marker[mk]; 
+                        if(gen_if.second_traffic_seq == 0)begin
+                         onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];  
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) +`CA_TX_MARKER_LOC]     = vif.user_marker[mk]; 
+                       end else begin
+                         markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) +`CA_TX_MARKER_LOC]     = onlymark_data[(ch*BUS_BIT_WIDTH)+(mk*80)+`CA_TX_MARKER_LOC]; 
+                       end
+ 
                   end
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
                 end  else if (BUS_BIT_WIDTH == 320) begin 
                   for(int mk=0;mk<=3;mk++)begin ///80,160,240,320
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk]; 
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];
+                     if(gen_if.second_traffic_seq == 0)begin
+                        onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk]; 
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) + `CA_TX_MARKER_LOC]    = vif.user_marker[mk];
+                     end else begin
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + (mk*80) + `CA_TX_MARKER_LOC]    = onlymark_data[(ch*BUS_BIT_WIDTH) + (mk*80) + `CA_TX_MARKER_LOC ] ;
+                     end
                   end
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                      = 1'b1; 
                 end
              `else
                 if (BUS_BIT_WIDTH == 40) begin
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = vif.user_marker; 
-                    markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = vif.user_marker; 
+                     if(gen_if.second_traffic_seq == 0)begin
+                       onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]    = vif.user_marker; 
+                       markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = vif.user_marker; 
+                     end else begin
+                       markstb_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]     = onlymark_data[(ch*BUS_BIT_WIDTH)+`CA_TX_MARKER_LOC] ;
+                     end
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]            = 1'b1;
                 end else if (BUS_BIT_WIDTH == 80) begin
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = vif.user_marker;  
-                    onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker;  
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = vif.user_marker; 
-                    markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker; 
+                     if(gen_if.second_traffic_seq == 0)begin
+                        onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]         = vif.user_marker;  
+                        onlymark_data[(ch*BUS_BIT_WIDTH) + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker;  
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = vif.user_marker; 
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = vif.user_marker;
+                     end else begin
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + `CA_TX_MARKER_LOC]         = onlymark_data[(ch*BUS_BIT_WIDTH) + `CA_TX_MARKER_LOC]; 
+                        markstb_data[(ch*BUS_BIT_WIDTH)  + 40 + `CA_TX_MARKER_LOC]    = onlymark_data[(ch*BUS_BIT_WIDTH) + 40 +`CA_TX_MARKER_LOC];
+                     end 
                     markstb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                     onlystb_data[(ch*BUS_BIT_WIDTH)+ stb_bit_pos]                 = 1'b1;
                 end 
@@ -237,7 +266,7 @@ task ca_tx_tb_in_mon_c::mon_tx();
             first_time_rst   = 0;
             markstb_data     = 0;
             onlystb_data     = 0;
-            onlymark_data    = 0;
+            stb_beat_cnt     = 0;
             //tx_compare_start = 0;
            if(calc_stb == 1) begin
                 calc_stb = 0;
@@ -466,10 +495,10 @@ task ca_tx_tb_in_mon_c::mon_tx();
                      end
                      2'b11: begin // both data and stb
                              ca_item.add_stb = 1;
-                             if(markstb_data != tx_data_fin_prev) begin
                                  if((cfg.with_external_stb_test == 0) && (cfg.stb_error_test == 0) && (cfg.stop_stb_checker == 0)) begin //dont check stbs after align_done case
-                                   verify_tx_stb();  
+                                   verify_tx_stb();
                                  end
+                             if(markstb_data != tx_data_fin_prev) begin
                                  aport.write(ca_item);
                              end
                      end

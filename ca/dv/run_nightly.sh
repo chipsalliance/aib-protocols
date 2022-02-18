@@ -344,7 +344,6 @@ echo " "
 echo "Starting Nightly Regression with ${lp_cnt} TESTS ... "
 echo " "
 
-mv nightly_results.txt nightly_results.txt.old
 date > nightly_results.txt
 ./submit_group.pl nightly_grid_group.txt
 

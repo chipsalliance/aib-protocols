@@ -99,6 +99,12 @@ task ca_stb_rcvr_aft_aln_done_test_c::chk_align_done();
                 // repeat(4)@(posedge vif.clk);
                 `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in scoreboard started ..\n", UVM_LOW);
                  ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
+
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+                ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+                ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+                `uvm_info("ca_stb_rcvr_aft_aln_done_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
+
                 `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "DIE_A_generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
                  ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
                  ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -190,7 +196,12 @@ task ca_stb_rcvr_aft_aln_done_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_b_rx_tb_in_cfg.tx_stb_rcvr              = 0;
 
      repeat(4)@(posedge vif.clk);
+         gen_if.second_traffic_seq = 1; //new_stb_params_cfg
      ca_top_env.ca_scoreboard.generate_stb_beat(); //To update stb_rcvr_enb in scoreboard
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+     ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+     ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+    `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
     `uvm_info("ca_stb_rcvr_aft_aln_done_test::run_phase", "aft_rcvr_0_generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
      ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
      ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();

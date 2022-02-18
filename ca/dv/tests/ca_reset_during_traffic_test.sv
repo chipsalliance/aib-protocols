@@ -113,6 +113,8 @@ task ca_reset_during_traffic_test_c::run_test(uvm_phase phase);
               sbd_counts_clear();
               //After some clockss/ some transfer packets,we can stop comparison, to configure reset_low
               ca_top_env.ca_scoreboard.do_compare          =   0;
+              ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   1;
+              ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   1;
               ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   1;
               ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   1;
               ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   1;
@@ -136,6 +138,8 @@ task ca_reset_during_traffic_test_c::resume_traffic();
        wait(start_traffic_after_reset ==1);     
        `uvm_info("ca_reset_during_traffic_test ::resume_traffic ", "start_traffic_after_reset..\n", UVM_LOW);
        ca_top_env.ca_scoreboard.do_compare          =   1;
+       ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+       ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
        ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;

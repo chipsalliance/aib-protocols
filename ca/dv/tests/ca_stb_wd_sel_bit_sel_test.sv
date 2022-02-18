@@ -37,6 +37,7 @@ class ca_stb_wd_sel_bit_sel_test_c extends base_ca_test_c;
     ca_seq_lib_c        ca_vseq;
     ca_traffic_seq_c    ca_traffic_seq;
     int                 bit_shift_val; 
+    int                 max_wd_sel_fin = 0 ; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -86,7 +87,8 @@ endtask : run_phase
 task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
 
     bit result = 0;
-
+    ca_cfg.override_align_done_timeout = 1; //In high iteration test cases, align_done timeout should not be 60us.so overide timout here.
+  
     `uvm_info("ca_stb_wd_sel_bit_sel_test ::run_phase", "START test...", UVM_LOW);
     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
@@ -111,14 +113,33 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker    =   0;
     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker    =   0;
     
+      // If asymmetric, we need to check lower one of the leader-follower BUS_WIDTH 
+     if(ca_cfg.ca_die_a_tx_tb_out_cfg.max_wd_sel <= ca_cfg.ca_die_b_tx_tb_out_cfg.max_wd_sel) begin
+         max_wd_sel_fin = ca_cfg.ca_die_a_tx_tb_out_cfg.max_wd_sel;
+     end else begin
+         max_wd_sel_fin = ca_cfg.ca_die_b_tx_tb_out_cfg.max_wd_sel;
+     end 
+   $display("max_wd_sel_fin %0d",max_wd_sel_fin);
+       ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
+       ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel = `CA_TX_STB_BIT_SEL;
     //i=8 is not an active index. Used to achieve toggle coverage in for loop i ==8 also checked
-    for(int i=0;i<=8;i++) begin 
+    //for(int i=0;i<=8;i++) begin 
+    for(int i=0;i<=max_wd_sel_fin;i++) begin 
 
         if(i <= 7)begin 
+            repeat(50)@ (posedge vif.clk);
+            vif.reset_l =1'b0;  //assert reset
+            `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_LOW1   ..\n", UVM_LOW);
+            repeat(10)@ (posedge vif.clk);
+
             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel[i] = 1'b1;
             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel[i] = 1'b1;
+            repeat(50)@ (posedge vif.clk);
+            vif.reset_l =1'b1;  //de-assert reset
+            `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_HIGH1   ..\n", UVM_LOW);
+
             //if(i<=1) begin
             //  bit_shift_val = 26 ;
             //end else if (i<=3) begin
@@ -131,6 +152,11 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
             //for(int j=0;j<=9;j++) begin 
             for(int j= 0;j<39;j++) begin
                 if(j != (`CA_TX_MARKER_LOC - 40)) begin 
+                 repeat(50)@ (posedge vif.clk);
+                 vif.reset_l =1'b0;  //assert reset
+                 `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_LOW2   ..\n", UVM_LOW);
+                 repeat(10)@ (posedge vif.clk);
+
                  ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel    = 'h0;
                  ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel    = 'h0;
                  ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel[j] = 1'b1;
@@ -138,8 +164,15 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
                  //ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel[j+bit_shift_val] = 1'b1;
                  //ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_bit_sel[j+bit_shift_val] = 1'b1;
 		 ca_cfg.configure();
+                 repeat(50)@ (posedge vif.clk);
+                 vif.reset_l =1'b1;  //de-assert reset
+                 `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_HIGH2   ..\n", UVM_LOW);
                  sbd_counts_clear(); 
 
+                 gen_if.second_traffic_seq = 1; //new_stb_params_cfg
+
+                 ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+                 ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
                  ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
                  ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
                  ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
@@ -147,6 +180,11 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
 
                 ca_top_env.ca_scoreboard.generate_stb_beat();
                 `uvm_info("ca_stb_related_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+                `uvm_info("ca_stb_related_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+                ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+                ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+                `uvm_info("ca_stb_related_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
 
                 `uvm_info("ca_stb_related_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
                   ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -172,6 +210,8 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
                  repeat(20)@ (posedge vif.clk);
 
                 `uvm_info("ca_stb_related_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+                 ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+                 ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
                  ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
                  ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
                  ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;
@@ -193,17 +233,19 @@ task ca_stb_wd_sel_bit_sel_test_c::run_test(uvm_phase phase);
              end // tx_stb_bit_sel  (j<40)
          end // tx_stb_wd_sel if (i<=7)
          else begin
+            ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+            ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
             ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
             ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
             ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
             ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
              repeat(50)@ (posedge vif.clk);
-             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
-             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
-             ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel[0] = 1'b1;
-             ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel[0] = 1'b1;
-             ca_cfg.configure();
-             sbd_counts_clear(); 
+            ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
+            ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel    = 'h0;
+            ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel[0] = 1'b1;
+            ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_wd_sel[0] = 1'b1;
+            ca_cfg.configure();
+            sbd_counts_clear(); 
          end //i ==8
      end  //for (i=1
 

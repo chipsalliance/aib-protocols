@@ -111,7 +111,7 @@ task ca_aln_err_afly0_by_incorrect_stb_test_c::aln_err_chk();
 
    fork 
        begin
-            wait(gen_if.die_b_align_error == 1);
+            wait(gen_if.die_a_align_error == 1);
               sbd_counts_clear();
               die_a_aln_err = 1;
               `uvm_info("ca_aln_err_afly0_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);

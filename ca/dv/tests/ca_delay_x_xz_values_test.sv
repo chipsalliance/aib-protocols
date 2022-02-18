@@ -129,13 +129,22 @@ task ca_delay_x_xz_values_test_c::run_test(uvm_phase phase);
          ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value = gen_if.delay_xz_value;
 
          sbd_counts_clear();
+         ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+         ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
          ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
 
+         gen_if.second_traffic_seq = 1;
+
          ca_top_env.ca_scoreboard.generate_stb_beat();
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+         `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+          ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+          ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+         `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
 
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
          ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -161,6 +170,8 @@ task ca_delay_x_xz_values_test_c::run_test(uvm_phase phase);
          repeat(20)@ (posedge vif.clk);
 
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+         ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+         ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
          ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
          ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
          ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;

@@ -50,6 +50,7 @@ class ca_cfg_c extends uvm_object;
  
     bit                  stb_error_test; 
     bit [15:0]           intv_offset;
+    bit                  override_align_done_timeout;
     //------------------------------------------
     // constraints
     //------------------------------------------

@@ -184,6 +184,8 @@ task ca_afly1_stb_incorrect_intv_test_c::aln_err_chk();
         begin
           wait(shift_stb_intv_complt == 1) ;
           wait(ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1);
+               ca_cfg.ca_die_a_tx_tb_out_cfg.tx_q_not_zero  = 1; // Tx_q is not ended in this test case.driver transfer should start from  valid data depends on this param only.
+               ca_cfg.ca_die_b_tx_tb_out_cfg.tx_q_not_zero  = 1;
              if(update_do_compare == 0) begin
                sbd_counts_only_clear();
               `uvm_info("ca_afly1_stb_incorrect_intv_test", "after align_error gone,align_done come,start SCOREBOARD comparision...", UVM_LOW);

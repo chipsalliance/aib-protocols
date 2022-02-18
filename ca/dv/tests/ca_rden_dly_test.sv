@@ -146,13 +146,22 @@ task ca_rden_dly_test_c::run_test(uvm_phase phase);
 ///expect : rx-align_dnoe -> first_data time = time[rden0]+i
 
          sbd_counts_clear();
+        ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+        ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
         ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
         ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
 
+         gen_if.second_traffic_seq = 1; //new_stb_params_cfg
+
         ca_top_env.ca_scoreboard.generate_stb_beat();
         `uvm_info("ca_rden_dly_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+        `uvm_info("ca_rden_dly_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+         ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+         ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+        `uvm_info("ca_rden_dly_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
 
         `uvm_info("ca_rden_dly_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
           ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -178,6 +187,8 @@ task ca_rden_dly_test_c::run_test(uvm_phase phase);
          repeat(20)@ (posedge vif.clk);
 
         `uvm_info("ca_rden_dly_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+        ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+        ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
         ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
         ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
         ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;

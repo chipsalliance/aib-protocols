@@ -65,7 +65,7 @@ assign empty = empty_reg;
 // empty status
 ////////////////////////////////////////////////////////////
 
-  reg [DATA_WIDTH:0] memory;
+  reg [DATA_WIDTH-1:0] memory;
 
   always_ff @(posedge lclk or negedge reset)
   if (!reset)

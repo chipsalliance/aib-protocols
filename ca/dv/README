@@ -53,10 +53,17 @@ cmd to run test:
               Run command:  sh ./run_nightly.sh
 
               Results path:
-                     /ca/dv/nightly/test_*/ca_tb.log
-                     /ca/dv/nightly/test_*/cov_work   {with cov_nowaves option used}
-                        {user needs to merge all test_*/cov_work to observe coverage with IMC (cadence)}
                      /ca/dv/nightly_results.txt
+                     /ca/dv/nightly/test_*/ca_tb.log
+
+                     /ca/dv/nightly/test_*/cov_work   {with cov_nowaves option used by manual Editing of run_nightly.sh}
+                        {user needs to merge all test_*/cov_work to observe coverage with IMC (cadence)}
+			Commands to use:   
+			    cd ca/dv/nightly
+                            imc  -exec  ../imc.cmd
+			    imc -64bit &
+			    Open ca/dv/nightly/cov_work/scope/*
+
 ------------------------------------------------------------------------------------------
 ----------------------
 CA Directory Structure 
