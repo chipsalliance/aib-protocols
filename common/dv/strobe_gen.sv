@@ -43,7 +43,7 @@ if (!rst_n)
   count_reg <= 16'h0;
 else if (~online)
   count_reg <= 16'h0;
-else if ((marker_dly_reg) & (|count_reg[15:1] == 15'h0)) // If we get a marker and we are empty or at 1.
+else if ((marker_dly_reg) & (count_reg[15:1] == 15'h0)) // If we get a marker and we are empty or at 1.
   count_reg <= interval;
 else if (|count_reg)
   count_reg <= count_reg - 16'h1;

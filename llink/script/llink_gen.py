@@ -2614,12 +2614,12 @@ def make_top_file(configuration):
                 if llink['DIR'] == localdir:
                     print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
-                    print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32), semicolon=False)
+                    print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32))
                     print_verilog_assign(file_name, "tx_{0}_pushbit".format(llink['NAME']), "user_{0}_vld".format(llink['NAME']))
                 else:
-                    print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+                    print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_RX_RSTRUCT']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
-                    print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32), semicolon=False)
+                    print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32))
                     print_verilog_assign(file_name, "user_{0}_vld".format(llink['NAME']), "rx_online_delay & rx_{0}_pushbit".format(llink['NAME']))
 
             elif not llink['HASREADY'] and not llink['HASVALID']:
