@@ -109,6 +109,7 @@ case "$sailrock_name" in
                                                            cd -;
                                                            run_cmd="./run_sim  ca_afly1_stb_incorrect_intv_test_c ${cov_wave_opt}"
                                                            echo "cd ${DIR}_1; $run_cmd ; rm -rf xcelium.d ; cd ~-;" >> nightly_grid_group.txt
+                                                           cd scripts;
                                                            python3 run_all_sim.py copy -d ${DIR}_2 -cfg $CONFIG;
                                                            cd -;
                                                            run_cmd="./run_sim ca_basic_test_c ${cov_wave_opt}"
