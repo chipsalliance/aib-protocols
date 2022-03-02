@@ -155,7 +155,8 @@ always_ff @(posedge sclk or negedge rst_n_sclk)
  end
 
 always_ff @(negedge sclk or negedge rst_n_sclk)
- if (!rst_n_sclk) miso <= '0;
+// if (!rst_n_sclk) miso <= '0;
+   if (!rst_n_sclk) miso <= '1;
  else miso <= tx_data[31];
 
 always_ff @(posedge sclk or negedge rst_n_sclk)
