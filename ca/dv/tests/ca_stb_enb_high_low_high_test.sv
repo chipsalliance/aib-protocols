@@ -88,6 +88,10 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
     `uvm_info("stb_enb_high_low_high_test ::run_phase", "START test...", UVM_LOW);
      ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
      ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =   1;
 
      ca_vseq.start(ca_top_env.virt_seqr); //tx_stb_en = 1 by default
 
@@ -111,7 +115,29 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
      ca_cfg.configure();
      `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
 
-      ca_traffic_seq.start(ca_top_env.virt_seqr); //tx_stb_en = 0 
+       gen_if.second_traffic_seq = 1;
+
+       //`uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+       //ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+       //ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+       //`uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
+
+      `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in SBD started ..\n", UVM_LOW);
+       ca_top_env.ca_scoreboard.generate_stb_beat();
+      `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+    //  `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+    //   ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+    //   ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+    //  `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+
+    //   repeat(tx_stb_intv_bkp)@ (posedge vif.clk); 
+    //  `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+    //   ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+    //   ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+    //  `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
+
+      ca_traffic_seq.start(ca_top_env.virt_seqr); //tx_stb_en = 0 //PN_FEB3 
 
      `uvm_info("stb_enb_high_low_high_test ::run_phase", "wait_started for 2nd drv_tfr_complete ..\n", UVM_LOW);
       wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
@@ -128,7 +154,28 @@ task ca_stb_enb_high_low_high_test_c::run_test(uvm_phase phase);
       ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en    =  1 ;
       ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en    =  1 ; 
       ca_cfg.configure();
+
      `uvm_info("stb_enb_high_low_high_test ::run_phase",$sformatf("tx_stb_en DIEA= %0d,tx_stb_en DIEB =%h configured..\n", ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_en,ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_en),UVM_LOW);
+
+      // `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+      // ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+      // ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+      // `uvm_info("ca_stb_all_bit_sel_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
+      `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in SBD started ..\n", UVM_LOW);
+       ca_top_env.ca_scoreboard.generate_stb_beat();
+      `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+     // `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
+     //  ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+     //  ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+     // `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
+
+     //  repeat(tx_stb_intv_bkp)@ (posedge vif.clk); 
+     // `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
+     //  ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+     //  ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+     // `uvm_info("ca_strobe_error_test ::run_phase", "generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
+
 
       ca_traffic_seq.start(ca_top_env.virt_seqr); //tx_stb_en = 1
 

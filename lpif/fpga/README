@@ -1,0 +1,6 @@
+rm -rf output_files/ qdb synth_dumps/ tmp-clearbox/
+qsub -V -cwd -b y -o /dev/null -e stderr.log quartus_sh --flow compile lpif_wrap &
+
+or this for GUI
+
+qsub -V -cwd -b y -o /dev/null -e stderr.log quartus lpif_wrap &

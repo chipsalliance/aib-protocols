@@ -173,23 +173,21 @@ task  ca_tx_tb_out_drv_c::drv_tx();
     ca_data_pkg::ca_seq_item_c                tx_item;      
     bit [((BUS_BIT_WIDTH*NUM_CHANNELS)-1):0]  tx_data; 
     bit [7:0]                                 count;
-    bit                                       calc_stb = 1;
     bit                                       marker_b4_data_done, marker_b4_data_done_p;
+    bit                                       marker_b4_data_done_cleared;
+    bit                                       wait_xz_delay_over;
     int                                       index, stb_bit_pos; 
-    int                                       ch; 
+    int                                       ch, xz_delay_cnt; 
     
     forever begin @(posedge vif.clk)
         if(vif.rst_n === 1'b0) begin // reset state
-            if(calc_stb == 1) begin
-                calc_stb = 0;
-                gen_stb_beat();
-            end
+            gen_stb_beat();
             drv_tx_idle();
             tx_cnt = 0;
+            wait_xz_delay_over = 1'b0;
             while(tx_q.size() > 0) tx_item = tx_q.pop_front(); 
         end // reset
         else begin // non reset state
-            calc_stb = 1;
             drv_tx_cfg_to_vif();
             if((got_tx == 0) && (tx_q.size() > 0) && (tx_online === 1'b1) && (vif.align_done === 1'b1)) begin
                 if (cfg.ca_stb_rcvr_aft_aln_done_test  == 1) begin /// to control tx_din drive under tx_stb_rcvr test ONLY
@@ -282,7 +280,8 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                             if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
                             if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
                             //$display("inside stb_inject part1.time,i = %0d,stb_bit_pos = %0d",$time,i,stb_bit_pos);
-                                if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                    
+                                if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin //not for 0th channel
                                     idle_data[i] = 0;
                                 end else begin
                                     idle_data[i] = vif.user_stb;
@@ -354,7 +353,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                                     if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++;  //// represents Channel
                                     if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
                                         //$display("inside stb_inject part2.time, i = %0d",$time,i);
-                                        if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                                        if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin
                                            tx_data[i] = 0;
                                         end else begin
                                            tx_data[i] = vif.user_stb;
@@ -366,6 +365,14 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                         vif.tx_din = tx_data;
                         `uvm_info("drv_tx", $sformatf("%s Driving transfer %0d TB ---> tx_din: 0x%h", my_name, tx_cnt, tx_data), UVM_MEDIUM);
                         got_tx = 0;
+`ifdef CA_ASYMMETRIC
+                        if (tx_q.size() == 0) marker_b4_data_done = 0;
+                        if ((marker_b4_data_done_cleared == 0) && (cfg.tx_q_not_zero == 1)) begin 
+                           marker_b4_data_done = 0 ; /// Tx_q is not ended in this test case.driver transfer should start from  valid data depends on this param only in ca_afly1_stb_incorrect_intv_test_c
+                           marker_b4_data_done_cleared = 1; 
+                        end
+
+`endif
                 end // no delay
             end // got pkt == 1
             else begin //Send IDLE
@@ -416,6 +423,7 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                 end //for
              `endif //CA_ASYMMETRIC
 ////Inject Strobe in Tx Data at appropriate channel position, when CA-DUT input tx_stb_en=0
+/////////// Wait for Z delay only ONCE HERE
                 if ((cfg.tx_stb_en == 1'b0) && (cfg.stop_strobes_inject == 0)) begin
                     index = 0;
                     for (int i=0; i<40; i+=1) begin
@@ -429,17 +437,27 @@ task  ca_tx_tb_out_drv_c::drv_tx();
                     end else begin
                         stb_bit_pos = ($clog2(cfg.tx_stb_wd_sel[7:0])*40) + (index);
                     end
+
                     for (int i=0, k=0; i<(BUS_BIT_WIDTH*NUM_CHANNELS); i+=1) begin
                         if ((i!=0) && (i%BUS_BIT_WIDTH == 0)) k++; //Channel Num select
                         if ((i == stb_bit_pos) || (i == ((BUS_BIT_WIDTH*k)+stb_bit_pos))) begin
-                           if((cfg.shift_stb_intv_enb == 1) && (k ==1)) begin
+                           if((cfg.shift_stb_intv_enb == 1) && (k != 0)) begin
                               idle_data[i] = 0;
                            end else begin
-                              idle_data[i] = vif.user_stb;
+                               if (~wait_xz_delay_over) begin
+                                   idle_data[i] = 0;
+                               end else begin //Do not inject external strobe until xz_delay is over (when tx_stb_en==0 and not tx_online==1 yet)
+                                   idle_data[i] = vif.user_stb;
+                               end
                            end
                         end
                     end //for
-                end //if (ca_cfg.tx_stb_en == 0)
+                    if(xz_delay_cnt == cfg.delay_xz_value) begin
+                        wait_xz_delay_over = 1'b1;
+                    end else begin
+                        if (tx_online) xz_delay_cnt += 1;
+                    end
+                end //if (cfg.tx_stb_en == 0)
 
                 drv_tx_idle();
             end //send IDLE

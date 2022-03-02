@@ -28,7 +28,7 @@ class virt_seqr_c extends uvm_sequencer ;
     
     `uvm_component_utils(virt_seqr_c)
 
-    reset_seqr_c              reset_seqr;
+    ca_reset_seqr_c           reset_seqr;
     ca_tx_tb_out_seqr_c       ca_die_a_tx_tb_out_seqr;
     ca_tx_tb_out_seqr_c       ca_die_b_tx_tb_out_seqr;
     ca_cfg_c                  ca_cfg;

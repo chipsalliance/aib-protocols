@@ -33,7 +33,30 @@ interface ca_gen_if (input clk, rst_n);
     //---------------------------------------------------
     logic                                         aib_ready;
     logic                                         force0_tx_rx_online=1'b0;
+    logic                                         die_a_align_error;
+    logic                                         die_a_align_done;
+    logic                                         die_b_align_error;
+    logic                                         die_b_align_done;
+    logic                                         die_a_rx_stb_pos_err;
+    logic                                         die_b_rx_stb_pos_err;
+    logic                                         die_a_rx_stb_pos_coding_err;
+    logic                                         die_b_rx_stb_pos_coding_err;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_a_fifo_full;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_a_fifo_pfull;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_a_fifo_empty;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_a_fifo_pempty;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_b_fifo_full;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_b_fifo_pfull;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_b_fifo_empty;
+    logic [`TB_DIE_A_NUM_CHANNELS-1:0]            die_b_fifo_pempty;
+    
+    logic [`TB_DIE_A_BUS_BIT_WIDTH*`TB_DIE_A_NUM_CHANNELS-1:0]    die_a_tx_dout;
+    logic [`TB_DIE_B_BUS_BIT_WIDTH*`TB_DIE_B_NUM_CHANNELS-1:0]    die_b_tx_dout;
 
+    logic                                         die_a_tx_online;
+    logic                                         die_b_tx_online;
+    logic                                         second_traffic_seq=0;
+    int                                           delay_xz_value; 
     // modports... 
     //---------------------------------------------------
     modport mon (  

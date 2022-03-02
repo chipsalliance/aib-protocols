@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_RECEIVE_SV
+`define _COMMON_LL_RECEIVE_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -54,17 +56,17 @@ module ll_receive #(parameter WIDTH=8, parameter DEPTH=8'h1) (
 
 ////////////////////////////////////////////////////////////
 //  Do Not Modify
-parameter FIFO_COUNT_WID  = ((DEPTH+1) > 1024 )  ?  0 :  // Invalid
-                            ((DEPTH+1) > 512  )  ? 10 :
-                            ((DEPTH+1) > 256  )  ?  9 :
-                            ((DEPTH+1) > 128  )  ?  8 :
-                            ((DEPTH+1) >  64  )  ?  7 :
-                            ((DEPTH+1) >  32  )  ?  6 :
-                            ((DEPTH+1) >  16  )  ?  5 :
-                            ((DEPTH+1) >   8  )  ?  4 :
-                            ((DEPTH+1) >   4  )  ?  3 :
-                            ((DEPTH+1) >   2  )  ?  2 : 1 ;
-parameter FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
+localparam FIFO_COUNT_WID  = ((DEPTH+1) > 1024 )  ?  0 :  // Invalid
+                             ((DEPTH+1) > 512  )  ? 10 :
+                             ((DEPTH+1) > 256  )  ?  9 :
+                             ((DEPTH+1) > 128  )  ?  8 :
+                             ((DEPTH+1) >  64  )  ?  7 :
+                             ((DEPTH+1) >  32  )  ?  6 :
+                             ((DEPTH+1) >  16  )  ?  5 :
+                             ((DEPTH+1) >   8  )  ?  4 :
+                             ((DEPTH+1) >   4  )  ?  3 :
+                             ((DEPTH+1) >   2  )  ?  2 : 1 ;
+localparam FIFO_COUNT_MSB = FIFO_COUNT_WID  - 1 ;
 //  Do Not Modify
 ////////////////////////////////////////////////////////////
 
@@ -186,6 +188,7 @@ else if (rxfifo_i_underflow_pulse)
 
 
 endmodule
+`endif
 
 
 

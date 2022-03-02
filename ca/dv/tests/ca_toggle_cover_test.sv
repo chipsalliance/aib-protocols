@@ -79,22 +79,22 @@ endfunction: start_of_simulation
 //------------------------------------------
 // run phase 
 task ca_toggle_cover_test_c::run_phase(uvm_phase phase);
-    fork
-        run_test(phase);
-        global_timer(); // and check for error count
-        ck_eot(phase);
-    join
+     fork
+         run_test(phase);
+         global_timer(); // and check for error count
+         ck_eot(phase);
+     join
 
 endtask : run_phase
 
 //------------------------------------------
 task ca_toggle_cover_test_c::run_test(uvm_phase phase);
 
-      bit result = 0;
+     bit result = 0;
 
-      `uvm_info("ca_toggle_cover_test ::run_phase", "START test...", UVM_LOW);
-      ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
-      ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
+     `uvm_info("ca_toggle_cover_test ::run_phase", "START test...", UVM_LOW);
+     ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
+     ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
        
      ca_cfg.ca_die_a_tx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_b_tx_tb_in_cfg.with_external_stb_test   = 1;
@@ -102,38 +102,50 @@ task ca_toggle_cover_test_c::run_test(uvm_phase phase);
      ca_cfg.ca_die_b_rx_tb_in_cfg.with_external_stb_test   = 1;
      ca_cfg.ca_die_a_tx_tb_in_cfg.ca_toggle_test = 1;
 
-      ca_vseq.start(ca_top_env.virt_seqr);
+     ca_vseq.start(ca_top_env.virt_seqr);
 
-      `uvm_info("ca_toggle_cover_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
-      wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
-      `uvm_info("ca_toggle_cover_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
+     `uvm_info("ca_toggle_cover_test ::run_phase", "wait_started for 1st drv_tfr_complete ..\n", UVM_LOW);
+     wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1); 
+     `uvm_info("ca_toggle_cover_test ::run_phase", "wait_ended for 1st drv_tfr_complete..\n", UVM_LOW);
 
-      result =  ck_xfer_cnt_a(1);
-      result =  ck_xfer_cnt_b(1);
-      `uvm_info("ca_toggle_cover_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
+     result =  ck_xfer_cnt_a(1);
+     result =  ck_xfer_cnt_b(1);
+     `uvm_info("ca_toggle_cover_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
 
-      ///// For toggle coverage
-      ca_cfg.ca_die_a_rx_tb_in_cfg.rden_dly         = 7;       //complement default value here 
-      ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value    = 'hFFF5;  //10 complement default value here 
-      ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value   = 'hFFF1;  //14 complement default value here 
+     //// Due to on-the-fly toggle of delay_xz_value below, we'd miss strobe generation of DUT,
+     //// hence stop strobe checks now and expect align_err=1.
+     ca_cfg.ca_die_a_tx_tb_in_cfg.stop_stb_checker       =  1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.stop_stb_checker       =  1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker       =  1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker       =  1;   
+                                                                                                
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =  1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =  1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =  1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =  1;
 
-      ca_cfg.ca_die_b_rx_tb_in_cfg.rden_dly         = 7;
-      ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value    = 'hFFF5;
-      ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value   = 'hFFF1;
+     ///// For toggle coverage
+     ca_cfg.ca_die_a_rx_tb_in_cfg.rden_dly               =  7;       //complement default value here 
+     ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value          =  'hFFF5;  //10 complement default value here 
+     ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value         =  'hFFF1;  //14 complement default value here 
 
-      repeat(4)@ (posedge vif.clk);
-      sbd_counts_only_clear();
+     ca_cfg.ca_die_b_rx_tb_in_cfg.rden_dly               =  7;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value          =  'hFFF5;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value         =  'hFFF1;
+
+     repeat(4)@ (posedge vif.clk);
+     sbd_counts_only_clear();
 
      // Default value configured  
-      ca_cfg.ca_die_a_rx_tb_in_cfg.rden_dly         = 0;  
-      ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value    = 10; 
-      ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value   = 14; 
+     ca_cfg.ca_die_a_rx_tb_in_cfg.rden_dly               =  0;  
+     ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value          =  10; 
+     ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value         =  14; 
 
-      ca_cfg.ca_die_b_rx_tb_in_cfg.rden_dly         = 0; 
-      ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value    = 10;
-      ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value   = 14;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.rden_dly               =  0; 
+     ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value          =  10;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value         =  14;
 
-      test_end = 1; 
+     test_end = 1; 
      `uvm_info("ca_toggle_cover_test ::run_phase", "END test...\n", UVM_LOW);
 
 endtask : run_test

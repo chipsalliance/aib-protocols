@@ -1,3 +1,5 @@
+`ifndef _COMMON_ASYNCFIFO_SV
+`define _COMMON_ASYNCFIFO_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -360,3 +362,5 @@ endmodule // asyncfifo //
 // verilog-library-directories:("../*" "../../*")
 // End:
 //
+
+`endif

@@ -419,8 +419,8 @@ print OP4 "`define CA_FIFO_PFULL           $CaFifoPFull\n";
 print OP4 "`define CA_FIFO_EMPTY           0\n";
 print OP4 "`define CA_FIFO_PEMPTY          2\n";
 
-printf (OP4 "`define CA_TX_STB_WD_SEL        %0x\n",$CaTxStbWdSel);
-printf (OP4 "`define CA_RX_STB_WD_SEL        %0x\n",$CaRxStbWdSel);
+printf (OP4 "`define CA_TX_STB_WD_SEL        8'h%x\n",$CaTxStbWdSel);
+printf (OP4 "`define CA_RX_STB_WD_SEL        8'h%x\n",$CaRxStbWdSel);
 printf (OP4 "`define CA_TX_STB_BIT_SEL       40'h%x\n",$CaTxStbBitSel);
 printf (OP4 "`define CA_RX_STB_BIT_SEL       40'h%x\n",$CaRxStbBitSel);
 

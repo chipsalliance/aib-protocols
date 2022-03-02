@@ -58,6 +58,7 @@ class ca_seq_item_c extends uvm_sequence_item ;
     int                            size_mul= 0;
     bit [7:0]                      databytes[];
     bit [7:0]                      tx_data_fin[]; 
+    bit [7:0]                      tx_data_bkp[]; 
     int                            die_a_exp_rx_dout_q[$];    
     int                            die_b_exp_rx_dout_q[$];  
     bit                            tx_data_rdy=0;  
@@ -104,8 +105,9 @@ endfunction : new
 function void ca_seq_item_c::init_xfer(int size_l);
 
   `ifndef CA_ASYMMETRIC
-     databytes = new[size_l];
-     bcnt      = size_l;
+     databytes   = new[size_l];
+     tx_data_bkp = new[size_l];
+     bcnt        = size_l;
   `else
      databytes   = new[size_l*4]; //*4    to accommodate F2Q
      tx_data_fin = new[size_l*4];
@@ -292,9 +294,10 @@ function bit  ca_seq_item_c::compare_beat(ca_seq_item_c  act_beat, bit tx_or_rx_
                   `ifdef CA_ASYMMETRIC
                     `ifdef GEN1
                        //die_a to die_b busbitwidth check 40,80    f2h/h2f ,f2f,h2h =same bcnt
-                       //if((act_item.my_name == "DIE_A" ) && ((act_item.bus_bit_width == 40)  && act_item.bus_bit_width == 80))) size_mul = 2;
-                       if((my_name == "DIE_A" ) && (bus_bit_width == 40)) size_mul = 2; //ASYM,F2H
-                       if((my_name == "DIE_B" ) && (bus_bit_width == 80)) size_mul = 2; //ASYM H2F
+                       if((my_name == "DIE_A" )      && (bus_bit_width == 40)  && (`TB_DIE_B_BUS_BIT_WIDTH == 80)) size_mul = 2; //F2H-A
+                       else if((my_name == "DIE_A" ) && (bus_bit_width == 80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 40)) size_mul = 2; //H2F-A
+                       if((my_name == "DIE_B" )      && (bus_bit_width == 40)  && (`TB_DIE_A_BUS_BIT_WIDTH == 80)) size_mul = 2; //F2H-A
+                       else if((my_name == "DIE_B" ) && (bus_bit_width == 80)  && (`TB_DIE_A_BUS_BIT_WIDTH == 40)) size_mul = 2; //H2F-A
                     `else
                        if((my_name == "DIE_A" )      && (bus_bit_width ==  80)  && (`TB_DIE_B_BUS_BIT_WIDTH == 160)) size_mul = 2;//F2H-A
                        else if((my_name == "DIE_A" ) && (bus_bit_width == 160)  && (`TB_DIE_B_BUS_BIT_WIDTH ==  80)) size_mul = 2;//H2F-A

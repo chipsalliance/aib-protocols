@@ -2,7 +2,6 @@
 //
 //        (C) Copyright 2021 Eximius Design
 //
-//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -86,7 +85,7 @@ module lpif_txrx_x16_h1_master_top  (
   input  logic               m_gen2_mode         ,
 
 
-  input  logic [15:0]        delay_x_value       , // In single channel, no CA, this is Word Alignment Time. In multie-channel, this is 0 and RX_ONLINE tied to channel_alignment_done
+  input  logic [15:0]        delay_x_value       ,
   input  logic [15:0]        delay_y_value       ,
   input  logic [15:0]        delay_z_value       
 
@@ -106,6 +105,7 @@ module lpif_txrx_x16_h1_master_top  (
   logic                                          tx_auto_stb_userbit           ;
   logic                                          tx_online_delay               ;
   logic                                          rx_online_delay               ;
+  logic                                          rx_online_holdoff             ;
   logic [   1:   0]                              tx_mrk_userbit                ; // No TX User Marker, so tie off
   logic                                          tx_stb_userbit                ; // No TX User Strobe, so tie off
   assign tx_mrk_userbit                     = '0                                 ;
@@ -116,6 +116,8 @@ module lpif_txrx_x16_h1_master_top  (
 
 //////////////////////////////////////////////////////////////////
 // Auto Sync
+
+  assign rx_online_holdoff                  = 1'b0                               ;
 
    ll_auto_sync #(.MARKER_WIDTH(2),
                   .PERSISTENT_MARKER(1'b1),
@@ -135,6 +137,7 @@ module lpif_txrx_x16_h1_master_top  (
       .tx_mrk_userbit                   (tx_mrk_userbit),
       .tx_stb_userbit                   (tx_stb_userbit),
       .rx_online                        (rx_online),
+      .rx_online_holdoff                (rx_online_holdoff),
       .delay_x_value                    (delay_x_value[15:0]));
 
 // Auto Sync
@@ -145,12 +148,10 @@ module lpif_txrx_x16_h1_master_top  (
 
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
   assign tx_downstream_data   [   0 +:1067] = txfifo_downstream_data [   0 +:1067] ;
-  assign tx_downstream_debug_status [   0 +:  32] = 32'h0                              ;
-
+  assign tx_downstream_debug_status [   0 +:  32] = {12'h0, tx_online_delay, rx_online_delay, 18'h0} ;               
   // No AXI Valid or Ready, so bypassing main Logic Link FIFO and Credit logic.
   assign rxfifo_upstream_data [   0 +:1067] = rx_upstream_data     [   0 +:1067] ;
-  assign rx_upstream_debug_status [   0 +:  32] = 32'h0                              ;
-
+  assign rx_upstream_debug_status [   0 +:  32] = {12'h0, tx_online_delay, rx_online_delay, 18'h0} ;               
 // Logic Link Instantiation
 //////////////////////////////////////////////////////////////////
 

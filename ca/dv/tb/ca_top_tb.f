@@ -24,10 +24,10 @@ ${TESTBENCH_DIR}/aib2.0/tb_aib2_dut_wrapper_s0.sv
 ${CA_DV_HOME}/tb/ca_GENERATED_defines.svh
 ${PROJ_DIR}/common/dv/p2p_lite.sv
 +incdir+${CA_DV_HOME}/tb/
-+incdir+${PROJ_DIR}/common/dv/reset_agent/
++incdir+${CA_DV_HOME}/export_src/ca_reset_agent/
 +incdir+${CA_DV_HOME}/export_src/chan_delay_agent/
-${PROJ_DIR}/common/dv/reset_agent/reset_pkg.svh
-${PROJ_DIR}/common/dv/reset_agent/reset_if.sv
+${CA_DV_HOME}/export_src/ca_reset_agent/ca_reset_pkg.svh
+${CA_DV_HOME}/export_src/ca_reset_agent/ca_reset_if.sv
 ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_pkg.svh
 ${CA_DV_HOME}/export_src/chan_delay_agent/chan_delay_if.sv
 +incdir+${CA_DV_HOME}/export_src/

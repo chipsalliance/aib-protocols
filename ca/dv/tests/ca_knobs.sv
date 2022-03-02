@@ -31,8 +31,8 @@ class ca_knobs_c extends uvm_object;
     //------------------------------------------
     // test knobs
 
-    int         GLOBAL_TIMEOUT                  = 30000;
-    int         stop_err_cnt                    = 200;
+    int         GLOBAL_TIMEOUT                  = 2000000; ///1msec considering 0.5nsec clock period
+    int         stop_err_cnt                    = 20;
     rand int    tx_xfer_cnt_die_a;
     rand int    tx_xfer_cnt_die_b;
 
@@ -105,8 +105,29 @@ class ca_knobs_c extends uvm_object;
     extern function void display_knobs();
 
 endclass : ca_knobs_c
-////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////
+class ca_knobs_stb_intv_c extends ca_knobs_c;
+    
+`uvm_object_utils_begin(ca_knobs_stb_intv_c)
+        `uvm_field_int(tx_xfer_cnt_die_a, UVM_DEFAULT);
+        `uvm_field_int(tx_xfer_cnt_die_b, UVM_DEFAULT);
+`uvm_object_utils_end
+
+    constraint c_tx_xfer_cnt_die_a {tx_xfer_cnt_die_a >= 5; tx_xfer_cnt_die_a <=9;}
+    constraint c_tx_xfer_cnt_die_b {tx_xfer_cnt_die_b >= 5; tx_xfer_cnt_die_b <=9;}
+
+    extern function new (string name = "ca_knobs_stb_intv");
+
+endclass : ca_knobs_stb_intv_c
+
+////////////////////////////////////////////////////////
+function ca_knobs_stb_intv_c::new (string name = "ca_knobs_stb_intv");
+   // super.new(name);
+    //assert(this.randomize());
+endfunction : new
+
+////////////////////////////////////////////////////////
 function ca_knobs_c::new (string name = "ca_knobs");
     super.new(name);
     assert(this.randomize());

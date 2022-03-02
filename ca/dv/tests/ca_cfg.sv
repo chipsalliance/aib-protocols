@@ -34,7 +34,7 @@ class ca_cfg_c extends uvm_object;
     // Data Members
     //------------------------------------------
     ca_knobs_c           ca_knobs;
-    reset_cfg_c          reset_cfg;
+    ca_reset_cfg_c       reset_cfg;
 
     ca_tx_tb_out_cfg_c   ca_die_a_tx_tb_out_cfg;
     ca_tx_tb_out_cfg_c   ca_die_b_tx_tb_out_cfg;
@@ -49,6 +49,8 @@ class ca_cfg_c extends uvm_object;
     chan_delay_cfg_c     ca_die_a_delay_cfg[`MAX_NUM_CHANNELS];
  
     bit                  stb_error_test; 
+    bit [15:0]           intv_offset;
+    bit                  override_align_done_timeout;
     //------------------------------------------
     // constraints
     //------------------------------------------
@@ -69,7 +71,7 @@ function ca_cfg_c::new(string name = "ca_cfg");
    
     super.new(name);
     ca_knobs                = ca_knobs_c::type_id::create("ca_knobs");
-    reset_cfg               = reset_cfg_c::type_id::create("reset_cfg");
+    reset_cfg               = ca_reset_cfg_c::type_id::create("reset_cfg");
     ca_die_a_tx_tb_out_cfg  = ca_tx_tb_out_cfg_c::type_id::create("ca_die_a_tx_tb_out_cfg");
     ca_die_b_tx_tb_out_cfg  = ca_tx_tb_out_cfg_c::type_id::create("ca_die_b_tx_tb_out_cfg");
     
@@ -149,11 +151,16 @@ function void ca_cfg_c::configure( );
     // copy same configs from tx_out to tx_in
     ca_die_a_tx_tb_in_cfg.cp(ca_die_a_tx_tb_out_cfg); 
     ca_die_b_tx_tb_in_cfg.cp(ca_die_b_tx_tb_out_cfg); 
-    
+
+    // copy delay_xz_value from assigned in ca_die_a/b_rx_tb_in_cfg to ca_die_a/b_tx_tb_out_cfg for Driver to use
+    ca_die_a_tx_tb_out_cfg.delay_xz_value = ca_die_a_rx_tb_in_cfg.delay_xz_value;  ///DIE_A and DIE_B both Tx-Rx use same values
+    ca_die_b_tx_tb_out_cfg.delay_xz_value = ca_die_b_rx_tb_in_cfg.delay_xz_value;  ///DIE_A and DIE_B both Tx-Rx use same values
+
     // *FIXME* add in for gear chaning
     // ADD task in rx cfg to account for changes in bit/wd select when vers/bit bus size changes
     // similar to the tx_in.cp above, but it will dynamically change rx to the correct sizes
     //
+
     ca_die_b_rx_tb_in_cfg.rx_stb_intv    = ca_die_a_tx_tb_out_cfg.tx_stb_intv;     
     ca_die_b_rx_tb_in_cfg.rx_stb_wd_sel  = ca_die_a_tx_tb_out_cfg.tx_stb_wd_sel;     
     ca_die_b_rx_tb_in_cfg.rx_stb_bit_sel = ca_die_a_tx_tb_out_cfg.tx_stb_bit_sel;     

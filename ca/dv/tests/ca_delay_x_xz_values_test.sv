@@ -38,8 +38,8 @@ class ca_delay_x_xz_values_test_c extends base_ca_test_c;
     //------------------------------------------
     ca_seq_lib_c        ca_vseq;
     ca_traffic_seq_c    ca_traffic_seq;
-    randc int           delay_xz_value; 
-    randc int           delay_x_value; 
+    int                 delay_xz_value; 
+    int                 delay_x_value; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -115,25 +115,40 @@ task ca_delay_x_xz_values_test_c::run_test(uvm_phase phase);
        sbd_counts_clear();
 
     ///////////////////////////////////////////////////////////////////
-    for(int i=1;i<=7;i++) begin 
-         delay_x_value      =  $urandom_range(11,(i*20));
-         delay_xz_value     =  delay_x_value + 4;
+    for(int i=21;i<31;i++) begin 
+         vif.reset_l         = 1'b0; /////assert reset to CA
+         gen_if.delay_xz_value      =  i*$urandom_range(30,(i*20));
+         delay_x_value       =  gen_if.delay_xz_value/8;
+
+        // $display("\n TEST::X=%0d  Z=%0d  at %0t",delay_x_value,gen_if.delay_xz_value,$time);
 
          ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value  = delay_x_value;
-         ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value = delay_xz_value;
+         ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value = gen_if.delay_xz_value;
+
+         ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value  = delay_x_value;
+         ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value = gen_if.delay_xz_value;
 
          sbd_counts_clear();
+         ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor     =   1;
+         ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor     =   1;
          ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor      =   1;
          ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor      =   1;
 
+         gen_if.second_traffic_seq = 1;
+
          ca_top_env.ca_scoreboard.generate_stb_beat();
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
 
+         `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+          ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+          ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+         `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
+
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
-          ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
-          ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+         ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
+         ca_top_env.ca_die_b_tx_tb_in_agent.mon.test_call_gen_stb_beat();
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON ended ..\n", UVM_LOW);
 
          if(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv > ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv) begin
@@ -148,40 +163,44 @@ task ca_delay_x_xz_values_test_c::run_test(uvm_phase phase);
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "tx_stb_intv_bkp_wait ended..\n", UVM_LOW);
 
          `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in RX_TB_IN_MON started ..\n", UVM_LOW);
-          ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
-          ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+         ca_top_env.ca_die_a_rx_tb_in_agent.mon.test_call_gen_stb_beat();
+         ca_top_env.ca_die_b_rx_tb_in_agent.mon.test_call_gen_stb_beat();
          `uvm_info("ca_delay_x_xz_values_test::run_phase", "generate_stb_beat in RX_TB_IN_MON ended ..\n", UVM_LOW);
-            //user_marker will be updated after some clocks
-           repeat(20)@ (posedge vif.clk);
+         //user_marker will be updated after some clocks
+         repeat(20)@ (posedge vif.clk);
 
          `uvm_info("ca_delay_x_xz_values_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+         ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+         ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
          ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
          ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
          ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;
          ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor    =   0;
 
-        `uvm_info("ca_delay_x_xz_values_test ::run_phase", "second ca_traffic_seq starts..\n", UVM_LOW);
-         ca_traffic_seq.start(ca_top_env.virt_seqr);
-        `uvm_info("ca_delay_x_xz_values_test ::run_phase", "second ca_traffic_seq ends..\n", UVM_LOW);
+         //ca_traffic_seq.start(ca_top_env.virt_seqr);
+         `uvm_info("ca_delay_x_xz_values_test ::run_phase", "second ca_traffic_seq starts..\n", UVM_LOW);
+          ca_vseq.start(ca_top_env.virt_seqr);  ////helps de-assert reset_l
+         `uvm_info("ca_delay_x_xz_values_test ::run_phase", "second ca_traffic_seq ends..\n", UVM_LOW);
 
         `uvm_info("ca_delay_x_xz_values_test ::run_phase", "wait started after_2nd drv_tfr_complete..\n", UVM_LOW);
          wait(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab == 1);//will be updated by Scoreboard 
         `uvm_info("ca_delay_x_xz_values_test ::run_phase", "wait ended after_2nd drv_tfr_complete..\n", UVM_LOW);
 
-         repeat(10)@ (posedge vif.clk);
-         result =  ck_xfer_cnt_a(1);
-         result =  ck_xfer_cnt_b(1);
+        repeat(10)@ (posedge vif.clk);
+        result =  ck_xfer_cnt_a(1);
+        result =  ck_xfer_cnt_b(1);
         `uvm_info("ca_delay_x_xz_values_test ::run_phase", "SCOREBOARD COMPARISON FOR SECOND SET COMPLETED..\n", UVM_LOW);
 
-         repeat(100)@ (posedge vif.clk);
-         ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value  = 0;
-         ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value = 4;
-         repeat(2)@ (posedge vif.clk);
-     end//for rden_dly
- 
-      test_end = 1; 
-     `uvm_info("ca_delay_x_xz_values_test ::run_phase", "END test...\n", UVM_LOW);
-
+        repeat(100)@ (posedge vif.clk);
+        ca_cfg.ca_die_a_rx_tb_in_cfg.delay_x_value  = 0;
+        ca_cfg.ca_die_a_rx_tb_in_cfg.delay_xz_value = 4;
+        ca_cfg.ca_die_b_rx_tb_in_cfg.delay_xz_value = 4;
+        ca_cfg.ca_die_b_rx_tb_in_cfg.delay_x_value  = 0;
+        repeat(2)@ (posedge vif.clk);
+    end//for i
+    test_end = 1; 
+    `uvm_info("ca_delay_x_xz_values_test ::run_phase", "END test...\n", UVM_LOW);
 endtask : run_test
-////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 `endif

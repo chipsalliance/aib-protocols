@@ -1,3 +1,5 @@
+`ifndef _COMMON_SYNCFIFO_REG_SV
+`define _COMMON_SYNCFIFO_REG_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -270,7 +272,7 @@ assign rdstrobe = read_pop   ;
 //         .wrstrobe     (wrstrobe)       ) ;
 //
   reg [FIFO_WIDTH_MSB:0] memory [FIFO_DEPTH_MSB:0];
-  integer index0;
+  integer unsigned index0;
 
   always_ff @(posedge clk_core or negedge rst_core_n)
   if (!rst_core_n)
@@ -318,3 +320,4 @@ endmodule // syncfifo //
 //$Id$
 ////////////////////////////////////////////////////////////
 
+`endif

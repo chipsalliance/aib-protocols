@@ -13,8 +13,8 @@ GLOBAL_RX_MARKER_LOC	79	        79		39,76,77,78,79
 ///Interchannel delays (0-GLOBAL_MAX_INTER_CH_SKEW)
 //GLOBAL_MAX_INTER_CH_SKEW 8              8
 ///// OR .... as directed in each direction (2-digits per channel with CH#0 being at LSB)
-GLOBAL_INTER_CH_SKEW_S2M 0x1F1F1F1F1F1F011F
-GLOBAL_INTER_CH_SKEW_M2S 0x1F1F1F1F1F1F011F
+GLOBAL_INTER_CH_SKEW_S2M 0x1F01010101010101
+GLOBAL_INTER_CH_SKEW_M2S 0x1F01010101010101
 ///// any of these 2 above when used find priority over GLOBAL_MAX_INTER_CH_SKEW for that path (M2S / S2M)
 ///// When none of these are used, AIB offers no inter-channel skew
 

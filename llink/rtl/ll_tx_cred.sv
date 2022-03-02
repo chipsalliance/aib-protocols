@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_TX_CRED_SV
+`define _COMMON_LL_TX_CRED_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -66,6 +68,7 @@ logic [7:0]                     tx_credit_nxt;
 logic [7:0]                     tx_credit_nxt_nonasym;
 logic [7:0]                     tx_credit_nxt_asym;
 logic [7:0]                     tx_credit_min1_reg;
+logic [7:0]                     tx_credit_pls1_reg;
 
 ////////////////////////////////////////////////////////////
 // Pop generation
@@ -168,8 +171,17 @@ if (!rst_wr_n)
 else
   tx_credit_min1_reg <= tx_credit_nxt - 8'h01;
 
+// This is equal to the credit plus 1. Used for timing closure in symmetric mode.
+always @(posedge clk_wr or negedge rst_wr_n)
+if (!rst_wr_n)
+  tx_credit_pls1_reg <= 8'b0;
+else
+  tx_credit_pls1_reg <= tx_credit_nxt + 8'h01;
+
 //assign tx_credit_nxt_nonasym = tx_credit_reg - (tx_credit_dec ? 8'h1 : 8'h0) + (tx_credit_inc_nonasym ? 8'h1 : 8'h0); // spyglass disable W484
-assign tx_credit_nxt_nonasym = (tx_credit_dec ? tx_credit_min1_reg : tx_credit_reg) + (tx_credit_inc_nonasym ? 8'h1 : 8'h0); // spyglass disable W484
+assign tx_credit_nxt_nonasym = (tx_credit_inc_nonasym & tx_credit_dec) ? tx_credit_reg      :
+                               (tx_credit_inc_nonasym                ) ? tx_credit_pls1_reg :
+                               (                        tx_credit_dec) ? tx_credit_min1_reg : tx_credit_reg ;
 
 // Symmetric credit support
 ////////////////////////////////////////////////////////////
@@ -211,3 +223,4 @@ else if (ASYMMETRIC_CREDIT == 1'b0)
 assign dbg_curr_i_credit = tx_credit_reg;
 
 endmodule // tx_cred //
+`endif

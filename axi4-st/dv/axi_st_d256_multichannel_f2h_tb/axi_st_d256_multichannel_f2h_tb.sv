@@ -595,10 +595,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .delay_z_value                    (MASTER_DELAY_Z_VALUE),
       .tx_stb_wd_sel                    (8'h01),                 // Strobe is at LOC [1]
       .tx_stb_bit_sel                   (40'h0000000002),
-      .tx_stb_intv                      (8'd20),                 // Strobe repeats every 20 cycles
+      .tx_stb_intv                      (16'd20),                 // Strobe repeats every 20 cycles
       .rx_stb_wd_sel			(8'h01),                 // Strobe is at LOC [1]
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_intv			(16'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din				 ({master_ll2ca_6[39:0]  , master_ll2ca_5[39:0]  , master_ll2ca_4[39:0]  , master_ll2ca_3[39:0]  , master_ll2ca_2[39:0]  , master_ll2ca_1[39:0]  , master_ll2ca_0[39:0]})  ,
       .rx_din				 ({master_phy2ca_6[39:0] , master_phy2ca_5[39:0] , master_phy2ca_4[39:0] , master_phy2ca_3[39:0] , master_phy2ca_2[39:0] , master_phy2ca_1[39:0] , master_phy2ca_0[39:0]})  ,
@@ -649,10 +649,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .delay_z_value                    (MASTER_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'd20),		 // Templated
+      .tx_stb_intv			(16'd20),		 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'd20),		 // Templated
+      .rx_stb_intv			(16'd20),		 // Templated
       .tx_din				({master_ll2ca_6[39:0]  , master_ll2ca_5[39:0]  , master_ll2ca_4[39:0]  , master_ll2ca_3[39:0]  , master_ll2ca_2[39:0]  , master_ll2ca_1[39:0]  , master_ll2ca_0[39:0]}), // Templated
       .rx_din				({master_phy2ca_6[39:0] , master_phy2ca_5[39:0] , master_phy2ca_4[39:0] , master_phy2ca_3[39:0] , master_phy2ca_2[39:0] , master_phy2ca_1[39:0] , master_phy2ca_0[39:0]}), // Templated
       .fifo_full_val			(6'd16),		 // Templated
@@ -683,10 +683,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),                // Strobe is at LOC [1]
       .tx_stb_bit_sel			(40'h0000000002),
-      .tx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .tx_stb_intv			(16'd20),                 // Strobe repeats every 20 cycles
       .rx_stb_wd_sel			(8'h01),                // Strobe is at LOC [1]
       .rx_stb_bit_sel			(40'h0000000002),
-      .rx_stb_intv			(8'd20),                 // Strobe repeats every 20 cycles
+      .rx_stb_intv			(16'd20),                 // Strobe repeats every 20 cycles
 
       .tx_din			        ({slave_ll2ca_6[79:0]  , slave_ll2ca_5[79:0]  , slave_ll2ca_4[79:0]  , slave_ll2ca_3[79:0]  , slave_ll2ca_2[79:0]  , slave_ll2ca_1[79:0]  , slave_ll2ca_0[79:0]})  ,
       .rx_din			        ({slave_phy2ca_6[79:0] , slave_phy2ca_5[79:0] , slave_phy2ca_4[79:0] , slave_phy2ca_3[79:0] , slave_phy2ca_2[79:0] , slave_phy2ca_1[79:0] , slave_phy2ca_0[79:0]})  ,
@@ -737,10 +737,10 @@ assign s_wr_clk = (SLAVE_RATE == FULL)    ? clk_phy    :
       .delay_z_value                    (SLAVE_DELAY_Z_VALUE),
       .tx_stb_wd_sel			(8'h01),		 // Templated
       .tx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .tx_stb_intv			(8'd20),		 // Templated
+      .tx_stb_intv			(16'd20),		 // Templated
       .rx_stb_wd_sel			(8'h01),		 // Templated
       .rx_stb_bit_sel			(40'h0000000002),	 // Templated
-      .rx_stb_intv			(8'd20),		 // Templated
+      .rx_stb_intv			(16'd20),		 // Templated
       .tx_din				({slave_ll2ca_6[79:0]  , slave_ll2ca_5[79:0]  , slave_ll2ca_4[79:0]  , slave_ll2ca_3[79:0]  , slave_ll2ca_2[79:0]  , slave_ll2ca_1[79:0]  , slave_ll2ca_0[79:0]}), // Templated
       .rx_din				({slave_phy2ca_6[79:0] , slave_phy2ca_5[79:0] , slave_phy2ca_4[79:0] , slave_phy2ca_3[79:0] , slave_phy2ca_2[79:0] , slave_phy2ca_1[79:0] , slave_phy2ca_0[79:0]}), // Templated
       .fifo_full_val			(6'd16),		 // Templated

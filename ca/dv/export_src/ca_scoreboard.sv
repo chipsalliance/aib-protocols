@@ -73,7 +73,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     // Component Members
     //------------------------------------------
-    uvm_analysis_imp_ca_reset #(reset_seq_item_c, ca_scoreboard_c)  ca_reset_export;
+    uvm_analysis_imp_ca_reset #(ca_reset_seq_item_c, ca_scoreboard_c)  ca_reset_export;
     uvm_analysis_imp_ca_tx_tb_out #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) ca_tx_tb_out_export;
     uvm_analysis_imp_tx_tb_in #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) tx_tb_in_export;
     uvm_analysis_imp_rx_tb_in #(ca_data_pkg::ca_seq_item_c, ca_scoreboard_c) rx_tb_in_export;
@@ -85,7 +85,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     extern function new(string name = "ca_scoreboard", uvm_component parent = null);
     extern function void build_phase( uvm_phase phase );
-    extern function void write_ca_reset( reset_seq_item_c  trig );
+    extern function void write_ca_reset( ca_reset_seq_item_c  trig );
     extern function void write_ca_tx_tb_out( ca_data_pkg::ca_seq_item_c  tx_tb_out_item );
     extern function void write_tx_tb_in( ca_data_pkg::ca_seq_item_c  tx_tb_in_item );
     extern function void write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
@@ -95,6 +95,7 @@ class ca_scoreboard_c extends uvm_scoreboard;
     //------------------------------------------
     extern function void proc_tx_tb_in_err(ca_data_pkg::ca_seq_item_c  tx_tb_in_item);
     extern function void proc_rx_tb_in_err(ca_data_pkg::ca_seq_item_c  rx_tb_in_item);
+    extern function void proc_rx_tb_in_aln_err(ca_data_pkg::ca_seq_item_c  rx_tb_in_item);
     extern function void generate_stb_beat( );
     
     //------------------------------------------
@@ -143,7 +144,7 @@ function void ca_scoreboard_c::build_phase(uvm_phase phase);
 endfunction : build_phase
 
 //------------------------------------------
-function void ca_scoreboard_c::write_ca_reset( reset_seq_item_c  trig );
+function void ca_scoreboard_c::write_ca_reset( ca_reset_seq_item_c  trig );
     
     `uvm_info("write_ca_reset","===> SB RX-ing trig from RESET\n", UVM_MEDIUM);
     generate_stb_beat();
@@ -267,8 +268,11 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
 
     `uvm_info("write_rx_tb_in",$sformatf("===> SB RX-ing from RTL: %s --> TB rx_dout \n", rx_tb_in_item.my_name), UVM_MEDIUM);
 
-    if((rx_tb_in_item.stb_pos_err == 1) || (rx_tb_in_item.stb_pos_coding_err == 1) || (rx_tb_in_item.align_err == 1)) begin
+    if((rx_tb_in_item.stb_pos_err == 1) || (rx_tb_in_item.stb_pos_coding_err == 1)) begin
         proc_rx_tb_in_err(rx_tb_in_item);
+    end 
+    else if(rx_tb_in_item.align_err == 1) begin
+        proc_rx_tb_in_aln_err(rx_tb_in_item);
     end
     else begin // non error taffic
         case(rx_tb_in_item.my_name)
@@ -281,15 +285,11 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                         rx_out_cnt_die_a = beat_cnt_a *  rx_tb_in_item.cnt_mul;
                         end
                       `endif
-                        if(rx_out_cnt_die_a == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
-                             ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
-                             ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
-                        end
-                        if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 1)begin
-                           if(ca_cfg.ca_die_a_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  //check if requested count of transfer done at Tx driver
-                                ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
-                                ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
-                           end
+                        if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0)begin
+                            if(rx_out_cnt_die_a == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
+                                  ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                                  ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                            end
                         end
                      end
             "DIE_B": begin
@@ -300,15 +300,9 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                         if(ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b == 0 ) begin 
                            rx_out_cnt_die_b = beat_cnt_b *  rx_tb_in_item.cnt_mul;
                         end
-                        //if(beat_cnt == rx_tb_in_item.last_tx_cnt_b) rx_out_cnt_die_b = beat_cnt * rx_tb_in_item.cnt_mul;
                       `endif
                         if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0)begin
                            if(rx_out_cnt_die_b == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  
-                                ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
-                                ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
-                           end
-                        end else begin 
-                           if(ca_cfg.ca_die_b_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
                                 ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
                                 ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
                            end
@@ -318,17 +312,23 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
                 `uvm_fatal("write_rx_tb_in", "BAD case in my_name");
             end
         endcase
+
+          if(ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 1)begin
+              if(ca_cfg.ca_die_b_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_b)) begin  
+                 ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b = 1; 
+                 ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+              end
+             if(ca_cfg.ca_die_a_tx_tb_out_cfg.req_cnt == (ca_cfg.ca_knobs.tx_xfer_cnt_die_a)) begin  //check if requested count of transfer done at Tx driver
+                  ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a = 1; 
+                  ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_b = 1;
+             end
+         end
                     if((ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_a == 1 ) && (ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_b == 1)) begin
                        ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab = 1;
                        ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab = 1;
                        ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab = 1;
                        ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab = 1;
-                       $display("drv_tfr_complete_ab %0d",ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab);
                     end
-                     // $display("RX:: drv_tfr_complete_ab %0d,%0d,%s",ca_cfg.ca_die_a_rx_tb_in_cfg.drv_tfr_complete_ab,ca_cfg.ca_die_b_rx_tb_in_cfg.drv_tfr_complete_ab,rx_tb_in_item.my_name);
-                     // $display("TX:: drv_tfr_complete_ab %0d,%0d,%s",ca_cfg.ca_die_a_tx_tb_in_cfg.drv_tfr_complete_ab,ca_cfg.ca_die_b_tx_tb_in_cfg.drv_tfr_complete_ab,rx_tb_in_item.my_name);
-                     // $display("my_name %0s rx_cnt %0f,tx_cnt   %0d",rx_tb_in_item.my_name ,rx_out_cnt_die_a,ca_cfg.ca_knobs.tx_xfer_cnt_die_a);
-                     // $display("my_name %0s rx_cnt %0f,tx_cnt   %0d",rx_tb_in_item.my_name ,rx_out_cnt_die_b,ca_cfg.ca_knobs.tx_xfer_cnt_die_b);
 
        `ifdef CA_ASYMMETRIC
         //$display("cnt_mul = %0f,beat %0f,rx_die_a %0f,rx_die_b %0f,last_tx_cnt_a %0d,last_tx_cnt_b %0d,my_name  %s",rx_tb_in_item.cnt_mul,(rx_tb_in_item.my_name=="DIE_A")?beat_cnt_a:beat_cnt_b,rx_out_cnt_die_a,rx_out_cnt_die_b,rx_tb_in_item.last_tx_cnt_a,rx_tb_in_item.last_tx_cnt_b,rx_tb_in_item.my_name);
@@ -338,8 +338,7 @@ function void ca_scoreboard_c::write_rx_tb_in( ca_data_pkg::ca_seq_item_c  rx_tb
         `endif
         rx_tb_in_item.dprint();
         verify_rx_dout(rx_tb_in_item);
-    end
-
+end
 endfunction : write_rx_tb_in
 
 //=========================================================================================
@@ -354,10 +353,19 @@ endfunction : proc_tx_tb_in_err
 function void ca_scoreboard_c::proc_rx_tb_in_err( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
 
      if((ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))  begin
-        `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d align_err: %0d",
-            rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err, rx_tb_in_item.align_err));
+        `uvm_error("proc_rx_tb_in", $sformatf("%s UNEXPECTED ERROR: rx_stb_pos_err: %0d  rx_stb_pos_coding_err: %0d ",
+            rx_tb_in_item.my_name, rx_tb_in_item.stb_pos_err, rx_tb_in_item.stb_pos_coding_err));
      end 
 endfunction : proc_rx_tb_in_err
+
+//------------------------------------------
+function void ca_scoreboard_c::proc_rx_tb_in_aln_err( ca_data_pkg::ca_seq_item_c  rx_tb_in_item );
+
+     if((ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.stb_error_test == 0) && (ca_cfg.ca_die_a_tx_tb_in_cfg.ca_afly1_stb_incorrect_intv_test == 0))  begin
+        `uvm_error("proc_rx_tb_in_aln_err", $sformatf("%s UNEXPECTED ERROR: align_err: %0d",
+            rx_tb_in_item.my_name, rx_tb_in_item.align_err));
+     end 
+endfunction : proc_rx_tb_in_aln_err
 
 //=========================================================================================
 function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_item);
@@ -427,9 +435,16 @@ function void ca_scoreboard_c::verify_tx_dout(ca_data_pkg::ca_seq_item_c  act_it
              `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d tx_din --> tx_dout pass", act_item.my_name, xfer_cnt), UVM_MEDIUM);
              // store act_item for rx rtl out / rx tb in checking
               `ifdef CA_ASYMMETRIC 
-                if(act_item.tx_data_rdy == 1)begin
-                    act_item.databytes = act_item.tx_data_fin;
+                  if(act_item.tx_data_rdy == 1)begin
+                      act_item.databytes = act_item.tx_data_fin;
               `endif
+               `ifndef CA_ASYMMETRIC 
+                 `ifdef GEN1
+                       if((`TB_DIE_A_BUS_BIT_WIDTH == 80) && (`TB_DIE_B_BUS_BIT_WIDTH == 80)) begin //HALF RATE
+                           act_item.databytes = act_item.tx_data_bkp;
+                       end
+                 `endif
+               `endif
                     if(act_item.my_name == "DIE_A") begin 
                         `uvm_info("verify_tx_dout", $sformatf("%s xfer_cnt: %0d storing exp for DIE_B rx_dout", act_item.my_name, xfer_cnt), UVM_MEDIUM);
                         die_b_exp_rx_dout_q.push_back(act_item);    
@@ -509,7 +524,7 @@ function void ca_scoreboard_c::verify_rx_dout(ca_data_pkg::ca_seq_item_c  act_it
             xfer_cnt, src_item.my_name, act_item.my_name), UVM_LOW);
         end
         else begin /// show error 
-            `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", act_item.my_name));
+            `uvm_warning("verify_rx_dout", $sformatf("%s EXPECTED beat TX_DOUT data:", src_item.my_name));
             src_item.dprint();
             `uvm_warning("verify_rx_dout", $sformatf("%s ACTUAL beat RX_DOUT data:", act_item.my_name));
             act_item.dprint();

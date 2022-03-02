@@ -38,7 +38,7 @@ class base_ca_test_c extends uvm_test;
     //------------------------------------------
     // Data Members
     //------------------------------------------
-    virtual reset_if       vif;
+    virtual ca_reset_if    vif;
     virtual ca_gen_if      gen_if;
     ca_cfg_c               ca_cfg;  
     uvm_report_server      server;
@@ -120,9 +120,9 @@ function void base_ca_test_c::build_phase( uvm_phase phase );
         uvm_config_db# (chan_delay_cfg_c)::set(this, $sformatf("*.chan_delay_die_a_agent_%0d*", i), "chan_delay_cfg", ca_cfg.ca_die_a_delay_cfg[i]);
     end
 
-    uvm_config_db# (reset_cfg_c)::set(this, "*", "reset_cfg", ca_cfg.reset_cfg);
+    uvm_config_db# (ca_reset_cfg_c)::set(this, "*", "reset_cfg", ca_cfg.reset_cfg);
 
-    if( !uvm_config_db #( virtual reset_if )::get(this, "" , "reset_vif", vif) )
+    if( !uvm_config_db #( virtual ca_reset_if )::get(this, "" , "reset_vif", vif) )
         `uvm_fatal("build_phase", "unable to get reset vif")
     
     if( !uvm_config_db #( virtual ca_gen_if)::get(this, "" , "gen_vif", gen_if) )
@@ -215,7 +215,18 @@ task base_ca_test_c::global_timer();
     bit result_b = 0;
 
     `uvm_info("GLOBAL_TIMER", "Global timer START!\n", UVM_LOW);       
-     
+    
+    fork
+       begin
+         #60us; ///GEN1 needs more time for (online and then align_done)
+         if((gen_if.die_a_align_done == 0)  || (gen_if.die_b_align_done == 0)) begin
+             if (~ca_cfg.override_align_done_timeout) begin
+                 `uvm_fatal("NO_ALIGN_DONE TIMER", $sformatf("\n ***> [DIE_A/DIE_B] ALIGN_DONE is not asserted within expected time [60usec] %0t <***\n", $time));
+             end
+         end
+       end
+    join_none
+ 
     forever begin
         repeat(1)@(posedge vif.clk); 
         ck_global_err_cnt();
@@ -227,21 +238,16 @@ task base_ca_test_c::global_timer();
            if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
               result_b = ck_xfer_cnt_b(1);
            end
-            `uvm_info("GLOBAL_TIMER", $sformatf("....sim heartbeat %0d cycles....",local_cnt), UVM_NONE);
-        end
-         
-    if(local_cnt >= ca_cfg.ca_knobs.GLOBAL_TIMEOUT) begin 
-          if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
-            result_a = ck_xfer_cnt_a(1);
-          end
-          if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
-            result_b = ck_xfer_cnt_b(1);
-          end
-       // `uvm_fatal("GLOBAL_TIMER", $sformatf("\n ***> TIMEOUT EXCEEDED %0d cycles <***\n", local_cnt));
-    end
-         
-end     
 
+           /////COMPARE local_cnt to clk-time with knobs.GLOBAL_TIMEOUT ... then next line can be FATAL or INFO based on comparison
+           if (local_cnt >= ca_cfg.ca_knobs.GLOBAL_TIMEOUT) begin
+             `uvm_fatal("GLOBAL_TIMER", $sformatf("\n ***> TEST ENDS with GLOBAL TIMEOUT at %0t <***\n", $time));
+           end else begin
+            `uvm_info("GLOBAL_TIMER", $sformatf("....sim heartbeat %0d cycles....",local_cnt), UVM_NONE);
+          end
+        end
+    end //forever
+    
 endtask : global_timer 
 
 //------------------------------------------
@@ -294,15 +300,15 @@ function void base_ca_test_c::ck_global_err_cnt( );
     bit result_a = 0;
     bit result_b = 0;
 
-    if(server.get_severity_count(UVM_ERROR) >= ca_cfg.ca_knobs.stop_err_cnt) begin
-          if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
-             result_a = ck_xfer_cnt_a(1);
-          end
-          if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
-             result_b = ck_xfer_cnt_b(1);
-          end
-        `uvm_fatal("STOP_ERROR_CNT", $sformatf("base test: MAX error %0d reached.  Ending sim...", ca_cfg.ca_knobs.stop_err_cnt));
-    end
+         if(server.get_severity_count(UVM_ERROR) >= ca_cfg.ca_knobs.stop_err_cnt) begin
+               if(ca_cfg.ca_knobs.traffic_enb_ab[0]) begin
+                  result_a = ck_xfer_cnt_a(1);
+               end
+               if(ca_cfg.ca_knobs.traffic_enb_ab[1]) begin
+                  result_b = ck_xfer_cnt_b(1);
+               end
+             `uvm_fatal("STOP_ERROR_CNT", $sformatf("base test: MAX error %0d reached.  Ending sim...", ca_cfg.ca_knobs.stop_err_cnt));
+         end
 
 endfunction : ck_global_err_cnt
 

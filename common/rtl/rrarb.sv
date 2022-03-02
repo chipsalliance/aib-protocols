@@ -1,3 +1,5 @@
+`ifndef _COMMON_RRARB_SV
+`define _COMMON_RRARB_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -124,7 +126,7 @@ function automatic [REQ_ADDR_MSB:0] convert_onehot_to_addr;
 input [NUM_REQ_MSB:0]   onehot;
 reg                     found_lead_one;
 reg   [REQ_ADDR_MSB:0]  address;
-integer                 temp_variable;
+integer unsigned        temp_variable;
 begin
 
   found_lead_one = 0;
@@ -182,3 +184,4 @@ endmodule // rrarb //
 //$Id$
 ////////////////////////////////////////////////////////////
 
+`endif

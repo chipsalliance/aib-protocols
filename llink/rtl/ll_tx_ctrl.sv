@@ -1,3 +1,5 @@
+`ifndef _COMMON_LL_TX_CTRL_SV
+`define _COMMON_LL_TX_CTRL_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -42,3 +44,4 @@ assign user_i_ready          = txfifo_i_has_space & tx_online;
 assign txfifo_i_push         = user_i_valid & user_i_ready;
 
 endmodule
+`endif

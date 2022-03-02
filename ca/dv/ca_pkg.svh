@@ -42,7 +42,7 @@ package ca_pkg;
     
     // agent pkgs 
     //--------------------------------------------------- 
-    import reset_pkg::*;
+    import ca_reset_pkg::*;
     import chan_delay_pkg::*;
     import ca_tx_tb_out_pkg::*;
     import ca_tx_tb_in_pkg::*;
@@ -73,12 +73,17 @@ package ca_pkg;
     `include "../tests/base_ca_test.sv"
     `include "../tests/ca_basic_test.sv"
     `include "../tests/ca_stb_intv_stb_pos_test.sv"
+    `include "../tests/ca_stb_intv_walking_ones_test.sv"
     `include "../tests/ca_stb_wd_sel_test.sv"
     `include "../tests/ca_stb_wd_sel_Q2Q_test.sv"
+    `include "../tests/ca_stb_wd_sel_bit_sel_test.sv"
+    `include "../tests/ca_all_wd_sel_39th_bit_sel_test.sv"
+    `include "../tests/ca_wd_bit_sel_ones_cover_test.sv"
     `include "../tests/ca_stb_all_bit_sel_test.sv"
     `include "../tests/ca_strobe_error_test.sv"
     `include "../tests/ca_tx_rx_online_test.sv"
     `include "../tests/ca_stb_enb_high_low_high_test.sv"
+    `include "../tests/ca_stb_en0_aft_aln_done_test.sv"
     `include "../tests/ca_fifo_ptr_values_variations_test.sv"
     `include "../tests/ca_no_external_strobes_test.sv"
     `include "../tests/ca_with_external_strobes_test.sv"
@@ -95,6 +100,7 @@ package ca_pkg;
     `include "../tests/ca_delay_x_xz_values_test.sv"
     `include "../tests/ca_traffic_reset_traffic_test.sv"
     `include "../tests/ca_reset_during_traffic_test.sv"
+    `include "../tests/ca_basic_afly1_test.sv"
     
 ////////////////////////////////////////////////////////////////////
 endpackage : ca_pkg

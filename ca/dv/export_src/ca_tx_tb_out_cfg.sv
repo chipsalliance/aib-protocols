@@ -54,6 +54,9 @@ class ca_tx_tb_out_cfg_c extends uvm_object;
     bit              ca_tx_online_test;
     int              req_cnt;
     bit              ca_stb_rcvr_aft_aln_done_test;
+    bit [15:0]       delay_xz_value;
+    bit              stop_monitor;
+    bit              tx_q_not_zero; 
     //------------------------------------------
     // UVM Factory Registration Macro
     //------------------------------------------

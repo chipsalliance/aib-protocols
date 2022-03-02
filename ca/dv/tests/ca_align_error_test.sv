@@ -78,9 +78,9 @@ endfunction: start_of_simulation
 task ca_align_error_test_c::chk_align_error();
      forever begin
         repeat(1)@(posedge vif.clk); 
-        if((ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 1) && (test_end_rx_a == 0)) test_end_rx_a = 1;
+        if((gen_if.die_a_align_error == 1) && (test_end_rx_a == 0)) test_end_rx_a = 1;
 
-        if((ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 1) && (test_end_rx_b == 0)) test_end_rx_b = 1;
+        if((gen_if.die_b_align_error == 1) && (test_end_rx_b == 0)) test_end_rx_b = 1;
 
         if((test_end_rx_a && test_end_rx_b) && (test_end == 0)) begin
             test_end = 1;  ////variable in base_test

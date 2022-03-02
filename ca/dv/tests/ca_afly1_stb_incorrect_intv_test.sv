@@ -40,6 +40,8 @@ class ca_afly1_stb_incorrect_intv_test_c extends base_ca_test_c;
     bit             shift_stb_intv_complt; 
     bit             update_do_compare; 
     bit             aft_aln_err; 
+    bit             die_a_aln_err; 
+    bit             die_b_aln_err; 
     //------------------------------------------
     // Component Members
     //------------------------------------------
@@ -143,17 +145,25 @@ task ca_afly1_stb_incorrect_intv_test_c::aln_err_chk();
   
    fork 
         begin
-          wait (ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 1);
-          wait (ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 1);
+            wait (gen_if.die_a_align_error == 1);
             ca_top_env.ca_scoreboard.do_compare = 0; 
             `uvm_info("ca_afly1_stb_incorrect_intv_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
-            aft_aln_err = 1;
+            die_a_aln_err = 1;
         end
    join_none
 
    fork 
         begin
-          wait (aft_aln_err == 1);
+            wait (gen_if.die_b_align_error == 1);
+            ca_top_env.ca_scoreboard.do_compare = 0; 
+            `uvm_info("ca_afly1_stb_incorrect_intv_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
+            die_b_aln_err = 1;
+        end
+  join_none
+
+   fork 
+        begin
+            wait((die_a_aln_err == 1) && (die_b_aln_err == 1));
               `uvm_info("ca_afly1_stb_incorrect_intv_test", "after align_error_check......", UVM_LOW);
                sbd_counts_clear();
                shift_stb_intv_complt =1;
@@ -174,6 +184,8 @@ task ca_afly1_stb_incorrect_intv_test_c::aln_err_chk();
         begin
           wait(shift_stb_intv_complt == 1) ;
           wait(ca_cfg.ca_die_a_tx_tb_out_cfg.align_done_assert == 1);
+               ca_cfg.ca_die_a_tx_tb_out_cfg.tx_q_not_zero  = 1; // Tx_q is not ended in this test case.driver transfer should start from  valid data depends on this param only.
+               ca_cfg.ca_die_b_tx_tb_out_cfg.tx_q_not_zero  = 1;
              if(update_do_compare == 0) begin
                sbd_counts_only_clear();
               `uvm_info("ca_afly1_stb_incorrect_intv_test", "after align_error gone,align_done come,start SCOREBOARD comparision...", UVM_LOW);

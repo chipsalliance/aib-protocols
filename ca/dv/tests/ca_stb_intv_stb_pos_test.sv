@@ -90,10 +90,15 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
 
      `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "START test...", UVM_LOW);
 
-     ca_cfg.ca_die_a_tx_tb_in_cfg.stop_stb_checker    =   1;
-     ca_cfg.ca_die_b_tx_tb_in_cfg.stop_stb_checker    =   1;
-     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker    =   1;
-     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker    =   1;
+     ca_cfg.ca_die_a_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.align_error_afly0_test =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.align_error_afly0_test =   1;
+
+     ca_cfg.ca_die_a_tx_tb_in_cfg.stop_stb_checker       =   1;
+     ca_cfg.ca_die_b_tx_tb_in_cfg.stop_stb_checker       =   1;
+     ca_cfg.ca_die_a_rx_tb_in_cfg.stop_stb_checker       =   1;
+     ca_cfg.ca_die_b_rx_tb_in_cfg.stop_stb_checker       =   1;
 
      ca_vseq        = ca_seq_lib_c::type_id::create("ca_vseq");
      ca_traffic_seq = ca_traffic_seq_c::type_id::create("ca_traffic_seq");
@@ -109,11 +114,15 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
      `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "SCOREBOARD comparison completed for first set of traffic ..\n", UVM_LOW);
     
      for(int i=1;i < 36;i++) begin
+        ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   1;
+        ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   1;
         ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   1;
         ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   1;
         ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   1;
         ca_cfg.ca_die_b_rx_tb_in_cfg.stop_monitor    =   1;
        `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "stop_monitor = 1..\n", UVM_LOW);
+       
+         gen_if.second_traffic_seq = 1; //new_stb_params_cfg
 
         if(ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv > ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv) begin
            tx_stb_intv_bkp = ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv;
@@ -122,7 +131,12 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
         end
        `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", $sformatf("tx_stb_intv_bkp = %0d..\n",tx_stb_intv_bkp), UVM_LOW);
  
-        tx_stb_intv  =  $urandom_range(97, ((i*15) + 97));
+        repeat(50)@ (posedge vif.clk);
+        vif.reset_l =1'b0;  //assert reset
+        `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_LOW   ..\n", UVM_LOW);
+        repeat(10)@ (posedge vif.clk);
+
+        tx_stb_intv  =  $urandom_range(100, ((i*15) + 97));
         bit_shift    =  $urandom_range(0,36);
         ca_cfg.ca_die_a_tx_tb_out_cfg.tx_stb_intv              =  tx_stb_intv;
         ca_cfg.ca_die_b_tx_tb_out_cfg.tx_stb_intv              =  tx_stb_intv;
@@ -140,11 +154,20 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase",$sformatf("tx_stb_intv = %h,tx_stb_bit_sel= %h,tx_stb_wd_sel=%h configured..\n", ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_intv,ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_bit_sel,ca_cfg.ca_die_a_tx_tb_in_cfg.tx_stb_wd_sel),UVM_LOW);
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase",$sformatf("tx_stb_intv = %h,tx_stb_bit_sel= %h,tx_stb_wd_sel=%h configured..\n", ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_intv,ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_bit_sel,ca_cfg.ca_die_b_tx_tb_in_cfg.tx_stb_wd_sel),UVM_LOW);
 
+       repeat(50)@ (posedge vif.clk);
+       vif.reset_l =1'b1;  //de-assert reset
+       `uvm_info("ca_stb_wd_sel_test ::run_phase", "reset_HIGH   ..\n", UVM_LOW);
+
       sbd_counts_clear();
 
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "generate_stb_beat in SBD started ..\n", UVM_LOW);
        ca_top_env.ca_scoreboard.generate_stb_beat();
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "generate_stb_beat in SBD ended ..\n", UVM_LOW);
+
+      `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON started ..\n", UVM_LOW);
+       ca_top_env.ca_die_a_tx_tb_out_agent.mon.clr_strobe_params();
+       ca_top_env.ca_die_b_tx_tb_out_agent.mon.clr_strobe_params();
+      `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "generate_stb_beat in TX_TB_OUT_MON ended ..\n", UVM_LOW);
 
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "generate_stb_beat in TX_TB_IN_MON started ..\n", UVM_LOW);
        ca_top_env.ca_die_a_tx_tb_in_agent.mon.test_call_gen_stb_beat();
@@ -163,6 +186,8 @@ task ca_stb_intv_stb_pos_test_c::run_test(uvm_phase phase);
        repeat(20)@ (posedge vif.clk);
 
       `uvm_info("ca_stb_intv_stb_pos_test ::run_phase", "stop_monitor= 0..\n", UVM_LOW);
+       ca_cfg.ca_die_a_tx_tb_out_cfg.stop_monitor   =   0;
+       ca_cfg.ca_die_b_tx_tb_out_cfg.stop_monitor   =   0;
        ca_cfg.ca_die_a_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_b_tx_tb_in_cfg.stop_monitor    =   0;
        ca_cfg.ca_die_a_rx_tb_in_cfg.stop_monitor    =   0;

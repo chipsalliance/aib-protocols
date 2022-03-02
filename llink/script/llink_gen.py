@@ -130,10 +130,10 @@ def parse_config_file(cfgfile):
     configuration['TX_PERSISTENT_STROBE']     = False
     configuration['RX_PERSISTENT_STROBE']     = False
 
-    configuration['TX_STROBE_GEN2_LOC']       = 77
-    configuration['RX_STROBE_GEN2_LOC']       = 77
-    configuration['TX_MARKER_GEN2_LOC']       = 4
-    configuration['RX_MARKER_GEN2_LOC']       = 4
+    configuration['TX_STROBE_GEN2_LOC']       = 78
+    configuration['RX_STROBE_GEN2_LOC']       = 79
+    configuration['TX_MARKER_GEN2_LOC']       = 78
+    configuration['RX_MARKER_GEN2_LOC']       = 79
     configuration['TX_STROBE_GEN1_LOC']       = 38
     configuration['RX_STROBE_GEN1_LOC']       = 38
     configuration['TX_MARKER_GEN1_LOC']       = 39
@@ -2506,6 +2506,7 @@ def make_top_file(configuration):
         print_verilog_logic_line (file_name , "tx_auto_stb_userbit" )
         print_verilog_logic_line (file_name , "tx_online_delay"     )
         print_verilog_logic_line (file_name , "rx_online_delay"     )
+        print_verilog_logic_line (file_name , "rx_online_holdoff"     )
 
         #if configuration['RX_USER_MARKER'] == False:
         #    print_verilog_logic_line (file_name ,"rx_mrk_userbit", gen_index_msb(configuration['NUM_CHAN'], sysv=False), comment="No RX User Marker, so no connect")
@@ -2528,6 +2529,40 @@ def make_top_file(configuration):
         file_name.write("\n")
         file_name.write("//////////////////////////////////////////////////////////////////\n")
         file_name.write("// Auto Sync\n")
+        file_name.write("\n")
+
+        ## This is corner case catcher for recoverable markers but persistent strobes.
+        ## This is on receive, so we look for RX if direction is master
+        if (not(configuration['RX_PERSISTENT_MARKER'] if direction == 'master' else configuration['TX_PERSISTENT_MARKER']) and
+               (configuration['RX_PERSISTENT_STROBE'] if direction == 'master' else configuration['TX_PERSISTENT_STROBE']) ):
+
+            gen1_index = 0;
+            gen2_index = 0;
+            if (configuration['CHAN_TYPE'] == "Gen2Only" or configuration['CHAN_TYPE'] == "Gen2"):
+                if (configuration['TX_RATE'] if direction == 'master' else configuration['RX_RATE']) == 'Quarter':
+                    gen2_index = (configuration['RX_MARKER_GEN2_LOC'] if direction == 'master' else configuration['TX_MARKER_GEN2_LOC']) + 240
+                elif (configuration['TX_RATE'] if direction == 'master' else configuration['RX_RATE']) == 'Half':
+                    gen2_index = (configuration['RX_MARKER_GEN2_LOC'] if direction == 'master' else configuration['TX_MARKER_GEN2_LOC']) + 80
+                else:
+                    gen2_index = (configuration['RX_MARKER_GEN2_LOC'] if direction == 'master' else configuration['TX_MARKER_GEN2_LOC']) + 0
+
+            if (configuration['CHAN_TYPE'] == "Gen1Only" or configuration['CHAN_TYPE'] == "Gen2"):
+                if (configuration['TX_RATE'] if direction == 'master' else configuration['RX_RATE']) == 'Half':
+                    gen1_index = (configuration['RX_MARKER_GEN1_LOC'] if direction == 'master' else configuration['TX_MARKER_GEN1_LOC']) + 40
+                else:
+                    gen1_index = (configuration['RX_MARKER_GEN1_LOC'] if direction == 'master' else configuration['TX_MARKER_GEN1_LOC']) + 0
+
+            if configuration['GEN2_AS_GEN1_EN']:
+                print_verilog_assign(file_name, "rx_online_holdoff", " m_gen2_mode ? rx_phy0[{}] : rx_phy0[{}]".format(gen2_index,gen1_index))
+            elif (configuration['CHAN_TYPE'] == "Gen2Only" or configuration['CHAN_TYPE'] == "Gen2"):
+                print_verilog_assign(file_name, "rx_online_holdoff", " rx_phy0[{}]".format(gen2_index))
+            else:
+                print_verilog_assign(file_name, "rx_online_holdoff", " rx_phy0[{}]".format(gen1_index))
+
+        else:
+            print_verilog_assign(file_name, "rx_online_holdoff", "1'b0")
+
+
         file_name.write("\n")
         file_name.write("   ll_auto_sync #(.MARKER_WIDTH({}),\n".format(configuration['CHAN_RX_RAW1PHY_DATA_MAIN'] // configuration['CHAN_RX_RAW1PHY_BEAT_MAIN']))
         if configuration['TX_PERSISTENT_MARKER'] if direction == 'master' else configuration['RX_PERSISTENT_MARKER']:
@@ -2558,6 +2593,7 @@ def make_top_file(configuration):
         file_name.write("      .tx_mrk_userbit                   (tx_mrk_userbit),\n")
         file_name.write("      .tx_stb_userbit                   (tx_stb_userbit),\n")
         file_name.write("      .rx_online                        (rx_online),\n")
+        file_name.write("      .rx_online_holdoff                (rx_online_holdoff),\n")
         file_name.write("      .delay_x_value                    (delay_x_value[15:0]));\n")
         file_name.write("\n")
         file_name.write("// Auto Sync\n")
@@ -2578,12 +2614,12 @@ def make_top_file(configuration):
                 if llink['DIR'] == localdir:
                     print_verilog_assign(file_name, "tx_{0}_data".format(llink['NAME']), "txfifo_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
-                    print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32), semicolon=False)
+                    print_verilog_assign(file_name, "tx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32))
                     print_verilog_assign(file_name, "tx_{0}_pushbit".format(llink['NAME']), "user_{0}_vld".format(llink['NAME']))
                 else:
-                    print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_MAIN']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_MAIN'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
+                    print_verilog_assign(file_name, "rxfifo_{0}_data".format(llink['NAME']), "rx_{0}_data".format(llink['NAME']), index1=gen_index_msb (llink['WIDTH_RX_RSTRUCT']       * configuration['RSTRUCT_MULTIPLY_FACTOR']), index2=gen_index_msb (llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR']))
 
-                    print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32), semicolon=False)
+                    print_verilog_assign(file_name, "rx_{0}_debug_status".format(llink['NAME']), "{12'h0, tx_online_delay, rx_online_delay, 18'h0} ;", index1=gen_index_msb (32))
                     print_verilog_assign(file_name, "user_{0}_vld".format(llink['NAME']), "rx_online_delay & rx_{0}_pushbit".format(llink['NAME']))
 
             elif not llink['HASREADY'] and not llink['HASVALID']:

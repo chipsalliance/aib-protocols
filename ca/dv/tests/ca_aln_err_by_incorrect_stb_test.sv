@@ -104,8 +104,8 @@ task ca_aln_err_by_incorrect_stb_test_c::aln_err_chk();
    fork 
         begin
           repeat(20)@(posedge vif.clk);
-	    wait (ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 0);
-            wait (ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 0);
+            wait (gen_if.die_a_align_error == 0);
+            wait (gen_if.die_b_align_error == 0);
                ca_cfg.ca_die_a_rx_tb_in_cfg.align_fly  = 0;
                ca_cfg.ca_die_b_rx_tb_in_cfg.align_fly  = 0;
                `uvm_info("ca_aln_err_by_incorrect_stb_test", "No align_error seen after some clk with afly1...", UVM_LOW);
@@ -114,11 +114,12 @@ task ca_aln_err_by_incorrect_stb_test_c::aln_err_chk();
 
    fork 
         begin
-          wait (ca_cfg.ca_die_a_rx_tb_in_cfg.num_of_align_error == 1);
-          wait (ca_cfg.ca_die_b_rx_tb_in_cfg.num_of_align_error == 1);
-            ca_top_env.ca_scoreboard.do_compare = 0; 
+            wait (gen_if.die_a_align_error == 1);
+            wait (gen_if.die_b_align_error == 1);
+             ca_top_env.ca_scoreboard.do_compare = 0; 
             `uvm_info("ca_aln_err_by_incorrect_stb_test", "align_error seen due to incorrect stb intv ...", UVM_LOW);
-            aft_aln_err = 1;
+             aft_aln_err = 1;
+            disable fork;
         end
    join_none
 

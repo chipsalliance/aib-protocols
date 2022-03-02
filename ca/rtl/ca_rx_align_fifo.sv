@@ -99,7 +99,7 @@ module ca_rx_align_fifo
    .write_push    (fifo_push),
    .read_pop      (fifo_pop),
    .wr_soft_reset (soft_reset_lane_n),
-   .rd_soft_reset (soft_reset),
+   .rd_soft_reset (1'b0),
    ); */
 
   /* levelsync AUTO_TEMPLATE (
@@ -174,7 +174,7 @@ module ca_rx_align_fifo
            .wrdata                      (rx_din[FIFO_WIDTH_WID-1:0]), // Templated
            .write_push                  (fifo_push),             // Templated
            .read_pop                    (fifo_pop),              // Templated
-           .rd_soft_reset               (soft_reset),            // Templated
+           .rd_soft_reset               (1'b0),                  // Templated
            .wr_soft_reset               (soft_reset_lane_n));     // Templated
       end // else: !if(SYNC_FIFO)
   endgenerate

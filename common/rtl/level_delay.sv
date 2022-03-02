@@ -1,3 +1,5 @@
+`ifndef _COMMON_LEVEL_DELAY_SV
+`define _COMMON_LEVEL_DELAY_SV
 ////////////////////////////////////////////////////////////
 //
 //        Copyright (C) 2021 Eximius Design
@@ -75,4 +77,6 @@ endmodule // level_delay //
 //Module:	level_delay
 //$Id$
 ////////////////////////////////////////////////////////////
+
+`endif
 

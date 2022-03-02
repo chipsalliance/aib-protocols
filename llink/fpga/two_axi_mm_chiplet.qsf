@@ -19,15 +19,11 @@ set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/axi_mm_a32_d128_packet_
 
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_auto_sync.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_receive.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_concat_onechan.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_ctrl.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_mux.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_rx_push.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_transmit.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_concat_onechan.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_cred.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_ctrl.sv
-set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/ll_tx_mux.sv
 
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ./dut_rtl/syncfifo_reg.sv
