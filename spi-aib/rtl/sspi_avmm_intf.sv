@@ -120,7 +120,6 @@ end
 
 always @(posedge avmm_clk or negedge avmm_rst_n) begin : avmm_fsm
    if (avmm_rst_n==1'b0) begin
-      sm_base         <= SM_IDLE;
       avmm_write      <= '0;
       avmm_read       <= '0; 
       avmm_addr       <= '0;

@@ -38,7 +38,7 @@ Test bench(top_tb.sv) description. See user_guide under doc for detail.
  Test Vectors and how to run test
 ===========================================================
 
-Three test vectors provided 
+Five test vectors provided 
 spi-aib/dv/test/
 test_cases/
 ├── basic_spi_test.inc   --Cover all basic spi commands
