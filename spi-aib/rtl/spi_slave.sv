@@ -59,18 +59,8 @@ module spi_slave #(
     //Optional Interrupt port. Can connect to GPIO if necessary
 //  output                spi_inta
 );
-logic spi_rstn_sync, avmm_rstn_sync;
-logic [31:0] writedata;
-logic read;
-logic write;
-logic miso_int;
-logic [3:0] byteenable;   //Not used
-logic [31:0] readdata;
-logic readdatavalid;
-logic[12:0] address;
 
-logic [31:0] cmd_reg0;
-logic [31:0] cmd_reg1;
+
 logic rx_buf_we, tx_buf_we;
 logic [BUF_ADWIDTH-1:0] rx_buf_waddr;
 logic [BUF_ADWIDTH-1:0] rx_buf_raddr;
@@ -91,6 +81,9 @@ logic [31:0] auto_csr0_reg;
 logic [31:0] csr0_reg;
 logic [31:0] csr1_reg;
 logic [31:0] csr2_reg;
+logic rst_n_sclk, rst_n_avmm;
+logic trans_done;
+
 
 spi_rstnsync sclk_rstnsync
   (

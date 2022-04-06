@@ -62,12 +62,13 @@ logic [1:0] rd_latency;
 
 assign rx_buf_wdata = rx_data;
 assign csr_wdata = rx_data;
-assign reg_read =   (cmd == CMD_REG_READ);
-assign reg_write =  (cmd == CMD_REG_WRITE); 
-assign buf_read =   (cmd == CMD_BUF_READ);
-assign buf_write =  (cmd == CMD_BUF_WRITE);
-assign auto_read =  (cmd == CMD_AUTO_READ);
-assign auto_write = (cmd == CMD_AUTO_WRITE);
+
+wire   reg_read =   (cmd == CMD_REG_READ);
+wire   reg_write =  (cmd == CMD_REG_WRITE); 
+wire   buf_read =   (cmd == CMD_BUF_READ);
+wire   buf_write =  (cmd == CMD_BUF_WRITE);
+wire   auto_read =  (cmd == CMD_AUTO_READ);
+wire   auto_write = (cmd == CMD_AUTO_WRITE);
 
 always_ff @(posedge sclk or negedge rst_n_sclk)
  if (!rst_n_sclk) begin

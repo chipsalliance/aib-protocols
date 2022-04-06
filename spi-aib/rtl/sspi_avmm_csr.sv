@@ -50,6 +50,7 @@ output logic [31:0]      tx_buf_rdata
 
 //
 logic  [31:0] rdata_comb;
+logic         trans_done_sclk; 
 // A write byte enable for each register
 
 wire           sel_csr0    = (csr_addr[3:0] == 4'h0) & csr_sel;
