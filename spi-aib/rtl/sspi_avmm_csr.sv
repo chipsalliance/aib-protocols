@@ -17,7 +17,8 @@ input                    rst_n_sclk,
 input                    avmm_clk,       
 input                    avmm_rst_n,
 
-//SPI clock domain, but can treat as static
+//csr1_reg and csr2_reg are static
+//csr0_reg will be treated as static by cdc constrain
 output  logic [31:0]     csr0_reg,
 output  logic [31:0]     csr1_reg,
 output  logic [31:0]     csr2_reg,
@@ -51,6 +52,7 @@ output logic [31:0]      tx_buf_rdata
 //
 logic  [31:0] rdata_comb;
 logic         trans_done_sclk; 
+logic         auto_update_d1;
 // A write byte enable for each register
 
 wire           sel_csr0    = (csr_addr[3:0] == 4'h0) & csr_sel;
@@ -77,19 +79,30 @@ wire           re_csr3     = sel_csr3;
         .data_out (trans_done_sclk)
         );
 // Write process
+//During the auto_update, csr0_reg bit 0 will be the last
+//to arrive to avmm to make sure the rest information are stabled to use
+//SDC constrain will make sure the skew and delay can work for that purpose. 
+
 always @( negedge  rst_n_sclk,  posedge sclk)
    if (!rst_n_sclk)  begin
       csr0_reg[31:0] <= 32'h00000000;
+      auto_update_d1 <= 1'b0;
    end
    else begin
       if (we_csr0)
          csr0_reg[31:0] <=  csr_wdata[31:0];
       else if (auto_update)
-         csr0_reg <= auto_csr0_reg[31:0];
+         csr0_reg[31:1] <= auto_csr0_reg[31:1];
+      else if (auto_update_d1)                  //Delay bit 0 one SCLK
+         csr0_reg[0]    <= 1'b1;                //Bit 0 is the AVMM state machine enable
       else if (trans_done_sclk)
          csr0_reg[0] <= 1'b0;
+
+      auto_update_d1 <= auto_update;
    end
 
+
+//csr1_reg is static
 always @( negedge  rst_n_sclk,  posedge sclk)
    if (!rst_n_sclk)  begin
       csr1_reg[31:0] <= 32'h00000000;
@@ -99,6 +112,7 @@ always @( negedge  rst_n_sclk,  posedge sclk)
          csr1_reg[31:0] <=  csr_wdata[31:0];
    end
 
+//csr2_reg is static
 always @( negedge  rst_n_sclk,  posedge sclk)
    if (!rst_n_sclk)  begin
       csr2_reg[31:0] <= 32'h00000000;

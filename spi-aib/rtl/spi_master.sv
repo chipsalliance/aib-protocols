@@ -3,8 +3,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //--------------------------------------------------------------------------------------
 // Description: SPI master IP top level RTL 
-//
-//
+// Only mode 0 is supported.
+// Only free running sclk may supported. For gated clock, work around may required.
 // Change log
 // 08/09/2021
 // 11/19/2021 Add seperate misos so that it is easier for debugging if pins are available

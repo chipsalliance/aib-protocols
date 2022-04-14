@@ -2,9 +2,8 @@
 // Copyright (C) 2019 Intel Corporation.
 /////////////////////////////////////////////////////////////////////////////////////////
 //--------------------------------------------------------------------------------------
-// Description: SPI simple dual port ram
-//
-//
+// Description: SPI simple dual port synchronous ram
+// This code will work with Quartus tool. For other vendor, different structure may required
 // Change log
 // 08/09/2021
 /////////////////////////////////////////////////////////////////////////////////////////

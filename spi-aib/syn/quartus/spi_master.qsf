@@ -1,7 +1,7 @@
 set_global_assignment -name TOP_LEVEL_ENTITY spi_master 
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 20.4.0
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "16:49:25  JULY 21, 2021"
-set_global_assignment -name LAST_QUARTUS_VERSION "20.3.0 Pro Edition"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.4.0 Pro Edition"
 set_global_assignment -name FAMILY "Stratix 10"
 set_global_assignment -name MINIMUM_SEU_INTERVAL 0
 set_global_assignment -name PWRMGT_SLAVE_DEVICE_TYPE LTM4677

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2019 Intel Corporation.
 //-----------------------------------------------------------------------------------------------//
+// This module handle SPI bus side interface:
+// Receive command from AVMM domain register.
+// Receive control info from AVMM domain register (skew/delay for this static info enforced by SDC)
+// Generate counter to shifting out miso from tx buffer and shifting in mosi to rx buffer 
+// Only SPI mode 0 is supported. SCLK is free running. 
 //-----------------------------------------------------------------------------------------------//
 `timescale 1ps / 1ps
 module mspi_intf
@@ -21,7 +26,7 @@ output                       spi_active,
 //Contro from CSR
 input                        avmm_clk,
 input                        rst_n_avmm,
-input  [31:0]                cmd_reg,
+input  [31:0]                cmd_reg,    //From avmm clock domain
 
 //SPI interface signal
 input                        rst_n_sclk,
@@ -36,39 +41,40 @@ input      [SS_WIDTH-1:0]    miso
 //and low not to miss the pulse to sclk when sclk is too slow compare to 
 //avmm_clk
 ////////////////////////////////////////////////////////////////////////
-parameter ST_ZERO      = 2'b00;
-parameter ST_WT_4_ONE  = 2'b01;
-parameter ST_ONE       = 2'b10;
-parameter ST_WT_4_ZERO = 2'b11;
+localparam ST_ZERO      = 2'b00;
+localparam ST_WT_4_ONE  = 2'b01;
+localparam ST_ONE       = 2'b10;
+localparam ST_WT_4_ZERO = 2'b11;
 
+logic [31:0] cmd_reg_sync;
 logic [1:0] cdc_st;
 logic  start_trans, cdc_req;
-logic cdc_req_sclk, cdc_ack_aclk;
+logic cdc_req_aclk, cdc_ack_sclk;
 logic mux_miso;
 
-always_ff @(posedge avmm_clk or negedge rst_n_avmm)
- if (!rst_n_avmm) begin
+always_ff @(posedge sclk or negedge rst_n_sclk)
+ if (!rst_n_sclk) begin
       start_trans <= '0;
       cdc_st <= ST_ZERO;
       cdc_req <= '0;
  end else begin
       case (cdc_st)
-        ST_ZERO:      if (cmd_reg[0] & ~cdc_ack_aclk) begin  
+        ST_ZERO:      if (cmd_reg_sync[0] & ~cdc_ack_sclk) begin  
                            cdc_st <= ST_WT_4_ONE;
                            cdc_req <= 1'b1;
                            start_trans <= 1'b0;
                       end
-        ST_WT_4_ONE:  if (cdc_ack_aclk) begin
+        ST_WT_4_ONE:  if (cdc_ack_sclk) begin
                            cdc_st <= ST_ONE;
                            cdc_req <= 1'b0;
                            start_trans <= 1'b1;
                       end
-        ST_ONE:       if (~cmd_reg[0]  &  ~cdc_ack_aclk) begin
+        ST_ONE:       if (~cmd_reg_sync[0]  &  ~cdc_ack_sclk) begin
                            cdc_st <= ST_WT_4_ZERO;
                            cdc_req <= 1'b1; 
                            start_trans <= 1'b1;
                       end
-        ST_WT_4_ZERO: if (cdc_ack_aclk == 1'b1) begin
+        ST_WT_4_ZERO: if (cdc_ack_sclk == 1'b1) begin
                            cdc_st <= ST_ZERO;
                            cdc_req <= 1'b0;
                            start_trans <= 1'b0;
@@ -76,48 +82,47 @@ always_ff @(posedge avmm_clk or negedge rst_n_avmm)
       endcase
  end 
 
-    spi_bitsync sync_req_sclk 
+//////////////////////////////////////////////////////////////////////////////////
+//This multibit register go through syncronizer is static that constrained by SDC
+//so that skew should not be worry about
+/////////////////////////////////////////////////////////////////////////////////
+
+    spi_bitsync #(.DWIDTH(32)) bitsync2_cmd_reg
        (
         .clk      (sclk),
         .rst_n    (rst_n_sclk),
-        .data_in  (cdc_req),
-        .data_out (cdc_req_sclk)
+        .data_in  (cmd_reg[31:0]),
+        .data_out (cmd_reg_sync[31:0])
         );
+
+
     spi_bitsync sync_req_aclk 
        (
         .clk      (avmm_clk),
         .rst_n    (rst_n_avmm),
-        .data_in  (cdc_req_sclk),
-        .data_out (cdc_ack_aclk)
+        .data_in  (cdc_req),
+        .data_out (cdc_req_aclk)
+        );
+    spi_bitsync sync_req_sclk 
+       (
+        .clk      (sclk),
+        .rst_n    (rst_n_sclk),
+        .data_in  (cdc_req_aclk),
+        .data_out (cdc_ack_sclk)
         );
 
 /////////////////////////////////////////////////////////////////////////
 wire start_trans_sync2, start_pulse;
 reg  start_trans_d1, trans_enable, trans_enable_d;
-reg [31:0] cmd_reg_sync;
 reg [31:0] rx_data, tx_data;
 reg [BUF_ADWIDTH+4:0] full_counter;
-///////////////////////////////////////////////////////////
-// Take cmd_reg from avmm_clk domain to sclk domain
-//////////////////////////////////////////////////////////
-    spi_bitsync bitsync2_start_trans
-       (
-        .clk      (sclk),
-        .rst_n    (rst_n_sclk),
-        .data_in  (start_trans),
-        .data_out (start_trans_sync2)
-        );
+
 //Generate start pulse in sclk domain
 always_ff @(posedge sclk or negedge rst_n_sclk)
  if (!rst_n_sclk) start_trans_d1 <= '0;
- else start_trans_d1 <= start_trans_sync2;
+ else start_trans_d1 <= start_trans;
 
-assign start_pulse = start_trans_sync2 & !start_trans_d1;
-
-//Use start_pusle as enable to latch cmd_reg from avmm clock domain
-always_ff @(posedge sclk or negedge rst_n_sclk)
- if (!rst_n_sclk) cmd_reg_sync <= '0;
- else if (start_pulse) cmd_reg_sync <= cmd_reg;
+assign start_pulse = start_trans & !start_trans_d1;
 
 wire [BUF_ADWIDTH-1:0] burst_len_wd = cmd_reg_sync[BUF_ADWIDTH+1:2];
 wire [1:0] cs_sel = cmd_reg_sync[31:30];

@@ -44,8 +44,8 @@ module sspi_avmm_intf #(
    input   logic                         i_avmm2_rdatavalid,
    input   logic                         i_avmm2_waitrequest,
 
-   input   logic [31:0]                  csr0_reg,
-   input   logic [31:0]                  csr1_reg,
+   input   logic [31:0]                  csr0_reg,    //SCLK domain This is treated as static by SDC delay constrain 
+   input   logic [31:0]                  csr1_reg,    //SCLK domain This is static
    input   logic [31:0]                  rx_buf_rdata,
    output  logic [BUF_ADWIDTH-1:0]       rx_buf_raddr, 
    output  logic [31:0]                  tx_buf_wdata,
@@ -60,14 +60,15 @@ localparam SM_WAIT              = 3'h2;
 localparam SM_CHNL_INC          = 3'h3;
 localparam SM_DONE              = 3'h4;
 
-logic [2:0] sm_base;
-logic [8:0] burst_cnt;
-wire  [8:0] burst_len = csr0_reg[29:21];
-wire  [2:0] slave_sel = {(csr0_reg[20:19] == 2'b10),(csr0_reg[20:19] == 2'b01),(csr0_reg[20:19] == 2'b00)};   
-wire  [16:0] start_addr= csr0_reg[18:2];
-wire  rdnwr = csr0_reg[1];
+logic [2:0]  sm_base;
+logic [31:0] csr0_reg_sync_aclk;
+logic [8:0]  burst_cnt;
+wire  [8:0]  burst_len = csr0_reg_sync_aclk[29:21];
+wire  [2:0]  slave_sel = {(csr0_reg_sync_aclk[20:19] == 2'b10),(csr0_reg_sync_aclk[20:19] == 2'b01),(csr0_reg_sync_aclk[20:19] == 2'b00)};   
+wire  [16:0] start_addr= csr0_reg_sync_aclk[18:2];
+wire  rdnwr = csr0_reg_sync_aclk[1];
 logic trans_valid;
-wire  [5:0] auto_chan_num = csr1_reg[21:16];
+wire  [5:0] auto_chan_num = csr1_reg[21:16];      //csr1_reg is static
 wire  [15:0] auto_offset_addr = csr1_reg[15:0];
 logic [15:0] chanxoffset;
 logic [16:0] avmm_addr;
@@ -76,12 +77,12 @@ logic [31:0] avmm_rdata;
 logic [2:0] avmm_write, avmm_read;
 logic [5:0] chan_cnt;
 
-    spi_bitsync bitsync2_start_trans
+    spi_bitsync #(.DWIDTH(32)) bitsync2_csr0_reg
        (
         .clk      (avmm_clk),
         .rst_n    (avmm_rst_n),
-        .data_in  (csr0_reg[0]),
-        .data_out (trans_valid)
+        .data_in  (csr0_reg[31:0]),
+        .data_out (csr0_reg_sync_aclk[31:0])
         );
 
 
@@ -94,7 +95,7 @@ assign tx_buf_wdata = avmm_rdata;
 assign tx_buf_we = avmm_rdatavalid;
 
 always @* begin
-   case(csr0_reg[20:19])
+   case(csr0_reg_sync_aclk[20:19])
       2'b00: begin
                avmm_rdatavalid  = i_avmm0_rdatavalid;
                avmm_waitrequest = i_avmm0_waitrequest;
@@ -128,11 +129,12 @@ always @(posedge avmm_clk or negedge avmm_rst_n) begin : avmm_fsm
       burst_cnt       <= '0;
       chan_cnt        <= '0;
       chanxoffset     <= '0;
+      trans_valid     <= '0;
       trans_done      <= '0;
       sm_base         <= SM_IDLE; 
    end
    else begin
-      
+      trans_valid     <= csr0_reg_sync_aclk[0]; 
       case(sm_base)
          SM_IDLE : begin
                      if (trans_valid) begin

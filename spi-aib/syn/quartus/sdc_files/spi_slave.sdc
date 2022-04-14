@@ -8,18 +8,20 @@ set_time_format -unit ns -decimal_places 3
 #------------------------------------------------------------------------------
 # Create Clock (core clock is 50 MHz. SPI I/O is 20 MHz
 #------------------------------------------------------------------------------
-create_clock -name avmm_clk -period 20.000 -waveform { 0.000 10.000 } [get_ports {avmm_clk}]
-create_clock -name sclk -period 50.000 -waveform { 0.000 25.000 } [get_ports {sclk}]
+set AVMM_CLK_PERIOD 20.000
+set SCLK_PERIOD 50.000
+create_clock -name avmm_clk -period $AVMM_CLK_PERIOD  [get_ports {avmm_clk}]
+create_clock -name sclk -period $SCLK_PERIOD [get_ports {sclk}]
 
 #------------------------------------------------------------------------------
-# Create virtual clock exist outside of the FPGA that used for IO timing of SPI
+# Create virtual clock exist outside of the FPGA that used for IO timing of SP -max avmm_clock_period -value_multiplier 0.8I
 # For I/O, virtual clock will be the launch clock for input constrints and the latch
 # clock for output constraints.
 #-------------------------------------------------------------------------------
 
-create_clock -name sclk_ext -period 50.000 
+create_clock -name sclk_ext -period $SCLK_PERIOD 
 
-set_clock_groups -asynchronous \
+#set_clock_groups -asynchronous \
   -group [get_clocks {avmm_clk}] \
   -group [get_clocks {sclk}]
 
@@ -27,8 +29,19 @@ set_clock_groups -asynchronous \
 # ss_n is used to make miso tri-state when ss_n is high
 # The gated logic should be handled in top level.
 #------------------------------------------------------------------------------
-set_false_path -from [get_keepers -no_duplicates {ss_n}] -to [get_keepers -no_duplicates {miso}]
+#set_false_path -from [get_keepers -no_duplicates {ss_n}] -to [get_keepers -no_duplicates {miso}]
 
+#-----------------------
+#   Timing exceptions
+#-----------------------
+set_false_path -through sspi_avmm_csr|csr0_reg*
+
+#-------------------------------------------------------------------------------
+#  Metastable delay. The design required the delay to Meastable flop less
+#  than one cycle of either destination clock or source clock 
+#-------------------------------------------------------------------------------
+
+set_net_delay -from  *sspi_avmm_csr|csr0_reg*  -to *bitsync2_csr0_reg*dff1* -max -get_value_from_clock_period  dst_clock_period -value_multiplier 0.8 
 #------------------------------------------------------------------------------
 # The following set_input_delay/set_output_delay is for reference. User should
 # modify it based on their own system requirement

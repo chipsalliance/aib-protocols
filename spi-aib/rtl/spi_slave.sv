@@ -3,7 +3,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 //--------------------------------------------------------------------------------------
 // Description: SPI Slave IP top level RTL
-//
+// Only mode 0 is supported.
+// Only free running sclk may supported. For gated clock, work around may required.
 //
 // Change log
 // 08/09/2021

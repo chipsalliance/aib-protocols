@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright (C) 2019 Intel Corporation. 
+// Standard bit/multi-bit synchronizer.
+// User may need to replace this module with technology library synchronizer.
 module spi_bitsync
   #(
     parameter DWIDTH = 1'b1,    // Sync Data input
