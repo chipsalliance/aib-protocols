@@ -46,7 +46,7 @@ localparam CMD_AUTO_WRITE       = 4'h7;
 ///////////////////////////////////////////////////////////
 logic [31:0] rx_data, tx_data;
 logic [BUF_ADWIDTH+4+1:0] full_counter;  //Extra bit is for overflow protection.
-logic  dword0,cmd_valid;
+logic  dword0, cmd_valid;
 logic [3:0] cmd;
 logic [16:0] csr_addr_dw;
 
@@ -88,13 +88,18 @@ always_ff @(posedge sclk or negedge rst_n_sclk)
        else if (rx_buf_we) rx_buf_waddr <= rx_buf_waddr + 1'b1;
  end
 
-assign auto_csr0_reg ={7'h0, burst_len, csr_addr_dw, 2'b00, ~cmd[0], 1'b1}; 
+//Since the address is word based, lower two bit is ignored. Keep the full byte address
+//is for the readability for firmware.
+
+assign auto_csr0_reg ={{11-BUF_ADWIDTH{1'b0}}, burst_len, csr_addr_dw, 2'b00, ~cmd[0], 1'b1}; 
+
 always_ff @(posedge sclk or negedge rst_n_sclk)
  if (!rst_n_sclk) begin
        dword0 <= '0;
        cmd_valid <= '0; 
        cmd <= '0;
        burst_len_valid <= '0;
+       burst_len <= '0;
        csr_addr_valid <= '0;
        csr_addr_dw <= '0;
        csr_addr <= '0;
