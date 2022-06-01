@@ -61,10 +61,11 @@ The rev1 aib protocol IP directory structure is:
     ├── rtl
     └── syn
 
+```
 
 Note the aib-phy-hardware is a seperate repo available from GitHut here: https://github.com/chipsalliance/aib-phy-hardware
 For correct simulation, please ensure it is organized as shown below.
-aib-protocols-main
+```aib-protocols-main
 ├── axi4-mm
 ├── axi4-st
 ├── ca
@@ -77,7 +78,7 @@ aib-phy-hardware-master
 ├── README.md
 ├── v1.0
 └── v2.0
-
+```
 See the [AIB Spec](https://github.com/chipsalliance/AIB-specification/blob/master/AIB_Specification%202_0_DRAFT3.pdf) and 
 [AIB Usage Note](https://github.com/chipsalliance/aib-phy-hardware/blob/master/docs/AIB_Usage_Note_v1_2_1.pdf). for information about AIB.
 
