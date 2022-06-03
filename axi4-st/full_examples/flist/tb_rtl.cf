@@ -1,0 +1,24 @@
+# ####################################################################
+# tb files 
+# ####################################################################
++incdir+${AIB_ROOT}/dv/tb
++incdir+${AIB_ROOT}/dv/interface
++incdir+${AIB_ROOT}/dv/test/task
+${AIB_DV_ROOT}/emib/aliasv.sv
+${AIB_DV_ROOT}/emib/emib_ch_m1s2.sv
+${AIB_DV_ROOT}/emib/emib_ch_m2s1.sv
+${AIB_DV_ROOT}/emib/emib_ch_m2s2.sv
+${AIB_DV_ROOT}/emib/emib_m1s2.sv
+${AIB_DV_ROOT}/emib/emib_m2s1.sv
+${AIB_DV_ROOT}/emib/emib_m2s2.sv
+${AIB_DV_ROOT}/interface/dut_if_mac.sv
+${AIB_DV_ROOT}/interface/avalon_mm_if.sv
+
+${SIM_DIR}/../common/top_aib.sv
+
+${SIM_DIR}/../common/axist_aib_top.v
+${tbench_dir}/top_tb.v
+
+
+
+
