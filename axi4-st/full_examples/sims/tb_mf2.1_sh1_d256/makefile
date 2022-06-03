@@ -72,6 +72,8 @@ run : clean gen_cfg compile sim
 
 gen_cfg :
 	python ${PROJ_DIR}/llink/script/llink_gen.py --cfg axi_st_d256_multichannel.cfg
+	chmod +x scripts/ldr_mrkr_strb_in.sh
+	chmod +x scripts/folr_mrkr_strb_out.sh
 	./scripts/ldr_mrkr_strb_in.sh
 	./scripts/folr_mrkr_strb_out.sh
 mrk_strb_insert : 

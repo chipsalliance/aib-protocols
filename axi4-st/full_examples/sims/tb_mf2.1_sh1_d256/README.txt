@@ -29,7 +29,7 @@ aib-protocols-main.zip : https://github.com/chipsalliance/aib-protocols
 		|			
 		|--- aib-protocols-main
 		|
-		|--- aib-phy-hardware-master
+		|--- aib-phy-hardware
 		
 2. Navigate to ./aib-protocols-main/axi4-st/full_examples/sims/tb_mf2.1_sh1_d256.
 	
