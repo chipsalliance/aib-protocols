@@ -1,3 +1,5 @@
+#!/bin/sh -f
+
 for ((i=0; i<7; i++))
 do
 for ((j=0; j<40; j++))

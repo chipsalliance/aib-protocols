@@ -1,3 +1,5 @@
+#!/bin/sh -f
+
 set strb_loc = 1
 BWIDTH=40
 k=0
