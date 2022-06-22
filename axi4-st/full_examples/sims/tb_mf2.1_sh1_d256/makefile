@@ -71,6 +71,7 @@ sim :
 run : clean gen_cfg compile sim
 
 gen_cfg :
+	dos2unix ../../common/* * scripts/* 2>/dev/null
 	python ${PROJ_DIR}/llink/script/llink_gen.py --cfg axi_st_d256_multichannel.cfg
 	chmod +x scripts/ldr_mrkr_strb_in.sh
 	chmod +x scripts/folr_mrkr_strb_out.sh

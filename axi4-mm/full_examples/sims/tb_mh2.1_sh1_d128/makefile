@@ -71,6 +71,7 @@ sim :
 run : clean gen_cfg compile sim
 
 gen_cfg :
+	dos2unix ../../common/* *  2>/dev/null
 	python ${PROJ_DIR}/llink/script/llink_gen.py --cfg aximm_ll.cfg
 mrk_strb_insert : 
 	./scripts/ldr_mrkr_strb_in.sh

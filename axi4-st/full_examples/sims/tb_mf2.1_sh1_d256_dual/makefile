@@ -71,6 +71,7 @@ sim :
 run : clean gen_cfg compile sim
 
 gen_cfg :
+	dos2unix ../../common/* *  2>/dev/null
 	python ${PROJ_DIR}/llink/script/dual_axist_llink_gen.py --cfg axi_st_d256_dual_multichannel.cfg
 
 #-----------------------------------------------------------------------------
