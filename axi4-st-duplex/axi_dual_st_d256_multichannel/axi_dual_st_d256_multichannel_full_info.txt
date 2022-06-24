@@ -1,0 +1,644 @@
+////////////////////////////////////////////////////////////
+//
+//        (C) Copyright 2021 Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink RSTRUCT  ST_M2S   TX  257  RX    1
+    LogicLink RSTRUCT  ST_S2M   TX    1  RX  257
+    RepStruct in Full Mode           x1       x1
+                                -------  -------
+    Total     RSTRUCT           TX  258  RX  258
+
+  RSTRUCT Sub Channel Info
+  Note: RSTRUCT describes the Replicated Struct on a Full rate channel.
+        RSTRUCT will be replicated for Full rate per configuration and that is known as MAIN channel
+
+    RSTRUCT: Each channel is Gen1Only PHY running at Full Rate with 40 bits
+    RSTRUCT: 7x channels
+    RSTRUCT: Total AIB bits is 280 bits
+
+  MAIN Channel Info
+    MAIN: Each channel is Gen1Only PHY running at Full Rate with 40 bits
+    MAIN: 7x channels
+    MAIN: Total AIB bits is 280 bits
+
+       TX: No DBI
+       TX: Strobe is Recoverable or non-existent
+       TX: Marker is Recoverable or non-existent
+       TX: Total RSTRUCT overhead bits across 7 Full Rate channels is 0
+       TX: Total RSTRUCT data bits available 280
+       TX: Total MAIN overhead bits across 7 Full channels is 0
+       TX: Total MAIN data bits available 280
+
+       RX: No DBI
+       RX: Strobe is Recoverable or non-existent
+       RX: Marker is Recoverable or non-existent
+       RX: Total RSTRUCT overhead bits across 7 Full Rate channels is 0
+       RX: Total RSTRUCT data bits available 280
+       RX: Total MAIN overhead bits across 7 Full channels is 0
+       RX: Total MAIN data bits available 280
+
+  RSTRUCT TX needs  258 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   22 spare bits
+  RSTRUCT RX needs  258 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   22 spare bits
+
+  MAIN TX needs  258 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   22 spare bits
+  MAIN RX needs  258 bits of data and has  280 bits available across 7x Gen1Only Full Rate channels so   22 spare bits
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to Logic Link Data Mapping
+// This AXI Data FIFO packing
+  assign tx_ST_M2S_data       [   0 +: 256] = user_m2s_tdata       [   0 +: 256]
+  assign tx_ST_M2S_data       [ 256 +:   1] = user_m2s_enable      [   0 +:   1]
+
+  assign rx_ST_S2M_data       [   0 +: 256] = user_s2m_tdata       [   0 +: 256]
+  assign rx_ST_S2M_data       [ 256 +:   1] = user_s2m_enable      [   0 +:   1]
+// AXI to Logic Link Data Mapping
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [   0] = tx_ST_M2S_pushbit_r0
+  Channel 0 TX   [   1] = user_m2s_tdata       [   0] // RECOVERED_STROBE
+  Channel 0 TX   [   2] = user_m2s_tdata       [   1]
+  Channel 0 TX   [   3] = user_m2s_tdata       [   2]
+  Channel 0 TX   [   4] = user_m2s_tdata       [   3]
+  Channel 0 TX   [   5] = user_m2s_tdata       [   4]
+  Channel 0 TX   [   6] = user_m2s_tdata       [   5]
+  Channel 0 TX   [   7] = user_m2s_tdata       [   6]
+  Channel 0 TX   [   8] = user_m2s_tdata       [   7]
+  Channel 0 TX   [   9] = user_m2s_tdata       [   8]
+  Channel 0 TX   [  10] = user_m2s_tdata       [   9]
+  Channel 0 TX   [  11] = user_m2s_tdata       [  10]
+  Channel 0 TX   [  12] = user_m2s_tdata       [  11]
+  Channel 0 TX   [  13] = user_m2s_tdata       [  12]
+  Channel 0 TX   [  14] = user_m2s_tdata       [  13]
+  Channel 0 TX   [  15] = user_m2s_tdata       [  14]
+  Channel 0 TX   [  16] = user_m2s_tdata       [  15]
+  Channel 0 TX   [  17] = user_m2s_tdata       [  16]
+  Channel 0 TX   [  18] = user_m2s_tdata       [  17]
+  Channel 0 TX   [  19] = user_m2s_tdata       [  18]
+  Channel 0 TX   [  20] = user_m2s_tdata       [  19]
+  Channel 0 TX   [  21] = user_m2s_tdata       [  20]
+  Channel 0 TX   [  22] = user_m2s_tdata       [  21]
+  Channel 0 TX   [  23] = user_m2s_tdata       [  22]
+  Channel 0 TX   [  24] = user_m2s_tdata       [  23]
+  Channel 0 TX   [  25] = user_m2s_tdata       [  24]
+  Channel 0 TX   [  26] = user_m2s_tdata       [  25]
+  Channel 0 TX   [  27] = user_m2s_tdata       [  26]
+  Channel 0 TX   [  28] = user_m2s_tdata       [  27]
+  Channel 0 TX   [  29] = user_m2s_tdata       [  28]
+  Channel 0 TX   [  30] = user_m2s_tdata       [  29]
+  Channel 0 TX   [  31] = user_m2s_tdata       [  30]
+  Channel 0 TX   [  32] = user_m2s_tdata       [  31]
+  Channel 0 TX   [  33] = user_m2s_tdata       [  32]
+  Channel 0 TX   [  34] = user_m2s_tdata       [  33]
+  Channel 0 TX   [  35] = user_m2s_tdata       [  34]
+  Channel 0 TX   [  36] = user_m2s_tdata       [  35]
+  Channel 0 TX   [  37] = user_m2s_tdata       [  36]
+  Channel 0 TX   [  38] = user_m2s_tdata       [  37]
+  Channel 0 TX   [  39] = user_m2s_tdata       [  38] // RECOVERED_MARKER [0]
+  Channel 1 TX   [   0] = user_m2s_tdata       [  39]
+  Channel 1 TX   [   1] = user_m2s_tdata       [  40] // RECOVERED_STROBE
+  Channel 1 TX   [   2] = user_m2s_tdata       [  41]
+  Channel 1 TX   [   3] = user_m2s_tdata       [  42]
+  Channel 1 TX   [   4] = user_m2s_tdata       [  43]
+  Channel 1 TX   [   5] = user_m2s_tdata       [  44]
+  Channel 1 TX   [   6] = user_m2s_tdata       [  45]
+  Channel 1 TX   [   7] = user_m2s_tdata       [  46]
+  Channel 1 TX   [   8] = user_m2s_tdata       [  47]
+  Channel 1 TX   [   9] = user_m2s_tdata       [  48]
+  Channel 1 TX   [  10] = user_m2s_tdata       [  49]
+  Channel 1 TX   [  11] = user_m2s_tdata       [  50]
+  Channel 1 TX   [  12] = user_m2s_tdata       [  51]
+  Channel 1 TX   [  13] = user_m2s_tdata       [  52]
+  Channel 1 TX   [  14] = user_m2s_tdata       [  53]
+  Channel 1 TX   [  15] = user_m2s_tdata       [  54]
+  Channel 1 TX   [  16] = user_m2s_tdata       [  55]
+  Channel 1 TX   [  17] = user_m2s_tdata       [  56]
+  Channel 1 TX   [  18] = user_m2s_tdata       [  57]
+  Channel 1 TX   [  19] = user_m2s_tdata       [  58]
+  Channel 1 TX   [  20] = user_m2s_tdata       [  59]
+  Channel 1 TX   [  21] = user_m2s_tdata       [  60]
+  Channel 1 TX   [  22] = user_m2s_tdata       [  61]
+  Channel 1 TX   [  23] = user_m2s_tdata       [  62]
+  Channel 1 TX   [  24] = user_m2s_tdata       [  63]
+  Channel 1 TX   [  25] = user_m2s_tdata       [  64]
+  Channel 1 TX   [  26] = user_m2s_tdata       [  65]
+  Channel 1 TX   [  27] = user_m2s_tdata       [  66]
+  Channel 1 TX   [  28] = user_m2s_tdata       [  67]
+  Channel 1 TX   [  29] = user_m2s_tdata       [  68]
+  Channel 1 TX   [  30] = user_m2s_tdata       [  69]
+  Channel 1 TX   [  31] = user_m2s_tdata       [  70]
+  Channel 1 TX   [  32] = user_m2s_tdata       [  71]
+  Channel 1 TX   [  33] = user_m2s_tdata       [  72]
+  Channel 1 TX   [  34] = user_m2s_tdata       [  73]
+  Channel 1 TX   [  35] = user_m2s_tdata       [  74]
+  Channel 1 TX   [  36] = user_m2s_tdata       [  75]
+  Channel 1 TX   [  37] = user_m2s_tdata       [  76]
+  Channel 1 TX   [  38] = user_m2s_tdata       [  77]
+  Channel 1 TX   [  39] = user_m2s_tdata       [  78] // RECOVERED_MARKER [0]
+  Channel 2 TX   [   0] = user_m2s_tdata       [  79]
+  Channel 2 TX   [   1] = user_m2s_tdata       [  80] // RECOVERED_STROBE
+  Channel 2 TX   [   2] = user_m2s_tdata       [  81]
+  Channel 2 TX   [   3] = user_m2s_tdata       [  82]
+  Channel 2 TX   [   4] = user_m2s_tdata       [  83]
+  Channel 2 TX   [   5] = user_m2s_tdata       [  84]
+  Channel 2 TX   [   6] = user_m2s_tdata       [  85]
+  Channel 2 TX   [   7] = user_m2s_tdata       [  86]
+  Channel 2 TX   [   8] = user_m2s_tdata       [  87]
+  Channel 2 TX   [   9] = user_m2s_tdata       [  88]
+  Channel 2 TX   [  10] = user_m2s_tdata       [  89]
+  Channel 2 TX   [  11] = user_m2s_tdata       [  90]
+  Channel 2 TX   [  12] = user_m2s_tdata       [  91]
+  Channel 2 TX   [  13] = user_m2s_tdata       [  92]
+  Channel 2 TX   [  14] = user_m2s_tdata       [  93]
+  Channel 2 TX   [  15] = user_m2s_tdata       [  94]
+  Channel 2 TX   [  16] = user_m2s_tdata       [  95]
+  Channel 2 TX   [  17] = user_m2s_tdata       [  96]
+  Channel 2 TX   [  18] = user_m2s_tdata       [  97]
+  Channel 2 TX   [  19] = user_m2s_tdata       [  98]
+  Channel 2 TX   [  20] = user_m2s_tdata       [  99]
+  Channel 2 TX   [  21] = user_m2s_tdata       [ 100]
+  Channel 2 TX   [  22] = user_m2s_tdata       [ 101]
+  Channel 2 TX   [  23] = user_m2s_tdata       [ 102]
+  Channel 2 TX   [  24] = user_m2s_tdata       [ 103]
+  Channel 2 TX   [  25] = user_m2s_tdata       [ 104]
+  Channel 2 TX   [  26] = user_m2s_tdata       [ 105]
+  Channel 2 TX   [  27] = user_m2s_tdata       [ 106]
+  Channel 2 TX   [  28] = user_m2s_tdata       [ 107]
+  Channel 2 TX   [  29] = user_m2s_tdata       [ 108]
+  Channel 2 TX   [  30] = user_m2s_tdata       [ 109]
+  Channel 2 TX   [  31] = user_m2s_tdata       [ 110]
+  Channel 2 TX   [  32] = user_m2s_tdata       [ 111]
+  Channel 2 TX   [  33] = user_m2s_tdata       [ 112]
+  Channel 2 TX   [  34] = user_m2s_tdata       [ 113]
+  Channel 2 TX   [  35] = user_m2s_tdata       [ 114]
+  Channel 2 TX   [  36] = user_m2s_tdata       [ 115]
+  Channel 2 TX   [  37] = user_m2s_tdata       [ 116]
+  Channel 2 TX   [  38] = user_m2s_tdata       [ 117]
+  Channel 2 TX   [  39] = user_m2s_tdata       [ 118] // RECOVERED_MARKER [0]
+  Channel 3 TX   [   0] = user_m2s_tdata       [ 119]
+  Channel 3 TX   [   1] = user_m2s_tdata       [ 120] // RECOVERED_STROBE
+  Channel 3 TX   [   2] = user_m2s_tdata       [ 121]
+  Channel 3 TX   [   3] = user_m2s_tdata       [ 122]
+  Channel 3 TX   [   4] = user_m2s_tdata       [ 123]
+  Channel 3 TX   [   5] = user_m2s_tdata       [ 124]
+  Channel 3 TX   [   6] = user_m2s_tdata       [ 125]
+  Channel 3 TX   [   7] = user_m2s_tdata       [ 126]
+  Channel 3 TX   [   8] = user_m2s_tdata       [ 127]
+  Channel 3 TX   [   9] = user_m2s_tdata       [ 128]
+  Channel 3 TX   [  10] = user_m2s_tdata       [ 129]
+  Channel 3 TX   [  11] = user_m2s_tdata       [ 130]
+  Channel 3 TX   [  12] = user_m2s_tdata       [ 131]
+  Channel 3 TX   [  13] = user_m2s_tdata       [ 132]
+  Channel 3 TX   [  14] = user_m2s_tdata       [ 133]
+  Channel 3 TX   [  15] = user_m2s_tdata       [ 134]
+  Channel 3 TX   [  16] = user_m2s_tdata       [ 135]
+  Channel 3 TX   [  17] = user_m2s_tdata       [ 136]
+  Channel 3 TX   [  18] = user_m2s_tdata       [ 137]
+  Channel 3 TX   [  19] = user_m2s_tdata       [ 138]
+  Channel 3 TX   [  20] = user_m2s_tdata       [ 139]
+  Channel 3 TX   [  21] = user_m2s_tdata       [ 140]
+  Channel 3 TX   [  22] = user_m2s_tdata       [ 141]
+  Channel 3 TX   [  23] = user_m2s_tdata       [ 142]
+  Channel 3 TX   [  24] = user_m2s_tdata       [ 143]
+  Channel 3 TX   [  25] = user_m2s_tdata       [ 144]
+  Channel 3 TX   [  26] = user_m2s_tdata       [ 145]
+  Channel 3 TX   [  27] = user_m2s_tdata       [ 146]
+  Channel 3 TX   [  28] = user_m2s_tdata       [ 147]
+  Channel 3 TX   [  29] = user_m2s_tdata       [ 148]
+  Channel 3 TX   [  30] = user_m2s_tdata       [ 149]
+  Channel 3 TX   [  31] = user_m2s_tdata       [ 150]
+  Channel 3 TX   [  32] = user_m2s_tdata       [ 151]
+  Channel 3 TX   [  33] = user_m2s_tdata       [ 152]
+  Channel 3 TX   [  34] = user_m2s_tdata       [ 153]
+  Channel 3 TX   [  35] = user_m2s_tdata       [ 154]
+  Channel 3 TX   [  36] = user_m2s_tdata       [ 155]
+  Channel 3 TX   [  37] = user_m2s_tdata       [ 156]
+  Channel 3 TX   [  38] = user_m2s_tdata       [ 157]
+  Channel 3 TX   [  39] = user_m2s_tdata       [ 158] // RECOVERED_MARKER [0]
+  Channel 4 TX   [   0] = user_m2s_tdata       [ 159]
+  Channel 4 TX   [   1] = user_m2s_tdata       [ 160] // RECOVERED_STROBE
+  Channel 4 TX   [   2] = user_m2s_tdata       [ 161]
+  Channel 4 TX   [   3] = user_m2s_tdata       [ 162]
+  Channel 4 TX   [   4] = user_m2s_tdata       [ 163]
+  Channel 4 TX   [   5] = user_m2s_tdata       [ 164]
+  Channel 4 TX   [   6] = user_m2s_tdata       [ 165]
+  Channel 4 TX   [   7] = user_m2s_tdata       [ 166]
+  Channel 4 TX   [   8] = user_m2s_tdata       [ 167]
+  Channel 4 TX   [   9] = user_m2s_tdata       [ 168]
+  Channel 4 TX   [  10] = user_m2s_tdata       [ 169]
+  Channel 4 TX   [  11] = user_m2s_tdata       [ 170]
+  Channel 4 TX   [  12] = user_m2s_tdata       [ 171]
+  Channel 4 TX   [  13] = user_m2s_tdata       [ 172]
+  Channel 4 TX   [  14] = user_m2s_tdata       [ 173]
+  Channel 4 TX   [  15] = user_m2s_tdata       [ 174]
+  Channel 4 TX   [  16] = user_m2s_tdata       [ 175]
+  Channel 4 TX   [  17] = user_m2s_tdata       [ 176]
+  Channel 4 TX   [  18] = user_m2s_tdata       [ 177]
+  Channel 4 TX   [  19] = user_m2s_tdata       [ 178]
+  Channel 4 TX   [  20] = user_m2s_tdata       [ 179]
+  Channel 4 TX   [  21] = user_m2s_tdata       [ 180]
+  Channel 4 TX   [  22] = user_m2s_tdata       [ 181]
+  Channel 4 TX   [  23] = user_m2s_tdata       [ 182]
+  Channel 4 TX   [  24] = user_m2s_tdata       [ 183]
+  Channel 4 TX   [  25] = user_m2s_tdata       [ 184]
+  Channel 4 TX   [  26] = user_m2s_tdata       [ 185]
+  Channel 4 TX   [  27] = user_m2s_tdata       [ 186]
+  Channel 4 TX   [  28] = user_m2s_tdata       [ 187]
+  Channel 4 TX   [  29] = user_m2s_tdata       [ 188]
+  Channel 4 TX   [  30] = user_m2s_tdata       [ 189]
+  Channel 4 TX   [  31] = user_m2s_tdata       [ 190]
+  Channel 4 TX   [  32] = user_m2s_tdata       [ 191]
+  Channel 4 TX   [  33] = user_m2s_tdata       [ 192]
+  Channel 4 TX   [  34] = user_m2s_tdata       [ 193]
+  Channel 4 TX   [  35] = user_m2s_tdata       [ 194]
+  Channel 4 TX   [  36] = user_m2s_tdata       [ 195]
+  Channel 4 TX   [  37] = user_m2s_tdata       [ 196]
+  Channel 4 TX   [  38] = user_m2s_tdata       [ 197]
+  Channel 4 TX   [  39] = user_m2s_tdata       [ 198] // RECOVERED_MARKER [0]
+  Channel 5 TX   [   0] = user_m2s_tdata       [ 199]
+  Channel 5 TX   [   1] = user_m2s_tdata       [ 200] // RECOVERED_STROBE
+  Channel 5 TX   [   2] = user_m2s_tdata       [ 201]
+  Channel 5 TX   [   3] = user_m2s_tdata       [ 202]
+  Channel 5 TX   [   4] = user_m2s_tdata       [ 203]
+  Channel 5 TX   [   5] = user_m2s_tdata       [ 204]
+  Channel 5 TX   [   6] = user_m2s_tdata       [ 205]
+  Channel 5 TX   [   7] = user_m2s_tdata       [ 206]
+  Channel 5 TX   [   8] = user_m2s_tdata       [ 207]
+  Channel 5 TX   [   9] = user_m2s_tdata       [ 208]
+  Channel 5 TX   [  10] = user_m2s_tdata       [ 209]
+  Channel 5 TX   [  11] = user_m2s_tdata       [ 210]
+  Channel 5 TX   [  12] = user_m2s_tdata       [ 211]
+  Channel 5 TX   [  13] = user_m2s_tdata       [ 212]
+  Channel 5 TX   [  14] = user_m2s_tdata       [ 213]
+  Channel 5 TX   [  15] = user_m2s_tdata       [ 214]
+  Channel 5 TX   [  16] = user_m2s_tdata       [ 215]
+  Channel 5 TX   [  17] = user_m2s_tdata       [ 216]
+  Channel 5 TX   [  18] = user_m2s_tdata       [ 217]
+  Channel 5 TX   [  19] = user_m2s_tdata       [ 218]
+  Channel 5 TX   [  20] = user_m2s_tdata       [ 219]
+  Channel 5 TX   [  21] = user_m2s_tdata       [ 220]
+  Channel 5 TX   [  22] = user_m2s_tdata       [ 221]
+  Channel 5 TX   [  23] = user_m2s_tdata       [ 222]
+  Channel 5 TX   [  24] = user_m2s_tdata       [ 223]
+  Channel 5 TX   [  25] = user_m2s_tdata       [ 224]
+  Channel 5 TX   [  26] = user_m2s_tdata       [ 225]
+  Channel 5 TX   [  27] = user_m2s_tdata       [ 226]
+  Channel 5 TX   [  28] = user_m2s_tdata       [ 227]
+  Channel 5 TX   [  29] = user_m2s_tdata       [ 228]
+  Channel 5 TX   [  30] = user_m2s_tdata       [ 229]
+  Channel 5 TX   [  31] = user_m2s_tdata       [ 230]
+  Channel 5 TX   [  32] = user_m2s_tdata       [ 231]
+  Channel 5 TX   [  33] = user_m2s_tdata       [ 232]
+  Channel 5 TX   [  34] = user_m2s_tdata       [ 233]
+  Channel 5 TX   [  35] = user_m2s_tdata       [ 234]
+  Channel 5 TX   [  36] = user_m2s_tdata       [ 235]
+  Channel 5 TX   [  37] = user_m2s_tdata       [ 236]
+  Channel 5 TX   [  38] = user_m2s_tdata       [ 237]
+  Channel 5 TX   [  39] = user_m2s_tdata       [ 238] // RECOVERED_MARKER [0]
+  Channel 6 TX   [   0] = user_m2s_tdata       [ 239]
+  Channel 6 TX   [   1] = user_m2s_tdata       [ 240] // RECOVERED_STROBE
+  Channel 6 TX   [   2] = user_m2s_tdata       [ 241]
+  Channel 6 TX   [   3] = user_m2s_tdata       [ 242]
+  Channel 6 TX   [   4] = user_m2s_tdata       [ 243]
+  Channel 6 TX   [   5] = user_m2s_tdata       [ 244]
+  Channel 6 TX   [   6] = user_m2s_tdata       [ 245]
+  Channel 6 TX   [   7] = user_m2s_tdata       [ 246]
+  Channel 6 TX   [   8] = user_m2s_tdata       [ 247]
+  Channel 6 TX   [   9] = user_m2s_tdata       [ 248]
+  Channel 6 TX   [  10] = user_m2s_tdata       [ 249]
+  Channel 6 TX   [  11] = user_m2s_tdata       [ 250]
+  Channel 6 TX   [  12] = user_m2s_tdata       [ 251]
+  Channel 6 TX   [  13] = user_m2s_tdata       [ 252]
+  Channel 6 TX   [  14] = user_m2s_tdata       [ 253]
+  Channel 6 TX   [  15] = user_m2s_tdata       [ 254]
+  Channel 6 TX   [  16] = user_m2s_tdata       [ 255]
+  Channel 6 TX   [  17] = tx_ST_S2M_credit_r0 
+  Channel 6 TX   [  18] = 1'b0                
+  Channel 6 TX   [  19] = 1'b0                
+  Channel 6 TX   [  20] = 1'b0                
+  Channel 6 TX   [  21] = 1'b0                
+  Channel 6 TX   [  22] = 1'b0                
+  Channel 6 TX   [  23] = 1'b0                
+  Channel 6 TX   [  24] = 1'b0                
+  Channel 6 TX   [  25] = 1'b0                
+  Channel 6 TX   [  26] = 1'b0                
+  Channel 6 TX   [  27] = 1'b0                
+  Channel 6 TX   [  28] = 1'b0                
+  Channel 6 TX   [  29] = 1'b0                
+  Channel 6 TX   [  30] = 1'b0                
+  Channel 6 TX   [  31] = 1'b0                
+  Channel 6 TX   [  32] = 1'b0                
+  Channel 6 TX   [  33] = 1'b0                
+  Channel 6 TX   [  34] = 1'b0                
+  Channel 6 TX   [  35] = 1'b0                
+  Channel 6 TX   [  36] = 1'b0                
+  Channel 6 TX   [  37] = 1'b0                
+  Channel 6 TX   [  38] = 1'b0                
+  Channel 6 TX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [   0] = rx_ST_M2S_credit_r0 
+  Channel 0 RX   [   1] = rx_ST_S2M_pushbit_r0 // RECOVERED_STROBE
+  Channel 0 RX   [   2] = user_s2m_tdata       [   0]
+  Channel 0 RX   [   3] = user_s2m_tdata       [   1]
+  Channel 0 RX   [   4] = user_s2m_tdata       [   2]
+  Channel 0 RX   [   5] = user_s2m_tdata       [   3]
+  Channel 0 RX   [   6] = user_s2m_tdata       [   4]
+  Channel 0 RX   [   7] = user_s2m_tdata       [   5]
+  Channel 0 RX   [   8] = user_s2m_tdata       [   6]
+  Channel 0 RX   [   9] = user_s2m_tdata       [   7]
+  Channel 0 RX   [  10] = user_s2m_tdata       [   8]
+  Channel 0 RX   [  11] = user_s2m_tdata       [   9]
+  Channel 0 RX   [  12] = user_s2m_tdata       [  10]
+  Channel 0 RX   [  13] = user_s2m_tdata       [  11]
+  Channel 0 RX   [  14] = user_s2m_tdata       [  12]
+  Channel 0 RX   [  15] = user_s2m_tdata       [  13]
+  Channel 0 RX   [  16] = user_s2m_tdata       [  14]
+  Channel 0 RX   [  17] = user_s2m_tdata       [  15]
+  Channel 0 RX   [  18] = user_s2m_tdata       [  16]
+  Channel 0 RX   [  19] = user_s2m_tdata       [  17]
+  Channel 0 RX   [  20] = user_s2m_tdata       [  18]
+  Channel 0 RX   [  21] = user_s2m_tdata       [  19]
+  Channel 0 RX   [  22] = user_s2m_tdata       [  20]
+  Channel 0 RX   [  23] = user_s2m_tdata       [  21]
+  Channel 0 RX   [  24] = user_s2m_tdata       [  22]
+  Channel 0 RX   [  25] = user_s2m_tdata       [  23]
+  Channel 0 RX   [  26] = user_s2m_tdata       [  24]
+  Channel 0 RX   [  27] = user_s2m_tdata       [  25]
+  Channel 0 RX   [  28] = user_s2m_tdata       [  26]
+  Channel 0 RX   [  29] = user_s2m_tdata       [  27]
+  Channel 0 RX   [  30] = user_s2m_tdata       [  28]
+  Channel 0 RX   [  31] = user_s2m_tdata       [  29]
+  Channel 0 RX   [  32] = user_s2m_tdata       [  30]
+  Channel 0 RX   [  33] = user_s2m_tdata       [  31]
+  Channel 0 RX   [  34] = user_s2m_tdata       [  32]
+  Channel 0 RX   [  35] = user_s2m_tdata       [  33]
+  Channel 0 RX   [  36] = user_s2m_tdata       [  34]
+  Channel 0 RX   [  37] = user_s2m_tdata       [  35]
+  Channel 0 RX   [  38] = user_s2m_tdata       [  36]
+  Channel 0 RX   [  39] = user_s2m_tdata       [  37] // RECOVERED_MARKER [0]
+  Channel 1 RX   [   0] = user_s2m_tdata       [  38]
+  Channel 1 RX   [   1] = user_s2m_tdata       [  39] // RECOVERED_STROBE
+  Channel 1 RX   [   2] = user_s2m_tdata       [  40]
+  Channel 1 RX   [   3] = user_s2m_tdata       [  41]
+  Channel 1 RX   [   4] = user_s2m_tdata       [  42]
+  Channel 1 RX   [   5] = user_s2m_tdata       [  43]
+  Channel 1 RX   [   6] = user_s2m_tdata       [  44]
+  Channel 1 RX   [   7] = user_s2m_tdata       [  45]
+  Channel 1 RX   [   8] = user_s2m_tdata       [  46]
+  Channel 1 RX   [   9] = user_s2m_tdata       [  47]
+  Channel 1 RX   [  10] = user_s2m_tdata       [  48]
+  Channel 1 RX   [  11] = user_s2m_tdata       [  49]
+  Channel 1 RX   [  12] = user_s2m_tdata       [  50]
+  Channel 1 RX   [  13] = user_s2m_tdata       [  51]
+  Channel 1 RX   [  14] = user_s2m_tdata       [  52]
+  Channel 1 RX   [  15] = user_s2m_tdata       [  53]
+  Channel 1 RX   [  16] = user_s2m_tdata       [  54]
+  Channel 1 RX   [  17] = user_s2m_tdata       [  55]
+  Channel 1 RX   [  18] = user_s2m_tdata       [  56]
+  Channel 1 RX   [  19] = user_s2m_tdata       [  57]
+  Channel 1 RX   [  20] = user_s2m_tdata       [  58]
+  Channel 1 RX   [  21] = user_s2m_tdata       [  59]
+  Channel 1 RX   [  22] = user_s2m_tdata       [  60]
+  Channel 1 RX   [  23] = user_s2m_tdata       [  61]
+  Channel 1 RX   [  24] = user_s2m_tdata       [  62]
+  Channel 1 RX   [  25] = user_s2m_tdata       [  63]
+  Channel 1 RX   [  26] = user_s2m_tdata       [  64]
+  Channel 1 RX   [  27] = user_s2m_tdata       [  65]
+  Channel 1 RX   [  28] = user_s2m_tdata       [  66]
+  Channel 1 RX   [  29] = user_s2m_tdata       [  67]
+  Channel 1 RX   [  30] = user_s2m_tdata       [  68]
+  Channel 1 RX   [  31] = user_s2m_tdata       [  69]
+  Channel 1 RX   [  32] = user_s2m_tdata       [  70]
+  Channel 1 RX   [  33] = user_s2m_tdata       [  71]
+  Channel 1 RX   [  34] = user_s2m_tdata       [  72]
+  Channel 1 RX   [  35] = user_s2m_tdata       [  73]
+  Channel 1 RX   [  36] = user_s2m_tdata       [  74]
+  Channel 1 RX   [  37] = user_s2m_tdata       [  75]
+  Channel 1 RX   [  38] = user_s2m_tdata       [  76]
+  Channel 1 RX   [  39] = user_s2m_tdata       [  77] // RECOVERED_MARKER [0]
+  Channel 2 RX   [   0] = user_s2m_tdata       [  78]
+  Channel 2 RX   [   1] = user_s2m_tdata       [  79] // RECOVERED_STROBE
+  Channel 2 RX   [   2] = user_s2m_tdata       [  80]
+  Channel 2 RX   [   3] = user_s2m_tdata       [  81]
+  Channel 2 RX   [   4] = user_s2m_tdata       [  82]
+  Channel 2 RX   [   5] = user_s2m_tdata       [  83]
+  Channel 2 RX   [   6] = user_s2m_tdata       [  84]
+  Channel 2 RX   [   7] = user_s2m_tdata       [  85]
+  Channel 2 RX   [   8] = user_s2m_tdata       [  86]
+  Channel 2 RX   [   9] = user_s2m_tdata       [  87]
+  Channel 2 RX   [  10] = user_s2m_tdata       [  88]
+  Channel 2 RX   [  11] = user_s2m_tdata       [  89]
+  Channel 2 RX   [  12] = user_s2m_tdata       [  90]
+  Channel 2 RX   [  13] = user_s2m_tdata       [  91]
+  Channel 2 RX   [  14] = user_s2m_tdata       [  92]
+  Channel 2 RX   [  15] = user_s2m_tdata       [  93]
+  Channel 2 RX   [  16] = user_s2m_tdata       [  94]
+  Channel 2 RX   [  17] = user_s2m_tdata       [  95]
+  Channel 2 RX   [  18] = user_s2m_tdata       [  96]
+  Channel 2 RX   [  19] = user_s2m_tdata       [  97]
+  Channel 2 RX   [  20] = user_s2m_tdata       [  98]
+  Channel 2 RX   [  21] = user_s2m_tdata       [  99]
+  Channel 2 RX   [  22] = user_s2m_tdata       [ 100]
+  Channel 2 RX   [  23] = user_s2m_tdata       [ 101]
+  Channel 2 RX   [  24] = user_s2m_tdata       [ 102]
+  Channel 2 RX   [  25] = user_s2m_tdata       [ 103]
+  Channel 2 RX   [  26] = user_s2m_tdata       [ 104]
+  Channel 2 RX   [  27] = user_s2m_tdata       [ 105]
+  Channel 2 RX   [  28] = user_s2m_tdata       [ 106]
+  Channel 2 RX   [  29] = user_s2m_tdata       [ 107]
+  Channel 2 RX   [  30] = user_s2m_tdata       [ 108]
+  Channel 2 RX   [  31] = user_s2m_tdata       [ 109]
+  Channel 2 RX   [  32] = user_s2m_tdata       [ 110]
+  Channel 2 RX   [  33] = user_s2m_tdata       [ 111]
+  Channel 2 RX   [  34] = user_s2m_tdata       [ 112]
+  Channel 2 RX   [  35] = user_s2m_tdata       [ 113]
+  Channel 2 RX   [  36] = user_s2m_tdata       [ 114]
+  Channel 2 RX   [  37] = user_s2m_tdata       [ 115]
+  Channel 2 RX   [  38] = user_s2m_tdata       [ 116]
+  Channel 2 RX   [  39] = user_s2m_tdata       [ 117] // RECOVERED_MARKER [0]
+  Channel 3 RX   [   0] = user_s2m_tdata       [ 118]
+  Channel 3 RX   [   1] = user_s2m_tdata       [ 119] // RECOVERED_STROBE
+  Channel 3 RX   [   2] = user_s2m_tdata       [ 120]
+  Channel 3 RX   [   3] = user_s2m_tdata       [ 121]
+  Channel 3 RX   [   4] = user_s2m_tdata       [ 122]
+  Channel 3 RX   [   5] = user_s2m_tdata       [ 123]
+  Channel 3 RX   [   6] = user_s2m_tdata       [ 124]
+  Channel 3 RX   [   7] = user_s2m_tdata       [ 125]
+  Channel 3 RX   [   8] = user_s2m_tdata       [ 126]
+  Channel 3 RX   [   9] = user_s2m_tdata       [ 127]
+  Channel 3 RX   [  10] = user_s2m_tdata       [ 128]
+  Channel 3 RX   [  11] = user_s2m_tdata       [ 129]
+  Channel 3 RX   [  12] = user_s2m_tdata       [ 130]
+  Channel 3 RX   [  13] = user_s2m_tdata       [ 131]
+  Channel 3 RX   [  14] = user_s2m_tdata       [ 132]
+  Channel 3 RX   [  15] = user_s2m_tdata       [ 133]
+  Channel 3 RX   [  16] = user_s2m_tdata       [ 134]
+  Channel 3 RX   [  17] = user_s2m_tdata       [ 135]
+  Channel 3 RX   [  18] = user_s2m_tdata       [ 136]
+  Channel 3 RX   [  19] = user_s2m_tdata       [ 137]
+  Channel 3 RX   [  20] = user_s2m_tdata       [ 138]
+  Channel 3 RX   [  21] = user_s2m_tdata       [ 139]
+  Channel 3 RX   [  22] = user_s2m_tdata       [ 140]
+  Channel 3 RX   [  23] = user_s2m_tdata       [ 141]
+  Channel 3 RX   [  24] = user_s2m_tdata       [ 142]
+  Channel 3 RX   [  25] = user_s2m_tdata       [ 143]
+  Channel 3 RX   [  26] = user_s2m_tdata       [ 144]
+  Channel 3 RX   [  27] = user_s2m_tdata       [ 145]
+  Channel 3 RX   [  28] = user_s2m_tdata       [ 146]
+  Channel 3 RX   [  29] = user_s2m_tdata       [ 147]
+  Channel 3 RX   [  30] = user_s2m_tdata       [ 148]
+  Channel 3 RX   [  31] = user_s2m_tdata       [ 149]
+  Channel 3 RX   [  32] = user_s2m_tdata       [ 150]
+  Channel 3 RX   [  33] = user_s2m_tdata       [ 151]
+  Channel 3 RX   [  34] = user_s2m_tdata       [ 152]
+  Channel 3 RX   [  35] = user_s2m_tdata       [ 153]
+  Channel 3 RX   [  36] = user_s2m_tdata       [ 154]
+  Channel 3 RX   [  37] = user_s2m_tdata       [ 155]
+  Channel 3 RX   [  38] = user_s2m_tdata       [ 156]
+  Channel 3 RX   [  39] = user_s2m_tdata       [ 157] // RECOVERED_MARKER [0]
+  Channel 4 RX   [   0] = user_s2m_tdata       [ 158]
+  Channel 4 RX   [   1] = user_s2m_tdata       [ 159] // RECOVERED_STROBE
+  Channel 4 RX   [   2] = user_s2m_tdata       [ 160]
+  Channel 4 RX   [   3] = user_s2m_tdata       [ 161]
+  Channel 4 RX   [   4] = user_s2m_tdata       [ 162]
+  Channel 4 RX   [   5] = user_s2m_tdata       [ 163]
+  Channel 4 RX   [   6] = user_s2m_tdata       [ 164]
+  Channel 4 RX   [   7] = user_s2m_tdata       [ 165]
+  Channel 4 RX   [   8] = user_s2m_tdata       [ 166]
+  Channel 4 RX   [   9] = user_s2m_tdata       [ 167]
+  Channel 4 RX   [  10] = user_s2m_tdata       [ 168]
+  Channel 4 RX   [  11] = user_s2m_tdata       [ 169]
+  Channel 4 RX   [  12] = user_s2m_tdata       [ 170]
+  Channel 4 RX   [  13] = user_s2m_tdata       [ 171]
+  Channel 4 RX   [  14] = user_s2m_tdata       [ 172]
+  Channel 4 RX   [  15] = user_s2m_tdata       [ 173]
+  Channel 4 RX   [  16] = user_s2m_tdata       [ 174]
+  Channel 4 RX   [  17] = user_s2m_tdata       [ 175]
+  Channel 4 RX   [  18] = user_s2m_tdata       [ 176]
+  Channel 4 RX   [  19] = user_s2m_tdata       [ 177]
+  Channel 4 RX   [  20] = user_s2m_tdata       [ 178]
+  Channel 4 RX   [  21] = user_s2m_tdata       [ 179]
+  Channel 4 RX   [  22] = user_s2m_tdata       [ 180]
+  Channel 4 RX   [  23] = user_s2m_tdata       [ 181]
+  Channel 4 RX   [  24] = user_s2m_tdata       [ 182]
+  Channel 4 RX   [  25] = user_s2m_tdata       [ 183]
+  Channel 4 RX   [  26] = user_s2m_tdata       [ 184]
+  Channel 4 RX   [  27] = user_s2m_tdata       [ 185]
+  Channel 4 RX   [  28] = user_s2m_tdata       [ 186]
+  Channel 4 RX   [  29] = user_s2m_tdata       [ 187]
+  Channel 4 RX   [  30] = user_s2m_tdata       [ 188]
+  Channel 4 RX   [  31] = user_s2m_tdata       [ 189]
+  Channel 4 RX   [  32] = user_s2m_tdata       [ 190]
+  Channel 4 RX   [  33] = user_s2m_tdata       [ 191]
+  Channel 4 RX   [  34] = user_s2m_tdata       [ 192]
+  Channel 4 RX   [  35] = user_s2m_tdata       [ 193]
+  Channel 4 RX   [  36] = user_s2m_tdata       [ 194]
+  Channel 4 RX   [  37] = user_s2m_tdata       [ 195]
+  Channel 4 RX   [  38] = user_s2m_tdata       [ 196]
+  Channel 4 RX   [  39] = user_s2m_tdata       [ 197] // RECOVERED_MARKER [0]
+  Channel 5 RX   [   0] = user_s2m_tdata       [ 198]
+  Channel 5 RX   [   1] = user_s2m_tdata       [ 199] // RECOVERED_STROBE
+  Channel 5 RX   [   2] = user_s2m_tdata       [ 200]
+  Channel 5 RX   [   3] = user_s2m_tdata       [ 201]
+  Channel 5 RX   [   4] = user_s2m_tdata       [ 202]
+  Channel 5 RX   [   5] = user_s2m_tdata       [ 203]
+  Channel 5 RX   [   6] = user_s2m_tdata       [ 204]
+  Channel 5 RX   [   7] = user_s2m_tdata       [ 205]
+  Channel 5 RX   [   8] = user_s2m_tdata       [ 206]
+  Channel 5 RX   [   9] = user_s2m_tdata       [ 207]
+  Channel 5 RX   [  10] = user_s2m_tdata       [ 208]
+  Channel 5 RX   [  11] = user_s2m_tdata       [ 209]
+  Channel 5 RX   [  12] = user_s2m_tdata       [ 210]
+  Channel 5 RX   [  13] = user_s2m_tdata       [ 211]
+  Channel 5 RX   [  14] = user_s2m_tdata       [ 212]
+  Channel 5 RX   [  15] = user_s2m_tdata       [ 213]
+  Channel 5 RX   [  16] = user_s2m_tdata       [ 214]
+  Channel 5 RX   [  17] = user_s2m_tdata       [ 215]
+  Channel 5 RX   [  18] = user_s2m_tdata       [ 216]
+  Channel 5 RX   [  19] = user_s2m_tdata       [ 217]
+  Channel 5 RX   [  20] = user_s2m_tdata       [ 218]
+  Channel 5 RX   [  21] = user_s2m_tdata       [ 219]
+  Channel 5 RX   [  22] = user_s2m_tdata       [ 220]
+  Channel 5 RX   [  23] = user_s2m_tdata       [ 221]
+  Channel 5 RX   [  24] = user_s2m_tdata       [ 222]
+  Channel 5 RX   [  25] = user_s2m_tdata       [ 223]
+  Channel 5 RX   [  26] = user_s2m_tdata       [ 224]
+  Channel 5 RX   [  27] = user_s2m_tdata       [ 225]
+  Channel 5 RX   [  28] = user_s2m_tdata       [ 226]
+  Channel 5 RX   [  29] = user_s2m_tdata       [ 227]
+  Channel 5 RX   [  30] = user_s2m_tdata       [ 228]
+  Channel 5 RX   [  31] = user_s2m_tdata       [ 229]
+  Channel 5 RX   [  32] = user_s2m_tdata       [ 230]
+  Channel 5 RX   [  33] = user_s2m_tdata       [ 231]
+  Channel 5 RX   [  34] = user_s2m_tdata       [ 232]
+  Channel 5 RX   [  35] = user_s2m_tdata       [ 233]
+  Channel 5 RX   [  36] = user_s2m_tdata       [ 234]
+  Channel 5 RX   [  37] = user_s2m_tdata       [ 235]
+  Channel 5 RX   [  38] = user_s2m_tdata       [ 236]
+  Channel 5 RX   [  39] = user_s2m_tdata       [ 237] // RECOVERED_MARKER [0]
+  Channel 6 RX   [   0] = user_s2m_tdata       [ 238]
+  Channel 6 RX   [   1] = user_s2m_tdata       [ 239] // RECOVERED_STROBE
+  Channel 6 RX   [   2] = user_s2m_tdata       [ 240]
+  Channel 6 RX   [   3] = user_s2m_tdata       [ 241]
+  Channel 6 RX   [   4] = user_s2m_tdata       [ 242]
+  Channel 6 RX   [   5] = user_s2m_tdata       [ 243]
+  Channel 6 RX   [   6] = user_s2m_tdata       [ 244]
+  Channel 6 RX   [   7] = user_s2m_tdata       [ 245]
+  Channel 6 RX   [   8] = user_s2m_tdata       [ 246]
+  Channel 6 RX   [   9] = user_s2m_tdata       [ 247]
+  Channel 6 RX   [  10] = user_s2m_tdata       [ 248]
+  Channel 6 RX   [  11] = user_s2m_tdata       [ 249]
+  Channel 6 RX   [  12] = user_s2m_tdata       [ 250]
+  Channel 6 RX   [  13] = user_s2m_tdata       [ 251]
+  Channel 6 RX   [  14] = user_s2m_tdata       [ 252]
+  Channel 6 RX   [  15] = user_s2m_tdata       [ 253]
+  Channel 6 RX   [  16] = user_s2m_tdata       [ 254]
+  Channel 6 RX   [  17] = user_s2m_tdata       [ 255]
+  Channel 6 RX   [  18] = 1'b0                
+  Channel 6 RX   [  19] = 1'b0                
+  Channel 6 RX   [  20] = 1'b0                
+  Channel 6 RX   [  21] = 1'b0                
+  Channel 6 RX   [  22] = 1'b0                
+  Channel 6 RX   [  23] = 1'b0                
+  Channel 6 RX   [  24] = 1'b0                
+  Channel 6 RX   [  25] = 1'b0                
+  Channel 6 RX   [  26] = 1'b0                
+  Channel 6 RX   [  27] = 1'b0                
+  Channel 6 RX   [  28] = 1'b0                
+  Channel 6 RX   [  29] = 1'b0                
+  Channel 6 RX   [  30] = 1'b0                
+  Channel 6 RX   [  31] = 1'b0                
+  Channel 6 RX   [  32] = 1'b0                
+  Channel 6 RX   [  33] = 1'b0                
+  Channel 6 RX   [  34] = 1'b0                
+  Channel 6 RX   [  35] = 1'b0                
+  Channel 6 RX   [  36] = 1'b0                
+  Channel 6 RX   [  37] = 1'b0                
+  Channel 6 RX   [  38] = 1'b0                
+  Channel 6 RX   [  39] = 1'b0                 // RECOVERED_MARKER [0]
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////

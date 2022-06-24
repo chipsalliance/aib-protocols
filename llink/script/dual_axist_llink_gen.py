@@ -1215,7 +1215,7 @@ def calculate_bit_loc_repstruct(this_is_tx, configuration):
                 for rstruct_iteration in list (range (0, configuration['RSTRUCT_MULTIPLY_FACTOR'])):
                     global_struct.g_concat_code_vector_master_tx.append ( sprint_verilog_logic_line (gen_llink_concat_pushbit (llink['NAME'],otherdir)+"_r"+str(rstruct_iteration)) )
                     global_struct.g_concat_code_vector_slave_tx.append  ( sprint_verilog_logic_line (gen_llink_concat_pushbit (llink['NAME'],localdir)+"_r"+str(rstruct_iteration)) )
-		global_struct.g_concat_code_vector_master_tx.append ( "\n" )
+                global_struct.g_concat_code_vector_master_tx.append ( "\n" )
                 global_struct.g_concat_code_vector_slave_tx.append  ( "\n" )
         else:
             if llink['HASREADY']:
@@ -1508,8 +1508,8 @@ def make_name_file(configuration):
                     localdir = gen_direction(name_file_name, sig['DIR'])
                     if sig['TYPE'] == "rstruct_enable" or configuration['GEN2_AS_GEN1_EN'] == True:
                         print_verilog_io_line(file_name, localdir, sig['NAME'], index=gen_index_msb(sig['SIGWID'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig['LSB'], sysv=False))
-                    elif configuration['REPLICATED_STRUCT']:
-                        print_verilog_io_line(file_name, localdir, sig['NAME'], gen_index_msb(llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig['LSB'], sysv=False))
+                    #elif configuration['REPLICATED_STRUCT']:
+                    #    print_verilog_io_line(file_name, localdir, sig['NAME'], gen_index_msb(llink['WIDTH_RX_RSTRUCT'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig['LSB'], sysv=False))
                     else:
                         print_verilog_io_line(file_name, localdir, sig['NAME'], index=gen_index_msb(sig['SIGWID'] * configuration['RSTRUCT_MULTIPLY_FACTOR'],sig['LSB'], sysv=False))
 

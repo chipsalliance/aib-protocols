@@ -1,0 +1,230 @@
+////////////////////////////////////////////////////////////
+//
+//        (C) Copyright 2021 Eximius Design
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// Data and Channel Size
+  Logic Link Data Info
+    LogicLink MAIN     ST_M2S   TX   74  RX    1
+    LogicLink MAIN     ST_S2M   TX    1  RX   74
+                                -------  -------
+    Total     MAIN              TX   75  RX   75
+
+  Channel Info
+    MAIN: Each channel is Gen2Only PHY running at Full Rate with 80 bits
+    MAIN: 1x channels
+    MAIN: Total AIB bits is 80 bits
+
+       TX: DBI enabled adds 4 overhead bits per channel
+       TX: Strobe is Recoverable or non-existent
+       TX: Marker is Recoverable or non-existent
+       TX: Total overhead bits across 1 channels is 4
+       TX: Total data bits available 76
+
+       RX: DBI enabled adds 4 overhead bits per channel
+       RX: Strobe is Recoverable or non-existent
+       RX: Marker is Recoverable or non-existent
+       RX: Total overhead bits across 1 channels is 4
+       RX: Total data bits available 76
+
+  MAIN TX needs   75 bits of data and has   76 bits available across 1x Gen2Only Full Rate channels so    1 spare bits
+  MAIN RX needs   75 bits of data and has   76 bits available across 1x Gen2Only Full Rate channels so    1 spare bits
+
+// Data and Channel Size
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to Logic Link Data Mapping
+// This AXI Data FIFO packing
+  assign tx_ST_M2S_data       [   0 +:   8] = user_m2s_tkeep       [   0 +:   8]
+  assign tx_ST_M2S_data       [   8 +:  64] = user_m2s_tdata       [   0 +:  64]
+  assign tx_ST_M2S_data       [  72 +:   1] = user_m2s_tlast                    
+
+  assign rx_ST_S2M_data       [   0 +:   8] = user_s2m_tkeep       [   0 +:   8]
+  assign rx_ST_S2M_data       [   8 +:  64] = user_s2m_tdata       [   0 +:  64]
+  assign rx_ST_S2M_data       [  72 +:   1] = user_s2m_tlast                    
+// AXI to Logic Link Data Mapping
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Transmit
+  Channel 0 TX   [   0] = tx_ST_M2S_pushbit   
+  Channel 0 TX   [   1] = user_m2s_tkeep       [   0]
+  Channel 0 TX   [   2] = user_m2s_tkeep       [   1]
+  Channel 0 TX   [   3] = user_m2s_tkeep       [   2]
+  Channel 0 TX   [   4] = user_m2s_tkeep       [   3] // RECOVERED_MARKER [0]
+  Channel 0 TX   [   5] = user_m2s_tkeep       [   4]
+  Channel 0 TX   [   6] = user_m2s_tkeep       [   5]
+  Channel 0 TX   [   7] = user_m2s_tkeep       [   6]
+  Channel 0 TX   [   8] = user_m2s_tkeep       [   7]
+  Channel 0 TX   [   9] = user_m2s_tdata       [   0]
+  Channel 0 TX   [  10] = user_m2s_tdata       [   1]
+  Channel 0 TX   [  11] = user_m2s_tdata       [   2]
+  Channel 0 TX   [  12] = user_m2s_tdata       [   3]
+  Channel 0 TX   [  13] = user_m2s_tdata       [   4]
+  Channel 0 TX   [  14] = user_m2s_tdata       [   5]
+  Channel 0 TX   [  15] = user_m2s_tdata       [   6]
+  Channel 0 TX   [  16] = user_m2s_tdata       [   7]
+  Channel 0 TX   [  17] = user_m2s_tdata       [   8]
+  Channel 0 TX   [  18] = user_m2s_tdata       [   9]
+  Channel 0 TX   [  19] = user_m2s_tdata       [  10]
+  Channel 0 TX   [  20] = user_m2s_tdata       [  11]
+  Channel 0 TX   [  21] = user_m2s_tdata       [  12]
+  Channel 0 TX   [  22] = user_m2s_tdata       [  13]
+  Channel 0 TX   [  23] = user_m2s_tdata       [  14]
+  Channel 0 TX   [  24] = user_m2s_tdata       [  15]
+  Channel 0 TX   [  25] = user_m2s_tdata       [  16]
+  Channel 0 TX   [  26] = user_m2s_tdata       [  17]
+  Channel 0 TX   [  27] = user_m2s_tdata       [  18]
+  Channel 0 TX   [  28] = user_m2s_tdata       [  19]
+  Channel 0 TX   [  29] = user_m2s_tdata       [  20]
+  Channel 0 TX   [  30] = user_m2s_tdata       [  21]
+  Channel 0 TX   [  31] = user_m2s_tdata       [  22]
+  Channel 0 TX   [  32] = user_m2s_tdata       [  23]
+  Channel 0 TX   [  33] = user_m2s_tdata       [  24]
+  Channel 0 TX   [  34] = user_m2s_tdata       [  25]
+  Channel 0 TX   [  35] = user_m2s_tdata       [  26]
+  Channel 0 TX   [  36] = user_m2s_tdata       [  27]
+  Channel 0 TX   [  37] = user_m2s_tdata       [  28]
+  Channel 0 TX   [  38] = 1'b0 // DBI
+  Channel 0 TX   [  39] = 1'b0 // DBI
+  Channel 0 TX   [  40] = user_m2s_tdata       [  29]
+  Channel 0 TX   [  41] = user_m2s_tdata       [  30]
+  Channel 0 TX   [  42] = user_m2s_tdata       [  31]
+  Channel 0 TX   [  43] = user_m2s_tdata       [  32]
+  Channel 0 TX   [  44] = user_m2s_tdata       [  33]
+  Channel 0 TX   [  45] = user_m2s_tdata       [  34]
+  Channel 0 TX   [  46] = user_m2s_tdata       [  35]
+  Channel 0 TX   [  47] = user_m2s_tdata       [  36]
+  Channel 0 TX   [  48] = user_m2s_tdata       [  37]
+  Channel 0 TX   [  49] = user_m2s_tdata       [  38]
+  Channel 0 TX   [  50] = user_m2s_tdata       [  39]
+  Channel 0 TX   [  51] = user_m2s_tdata       [  40]
+  Channel 0 TX   [  52] = user_m2s_tdata       [  41]
+  Channel 0 TX   [  53] = user_m2s_tdata       [  42]
+  Channel 0 TX   [  54] = user_m2s_tdata       [  43]
+  Channel 0 TX   [  55] = user_m2s_tdata       [  44]
+  Channel 0 TX   [  56] = user_m2s_tdata       [  45]
+  Channel 0 TX   [  57] = user_m2s_tdata       [  46]
+  Channel 0 TX   [  58] = user_m2s_tdata       [  47]
+  Channel 0 TX   [  59] = user_m2s_tdata       [  48]
+  Channel 0 TX   [  60] = user_m2s_tdata       [  49]
+  Channel 0 TX   [  61] = user_m2s_tdata       [  50]
+  Channel 0 TX   [  62] = user_m2s_tdata       [  51]
+  Channel 0 TX   [  63] = user_m2s_tdata       [  52]
+  Channel 0 TX   [  64] = user_m2s_tdata       [  53]
+  Channel 0 TX   [  65] = user_m2s_tdata       [  54]
+  Channel 0 TX   [  66] = user_m2s_tdata       [  55]
+  Channel 0 TX   [  67] = user_m2s_tdata       [  56]
+  Channel 0 TX   [  68] = user_m2s_tdata       [  57]
+  Channel 0 TX   [  69] = user_m2s_tdata       [  58]
+  Channel 0 TX   [  70] = user_m2s_tdata       [  59]
+  Channel 0 TX   [  71] = user_m2s_tdata       [  60]
+  Channel 0 TX   [  72] = user_m2s_tdata       [  61]
+  Channel 0 TX   [  73] = user_m2s_tdata       [  62]
+  Channel 0 TX   [  74] = user_m2s_tdata       [  63]
+  Channel 0 TX   [  75] = user_m2s_tlast      
+  Channel 0 TX   [  76] = tx_ST_S2M_credit     // RECOVERED_STROBE
+  Channel 0 TX   [  77] = 1'b0                
+  Channel 0 TX   [  78] = 1'b0 // DBI
+  Channel 0 TX   [  79] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Transmit
+//////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////
+// AXI to PHY IF Mapping AXI Manager Receive
+  Channel 0 RX   [   0] = rx_ST_M2S_credit    
+  Channel 0 RX   [   1] = rx_ST_S2M_pushbit   
+  Channel 0 RX   [   2] = user_s2m_tkeep       [   0]
+  Channel 0 RX   [   3] = user_s2m_tkeep       [   1]
+  Channel 0 RX   [   4] = user_s2m_tkeep       [   2] // RECOVERED_MARKER [0]
+  Channel 0 RX   [   5] = user_s2m_tkeep       [   3]
+  Channel 0 RX   [   6] = user_s2m_tkeep       [   4]
+  Channel 0 RX   [   7] = user_s2m_tkeep       [   5]
+  Channel 0 RX   [   8] = user_s2m_tkeep       [   6]
+  Channel 0 RX   [   9] = user_s2m_tkeep       [   7]
+  Channel 0 RX   [  10] = user_s2m_tdata       [   0]
+  Channel 0 RX   [  11] = user_s2m_tdata       [   1]
+  Channel 0 RX   [  12] = user_s2m_tdata       [   2]
+  Channel 0 RX   [  13] = user_s2m_tdata       [   3]
+  Channel 0 RX   [  14] = user_s2m_tdata       [   4]
+  Channel 0 RX   [  15] = user_s2m_tdata       [   5]
+  Channel 0 RX   [  16] = user_s2m_tdata       [   6]
+  Channel 0 RX   [  17] = user_s2m_tdata       [   7]
+  Channel 0 RX   [  18] = user_s2m_tdata       [   8]
+  Channel 0 RX   [  19] = user_s2m_tdata       [   9]
+  Channel 0 RX   [  20] = user_s2m_tdata       [  10]
+  Channel 0 RX   [  21] = user_s2m_tdata       [  11]
+  Channel 0 RX   [  22] = user_s2m_tdata       [  12]
+  Channel 0 RX   [  23] = user_s2m_tdata       [  13]
+  Channel 0 RX   [  24] = user_s2m_tdata       [  14]
+  Channel 0 RX   [  25] = user_s2m_tdata       [  15]
+  Channel 0 RX   [  26] = user_s2m_tdata       [  16]
+  Channel 0 RX   [  27] = user_s2m_tdata       [  17]
+  Channel 0 RX   [  28] = user_s2m_tdata       [  18]
+  Channel 0 RX   [  29] = user_s2m_tdata       [  19]
+  Channel 0 RX   [  30] = user_s2m_tdata       [  20]
+  Channel 0 RX   [  31] = user_s2m_tdata       [  21]
+  Channel 0 RX   [  32] = user_s2m_tdata       [  22]
+  Channel 0 RX   [  33] = user_s2m_tdata       [  23]
+  Channel 0 RX   [  34] = user_s2m_tdata       [  24]
+  Channel 0 RX   [  35] = user_s2m_tdata       [  25]
+  Channel 0 RX   [  36] = user_s2m_tdata       [  26]
+  Channel 0 RX   [  37] = user_s2m_tdata       [  27]
+  Channel 0 RX   [  38] = 1'b0 // DBI
+  Channel 0 RX   [  39] = 1'b0 // DBI
+  Channel 0 RX   [  40] = user_s2m_tdata       [  28]
+  Channel 0 RX   [  41] = user_s2m_tdata       [  29]
+  Channel 0 RX   [  42] = user_s2m_tdata       [  30]
+  Channel 0 RX   [  43] = user_s2m_tdata       [  31]
+  Channel 0 RX   [  44] = user_s2m_tdata       [  32]
+  Channel 0 RX   [  45] = user_s2m_tdata       [  33]
+  Channel 0 RX   [  46] = user_s2m_tdata       [  34]
+  Channel 0 RX   [  47] = user_s2m_tdata       [  35]
+  Channel 0 RX   [  48] = user_s2m_tdata       [  36]
+  Channel 0 RX   [  49] = user_s2m_tdata       [  37]
+  Channel 0 RX   [  50] = user_s2m_tdata       [  38]
+  Channel 0 RX   [  51] = user_s2m_tdata       [  39]
+  Channel 0 RX   [  52] = user_s2m_tdata       [  40]
+  Channel 0 RX   [  53] = user_s2m_tdata       [  41]
+  Channel 0 RX   [  54] = user_s2m_tdata       [  42]
+  Channel 0 RX   [  55] = user_s2m_tdata       [  43]
+  Channel 0 RX   [  56] = user_s2m_tdata       [  44]
+  Channel 0 RX   [  57] = user_s2m_tdata       [  45]
+  Channel 0 RX   [  58] = user_s2m_tdata       [  46]
+  Channel 0 RX   [  59] = user_s2m_tdata       [  47]
+  Channel 0 RX   [  60] = user_s2m_tdata       [  48]
+  Channel 0 RX   [  61] = user_s2m_tdata       [  49]
+  Channel 0 RX   [  62] = user_s2m_tdata       [  50]
+  Channel 0 RX   [  63] = user_s2m_tdata       [  51]
+  Channel 0 RX   [  64] = user_s2m_tdata       [  52]
+  Channel 0 RX   [  65] = user_s2m_tdata       [  53]
+  Channel 0 RX   [  66] = user_s2m_tdata       [  54]
+  Channel 0 RX   [  67] = user_s2m_tdata       [  55]
+  Channel 0 RX   [  68] = user_s2m_tdata       [  56]
+  Channel 0 RX   [  69] = user_s2m_tdata       [  57]
+  Channel 0 RX   [  70] = user_s2m_tdata       [  58]
+  Channel 0 RX   [  71] = user_s2m_tdata       [  59]
+  Channel 0 RX   [  72] = user_s2m_tdata       [  60]
+  Channel 0 RX   [  73] = user_s2m_tdata       [  61]
+  Channel 0 RX   [  74] = user_s2m_tdata       [  62]
+  Channel 0 RX   [  75] = user_s2m_tdata       [  63]
+  Channel 0 RX   [  76] = user_s2m_tlast       // RECOVERED_STROBE
+  Channel 0 RX   [  77] = 1'b0                
+  Channel 0 RX   [  78] = 1'b0 // DBI
+  Channel 0 RX   [  79] = 1'b0 // DBI
+// AXI to PHY IF Mapping AXI Manager Receive
+//////////////////////////////////////////////////////////////////////
