@@ -12,31 +12,38 @@
 `timescale 1ns/1ps
 module axi_st_patgen_dual_top #(parameter LEADER_MODE = 1)(
 
-	input 										wr_clk ,
-	input 										rst_n ,
-	input 										cntuspatt_en ,
-	input 										patgen_en ,
-	input	[1:0]								patgen_sel ,
-	input 	[8:0]								patgen_cnt ,
-	output	[(LEADER_MODE* 256)-1 :0] 			patgen_dout,
-	output	[(LEADER_MODE* 40)-1 :0] 			patgen_exp_dout,
-	output 										patgen_data_wr,
-	input 										chkr_fifo_full,
-	output	reg									axist_valid,
-	input 										axist_rdy
+	input 					wr_clk ,
+	input 					rst_n ,
+	input 					cntuspatt_en ,
+	input 					patgen_en ,
+	input	[1:0]				patgen_sel ,
+	input 	[8:0]				patgen_cnt ,
+	output	[(LEADER_MODE* 256)-1 :0] 	patgen_dout,
+	output	[(LEADER_MODE* 40)-1 :0] 	patgen_exp_dout,
+	output  [255:0]				data_out_first,
+	output  				data_out_first_valid,
+	output  [255:0]				data_out_last,
+	output  				data_out_last_valid,
+	output 					patgen_data_wr,
+	input 					chkr_fifo_full,
+	output	wire				axist_valid,
+	input 					axist_rdy
 
 );
 
-parameter AXIST_NUM_CHNL  = 7;  
+	parameter AXIST_NUM_CHNL  = 7;  
 
-wire 								rand_gen_en;
-wire 								incr_gen_en;
-wire [(LEADER_MODE*40)-1 : 0]		rand_data;
-wire [(LEADER_MODE*40)-1 : 0]		incr_data;
-wire [119 : 0]						rand_seed_in;
-wire [119 : 0]						incr_seed_in;
-wire 								cntr_en;
-wire 								cntuspatt_wr_en;
+	wire 					rand_gen_en;
+	wire 					incr_gen_en;
+	wire [(LEADER_MODE*40)-1 : 0]		rand_data;
+	wire [(LEADER_MODE*40)-1 : 0]		incr_data;
+	wire [119 : 0]				rand_seed_in;
+	wire [119 : 0]				incr_seed_in;
+	wire 					cntr_en;
+	wire 					cntuspatt_wr_en;
+	wire 					fifo_rd_req;
+	wire 					fifo_empty;
+
 
 
 axist_rand_gen#(.LEADER_MODE(LEADER_MODE)) randomgen(
@@ -84,25 +91,66 @@ axi_st_wr_ctrl axi_st_ctrl(
 	
 	assign cntr_en 		= (patgen_en && (patgen_sel!=2'b11)) ? 1'b1 : 1'b0;
 	
-	reg 							start_cnt;
-	reg 							cntuspatt_wr_r1;
-	reg 							axist_rdy_r1;
-	reg 							fifo_rd_req_r1;
-	reg 							fifo_rd_req_r2;
-	reg [8:0] 						dcnr;
-	wire 							fifo_wr_en;
-	wire 							fifo_rd_req_re;
-	wire 							axist_rdy_re;
-	wire 							fifo_rd_req_re1;
+	reg 				start_cnt;
+	reg 				cntuspatt_wr_r1;
+	reg 				axist_rdy_r1;
+	reg 				fifo_rd_req_r1;
+	reg 				fifo_rd_req_r2;
+	reg [8:0] 			dcnr;
+	wire 				fifo_wr_en;
+	wire 				fifo_rd_req_re;
+	wire 				axist_rdy_re;
+	wire 				fifo_rd_req_re1;
 	wire  [(LEADER_MODE*40)-1 : 0] 	fifo_wr_data;
 	reg  [(LEADER_MODE*40)-1 : 0] 	next_din;
 	wire  [(LEADER_MODE*40)-1 : 0] 	fifo_out_data;
-	wire 							fifo_rd_req;
-	wire 							fifo_empty;
-	wire 							fifo_rd_req_fe;
-	wire [119:0] 					fixed_pattern=120'h111111222222223333333344444444;
+	wire 				fifo_rd_req_fe;
+	wire [119:0] 			fixed_pattern = 120'h111111222222223333333344444444;
+	reg  [255:0]			axist_fisrt_data;
+	reg				axist_valid_r1;
+	reg				axist_fisrt_data_valid;
+	wire 				first_data;
 	
-	always@(posedge wr_clk)
+	
+	
+	assign data_out_first 		= axist_fisrt_data;
+	assign data_out_first_valid 	= axist_fisrt_data_valid;
+	
+	assign data_out_last  		= (axist_valid == 1'b1 && axist_rdy == 1'b1 && fifo_empty ==1'b1) ? patgen_dout : 'b0;
+	assign data_out_last_valid  	= (axist_valid == 1'b1 && axist_rdy == 1'b1 && fifo_empty ==1'b1) ? 1'b1 : 'b0;
+	
+	always@(posedge wr_clk or negedge rst_n)
+	begin
+	if(!rst_n) 
+		begin
+			axist_fisrt_data	<= 'b0;
+			axist_fisrt_data_valid	<= 1'b0;
+		end 
+	else if(axist_valid &  first_data)
+		begin
+			axist_fisrt_data	<= patgen_dout;
+			axist_fisrt_data_valid	<= 1'b1;
+		end 
+	else
+		begin
+			axist_fisrt_data_valid	<= 1'b0;
+		end
+	end
+	
+	always@(posedge wr_clk or negedge rst_n)
+	begin
+	if(!rst_n) 
+		begin
+			axist_valid_r1		<= 'b0;
+		end 
+	else 
+		begin
+			axist_valid_r1		<= axist_valid;
+		end 
+	end
+	
+	assign first_data = ~axist_valid_r1 & axist_valid ;
+	always@(posedge wr_clk or negedge rst_n)
 	begin
 	if(!rst_n) 
 		begin
@@ -114,8 +162,8 @@ axi_st_wr_ctrl axi_st_ctrl(
 		end 
 	end
 	
-always@(posedge wr_clk)
-begin
+	always@(posedge wr_clk or negedge rst_n)
+	begin
 	if(!rst_n) 
 		begin
 			dcnr		<= 'b0;
@@ -125,7 +173,7 @@ begin
 		begin
 			start_cnt	<= 1'b1;
 		end 
-	else if(dcnr == patgen_cnt)
+	else if(dcnr == patgen_cnt - 1)
 		begin
 			dcnr		<= 'b0;
 			start_cnt	<= 1'b0;
@@ -134,17 +182,17 @@ begin
 		begin
 			dcnr 	<= dcnr + 1;
 		end 
-end 
+	end 
 
 	assign fifo_wr_en 		= (cntuspatt_en ) ? ((chkr_fifo_full)? 1'b0 : cntuspatt_wr_r1) : (dcnr > 0) ? 1'b1:1'b0;
-	assign patgen_data_wr 	= fifo_wr_en;
-	assign fifo_wr_data 	= 	(patgen_sel==2'b01) ? rand_data :
-								(patgen_sel==2'b10 || cntuspatt_en) ? incr_data : 
-								(patgen_sel==2'b00) ? fixed_pattern[39:0]:
-								'b0;
+	assign patgen_data_wr 		= fifo_wr_en;
+	assign fifo_wr_data 		= (patgen_sel==2'b01) ? rand_data :
+					  (patgen_sel==2'b10 || cntuspatt_en) ? incr_data : 
+					  (patgen_sel==2'b00) ? fixed_pattern[39:0]:
+					  'b0;
 	assign patgen_exp_dout[(LEADER_MODE*40)-1:0] =  fifo_wr_data[(LEADER_MODE*40)-1:0];
 
-	always @(posedge wr_clk)
+	always @(posedge wr_clk or negedge rst_n)
 		if(!rst_n)
 		begin	
 			fifo_rd_req_r1	<= 1'b0;
@@ -159,7 +207,7 @@ end
 	assign fifo_rd_req_re 	= fifo_rd_req & !fifo_rd_req_r1;
 	assign fifo_rd_req_re1 	= fifo_rd_req_r1 & !fifo_rd_req_r2;
 	
-		always @(posedge wr_clk)
+	always @(posedge wr_clk or negedge rst_n)
 		if(!rst_n)
 		begin	
 			axist_rdy_r1	<= 1'b0;
@@ -171,7 +219,7 @@ end
 		
 		assign axist_rdy_re = !axist_rdy_r1 & axist_rdy;
 		
-	always @(posedge wr_clk)
+	always @(posedge wr_clk or negedge rst_n)
 		if(!rst_n)
 			next_din	<= 'b0;
 		else if(fifo_rd_req_fe)

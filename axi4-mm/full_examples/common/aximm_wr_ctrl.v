@@ -40,7 +40,7 @@ module aximm_wr_ctrl (
 		else
 		begin
 			fifo_empty_r1	<= fifo_empty;
-		    fifo_empty_r2   <= fifo_empty_r1;
+		    	fifo_empty_r2   <= fifo_empty_r1;
 		end	
 	end 
 		assign fifo_empty_fedge = fifo_empty_r2 & ~fifo_empty_r1;
@@ -91,9 +91,9 @@ module aximm_wr_ctrl (
 			axist_valid <= 'b0;
 		end 
 		else if(axist_valid == 1'b1 && axist_rdy == 1'b0)
-        begin
-            axist_valid     <= axist_valid;
-        end
+       	 	begin
+            		axist_valid     <= axist_valid;
+        	end
 		else
 			axist_valid	<= fifo_rden;
 	end
@@ -118,6 +118,7 @@ module aximm_wr_ctrl (
 	assign rd_nxt_data = axist_valid & axist_rdy;
 
 	assign fifo_rden = ((fifo_ctrl_r2[1:0]==2'b11 || (fifo_ctrl_r2[1] & rd_nxt_data))&& fifo_empty==1'b0) ? 1'b1:1'b0;
+	// assign fifo_rden = rd_nxt_data;
 
 	
 endmodule

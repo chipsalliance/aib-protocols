@@ -9,32 +9,32 @@
 // 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-module axi_mm_csr (
+module axi_mm_csr #(parameter AXI_CHNL_NUM = 1)(
 	input 					clk,	
 	input 					rst_n,
 	
-	input	[31:0]			master_address,       // width = 32,       master.address
-    output	[31:0]			master_readdata,      // width = 32,             .readdata
-    input					master_read,          //  width = 1,             .read
-    input					master_write,         //  width = 1,             .write
-    input	[31:0]			master_writedata,     // width = 32,             .writedata
-    output					master_waitrequest,   //  width = 1,             .waitrequest
-    output					master_readdatavalid, //  width = 1,             .readdatavalid
-    output	[3:0]			master_byteenable,    //  width = 4,             .byteenable
+	input	[31:0]				master_address,       // width = 32,       master.address
+    	output	[31:0]				master_readdata,      // width = 32,             .readdata
+    	input					master_read,          //  width = 1,             .read
+    	input					master_write,         //  width = 1,             .write
+    	input	[31:0]				master_writedata,     // width = 32,             .writedata
+    	output					master_waitrequest,   //  width = 1,             .waitrequest
+    	output					master_readdatavalid, //  width = 1,             .readdatavalid
+    	output	[3:0]				master_byteenable,    //  width = 4,             .byteenable
 	
-	input  [127:0]			data_out_first,
+	input  [(AXI_CHNL_NUM*64)-1:0]		data_out_first,
 	input  					data_out_first_valid,
-	input  [127:0]			data_out_last,
+	input  [(AXI_CHNL_NUM*64)-1:0]		data_out_last,
 	input  					data_out_last_valid,
 	
-	input  [127:0]			data_in_first,
+	input  [(AXI_CHNL_NUM*64)-1:0]		data_in_first,
 	input  					data_in_first_valid,
-	input  [127:0]			data_in_last,
+	input  [(AXI_CHNL_NUM*64)-1:0]		data_in_last,
 	input  					data_in_last_valid,
 	
 	
 	
-	input 	[1:0]			chkr_pass,
+	input 	[1:0]				chkr_pass,
 	input					read_complete,
 	input					write_complete,
 	input					align_error,
@@ -43,17 +43,17 @@ module axi_mm_csr (
 	input 					ldr_rx_online,
 	input 					fllr_tx_online,
 	input 					fllr_rx_online,
-	output	[31:0]			o_delay_x_value,
-	output	[31:0]			o_delay_y_value,
-	output	[31:0]			o_delay_z_value,
+	output	[31:0]				o_delay_x_value,
+	output	[31:0]				o_delay_y_value,
+	output	[31:0]				o_delay_z_value,
 	
 	output 					axist_rstn_out,
 	output 					aximm_wr,
 	output 					aximm_rd,
-	output 	[7:0]			aximm_rw_length,
-	output 	[1:0]			aximm_rw_burst,
-	output 	[2:0]			aximm_rw_size,
-	output 	[31:0]			aximm_rw_addr	
+	output 	[7:0]				aximm_rw_length,
+	output 	[1:0]				aximm_rw_burst,
+	output 	[2:0]				aximm_rw_size,
+	output 	[31:0]				aximm_rw_addr	
 
 	
 	);
@@ -73,25 +73,26 @@ module axi_mm_csr (
 	.rst_n (rst_n),
     
 	.master_address(master_address),       // width = 32,       master.address
-    .master_readdata(master_readdata),      // width = 32,             .readdata
-    .master_read(master_read),          //  width = 1,             .read
-    .master_write(master_write),         //  width = 1,             .write
-    .master_writedata(master_writedata),     // width = 32,             .writedata
-    .master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
-    .master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
-    .master_byteenable(master_byteenable),    //  width = 4,             .byteenable
-	
+    	.master_readdata(master_readdata),      // width = 32,             .readdata
+    	.master_read(master_read),          //  width = 1,             .read
+    	.master_write(master_write),         //  width = 1,             .write
+    	.master_writedata(master_writedata),     // width = 32,             .writedata
+    	.master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
+    	.master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
+    	.master_byteenable(master_byteenable),    //  width = 4,             .byteenable
+	.mgmt_clk_reset_n(1'b0),
+	.mgmt_clk(1'b0),	
 	.wr_rd_addr(csr_wr_rd_addr),		
 	.wr_en(csr_wr_en),
 	.rd_en(csr_rd_en),
 	.wr_data(csr_wr_data),
 	
 	.rd_datain(csr_rd_datain),
-	.rd_dvalid(csr_rd_dvalid)
+	.csr_rd_dvalid(csr_rd_dvalid)
 	
 );
 
-mm_csr_ctrl csr(
+mm_csr_ctrl #(.AXI_CHNL_NUM(AXI_CHNL_NUM)) csr(
 	.clk(clk),	
 	.rst_n(rst_n),
 	

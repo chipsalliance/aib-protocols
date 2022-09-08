@@ -10,23 +10,23 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ns/1ps
-module axi_mm_patchkr_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1)
+module axi_mm_patchkr_top #(parameter AXI_CHNL_NUM = 1 ,parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1)
 (
 
-	input 										rdclk ,
-	input 										wrclk ,
-	input 										rst_n ,
-	input 										patchkr_en ,
-	input 	[7:0]								patgen_cnt ,
-	input	[(LEADER_MODE* 128)-1 :0] 			patgen_din,
-	input										patgen_din_wr,
-	input 										cntuspatt_en,
-	output 										chkr_fifo_full,
-	input										axist_valid,
-	input 	[(FOLLOWER_MODE* 128)-1  :0]		axist_rcv_data,
-	input										axist_tready,
+	input 						rdclk ,
+	input 						wrclk ,
+	input 						rst_n ,
+	input 						patchkr_en ,
+	input 	[7:0]					patgen_cnt ,
+	input	[(AXI_CHNL_NUM* 64)-1 :0] 		patgen_din,
+	input						patgen_din_wr,
+	input 						cntuspatt_en,
+	output 						chkr_fifo_full,
+	input						axist_valid,
+	input 	[(AXI_CHNL_NUM* 64)-1  :0]		axist_rcv_data,
+	input						axist_tready,
 	
-	output reg [1:0]							patchkr_out
+	output reg [1:0]				patchkr_out
 
 );
 
@@ -37,35 +37,35 @@ module axi_mm_patchkr_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE =
 	reg  						patchkr_done;
 	reg  						rx_fifo_empty_r2;
 	reg  						rx_fifo_empty_r1;
-	wire [127:0] 				fifo_rx_dout;
-	wire [127:0] 				chkr_fifo_dout;
-	wire [127:0]				fifo_rx_qout;
+	wire [(64*AXI_CHNL_NUM)-1:0] 			fifo_rx_dout;
+	wire [(64*AXI_CHNL_NUM)-1:0] 			chkr_fifo_dout;
+	wire [(64*AXI_CHNL_NUM)-1:0]			fifo_rx_qout;
 	wire 						chkr_fifo_empty;
 	
 	reg [8:0]					rd_cnt;
 	reg [8:0]					patgen_cnt_r1;
 	reg [8:0]					patgen_cnt_r2;
 	reg [8:0]					err_count;
-	reg							chkr_fifo_rd_en;
-	reg							cntuspatt_en_r2;
-	reg							cntuspatt_en_r1;
+	reg						chkr_fifo_rd_en;
+	reg						cntuspatt_en_r2;
+	reg						cntuspatt_en_r1;
 	wire						cntuspatt_en_fe;
 	wire						cntuspatt_en_re;
 	wire 						chkr_full;
 	wire 						rcv_fifo_wrfull;
-	wire [127:0]				patgen_din_fifo;
-	wire [127:0]				chkr_fifo_data;
+	wire [127:0]					patgen_din_fifo;
+	wire [(64*AXI_CHNL_NUM)-1:0]			chkr_fifo_data;
 	reg  [1:0]					chkr_fifo_din_wr;
 	wire 						chkr_fifo_wr;
 	wire 						chkr_fifo_wr_last;
 	wire 						ff_1, q_out;
 	reg 						q, q1, q2, q3;
 	
-	assign rx_fifo_rd_en 		  = ~rx_fifo_empty;
-	assign fifo_rx_dout[127:0]    = fifo_rx_qout[127:0]; 
-	assign chkr_fifo_full 		  = chkr_full;
+	assign rx_fifo_rd_en 		  		= ~rx_fifo_empty;
+	assign fifo_rx_dout[(64*AXI_CHNL_NUM)-1:0]    	= fifo_rx_qout[(64*AXI_CHNL_NUM)-1:0]; 
+	assign chkr_fifo_full 		  		= chkr_full;
 
-	asyncfifo #(.FIFO_WIDTH_WID(128),
+	asyncfifo #(.FIFO_WIDTH_WID(64*AXI_CHNL_NUM),
 				.FIFO_DEPTH_WID(512))		
 	fifo_fllwr_rcv_data(/*AUTOARG*/
    // Outputs
@@ -159,7 +159,7 @@ module axi_mm_patchkr_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE =
 		begin
 			err_count	<= 'b0;
 		end
-		else if ((rd_cnt > 0 )&& (chkr_fifo_dout[127:0] != fifo_rx_dout[127:0] ))
+		else if ((rd_cnt > 0 )&& (chkr_fifo_dout[(64*AXI_CHNL_NUM)-1:0] != fifo_rx_dout[(64*AXI_CHNL_NUM)-1:0] ))
 		begin
 			if(err_count!=9'h1FF && (chkr_fifo_empty))
 				err_count 	<= err_count + 1;
@@ -263,7 +263,7 @@ module axi_mm_patchkr_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE =
 	assign chkr_fifo_wr   	 = (chkr_fifo_din_wr == 2'b01) ? 1'b1 : 1'b0;
 	assign chkr_fifo_wr_last = (chkr_fifo_din_wr == 2'b10 && patgen_din_wr == 1'b0) ? 1'b1 : 1'b0;
 	
-	asyncfifo #(.FIFO_WIDTH_WID(128),
+	asyncfifo #(.FIFO_WIDTH_WID(64*AXI_CHNL_NUM),
 				.FIFO_DEPTH_WID(512))		
 	fifo_chkr_data(/*AUTOARG*/
    // Outputs

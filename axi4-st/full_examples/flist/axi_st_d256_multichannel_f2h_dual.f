@@ -1,7 +1,7 @@
 +access+rwc
 #${PROJ_DIR}/axi4-st/dv/axi_st_d256_multichannel_f2h_tb/axi_st_d256_multichannel_f2h_tb_modified.sv
 ${SIM_DIR}/../common/axi_st_d256_multichannel_f2h_dual_top.sv
-${PROJ_DIR}/common/dv/p2p_lite.sv
+#${PROJ_DIR}/common/dv/p2p_lite.sv
 ${PROJ_DIR}/common/dv/marker_gen.sv
 ${PROJ_DIR}/common/dv/strobe_gen.sv
 ${SIM_DIR}/../common/axist_rand_gen.v
@@ -17,6 +17,7 @@ ${PROJ_DIR}/common/rtl/asyncfifo.sv
 ${PROJ_DIR}/common/rtl/syncfifo_mem1r1w.sv
 +libverbose
 +libext+.v
++define+FOR_SIM_ONLY
 -f ${tbench_dir}/axi_st_d256_dual_multichannel/axi_st_d256_dual_multichannel_full_master.f
 #-f ${SIM_DIR}/../flist/axi_st_d256_multichannel_full_master.f
 #-f ${PROJ_DIR}/axi4-st/axi_st_d256_multichannel/axi_st_d256_multichannel_half_slave.f

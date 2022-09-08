@@ -13,58 +13,77 @@
 module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MODE = 1)
 (
 
-	input 										rdclk ,
-	input 										wrclk ,
-	input 										rst_n ,
-	input 										patchkr_en ,
-	input 	[8:0]								patgen_cnt ,
-	input	[(PATGEN_MODE* 40)-1 :0] 			patgen_din,
-	input										patgen_din_wr,
-	input 										cntuspatt_en,
-	output 										chkr_fifo_full,
-	input										axist_valid,
-	input 	[(PATCHKR_MODE* 256)-1  :0]			axist_rcv_data,
-	output										axist_tready,
+	input 						rdclk ,
+	input 						wrclk ,
+	input 						rst_n ,
+	input 						patchkr_en ,
+	input 	[8:0]					patgen_cnt ,
+	input	[(PATGEN_MODE* 40)-1 :0] 		patgen_din,
+	input						patgen_din_wr,
+	input 						cntuspatt_en,
+	input 						axist_s2m_enable,
+	input 						read_pong_in,
+	output 						chkr_fifo_full,
+	input						axist_valid,
+	input 	[(PATCHKR_MODE* 256)-1  :0]		axist_rcv_data,
+	output						axist_tready,
+	output   [511:0]				f2l_data_in_first,
+	output  					f2l_data_in_first_valid,
+	output  reg [511:0]				f2l_data_in_last,
+	output  					f2l_data_in_last_valid,
 	
-	output reg [1:0]							patchkr_out
+	
+	output reg [1:0]				patchkr_out
 
 );
 
 	parameter AXIST_NUM_CHNL  = 7; 
 	
-	wire 						  rx_fifo_empty;
-	reg  						  rx_fifo_rd_en;
-	reg  						  patchkr_start;
-	reg  						  patchkr_done;
-	reg  						  rx_fifo_empty_r2;
-	reg  						  rx_fifo_empty_r1;
-	wire [(PATGEN_MODE*256)-1:0]  fifo_rx_dout;
-	wire [(PATGEN_MODE*256)-1:0]  chkr_fifo_dout;
-	wire 						  chkr_fifo_empty;
+	wire 						rx_fifo_empty;
+	wire 						rx_fifo_rd_en;
+	reg  						patchkr_start;
+	wire  						patchkr_done;
+	reg  						rx_fifo_empty_r2;
+	reg  						rx_fifo_empty_r1;
+	wire [(PATGEN_MODE*256)-1:0]  			fifo_rx_dout;
+	wire [(PATGEN_MODE*256)-1:0]  			chkr_fifo_dout;
+	wire 						chkr_fifo_empty;
 	
-	reg [8:0]					  rd_cnt;
-	reg [8:0]					  patgen_cnt_r1;
-	reg [8:0]					  patgen_cnt_r2;
-	reg [8:0]					  err_count;
-	reg							  rx_fifo_rd_en_r1;
-	reg							  chkr_fifo_rd_en;
-	reg							  cntuspatt_en_r2;
-	reg							  cntuspatt_en_r1;
-	wire						  cntuspatt_en_fe;
-	wire						  cntuspatt_en_re;
-	wire 						  chkr_full;
-	wire 						  rcv_fifo_wrfull;
+	reg [8:0]					rd_cnt;
+	reg [8:0]					patgen_cnt_r1;
+	reg [8:0]					patgen_cnt_r2;
+	reg [8:0]					err_count;
+	reg						rx_fifo_rd_en_r1;
+	wire						chkr_fifo_rd_en;
+	reg						cntuspatt_en_r2;
+	reg						cntuspatt_en_r1;
+	wire						cntuspatt_en_fe;
+	wire						cntuspatt_en_re;
+	wire 						chkr_full;
+	wire 						rcv_fifo_wrfull;
 	
-	wire [511:0]				  patgen_data_in;
-	reg  [511:0]				  axist_rcv_fifo_din;
-	reg  [1:0]					  axist_rx_fifo_din_wr;
-	wire 						  axist_rx_fifo_wr;
+	wire [511:0]				  	patgen_data_in;
+	reg  [511:0]				  	axist_rcv_fifo_din;
+	wire  [511:0]				  	axist_rcv_fifo_din_swap;
+	reg  [1:0]				  	axist_rx_fifo_din_wr;
+	wire 					  	axist_rx_fifo_wr;
 		
-	wire 						  ff_1, q_out;
-	reg 						  q, q1, q2, q3;
+	wire 						ff_1, q_out;
+	reg 						q, q1, q2, q3;
+	reg						f2l_axist_first_dvld_r;
+	wire						f2l_axist_first_dvld;
+	reg						f2l_first_dvalid;
+	reg						f2l_first_rcv_data;
+	reg	[511:0]					f2l_data_in_first_r1;
+	reg 	[511:0]					f2l_data_in_first_r2;
+	reg 						axist_valid_r1;
+	reg						swap_en;
+	wire 						axist_valid_re;
+	
 	
 	assign rx_fifo_rd_en = ~rx_fifo_empty;
 	assign axist_tready  = ~rcv_fifo_wrfull & ~chkr_full & axist_valid ;
+	assign f2l_data_in_first = (swap_en) ? f2l_data_in_first_r2 : f2l_data_in_first_r1;
 	
 	assign chkr_fifo_full = chkr_full;
 		
@@ -84,14 +103,17 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
    .rst_write_n(rst_n), 
    .clk_read(rdclk), 
    .rst_read_n(rst_n), 
-   .wrdata(axist_rcv_fifo_din), 
+//   .wrdata(axist_rcv_fifo_din), 
+   .wrdata(axist_rcv_fifo_din_swap), 
    .write_push(axist_rx_fifo_wr ),
    .read_pop(rx_fifo_rd_en), 
    .rd_soft_reset(1'b0), 
    .wr_soft_reset(1'b0)
    );
 	
-	always@(posedge rdclk)
+	assign axist_rcv_fifo_din_swap = (swap_en) ? {axist_rcv_fifo_din[255:0],axist_rcv_fifo_din[511:256]}:axist_rcv_fifo_din ;
+	
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -103,7 +125,79 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end 
 	end 
 	
-	always@(posedge rdclk)
+		always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			f2l_axist_first_dvld_r	= 1'b0;
+		end
+		else
+		begin
+			f2l_axist_first_dvld_r	= axist_valid;
+
+		end
+	end
+
+	assign f2l_axist_first_dvld = ~f2l_axist_first_dvld_r &(axist_valid);
+	assign f2l_data_in_first_valid = f2l_first_dvalid;
+	assign f2l_data_in_last_valid = patchkr_done & patchkr_start;
+	
+		
+	always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			f2l_data_in_last	= 'b0;
+		end
+		else
+		begin
+			f2l_data_in_last	= fifo_rx_dout;
+
+		end
+	end
+
+	
+	always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			f2l_data_in_first_r1	= 'b0;
+			f2l_data_in_first_r2		= 'b0;
+		end
+		else 
+		begin
+			f2l_data_in_first_r1	= axist_rcv_data[255:0];
+			f2l_data_in_first_r2		= f2l_data_in_first_r1;
+		end
+		
+	end
+
+	
+	always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			f2l_first_rcv_data	= 1'b0;
+			f2l_first_dvalid	= 1'b0;
+		end
+		// else if(f2l_axist_first_dvld && f2l_first_rcv_data == 1'b0)
+		else if(f2l_axist_first_dvld_r && f2l_first_rcv_data == 1'b0)
+		begin
+			f2l_first_rcv_data	= 1'b1;
+			f2l_first_dvalid	= 1'b1;
+		end
+		else if(patchkr_done) 
+		begin
+			f2l_first_rcv_data	= 1'b0;
+		end 
+		else
+		begin
+			f2l_first_dvalid	= 1'b0;
+		end 
+	end
+
+	
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -123,7 +217,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 	
 	assign ff_1 = (patchkr_en) ? ~q : q;
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -135,7 +229,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end
 	end
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -153,7 +247,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 
 	assign q_out = q3 ^ q2;
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -173,7 +267,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end
 	end
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -192,7 +286,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end
 	end 
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -208,13 +302,13 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end 
 	end
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
 			patchkr_out	<= 2'b00;
 		end 
-		else if((patchkr_done  && err_count == 8'h000 && patchkr_start == 1'b1))
+		else if((patchkr_done  && err_count == 8'h00 && patchkr_start == 1'b1))
 		begin
 			patchkr_out	<= 2'b11;
 		end
@@ -247,7 +341,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 	
 	assign chkr_fifo_rd_en	= rx_fifo_rd_en & ~chkr_fifo_empty ;
 		
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -262,7 +356,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 
 	end 
 	
-	always@(posedge rdclk)
+	always@(posedge rdclk or negedge rst_n)
 	begin
 		if(!rst_n)
 		begin
@@ -277,7 +371,7 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 
 	end 
 	
-	assign patchkr_done = ~rx_fifo_empty_r2 & rx_fifo_empty_r1 & chkr_fifo_empty;
+	assign patchkr_done = ~rx_fifo_empty_r2 & rx_fifo_empty_r1 & chkr_fifo_empty & patchkr_start;
 	
 	assign axist_rx_fifo_wr   = (axist_rx_fifo_din_wr == 2'b10) ? 1'b1 : 1'b0;
 	
@@ -317,8 +411,39 @@ module axi_st_patchkr_h2f_top #(parameter PATGEN_MODE = 1, parameter PATCHKR_MOD
 		end
 	endgenerate
 
+	always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			axist_valid_r1		<= 1'b0;
+		end 
+		else
+		begin
+			axist_valid_r1		<= axist_valid;
+		end
 	
-always @(posedge rdclk)
+	end
+	
+	assign axist_valid_re = axist_valid & ~axist_valid_r1 ;
+	
+	always@(posedge rdclk or negedge rst_n)
+	begin
+		if(!rst_n)
+		begin
+			swap_en		<= 1'b0;
+		end 
+		else if(axist_valid_re && ~read_pong_in)
+		begin
+			swap_en		<= 1'b1;
+		end
+		else if(axist_valid_re && read_pong_in)
+		begin
+			swap_en		<= 1'b0;
+		end
+	
+	end
+	
+always @(posedge rdclk or negedge rst_n)
 begin
 	if(!rst_n)
 	begin 
@@ -332,7 +457,7 @@ begin
 end	
 
 
-always @(posedge rdclk)
+always @(posedge rdclk or negedge rst_n)
 begin
 	if(!rst_n ||  patchkr_en)
 	begin 

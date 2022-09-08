@@ -13,9 +13,9 @@
 
 module aximm_rand_gen #(parameter LEADER_MODE = 1)(
 
-	input 								clk,
-	input 								rst_n,
-	input 								ena_in,
+	input 					clk,
+	input 					rst_n,
+	input 					ena_in,
 	input	[(LEADER_MODE*40)-1:0] 		seed_in,
 	output	[(LEADER_MODE*40)-1:0]		rand_dout 
 
@@ -34,8 +34,7 @@ wire fdbk_reg;
 always@(posedge clk)
 begin
 	if(!rst_n) 
-		begin
-			r_randreg	<= 'b1;	
+		begin	
 			gen_en 		<= 1'b0;
 		end
 	else if(ena_in)
@@ -45,7 +44,6 @@ begin
 	else if({r_randreg[(LEADER_MODE*40)-1:1],fdbk_reg}==seed_in && gen_en==1'b1)
 		begin
 			gen_en 		<= 1'b0;
-			r_randreg	<= 'b0;
 		end 
 end
 

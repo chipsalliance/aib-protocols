@@ -19,11 +19,21 @@ parameter FWD_CYCLE  		= 1000*CLK_SCALING;
 parameter AVMM_CYCLE 		= 4000;
 parameter OSC_CYCLE  		= 1000*CLK_SCALING;
 parameter TOTAL_CHNL_NUM 	= 24;
-parameter DWIDTH 			= 40;
+parameter MGMT_CLK_PERIOD 	= 10000;
+parameter DWIDTH 		= 40;
 parameter DATAWIDTH 		= 40;
-parameter FULL 				= 1;
-parameter HALF 				= 2;
+parameter FULL 			= 1;
+parameter HALF 			= 2;
 parameter CLKL_HALF_CYCLE 	= 500;
+
+localparam 		REG_TX_PKT_CTRL_ADDR 	= 32'h50001000;
+localparam 		REG_RX_CKR_STS_ADDR	= 32'h50001004;
+localparam 		REG_DOUT_FIRST1_ADDR	= 32'h50004000;
+localparam 		REG_DIN_FIRST1_ADDR	= 32'h50004200;
+localparam 		REG_DIN_LAST1_ADDR	= 32'h50004300;
+localparam 		REG_DOUT_LAST1_ADDR	= 32'h50004100;
+localparam 		REG_LINKUP_STS_ADDR	= 32'h50001008;
+localparam 		REG_AXI_CTRL_ADDR	= 32'h50003000;
 
 reg 				ms_wr_clk;
 reg 				ms_rd_clk;
@@ -33,20 +43,14 @@ reg 				sl_wr_clk;
 reg 				sl_rd_clk;
 reg 				sl_fwd_clk;
 			
-reg					avmm_clk;
+reg				avmm_clk;
 reg  [5:0]			count;
-reg  [255:0]		dout_last;
-reg  [255:0]		dout;
-reg  [511:0]		data_in;
-reg  [255:0]		data_in_last;
-reg  [511:0]		chkr_fifo_rcv_data_r1;
-wire [255:0]		pat_gen_wr_data;
-reg  [255:0]		pat_gen_wr_data_r1;
-wire [511:0]		pat_chkr_rcv_data;
-wire [511:0]		chkr_fifo_rcv_data;
-wire		        pat_chkr_rcv_en  ;
-wire		        chkr_fifo_empty  ;
-wire		        pat_gen_wr_en  ;
+reg  [255:0]			dout_last;
+reg  [255:0]			dout;
+reg  [511:0]			data_in;
+reg  [255:0]			data_in_last;
+wire [255:0]			pat_gen_wr_data;
+reg  [255:0]			pat_gen_wr_data_r1;
 					
 reg 				osc_clk;
 reg  [31:0]			tb_read_data;       		// width = 32,     
@@ -54,21 +58,25 @@ wire [31:0]			tb_master_readdata;
 wire 				tb_master_readdatavalid;	
 wire 				pat_gen_wr_valid;
 wire 				pat_gen_wr_ready;
-wire 				pat_gen_high;
 
-reg  [31:0] 		tb_wr_addr, tb_wrdata;
+reg  [31:0] 			tb_wr_addr, tb_wrdata;
 reg  [3:0] 			mask_reg;
 reg 				tb_wren, tb_rden;
+reg [255:0]			t_data_out_256b;
 
-reg              	clk_phy;
-reg              	clk_p_div2;
-reg              	clk_p_div4;
-reg              	rst_phy_n;
-reg              	tb_w_m_wr_rst_n ;
-reg              	tb_w_s_wr_rst_n ;
+reg              		clk_phy;
+reg              		clk_p_div2;
+reg              		clk_p_div4;
+reg              		rst_phy_n;
+reg              		tb_w_m_wr_rst_n ;
+reg              		tb_w_s_wr_rst_n ;
 reg 				flag;
-
-logic [255:0]     	queue_dout [$];
+reg 				delay_config_done;
+reg [255:0]			data_out_first;
+reg [255:0]			data_in_first ;
+reg 				tb_mgmt_clk;
+reg [31:0]			tb_32b_rd_addr ;
+int 				i;
 
 axist_aib_top #(.LEADER_MODE(FULL), 
 				.FOLLOWER_MODE(HALF),
@@ -77,6 +85,7 @@ axist_aib_top #(.LEADER_MODE(FULL),
 axist_aib_dut(
 .i_w_m_wr_rst_n(tb_w_m_wr_rst_n),
 .i_w_s_wr_rst_n(tb_w_s_wr_rst_n),
+.mgmt_clk(tb_mgmt_clk),
 .i_wr_addr(tb_wr_addr), 
 .i_wrdata(tb_wrdata), 
 
@@ -92,7 +101,9 @@ axist_aib_dut(
 .sl_wr_clk(sl_wr_clk),
 .sl_rd_clk(sl_rd_clk),
 .sl_fwd_clk(sl_fwd_clk),
-
+.tx_online(),
+.rx_online(),
+.test_done(),
 .avmm_clk(avmm_clk), 
 .osc_clk(osc_clk), 
 .i_wren(tb_wren), 
@@ -102,6 +113,7 @@ axist_aib_dut(
 .o_tb_axist_valid(pat_gen_wr_valid),
 .o_tb_axist_ready(pat_gen_wr_ready),
 .o_master_readdatavalid(tb_master_readdatavalid),
+.o_master_waitreq(tb_master_waitreq),
 .o_master_readdata(tb_master_readdata)			
 );
 
@@ -116,11 +128,13 @@ begin
 	sl_fwd_clk	= 1'b0;
 	avmm_clk	= 1'b0;
 	osc_clk		= 1'b0;
+	tb_mgmt_clk	= 1'b0;
 end
 
 always #(WR_CYCLE/2)   ms_wr_clk   	= ~ms_wr_clk;
 always #(RD_CYCLE/2)   ms_rd_clk   	= ~ms_rd_clk;
 always #(FWD_CYCLE/2)  ms_fwd_clk  	= ~ms_fwd_clk;
+always #(MGMT_CLK_PERIOD/2) tb_mgmt_clk = ~tb_mgmt_clk;
 	
 always #(WR_CYCLE)     sl_wr_clk   	= ~sl_wr_clk;
 always #(RD_CYCLE)     sl_rd_clk   	= ~sl_rd_clk;
@@ -133,8 +147,6 @@ always #(OSC_CYCLE/2)  osc_clk  	= ~osc_clk;
 always @(posedge ms_wr_clk)
 	pat_gen_wr_data_r1		<= pat_gen_wr_data ;
 	
-always @(posedge sl_rd_clk)
-	chkr_fifo_rcv_data_r1	<= chkr_fifo_rcv_data ;
 
 initial
 begin
@@ -165,7 +177,7 @@ initial
 begin
   clk_p_div2 	  = 1'bx;                              // Everything is X
   clk_p_div4 	  = 1'bx;                              // Everything is X
-  clk_phy 	 	  = 1'bx;                              // Everything is X
+  clk_phy 	  = 1'bx;                              // Everything is X
   rst_phy_n  	  = 1'bx;
   tb_w_m_wr_rst_n = 1'bx;
   tb_w_s_wr_rst_n = 1'bx;
@@ -197,29 +209,27 @@ begin
   $display ("To reproduce, add:  +VERILOG_RANDOM_SEED=%0x",random_seed);
 end
 
-assign pat_gen_wr_en 	  = pat_gen_wr_ready & pat_gen_wr_valid;
-assign pat_chkr_rcv_data  = axist_aib_dut.pattern_checker.axist_rcv_data;
-assign pat_chkr_rcv_en    = axist_aib_dut.pattern_checker.axist_valid & axist_aib_dut.pattern_checker.axist_tready;
-assign pat_gen_high 	  = axist_aib_dut.pat_gen.start_cnt;
-assign chkr_fifo_rcv_data = axist_aib_dut.pattern_checker.fifo_fllwr_rcv_data.rddata[511:256];
-assign chkr_fifo_empty    = axist_aib_dut.pattern_checker.rx_fifo_empty;
- 
 initial
 begin
-	dout 		 = 'b0;
-	data_in 	 = 'b0;
-	dout_last 	 = 'b0;
-	data_in_last = 'b0;
-	flag 		 = 'b0;
-	tb_wrdata	 = 'b0;
-	tb_wren		 = 'b0;
-	tb_rden		 = 'b0;
-	count 	 	 = 0;
-	mask_reg 	 = 0;
-	tb_wr_addr 	 = 0;
-	tb_read_data = 0;
-	
+	dout 		 	= 'b0;
+	data_in 	 	= 'b0;
+	dout_last 	 	= 'b0;
+	data_in_last 	 	= 'b0;
+	flag 		 	= 'b0;
+	tb_wrdata	 	= 'b0;
+	tb_wren		 	= 'b0;
+	tb_rden		 	= 'b0;
+	count 	 	 	= 0;
+	mask_reg 	 	= 0;
+	tb_wr_addr 	 	= 0;
+	tb_read_data 	 	= 0;
+	delay_config_done 	= 0;
+	t_data_out_256b 	= 0;
+	data_out_first		= 'b0;
+	data_in_first		= 'b0;
+	tb_32b_rd_addr		= 'b0;	
 	$display("Wait for AXI STREAM online");
+  	repeat (500) @(posedge ms_wr_clk);
 	wait (rst_phy_n == 1'b1);
 	repeat (10) @(posedge avmm_clk);
 	//Delay X,Y and Z values
@@ -227,13 +237,20 @@ begin
 	avmm_write(32'h50002004, 32'h00000020); //Delay Y value = 32
 	avmm_write(32'h50002008, 32'h00001770); //Delay Z value = 6000
 	
+	//Reset axi interface
+	avmm_write(REG_AXI_CTRL_ADDR, 32'h00000001);
+	repeat(100) @(posedge avmm_clk);
+	avmm_write(REG_AXI_CTRL_ADDR, 32'h00000000);
+	delay_config_done = 1;	
+	repeat(1000) @(posedge ms_wr_clk);
+	
 	//wait for AIB online
-	avmm_read(32'h50001008);
+	avmm_read(REG_LINKUP_STS_ADDR);
 	while (tb_read_data[3:0] != 4'hf)
 	begin
-		avmm_read(32'h50001008);
+		avmm_read(REG_LINKUP_STS_ADDR);
 	end
-	avmm_read(32'h50001008);
+	avmm_read(REG_LINKUP_STS_ADDR);
 	
 	//check for AIB online
 	if(tb_read_data[3:0]== 4'hF) 
@@ -243,41 +260,53 @@ begin
 		$display("AXI-Stream TX and RX online is high");
 		$display("///////////////////////////////////////////////////////\n");
 	end
-	else $display("AXI-Stream TX/RX is offline\n");
-	
+	else $display("AXI-Stream TX/RX is offline\n");	
 	repeat (200) @(posedge ms_wr_clk);
+	tb_read_data = 0;
 	
-	//Random pattern test 
-	avmm_write(32'h50001000, 32'h00001005);
+	//Initiate Random pattern test 
+	avmm_write(REG_TX_PKT_CTRL_ADDR, 32'h00001005);
 
 	$display("///////////////////////////////////////////////////");
 	$display("%0t Random pattern test for 256 data packet ",$time);
 	$display("//////////////////////////////////////////////////\n");
-	wait ( pat_gen_wr_en == 1'b1);
-	@(negedge ms_wr_clk);
-	dout 	 = pat_gen_wr_data;
-	wait (pat_chkr_rcv_en == 1'b1);
-	@(negedge sl_rd_clk);
-	data_in  = pat_chkr_rcv_data;
+	repeat (10) @(posedge ms_wr_clk);
+
+	//wait for test complete
+	avmm_read(REG_RX_CKR_STS_ADDR);
+	while (tb_read_data[1] != 1'b1)
+	begin
+		avmm_read(REG_RX_CKR_STS_ADDR);
+	end
+	avmm_read(REG_RX_CKR_STS_ADDR);
+
+	//read first beat of transmitted and received data
+	read_axist_256bit_data(REG_DOUT_FIRST1_ADDR);
+	data_out_first = t_data_out_256b;
+	read_axist_256bit_data(REG_DIN_FIRST1_ADDR);
+	data_in_first  = t_data_out_256b;
 	count 	 = 0;
-	$display("Send AXI Stream Packet 1    = %x",dout);
-	$display("receive AXI Stream Packet 1 = %x",data_in[255:0]);
+	$display("Send AXI Stream Packet 1    = %x",data_out_first);
+	$display("receive AXI Stream Packet 1 = %x",data_in_first);
 	
-	//wait for test to complete
-	while ( pat_gen_wr_en != 1'b0 | pat_gen_high !=1'b0)
+	//check for test complete
+	avmm_read(REG_RX_CKR_STS_ADDR);
+	while (tb_read_data[1] != 1'b1)
+	begin
+		avmm_read(REG_RX_CKR_STS_ADDR);
+	end
+	avmm_read(REG_RX_CKR_STS_ADDR);	
+	repeat (5)
 		begin
-		@(posedge ms_wr_clk);
-		count = count + 1;
-		if(count == 40)
-			begin
+		repeat(20) @(posedge ms_wr_clk);
 			$display(".");
-			count = 0;
-			end
 		end
-		
-	dout_last 	 = pat_gen_wr_data_r1;
-	wait (chkr_fifo_empty == 1'b1)
-	data_in_last = chkr_fifo_rcv_data;
+
+	//read last beat of transmitted and received data
+	read_axist_256bit_data(REG_DOUT_LAST1_ADDR);	
+	dout_last 	 = t_data_out_256b;
+	read_axist_256bit_data(REG_DIN_LAST1_ADDR);	
+	data_in_last = t_data_out_256b;
 	$display("Send AXI Stream Packet 256    = %x",dout_last);
 	$display("Receive AXI Stream Packet 256 = %x",data_in_last );
 	$display("\n");
@@ -295,20 +324,23 @@ end
 		tb_wrdata  	= wrdata;
 		tb_wren   	= 1'b0;
 		
-		repeat (3) @(posedge avmm_clk)
-		begin
-			tb_wren   = 1'b1;
-		end
+		repeat (3) @(posedge tb_mgmt_clk)
+		tb_wren   = 1'b1;
 		
+		tb_wren		= 1'b0;
+		repeat (3) @(posedge tb_mgmt_clk);
+
 		tb_wren		= 1'b0;
 	end
 	endtask
 	
-	task avmm_read (input [31:0] rd_addr) ;
+
+
+       	task avmm_read (input [31:0] rd_addr) ;
 	begin
 		tb_wr_addr 	= rd_addr;
 		tb_rden   	= 1'b0;
-		repeat (3) @(posedge avmm_clk)
+		repeat (3) @(posedge ms_wr_clk)
 		begin
 			tb_rden   = 1'b1;
 		end
@@ -317,14 +349,29 @@ end
 		wait (tb_master_readdatavalid==1'b1)
 		tb_read_data	= tb_master_readdata;
 	
+		repeat (20) @(posedge ms_wr_clk);
 	end 
+	endtask
+
+
+	
+	task read_axist_256bit_data (input [31:0] rd_staddr);
+	begin
+		tb_32b_rd_addr	= rd_staddr;
+		for(i=0;i<8;i++)
+		begin
+			avmm_read(tb_32b_rd_addr);
+			t_data_out_256b= {tb_read_data,t_data_out_256b[255:32]};
+			tb_32b_rd_addr	= tb_32b_rd_addr + 4;
+		end 
+	end
 	endtask
 	
 	task axist_test_report ;
 	begin
-		avmm_read(32'h50001004);
+		avmm_read(REG_RX_CKR_STS_ADDR);
 		mask_reg = {tb_read_data[3],tb_read_data[1:0]}&3'h7;
-		case(mask_reg)
+		casex(mask_reg)
 			3'b0xx : $display("AXIST Align error\n");
 			3'b110 : $display("AXIST test Fail\n");
 			3'b111 : 
@@ -339,5 +386,10 @@ end
 		
 	end 
 	endtask
+
+   initial
+   begin
+     $vcdpluson;
+   end
 
 endmodule

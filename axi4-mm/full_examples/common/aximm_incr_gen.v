@@ -14,12 +14,12 @@ module aximm_incr_gen #(parameter LEADER_MODE = 1)(
 	input 								clk,
 	input 								rst_n,
 	input 								ena_in,
-	input	[(LEADER_MODE*40)-1:0] 		seed_in,
-	input 	[7:0]						patgen_cnt,
+	input	[(LEADER_MODE*40)-1:0] 					seed_in,
+	input 	[7:0]							patgen_cnt,
 	input 								cntuspatt_en,
 	input 								chkr_fifo_full,
 	output 								cntuspatt_wr_en,
-	output	[(LEADER_MODE*40)-1:0]		incr_dout 
+	output	[(LEADER_MODE*40)-1:0]					incr_dout 
 
 );
 	
@@ -33,7 +33,7 @@ reg 				gen_en;
 wire 				cntspatt_rs;
 wire 				cntuspatt_fs;
 reg [7:0] 			incr_cnt;
-reg [119 : 0] 		r_incrreg;
+reg [119 : 0] 			r_incrreg;
 
 always@(posedge clk)
 begin

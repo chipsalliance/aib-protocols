@@ -7,7 +7,6 @@
          $display("%0t: AIB : Into task reset_dut", $time);
          $display("////////////////////////////////////////////////////////////////////////////\n");
 
-         // top_tb.err_count = 0;
          top_aib.err_count = 0;
          avmm_if_m1.rst_n = 1'b0;
          avmm_if_m1.address = '0;
@@ -39,7 +38,7 @@
          intf_s1.m_device_detect_ovrd = 1'b0;
          intf_s1.i_m_power_on_reset = 1'b0;
 		
-		 data_en_axist = 1'b0; // S.A
+//		 data_en_axist = 1'b0; // S.A
 		 
          intf_m1.data_in = {TOTAL_CHNL_NUM{80'b0}};
          intf_s1.data_in = {TOTAL_CHNL_NUM{80'b0}};

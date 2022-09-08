@@ -14,23 +14,24 @@ module jtag2avmm_bridge (
 
 	input 					clk ,
 	input 					rst_n ,
-    
-	input	[31:0]			master_address,       // width = 32,       master.address
-    output	[31:0]			master_readdata,      // width = 32,             .readdata
-    input					master_read,          //  width = 1,             .read
-    input					master_write,         //  width = 1,             .write
-    input	[31:0]			master_writedata,     // width = 32,             .writedata
-    output					master_waitrequest,   //  width = 1,             .waitrequest
-    output					master_readdatavalid, //  width = 1,             .readdatavalid
-    output	[3:0]			master_byteenable,    //  width = 4,             .byteenable
+    	input 					mgmt_clk,
+	input 					mgmt_clk_reset_n,
+	input	[31:0]				master_address,    
+    	output	[31:0]				master_readdata,   
+    	input					master_read,    
+    	input					master_write,    
+    	input	[31:0]				master_writedata,  
+    	output					master_waitrequest,
+    	output					master_readdatavalid,
+    	output	[3:0]				master_byteenable,  
 	
-	output 	[15:0]			wr_rd_addr,		
+	output 	[15:0]				wr_rd_addr,		
 	output					wr_en,
 	output					rd_en,
-	output  [31:0]			wr_data,
+	output  [31:0]				wr_data,
 	
-	input 	[31:0]			rd_datain,
-	input					rd_dvalid
+	input 	[31:0]				rd_datain,
+	input					csr_rd_dvalid
 	
 );
 
@@ -39,19 +40,26 @@ module jtag2avmm_bridge (
 
 	reg [31:0]	echo_reg;      
 	reg [31:0]	r_address;      
-    reg 		r_read;         
-    reg 		r_write;        
-    reg [31:0]	r_writedata;       
+	reg [31:0]	r_address_1;      
+	reg [31:0]	r_address_2;      
+    	reg 		r_read;         
+    	reg 		r_write;        
+    	reg [31:0]	r_writedata;       
+    	reg [31:0]	r_writedata_1;       
+    	reg [31:0]	rd_datain_1;  
+	reg		wait_en;
 	
 	wire 		wr_valid;
 	wire 		rd_valid;
 
 
-always@(posedge clk)
+always@(posedge clk or negedge rst_n)
 begin
 	if(!rst_n) 
 	begin
 		r_address  		<= 'b0;
+		r_address_1		<= 'b0;
+		r_address_2		<= 'b0;
 		r_read   		<= 'b0;
 		r_write    		<= 'b0;
 		r_writedata		<= 'b0;
@@ -60,6 +68,9 @@ begin
 	else
 	begin
 		r_address  		<= master_address;
+		r_address_1  		<= r_address;
+		r_address_2  		<= r_address_1;
+		rd_datain_1		<= rd_datain;
 		r_read   		<= master_read;
 		r_write    		<= master_write;
 		r_writedata		<= master_writedata;
@@ -69,25 +80,39 @@ begin
 end
 	assign 	wr_valid 	= (r_address[31:16] == REG_BASE_ADDR && r_write) ? 1'b1 : 1'b0;
 	assign 	wr_rd_addr	= (wr_valid || rd_valid) ? r_address[15:0] : 16'h0000;
-    assign 	wr_en		= (wr_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_write : 1'b0 ;
-    assign 	wr_data 	= r_writedata;
+	assign 	wr_en		= (wr_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_write : 1'b0 ;
+	assign 	wr_data 	= r_writedata;
 	assign  rd_valid 	= (r_address[31:16] == REG_BASE_ADDR && r_read) ? 1'b1 : 1'b0;
 	
-	assign 	rd_en					= (rd_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_read : 1'b0;
-	assign  master_readdata 		= (rd_valid) ? (r_address[15:0] == ECHO_REG_ADDR) ? echo_reg : rd_datain : 'b0; 
-	assign 	master_readdatavalid 	= (rd_valid) ? (r_address[15:0] == ECHO_REG_ADDR) ? 1'b1 : rd_dvalid : 'b0;
+	assign 	rd_en		= (rd_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_read : 1'b0;
+	assign  master_readdata = (r_address[15:0] == ECHO_REG_ADDR) ? echo_reg : rd_datain ; 
 	
-always@(posedge clk)
+	assign 	master_readdatavalid 	= (csr_rd_dvalid) ? 1'b1: (r_address[15:0] == ECHO_REG_ADDR && rd_valid) ? 1'b1 : 1'b0 ;
+	assign 	master_waitrequest 	= (!csr_rd_dvalid) ? master_read : 1'b0;
+	
+always@(posedge clk or negedge rst_n)
 begin
 	if(!rst_n) 
 	begin
 		echo_reg	<= 'b0;
 	end 
-	else if(wr_valid && r_address[15:0] == ECHO_REG_ADDR)
+	else if(wr_valid && r_address_2[15:0] == ECHO_REG_ADDR)
 	begin
 		echo_reg	<= r_writedata;
 	end 
 end 
 
+	
+always@(posedge clk or negedge rst_n)
+begin
+	if(!rst_n) 
+	begin
+		wait_en		<= 'b0;
+	end 
+	else if(r_read && csr_rd_dvalid == 1'b0 || csr_rd_dvalid == 1'b1)
+	begin
+		wait_en		<= 1'b1;
+	end 
+end 
 
 endmodule
