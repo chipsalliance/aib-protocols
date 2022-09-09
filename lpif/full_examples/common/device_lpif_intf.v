@@ -23,25 +23,25 @@ input 					die_b_align_error,
 input 					die_b_pl_exit_cg_req,
 input 					die_b_pl_trdy,
 
-input 		[511:0]		die_b_pl_data,
+input [511:0]				die_b_pl_data,
 input					die_b_pl_valid,
 
 output reg 				die_b_lp_exit_cg_ack,
 output reg 				die_b_lp_irdy,
 output reg 				die_b_lp_valid,
-output reg [511:0]		die_b_lp_data,
+output reg  [511:0]			die_b_lp_data,
 
-output 	 	[15:0]		die_b_crc_data,
-output 	reg 			die_b_crc_data_valid,
+output 	    [15:0]			die_b_crc_data,
+output 	reg 				die_b_crc_data_valid,
 
-output  reg [31:0]		mem_addr,
-output  reg [511:0]		mem_data,
-output	reg 			mem_wr,
-output	reg 			mem_rd,
+output  reg [31:0]			mem_addr,
+output  reg [511:0]			mem_data,
+output	reg 				mem_wr,
+output	reg 				mem_rd,
 
-input 		[511:0]		mem_rdata,
+input 	    [511:0]			mem_rdata,
 
-output 	reg [3:0]		die_b_lp_state_req
+output 	reg [3:0]			die_b_lp_state_req
 
 );
 
@@ -52,15 +52,15 @@ localparam  write_ndr	 = 4;
 localparam  read_dev	 = 5;
 localparam  read_drs	 = 6;
 
-reg  [2:0] 			device_state;
-wire 				phy_ready;
-wire [31:0] 		addr;
-wire [511:0] 		wr_data;
-reg 				exit_reset;
-wire 				rwd_flit;
-wire 				req_flit;
-reg  [4:0]			flit_rcv_cnt;
-reg  [527:0]		w_die_b_lp_crc_data;
+reg  [2:0] 				device_state;
+wire 					phy_ready;
+wire [31:0] 				addr;
+wire [511:0] 				wr_data;
+reg 					exit_reset;
+wire 					rwd_flit;
+wire 					req_flit;
+reg  [4:0]				flit_rcv_cnt;
+reg  [527:0]				w_die_b_lp_crc_data;
 
 `include "../../common/lpif_ed_defines.v"
 
@@ -110,7 +110,7 @@ begin
 end
 
 
-assign die_b_crc_data  	= w_die_b_lp_crc_data[527:512];
+assign die_b_crc_data  		= w_die_b_lp_crc_data[527:512];
 assign phy_ready		= die_b_align_done & die_b_tx_online & die_b_rx_online & ~die_b_align_error;
 assign rwd_flit 		= die_b_pl_trdy & die_b_pl_valid & (device_state == active_state);
 assign req_flit 		= die_b_pl_trdy & die_b_pl_valid & (device_state == read_dev);
@@ -136,14 +136,14 @@ begin
 	begin
 		device_state			<= reset_state;
 		die_b_lp_state_req		<= 4'h0;
-		die_b_lp_exit_cg_ack	<= 1'b0;
-		exit_reset				<= 1'b0;
+		die_b_lp_exit_cg_ack		<= 1'b0;
+		exit_reset			<= 1'b0;
 		die_b_lp_irdy			<= 1'b0;
-		die_b_crc_data_valid	<= 1'b0;
+		die_b_crc_data_valid		<= 1'b0;
 		die_b_lp_valid			<= 1'b0;
-		die_b_lp_data       	<= 'b0;
-		w_die_b_lp_crc_data    	<= 'b0;
-		flit_rcv_cnt	       	<= 'b0;
+		die_b_lp_data       		<= 'b0;
+		w_die_b_lp_crc_data    		<= 'b0;
+		flit_rcv_cnt	       		<= 'b0;
 		mem_rd			       	<= 'b0;
 		mem_wr			       	<= 'b0;
 	end
@@ -166,51 +166,51 @@ begin
 			die_b_lp_state_req		<= 4'h1;
 			die_b_lp_irdy			<= 1'b0;
 			die_b_lp_valid			<= 1'b0;
-			die_b_crc_data_valid	<= 1'b0;
+			die_b_crc_data_valid		<= 1'b0;
 			die_b_lp_data			<= 'b0;
 			w_die_b_lp_crc_data		<= 'b0;
 				if(die_b_pl_exit_cg_req)
 				begin
 					die_b_lp_exit_cg_ack	<= 1'b1;
-					exit_reset	<= 1'b1;
+					exit_reset		<= 1'b1;
 				end
 				else if(!die_b_pl_exit_cg_req)
 				begin
 					die_b_lp_exit_cg_ack	<= 1'b0;
 					if(exit_reset == 1'b1 && rwd_flit == 1'b1)
 					begin
-						device_state		<= write_dev;
+						device_state	<= write_dev;
 					end
 				end
 				else
 				begin
-					die_b_lp_irdy			<= 1'b0;
+					die_b_lp_irdy		<= 1'b0;
 					die_b_crc_data_valid	<= 1'b0;
-					die_b_lp_valid			<= 1'b0;
+					die_b_lp_valid		<= 1'b0;
 				end
 				 
 			end
 			write_dev	:
 			begin
 				mem_wr				<= 1'b1;
-				device_state		<= write_ndr;
+				device_state			<= write_ndr;
 			end
 		    write_ndr	:
 			begin
-				mem_wr		<= 1'b0;
+				mem_wr				<= 1'b0;
 				if(die_b_pl_trdy)
 				begin
-					die_b_lp_irdy			<= 1'b1;
-					die_b_lp_valid			<= 1'b1;
+					die_b_lp_irdy		<= 1'b1;
+					die_b_lp_valid		<= 1'b1;
 					die_b_crc_data_valid	<= 1'b1;
 					die_b_lp_data       	<= mem_ndr[flit_rcv_cnt];
 					w_die_b_lp_crc_data     <= mem_ndr[flit_rcv_cnt];
-					device_state			<= read_dev;
+					device_state		<= read_dev;
 				end
 				else
 				begin
-					die_b_lp_irdy			<= 1'b0;
-					die_b_lp_valid			<= 1'b0;
+					die_b_lp_irdy		<= 1'b0;
+					die_b_lp_valid		<= 1'b0;
 					die_b_crc_data_valid	<= 1'b0;
 					die_b_lp_data       	<= 'b0;
 					w_die_b_lp_crc_data     <= 'b0;
@@ -221,27 +221,27 @@ begin
 				if(req_flit)
 				begin
 					device_state		<= read_drs;
-					mem_rd	            <= 1'b1;
+					mem_rd	            	<= 1'b1;
 				end
 				else
 				begin
 				die_b_lp_irdy			<= 1'b0;
 				die_b_lp_valid			<= 1'b0;
-				die_b_crc_data_valid	<= 1'b0;
-				die_b_lp_data       	<= 'b0;
-				w_die_b_lp_crc_data     <= 'b0;
+				die_b_crc_data_valid		<= 1'b0;
+				die_b_lp_data       		<= 'b0;
+				w_die_b_lp_crc_data     	<= 'b0;
 				end
 			end
 		    read_drs	:
 			begin
-				mem_rd	            <= 1'b0;
+				mem_rd	            		<= 1'b0;
 				if(die_b_pl_trdy)
 				begin
 					die_b_lp_irdy			<= 1'b1;
 					die_b_lp_valid			<= 1'b1;
-					die_b_crc_data_valid	<= 1'b1;
-					die_b_lp_data       	<= {mem_rdata,mem_drs[flit_rcv_cnt][127:0]};
-					w_die_b_lp_crc_data     <= mem_drs[flit_rcv_cnt];
+					die_b_crc_data_valid		<= 1'b1;
+					die_b_lp_data       		<= {mem_rdata,mem_drs[flit_rcv_cnt][127:0]};
+					w_die_b_lp_crc_data     	<= mem_drs[flit_rcv_cnt];
 					device_state			<= active_state;
 					if(flit_rcv_cnt<5'd15)
 						flit_rcv_cnt		<= flit_rcv_cnt + 1;
@@ -252,9 +252,9 @@ begin
 				begin
 					die_b_lp_irdy			<= 1'b0;
 					die_b_lp_valid			<= 1'b0;
-					die_b_crc_data_valid	<= 1'b0;
-					die_b_lp_data       	<= 'b0;
-					w_die_b_lp_crc_data 	<= 'b0;
+					die_b_crc_data_valid		<= 1'b0;
+					die_b_lp_data       		<= 'b0;
+					w_die_b_lp_crc_data 		<= 'b0;
 				end
 				
 			end

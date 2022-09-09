@@ -13,19 +13,19 @@ module lpif_csr (
 	input 					clk,	
 	input 					rst_n,
 	
-	input 	[15:0]			wr_rd_addr,		
+	input 	[15:0]				wr_rd_addr,		
 	input					wr_en,
 	input					rd_en,
-	input  [31:0]			wr_data,
+	input  [31:0]				wr_data,
 	
-	output 	reg [31:0]		rd_datain,
+	output 	reg [31:0]			rd_datain,
 	output	reg				rd_dvalid,
 	
-	output	[31:0]			o_delay_x_value,
-	output	[31:0]			o_delay_y_value,
-	output	[31:0]			o_delay_z_value,
+	output	[31:0]				o_delay_x_value,
+	output	[31:0]				o_delay_y_value,
+	output	[31:0]				o_delay_z_value,
 	
-	input 	[1:0]			chkr_pass,
+	input 	[1:0]				chkr_pass,
 	input					align_error,
 	input 					die_a_tx_online,
 	input 					die_a_rx_online,
@@ -40,27 +40,27 @@ module lpif_csr (
 );
 
 localparam 		REG_DIE_A_CTRL_ADDR 		= 16'h1000;
-localparam 		REG_DIE_A_STS_ADDR	 		= 16'h1004;
-localparam 		REG_LINKUP_STS_ADDR			= 16'h1008;
+localparam 		REG_DIE_A_STS_ADDR		= 16'h1004;
+localparam 		REG_LINKUP_STS_ADDR		= 16'h1008;
 
 localparam 		REG_DELAY_X_VAL_ADDR		= 16'h2000;
 localparam 		REG_DELAY_Y_VAL_ADDR		= 16'h2004;
 localparam 		REG_DELAY_Z_VAL_ADDR		= 16'h2008;
 
-reg [31:0] 		delay_x_value;
-reg [31:0] 		delay_y_value;
-reg [31:0] 		delay_z_value;
-reg [31:0] 		die_a_ctrl;
-reg [31:0] 		die_a_sts;
-reg [31:0]		linkup_sts ;
+reg [31:0] 			delay_x_value;
+reg [31:0] 			delay_y_value;
+reg [31:0] 			delay_z_value;
+reg [31:0] 			die_a_ctrl;
+reg [31:0] 			die_a_sts;
+reg [31:0]			linkup_sts ;
 
-reg [1:0]		chkr_done_r1;
-wire 			chkr_done_rs;
+reg [1:0]			chkr_done_r1;
+wire 				chkr_done_rs;
 
 assign o_delay_x_value  	= delay_x_value;
 assign o_delay_y_value  	= delay_y_value;
 assign o_delay_z_value  	= delay_z_value;
-assign flit_wr_en			= die_a_ctrl[0];
+assign flit_wr_en		= die_a_ctrl[0];
 
 always@(posedge clk)
 begin
@@ -91,11 +91,11 @@ begin
 				die_a_ctrl		<= wr_data;
 			end
 			REG_DELAY_X_VAL_ADDR : 
-				delay_x_value	<= wr_data;
+				delay_x_value		<= wr_data;
 			REG_DELAY_Y_VAL_ADDR : 
-				delay_y_value	<= wr_data;
+				delay_y_value		<= wr_data;
 			REG_DELAY_Z_VAL_ADDR : 
-				delay_z_value	<= wr_data;			
+				delay_z_value		<= wr_data;			
 			default:
 			begin
 				die_a_ctrl		<= die_a_ctrl;

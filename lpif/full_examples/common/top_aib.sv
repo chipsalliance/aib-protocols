@@ -13,60 +13,60 @@
 
 module top_aib#(parameter DWIDTH = 40, parameter TOTAL_CHNL_NUM = 24)
 	(
-	input									avmm_clk,
-	input                                   osc_clk,
-	input	[TOTAL_CHNL_NUM*DWIDTH*8-1:0]	m1_data_in_f,
-    output  [TOTAL_CHNL_NUM*DWIDTH*8-1:0]	m1_data_out_f,	
-	input	[TOTAL_CHNL_NUM*DWIDTH*8-1:0]	s1_data_in_f,
-    output  [TOTAL_CHNL_NUM*DWIDTH*8-1:0]	s1_data_out_f,
+	input						avmm_clk,
+	input                                   	osc_clk,
+	input	[TOTAL_CHNL_NUM*DWIDTH*8-1:0]		m1_data_in_f,
+    	output  [TOTAL_CHNL_NUM*DWIDTH*8-1:0]		m1_data_out_f,	
+	input	[TOTAL_CHNL_NUM*DWIDTH*8-1:0]		s1_data_in_f,
+    	output  [TOTAL_CHNL_NUM*DWIDTH*8-1:0]		s1_data_out_f,
 	
-    input	[TOTAL_CHNL_NUM*DWIDTH*2-1:0]   m1_data_in, //output data to pad
-    output  [TOTAL_CHNL_NUM*DWIDTH*2-1:0]   m1_data_out,
-	 input	[TOTAL_CHNL_NUM*DWIDTH*2-1:0]   s1_data_in, //output data to pad
-    output  [TOTAL_CHNL_NUM*DWIDTH*2-1:0]   s1_data_out,
+    	input	[TOTAL_CHNL_NUM*DWIDTH*2-1:0]  		m1_data_in, //output data to pad
+    	output  [TOTAL_CHNL_NUM*DWIDTH*2-1:0]  		m1_data_out,
+	 input	[TOTAL_CHNL_NUM*DWIDTH*2-1:0]  		s1_data_in, //output data to pad
+    	output  [TOTAL_CHNL_NUM*DWIDTH*2-1:0]  		s1_data_out,
 	
 	input	[TOTAL_CHNL_NUM-1:0]     		m1_m_ns_fwd_clk, //output data clock
-    input	[TOTAL_CHNL_NUM-1:0]     		m1_m_ns_rcv_clk,
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_m_fs_rcv_clk,
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_m_fs_fwd_clk,
-	
+    	input	[TOTAL_CHNL_NUM-1:0]     		m1_m_ns_rcv_clk,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_m_fs_rcv_clk,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_m_fs_fwd_clk,
+    
 	input	[TOTAL_CHNL_NUM-1:0]     		s1_s_ns_fwd_clk, //output data clock
-    input	[TOTAL_CHNL_NUM-1:0]     		s1_s_ns_rcv_clk,
-    output  [TOTAL_CHNL_NUM-1:0]     		s1_s_fs_rcv_clk,
-    output  [TOTAL_CHNL_NUM-1:0]     		s1_s_fs_fwd_clk,
+    	input	[TOTAL_CHNL_NUM-1:0]     		s1_s_ns_rcv_clk,
+    	output  [TOTAL_CHNL_NUM-1:0]     		s1_s_fs_rcv_clk,
+    	output  [TOTAL_CHNL_NUM-1:0]     		s1_s_fs_fwd_clk,
 	
-    input	[TOTAL_CHNL_NUM-1:0]     		m1_m_wr_clk,
-    input	[TOTAL_CHNL_NUM-1:0]     		m1_m_rd_clk,
+    	input	[TOTAL_CHNL_NUM-1:0]     		m1_m_wr_clk,
+    	input	[TOTAL_CHNL_NUM-1:0]     		m1_m_rd_clk,
 	
-    input	[TOTAL_CHNL_NUM-1:0]     		s1_s_wr_clk,
-    input	[TOTAL_CHNL_NUM-1:0]     		s1_s_rd_clk,
-	input 									m0_ns_mac_rdy	,
-	input 	[23:0]								m0_adapter_rstn,
-	input 									s0_ns_mac_rdy	,
-	input 	[23:0]								s0_adapter_rstn,
+    	input	[TOTAL_CHNL_NUM-1:0]     		s1_s_wr_clk,
+    	input	[TOTAL_CHNL_NUM-1:0]     		s1_s_rd_clk,
+	input 						m0_ns_mac_rdy	,
+	input 	[23:0]					m0_adapter_rstn,
+	input 						s0_ns_mac_rdy	,
+	input 	[23:0]					s0_adapter_rstn,
 	
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_ms_tx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_ms_rx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_sl_tx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]     		m1_sl_rx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_ms_tx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_ms_rx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_sl_tx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]     		m1_sl_rx_transfer_en,
 	
-	output 									o_m1_conf_done,
-	output 									o_m1_por,
-	output 									o_s1_conf_done,
-	output 									o_s1_por,
+	output 						o_m1_conf_done,
+	output 						o_m1_por,
+	output 						o_s1_conf_done,
+	output 						o_s1_por,
 	
-    input									m1_i_osc_clk,   //Only for master mode
+    	input						m1_i_osc_clk,   //Only for master mode
 	
 	input  	[TOTAL_CHNL_NUM*80-1:0]   		s1_gen1_data_in_f,
-    output  [TOTAL_CHNL_NUM*80-1:0]   		s1_gen1_data_out_f,   
+    	output  [TOTAL_CHNL_NUM*80-1:0]   		s1_gen1_data_out_f,   
 	input  	[TOTAL_CHNL_NUM-1:0]   			s1_m_wr_clk,
-    input  	[TOTAL_CHNL_NUM-1:0]   			s1_m_rd_clk,
+    	input  	[TOTAL_CHNL_NUM-1:0]   			s1_m_rd_clk,
 	input  	[TOTAL_CHNL_NUM-1:0]   			s1_m_ns_fwd_clk,
 	output  [TOTAL_CHNL_NUM-1:0]   			s1_m_fs_fwd_clk,
-    output  [TOTAL_CHNL_NUM-1:0]    		s1_ms_rx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]    		s1_ms_tx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]    		s1_sl_rx_transfer_en,
-    output  [TOTAL_CHNL_NUM-1:0]    		s1_sl_tx_transfer_en
+    	output  [TOTAL_CHNL_NUM-1:0]    		s1_ms_rx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]    		s1_ms_tx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]    		s1_sl_rx_transfer_en,
+    	output  [TOTAL_CHNL_NUM-1:0]    		s1_sl_tx_transfer_en
     
 );
 
@@ -97,21 +97,21 @@ int 			run_for_n_wa_cycle;
 int 			err_count;
 wire 			por_out;
 
-logic [(TOTAL_CHNL_NUM*40*8)-1:0]   axist_data_in_f;
-logic [(TOTAL_CHNL_NUM*40*8)-1:0]   axist_data_out_f;
-logic [(TOTAL_CHNL_NUM*40)-1:0]     axist_gen1_data_in;
-logic [(TOTAL_CHNL_NUM*40)-1:0]     axist_gen1_data_out;
-logic [(TOTAL_CHNL_NUM*40*2)-1:0]   axist_gen1_data_in_f;
-logic [(TOTAL_CHNL_NUM*40*2)-1:0]   axist_gen1_data_out_f;
+logic [(TOTAL_CHNL_NUM*40*8)-1:0]  	 	axist_data_in_f;
+logic [(TOTAL_CHNL_NUM*40*8)-1:0]   		axist_data_out_f;
+logic [(TOTAL_CHNL_NUM*40)-1:0]     		axist_gen1_data_in;
+logic [(TOTAL_CHNL_NUM*40)-1:0]     		axist_gen1_data_out;
+logic [(TOTAL_CHNL_NUM*40*2)-1:0]   		axist_gen1_data_in_f;
+logic [(TOTAL_CHNL_NUM*40*2)-1:0]   		axist_gen1_data_out_f;
 
-logic [40*24-1:0] 					ms1_rcv_40b_q [$];
+logic [40*24-1:0] 				ms1_rcv_40b_q [$];
 
-logic [80*24-1:0] 					sl1_rcv_80b_q [$];
-logic [80*24-1:0] 					ms1_rcv_80b_q [$];
+logic [80*24-1:0] 				sl1_rcv_80b_q [$];
+logic [80*24-1:0] 				ms1_rcv_80b_q [$];
 
-logic [320*24-1:0] 					sl1_rcv_320b_q [$];
-logic [320*24-1:0] 					ms1_rcv_320b_q [$];
-bit [1023:0] 						status;
+logic [320*24-1:0] 				sl1_rcv_320b_q [$];
+logic [320*24-1:0] 				ms1_rcv_320b_q [$];
+bit [1023:0] 					status;
 
 logic [(24*320)-1 : 0] 				datain_f_m;
 logic [(24*320)-1 : 0] 				dataout_f_m;
@@ -119,11 +119,11 @@ logic [(24*80)-1 : 0] 				datain_m;
 logic [(24*80)-1 : 0] 				dataout_m;
 logic [(24*80)-1 : 0] 				tx_parallel_data_in;
 logic [(24*80)-1 : 0] 				rx_parallel_data_out;
-wire 					m1_por_out;
-wire 					s1_por_out;
-assign o_m1_conf_done	= intf_m1.i_conf_done;
+wire 						m1_por_out;
+wire 						s1_por_out;
+assign o_m1_conf_done		= intf_m1.i_conf_done;
 assign o_m1_por			= m1_por_out;
-assign o_s1_conf_done	= intf_s1.i_conf_done;
+assign o_s1_conf_done		= intf_s1.i_conf_done;
 assign o_s1_por			= s1_por_out;
 
 logic data_en_axist;
@@ -179,9 +179,8 @@ logic data_en_axist;
     wire [S_PAD_NUM-1:0] s1_iopad_ch22_aib;
     wire [M_PAD_NUM-1:0] m1_iopad_ch23_aib;
     wire [S_PAD_NUM-1:0] s1_iopad_ch23_aib;
-    //=================================================================================
-    // Register config for testbench 
-    //=================================================================================
+    wire HI = 1'b1;
+    wire LO = 1'b0;
     reg  [1:0]  ms1_tx_fifo_mode;
     reg  [1:0]  sl1_tx_fifo_mode;
     reg  [1:0]  ms1_rx_fifo_mode;
@@ -198,6 +197,7 @@ logic data_en_axist;
 `include "../../common/agent.sv"
     //-----------------------------------------------------------------------------------------
     //Avalon MM Interface instantiation
+
     //-----------------------------------------------------------------------------------------
     avalon_mm_if #(.AVMM_WIDTH(32), .BYTE_WIDTH(4)) avmm_if_m1  (
      .clk    (avmm_clk)
@@ -221,6 +221,134 @@ logic data_en_axist;
     aib_top_wrapper_v1m dut_master1 (
        `include "dut_ms_gen1.inc"
     );
+`elsif MS_AIB_BCA
+    aib_phy_top dut_master1 (
+	.iopad_ch0_aib(m1_iopad_ch0_aib), 
+    .iopad_ch1_aib(m1_iopad_ch1_aib), 
+    .iopad_ch2_aib(m1_iopad_ch2_aib), 
+    .iopad_ch3_aib(m1_iopad_ch3_aib), 
+    .iopad_ch4_aib(m1_iopad_ch4_aib), 
+    .iopad_ch5_aib(m1_iopad_ch5_aib), 
+    .iopad_ch6_aib(m1_iopad_ch6_aib), 
+    .iopad_ch7_aib(m1_iopad_ch7_aib), 
+    .iopad_ch8_aib(m1_iopad_ch8_aib), 
+    .iopad_ch9_aib(m1_iopad_ch9_aib), 
+    .iopad_ch10_aib(m1_iopad_ch10_aib),
+    .iopad_ch11_aib(m1_iopad_ch11_aib),
+    .iopad_ch12_aib(m1_iopad_ch12_aib),
+    .iopad_ch13_aib(m1_iopad_ch13_aib),
+    .iopad_ch14_aib(m1_iopad_ch14_aib),
+    .iopad_ch15_aib(m1_iopad_ch15_aib),
+    .iopad_ch16_aib(m1_iopad_ch16_aib),
+    .iopad_ch17_aib(m1_iopad_ch17_aib),
+    .iopad_ch18_aib(m1_iopad_ch18_aib),
+    .iopad_ch19_aib(m1_iopad_ch19_aib),
+    .iopad_ch20_aib(m1_iopad_ch20_aib),
+    .iopad_ch21_aib(m1_iopad_ch21_aib),
+    .iopad_ch22_aib(m1_iopad_ch22_aib),
+    .iopad_ch23_aib(m1_iopad_ch23_aib),
+   //IO pads, AUX channel
+  
+    .iopad_device_detect(device_detect),
+    .iopad_power_on_reset(por),
+    
+    .data_in_f(m1_data_in_f),						
+    .data_out_f(m1_data_out_f),                     
+    .data_in(m1_data_in), //output data to pad      
+    .data_out(m1_data_out),                         
+			 
+    .m_ns_fwd_clk(m1_m_ns_fwd_clk), //output data clock	 
+    .m_ns_rcv_clk(m1_m_ns_rcv_clk),                         
+    .m_fs_rcv_clk(m1_m_fs_rcv_clk),                         
+    .m_fs_fwd_clk(m1_m_fs_fwd_clk),                         
+                                                         
+    .m_wr_clk(m1_m_wr_clk),                              
+    .m_rd_clk(m1_m_rd_clk),
+
+    .ns_adapter_rstn(intf_m1.ns_adapter_rstn),	
+    .ns_mac_rdy(intf_m1.ns_mac_rdy),             
+    .fs_mac_rdy(intf_m1.fs_mac_rdy),             
+
+    .i_conf_done(intf_m1.i_conf_done),
+    .ms_rx_dcc_dll_lock_req(intf_m1.ms_rx_dcc_dll_lock_req),			
+    .ms_tx_dcc_dll_lock_req(intf_m1.ms_tx_dcc_dll_lock_req),         
+    .sl_rx_dcc_dll_lock_req({24{1'b1}}),                        
+    .sl_tx_dcc_dll_lock_req({24{1'b1}}),                        
+    .ms_tx_transfer_en(m1_ms_tx_transfer_en),                   
+    .ms_rx_transfer_en(m1_ms_rx_transfer_en),                   
+    .sl_tx_transfer_en(m1_sl_tx_transfer_en),
+    .sl_rx_transfer_en(m1_sl_rx_transfer_en),
+    .sr_ms_tomac(intf_m1.ms_sideband),			
+    .sr_sl_tomac(intf_m1.sl_sideband),           
+    .m_rx_align_done(intf_m1.m_rx_align_done),   
+    .dual_mode_select(1'b1),
+`ifdef SL_AIB_GEN1
+    .m_gen2_mode(1'b0),
+`else
+    .m_gen2_mode(1'b1),
+`endif
+    .i_osc_clk(m1_i_osc_clk),   //Only for master mode		
+
+       //AVMM interface
+    .i_cfg_avmm_clk(avmm_if_m1.clk),
+    .i_cfg_avmm_rst_n(avmm_if_m1.rst_n),
+    .i_cfg_avmm_addr(avmm_if_m1.address),
+    .i_cfg_avmm_byte_en(avmm_if_m1.byteenable),
+    .i_cfg_avmm_read(avmm_if_m1.read),
+    .i_cfg_avmm_write(avmm_if_m1.write),
+    .i_cfg_avmm_wdata(avmm_if_m1.writedata),
+
+    .o_cfg_avmm_rdatavld(avmm_if_m1.readdatavalid),
+    .o_cfg_avmm_rdata(avmm_if_m1.readdata),
+    .o_cfg_avmm_waitreq(avmm_if_m1.waitrequest),
+
+    .ns_fwd_clk_div(),
+    .fs_fwd_clk_div(),
+    .ns_fwd_clk(),
+    .fs_fwd_clk(),
+    .vddc1(HI),
+    .vddc2(HI),
+    .vddtx(HI),
+    .vss(LO),
+
+	.m_por_ovrd(intf_m1.m_por_ovrd),
+    .m_device_detect(intf_m1.m_device_detect),
+    .m_device_detect_ovrd(1'b0),
+    .i_m_power_on_reset(1'b0),
+    .o_m_power_on_reset(m1_por_out),
+
+    //JTAG ports
+    .i_jtag_clkdr(1'b0),
+    .i_jtag_clksel(1'b0),
+    .o_jtag_tdo(),
+    .i_jtag_intest(1'b0),
+    .i_jtag_mode(1'b0),
+    .i_jtag_rstb(1'b0),
+    .i_jtag_rstb_en(1'b0),
+    .i_jtag_weakpdn(1'b0),
+    .i_jtag_weakpu(1'b0),
+    .i_jtag_tx_scanen(1'b0),
+    .i_jtag_tdi(1'b0),
+   //ATPG
+    .i_scan_clk(1'b0),
+    .i_scan_clk_500m(1'b0),
+    .i_scan_clk_1000m(1'b0),
+    .i_scan_en(1'b0),
+    .i_scan_mode(1'b0),
+    //.i_scan_din({24{200'b0}}),
+    .i_scan_din({241'b0}),
+    .i_scan_dout(),
+
+
+	.sl_external_cntl_26_0({24{27'b0}}),
+    .sl_external_cntl_30_28({24{3'b0}}),
+    .sl_external_cntl_57_32({24{26'b0}}),
+
+    .ms_external_cntl_4_0({24{5'b0}}),
+    .ms_external_cntl_65_8({24{58'b0}})
+
+     );
+
 `else 
     aib_model_top  #(.DATAWIDTH(DATAWIDTH)) dut_master1 (
     .iopad_ch0_aib(m1_iopad_ch0_aib), 
@@ -270,7 +398,7 @@ logic data_en_axist;
     .ns_adapter_rstn(m0_adapter_rstn),		
     .ns_mac_rdy({24{m0_ns_mac_rdy}}),             
     .fs_mac_rdy(intf_m1.fs_mac_rdy),             
-                                                
+
     .i_conf_done(intf_m1.i_conf_done),
     .ms_rx_dcc_dll_lock_req(intf_m1.ms_rx_dcc_dll_lock_req),			
     .ms_tx_dcc_dll_lock_req(intf_m1.ms_tx_dcc_dll_lock_req),         
@@ -338,9 +466,7 @@ logic data_en_axist;
     .sl_external_cntl_57_32({24{26'b0}}),
 
     .ms_external_cntl_4_0({24{5'b0}}),
-    .ms_external_cntl_65_8({24{58'b0}})
-
-
+    .ms_external_cntl_65_8({24{58'b0}})  
      );
 `endif
 
@@ -409,9 +535,140 @@ logic data_en_axist;
        );
 initial begin
 @(posedge dut_slave1.config_done);
-`include "../../common/maib_prog.inc"
+//`include "../../common/maib_prog.inc"
+`include "maib_prog.inc"
 end
-    
+  `elsif SL_AIB_BCA
+    aib_phy_top dut_slave1 (
+      // `include "dut_sl1_bca.inc"
+ .iopad_ch0_aib(s1_iopad_ch0_aib),
+    .iopad_ch1_aib(s1_iopad_ch1_aib),
+    .iopad_ch2_aib(s1_iopad_ch2_aib),
+    .iopad_ch3_aib(s1_iopad_ch3_aib),
+    .iopad_ch4_aib(s1_iopad_ch4_aib),
+    .iopad_ch5_aib(s1_iopad_ch5_aib),
+    .iopad_ch6_aib(s1_iopad_ch6_aib),
+    .iopad_ch7_aib(s1_iopad_ch7_aib),
+    .iopad_ch8_aib(s1_iopad_ch8_aib),
+    .iopad_ch9_aib(s1_iopad_ch9_aib),
+    .iopad_ch10_aib(s1_iopad_ch10_aib),
+    .iopad_ch11_aib(s1_iopad_ch11_aib),
+    .iopad_ch12_aib(s1_iopad_ch12_aib),
+    .iopad_ch13_aib(s1_iopad_ch13_aib),
+    .iopad_ch14_aib(s1_iopad_ch14_aib),
+    .iopad_ch15_aib(s1_iopad_ch15_aib),
+    .iopad_ch16_aib(s1_iopad_ch16_aib),
+    .iopad_ch17_aib(s1_iopad_ch17_aib),
+    .iopad_ch18_aib(s1_iopad_ch18_aib),
+    .iopad_ch19_aib(s1_iopad_ch19_aib),
+    .iopad_ch20_aib(s1_iopad_ch20_aib),
+    .iopad_ch21_aib(s1_iopad_ch21_aib),
+    .iopad_ch22_aib(s1_iopad_ch22_aib),
+    .iopad_ch23_aib(s1_iopad_ch23_aib), 
+   //IO pads, AUX channel
+    .iopad_device_detect(device_detect),
+    .iopad_power_on_reset(por),
+
+    //Control/status from/to MAC 
+    .data_in_f(s1_data_in_f),
+    .data_out_f(s1_data_out_f),
+    .data_in(s1_data_in), //output data to pad
+    .data_out(s1_data_out),
+
+    .m_ns_fwd_clk(s1_s_ns_fwd_clk), //output data clock
+    .m_ns_rcv_clk(s1_s_ns_rcv_clk),
+    .m_fs_rcv_clk(s1_s_fs_rcv_clk),
+    .m_fs_fwd_clk(s1_s_fs_fwd_clk),
+
+    .m_wr_clk(s1_s_wr_clk),
+    .m_rd_clk(s1_s_rd_clk),
+ // .tclk_phy(),
+
+    .ns_adapter_rstn(s0_adapter_rstn),
+    .ns_mac_rdy({24{s0_ns_mac_rdy}}),
+    .fs_mac_rdy(intf_s1.fs_mac_rdy),
+
+    .i_conf_done(intf_s1.i_conf_done),
+    .ms_rx_dcc_dll_lock_req({24{1'b1}}),
+    .ms_tx_dcc_dll_lock_req({24{1'b1}}),
+    .sl_rx_dcc_dll_lock_req(intf_s1.sl_rx_dcc_dll_lock_req),
+    .sl_tx_dcc_dll_lock_req(intf_s1.sl_tx_dcc_dll_lock_req),
+    .ms_tx_transfer_en(s1_ms_tx_transfer_en),
+    .ms_rx_transfer_en(s1_ms_rx_transfer_en),
+    .sl_tx_transfer_en(s1_sl_tx_transfer_en),
+    .sl_rx_transfer_en(s1_sl_rx_transfer_en),
+    .sr_ms_tomac(intf_s1.ms_sideband),
+    .sr_sl_tomac(intf_s1.sl_sideband),
+    .m_rx_align_done(intf_s1.m_rx_align_done),
+    .dual_mode_select(1'b0),
+`ifdef MS_AIB_GEN1
+    .m_gen2_mode(1'b0),
+`else
+    .m_gen2_mode(1'b1),
+`endif
+    .i_osc_clk(m1_i_osc_clk),   //Only for master mode
+
+    //AVMM interface
+    .i_cfg_avmm_clk(avmm_if_s1.clk),
+    .i_cfg_avmm_rst_n(avmm_if_s1.rst_n),
+    .i_cfg_avmm_addr(avmm_if_s1.address),
+    .i_cfg_avmm_byte_en(avmm_if_s1.byteenable),
+    .i_cfg_avmm_read(avmm_if_s1.read),
+    .i_cfg_avmm_write(avmm_if_s1.write),
+    .i_cfg_avmm_wdata(avmm_if_s1.writedata),
+
+    .o_cfg_avmm_rdatavld(avmm_if_s1.readdatavalid),
+    .o_cfg_avmm_rdata(avmm_if_s1.readdata),
+    .o_cfg_avmm_waitreq(avmm_if_s1.waitrequest),
+
+    //BCA extra port
+
+    .ns_fwd_clk_div(),
+    .fs_fwd_clk_div(),
+    .ns_fwd_clk(),
+    .fs_fwd_clk(),
+    .vddc1(HI),
+    .vddc2(HI),
+    .vddtx(HI),
+    .vss(LO),
+
+
+    //Aux channel signals from MAC
+    .m_por_ovrd(1'b0),
+    .m_device_detect(intf_s1.m_device_detect),
+    .m_device_detect_ovrd(intf_s1.m_device_detect_ovrd),
+    .i_m_power_on_reset(intf_s1.i_m_power_on_reset),
+    .o_m_power_on_reset(s1_por_out),
+
+    //JTAG ports
+    .i_jtag_clkdr(1'b0),
+    .i_jtag_clksel(1'b0),
+    .o_jtag_tdo(),
+    .i_jtag_intest(1'b0),
+    .i_jtag_mode(1'b0),
+    .i_jtag_rstb(1'b0),
+    .i_jtag_rstb_en(1'b0),
+    .i_jtag_weakpdn(1'b0),
+    .i_jtag_weakpu(1'b0),
+    .i_jtag_tx_scanen(1'b0),
+    .i_jtag_tdi(1'b0),
+   //ATPG
+    .i_scan_clk(1'b0),
+    .i_scan_clk_500m(1'b0),
+    .i_scan_clk_1000m(1'b0),
+    .i_scan_en(1'b0),
+    .i_scan_mode(1'b0),
+    .i_scan_din({241'b0}),
+    .i_scan_dout(),
+
+    .sl_external_cntl_26_0({24{27'b0}}),
+    .sl_external_cntl_30_28({24{3'b0}}),
+    .sl_external_cntl_57_32({24{26'b0}}),
+
+    .ms_external_cntl_4_0({24{5'b0}}),
+    .ms_external_cntl_65_8({24{58'b0}})
+
+    );
 `else
     aib_model_top #(.DATAWIDTH(DATAWIDTH)) dut_slave1 (
 	.iopad_ch0_aib(s1_iopad_ch0_aib),
@@ -539,7 +796,8 @@ end
        );
 `elsif SL_AIB_GEN1
     emib_m2s1 dut_emib (
-        `include "../../common/dut_emib.inc"
+        //`include "../../common/dut_emib.inc"
+        `include "dut_emib.inc"
        );
 `else
     emib_m2s2 dut_emib (

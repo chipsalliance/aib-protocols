@@ -22,28 +22,28 @@ input 					die_a_align_error,
 input 					die_a_pl_exit_cg_req,
 input 					die_a_pl_trdy,
 input 					die_a_pl_valid,
-input 	   [511:0]		die_a_pl_data,
-input 	   [15:0]		die_a_pl_crc,
+input [511:0]				die_a_pl_data,
+input [15:0]				die_a_pl_crc,
 input 					die_a_pl_crc_valid,
 
 output reg				die_a_lp_exit_cg_ack,
 output reg				die_a_lp_irdy,
 output reg				die_a_lp_valid,
-output reg [511:0]		die_a_lp_data,
+output reg [511:0]			die_a_lp_data,
 
-output     [15:0]		die_a_lp_crc_data,
+output     [15:0]			die_a_lp_crc_data,
 output reg 				die_a_lp_crc_valid,
 
 output					die_a_rwd_valid	,
-output	   [527:0]		die_a_rwd_data	,
-output	   [527:0]		die_a_drs_data	,
-output                  die_a_drs_valid ,
+output	   [527:0]			die_a_rwd_data	,
+output	   [527:0]			die_a_drs_data	,
+output                  		die_a_drs_valid ,
 
-output 	reg [3:0]		die_a_lp_state_req,
+output 	reg [3:0]			die_a_lp_state_req,
 output 	reg				write_done,
 output 	reg				read_done,
 output 	reg				test_complete,
-output 	[1:0]			test_done,
+output 	[1:0]				test_done,
 
 input					flit_wr_en
 
@@ -129,18 +129,18 @@ begin
 	if(!reset_n )
 	begin
 		host_state			<= reset_state;
-		die_a_lp_state_req	<= 4'h0;
-		die_a_lp_exit_cg_ack<= 1'b0;
+		die_a_lp_state_req		<= 4'h0;
+		die_a_lp_exit_cg_ack		<= 1'b0;
 		exit_reset			<= 1'b0;
-		die_a_lp_irdy		<= 1'b0;
-		die_a_lp_valid		<= 1'b0;
-		die_a_lp_crc_valid	<= 1'b0;
-		test_complete       <= 1'b0;
-		write_done	        <= 1'b0;
-		read_done	        <= 1'b0;
+		die_a_lp_irdy			<= 1'b0;
+		die_a_lp_valid			<= 1'b0;
+		die_a_lp_crc_valid		<= 1'b0;
+		test_complete       		<= 1'b0;
+		write_done	        	<= 1'b0;
+		read_done	        	<= 1'b0;
 		flit_cnt			<= 'b0;
-		die_a_lp_data		<= 'b0;
-		w_die_a_lp_crc_data	<= 'b0;
+		die_a_lp_data			<= 'b0;
+		w_die_a_lp_crc_data		<= 'b0;
 	end
 	else
 	begin
@@ -159,18 +159,18 @@ begin
 			active_state :
 			begin
 			flit_cnt			<= 5'd0;
-			die_a_lp_state_req	<= 4'h1;
+			die_a_lp_state_req		<= 4'h1;
 				if(die_a_pl_exit_cg_req)
 				begin
 					die_a_lp_exit_cg_ack	<= 1'b1;
-					exit_reset				<= 1'b1;
+					exit_reset		<= 1'b1;
 				end
 				else if(!die_a_pl_exit_cg_req)
 				begin
 					die_a_lp_exit_cg_ack	<= 1'b0;
 					if(exit_reset == 1'b1 && flit_wr_en==1'b1)
 					begin
-						host_state			<= write_rwd;
+						host_state		<= write_rwd;
 						test_complete		<= 1'b0;
 					end
 				end
@@ -182,18 +182,18 @@ begin
 				begin
 				die_a_lp_irdy			<= 1'b1;
 				die_a_lp_valid			<= 1'b1;
-				die_a_lp_data       	<= mem_rwd[flit_cnt];
+				die_a_lp_data       		<= mem_rwd[flit_cnt];
 				w_die_a_lp_crc_data		<=	mem_rwd[flit_cnt];
 				die_a_lp_crc_valid		<= 1'b1	;
-				host_state				<= write_ndr;
+				host_state			<= write_ndr;
 				end
 				else
 				begin
 				die_a_lp_irdy			<= 1'b0;
 				die_a_lp_valid			<= 1'b0;
 				die_a_lp_crc_valid		<= 1'b0;
-				die_a_lp_data       	<= 'b0;
-				w_die_a_lp_crc_data     <= 'b0;
+				die_a_lp_data       		<= 'b0;
+				w_die_a_lp_crc_data     	<= 'b0;
 				end
 			end
 		    write_ndr	:
@@ -201,12 +201,12 @@ begin
 				die_a_lp_irdy			<= 1'b0;
 				die_a_lp_valid			<= 1'b0;
 				die_a_lp_crc_valid		<= 1'b0;
-				die_a_lp_data       	<= 'b0;
-				w_die_a_lp_crc_data     <= 'b0;
+				die_a_lp_data       		<= 'b0;
+				w_die_a_lp_crc_data     	<= 'b0;
 				if(ndr_rcv)
-					host_state			<= read_req;
+					host_state		<= read_req;
 				else
-					host_state			<= write_ndr;
+					host_state		<= write_ndr;
 				 
 			end
 		    read_req	:
@@ -216,18 +216,18 @@ begin
 				die_a_lp_irdy			<= 1'b1;
 				die_a_lp_valid			<= 1'b1;
 				die_a_lp_crc_valid		<= 1'b1;
-				die_a_lp_data       	<= mem_req[flit_cnt];
+				die_a_lp_data       		<= mem_req[flit_cnt];
 				w_die_a_lp_crc_data		<=	mem_req[flit_cnt];
-				host_state				<= read_drs;
+				host_state			<= read_drs;
 				end
 				else
 				begin
 				die_a_lp_irdy			<= 1'b0;
 				die_a_lp_valid			<= 1'b0;
 				die_a_lp_crc_valid		<= 1'b0;
-				die_a_lp_data       	<= 'b0;
-				w_die_a_lp_crc_data     <= 'b0;
-				host_state				<= read_req;
+				die_a_lp_data       		<= 'b0;
+				w_die_a_lp_crc_data     	<= 'b0;
+				host_state			<= read_req;
 				end
 			end
 		    read_drs	:
@@ -249,7 +249,7 @@ begin
 					else 
 					begin
 						host_state		<= active_state;
-						test_complete	<= 1'b1;
+						test_complete		<= 1'b1;
 					end
 				end
 				else
@@ -259,7 +259,7 @@ begin
 			end
 			default
 			begin
-				host_state			<= active_state;
+				host_state				<= active_state;
 			end
 		endcase
 	end

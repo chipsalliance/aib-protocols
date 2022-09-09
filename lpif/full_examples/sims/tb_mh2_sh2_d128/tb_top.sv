@@ -26,9 +26,14 @@ module tb_top();
    parameter FWD_CYCLE  		= 500*CLK_SCALING;
    parameter AVMM_CYCLE 		= 4000;
    parameter OSC_CYCLE  		= 1000*CLK_SCALING;
-   parameter FULL 				= 1;
-   parameter HALF 				= 2;
-   parameter CLKL_HALF_CYCLE 	= 500;
+   parameter FULL 			= 1;
+   parameter HALF 			= 2;
+   parameter CLKL_HALF_CYCLE 		= 500;
+
+
+   localparam 			REG_DIE_A_CTRL_ADDR 		=32'h50001000;
+   localparam 			REG_LINKUP_STS_ADDR		=32'h50001008;
+   localparam 			REG_DIE_A_STS_ADDR		=32'h50001004;
 
    wire   [7:0]                                w_die_a_lp_stream;
    wire                                        w_die_a_lp_stallack;
@@ -93,19 +98,19 @@ module tb_top();
    assign w_die_a_lp_rcvd_crc_err 		= 'b0;
    assign w_die_a_lp_wake_req 			= 'b0;
    assign w_die_a_lp_force_detect 		= 'b0;
-   assign w_die_a_lp_cfg 				= 'b0;
+   assign w_die_a_lp_cfg 			= 'b0;
    assign w_die_a_lp_cfg_vld 			= 'b0;
-   assign w_die_a_lp_crc 				= 'b0;
-   assign w_die_a_lp_crc_valid 		= 'b0;
-   assign w_die_a_lp_device_present 	= 'b0;
+   assign w_die_a_lp_crc 			= 'b0;
+   assign w_die_a_lp_crc_valid 			= 'b0;
+   assign w_die_a_lp_device_present 		= 'b0;
    assign w_die_a_lp_clk_ack 			= 'b0;
-   assign w_die_a_lp_pri 				= 2'h3;
-   assign w_die_a_lpbk_en 				= 'b0;
+   assign w_die_a_lp_pri 			= 2'h3;
+   assign w_die_a_lpbk_en 			= 'b0;
 
-   assign w_die_b_lp_irdy 				= 'b0;
-   assign w_die_b_lp_tmstmp_stream 	= 8'h00;
-   assign w_die_b_lp_data 				= 'b0;
-   assign w_die_b_lp_valid				= 'b0;
+   assign w_die_b_lp_irdy 			= 'b0;
+   assign w_die_b_lp_tmstmp_stream 		= 8'h00;
+   assign w_die_b_lp_data 			= 'b0;
+   assign w_die_b_lp_valid			= 'b0;
    assign w_die_b_lp_stream			= 'b0;
    assign w_die_b_lp_stallack			= 'b0;
    assign w_die_b_lp_linkerror			= 'b0;
@@ -113,14 +118,14 @@ module tb_top();
    assign w_die_b_lp_rcvd_crc_err 		= 'b0;
    assign w_die_b_lp_wake_req 			= 'b0;
    assign w_die_b_lp_force_detect 		= 'b0;
-   assign w_die_b_lp_cfg 				= 'b0;
+   assign w_die_b_lp_cfg 			= 'b0;
    assign w_die_b_lp_cfg_vld 			= 'b0;
-   assign w_die_b_lp_crc 				= 'b0;
-   assign w_die_b_lp_crc_valid 		= 'b0;
-   assign w_die_b_lp_device_present 	= 'b0;
+   assign w_die_b_lp_crc 			= 'b0;
+   assign w_die_b_lp_crc_valid 			= 'b0;
+   assign w_die_b_lp_device_present 		= 'b0;
    assign w_die_b_lp_clk_ack 			= 'b0;
-   assign w_die_b_lp_pri 				= 2'h3;
-   assign w_die_b_lpbk_en 				= 'b0;
+   assign w_die_b_lp_pri 			= 2'h3;
+   assign w_die_b_lpbk_en 			= 'b0;
    reg [31:0] 				       tb_wr_addr, tb_wrdata;
    reg [3:0] 				       mask_reg;
    reg 					       tb_wren, tb_rden;
@@ -138,9 +143,9 @@ module tb_top();
    logic [527:0] 			       rd_flit [$];
    logic [527:0]                               disp;
    
-   assign die_b_lp_tmstmp_stream = 8'd0;
-   assign w_die_b_lp_tmstmp	  = 1'b0;
-   assign w_die_a_lp_tmstmp	  = 1'b0;
+   assign die_b_lp_tmstmp_stream 	= 8'd0;
+   assign w_die_b_lp_tmstmp	  	= 1'b0;
+   assign w_die_a_lp_tmstmp	  	= 1'b0;
 
    initial
      begin
@@ -153,8 +158,8 @@ module tb_top();
 	sl_fwd_clk	= 1'b1;
 	avmm_clk	= 1'b0;
 	osc_clk		= 1'b1;
-	clk_die_a = 1'b0;
-	clk_die_b = 1'b0;
+	clk_die_a 	= 1'b0;
+	clk_die_b 	= 1'b0;
 	
      end
 
@@ -218,6 +223,11 @@ module tb_top();
 			      .osc_clk   (osc_clk	),		
 			      .clk_die_a (clk_die_a),
 			      .clk_die_b (clk_die_b ),
+			      .tx_online(),
+			      .rx_online(), 
+			      .i_w_m_wr_rst_n(1'b1),
+			      .i_w_s_wr_rst_n(1'b1),
+			      .mgmt_clk(1'b0),
 			      .reset_die_a(reset_die_a),
 			      .reset_die_b(reset_die_b),
 			      .master_address(tb_wr_addr),      
@@ -361,8 +371,8 @@ module tb_top();
 	tb_rden		 = 'b0;
 	mask_reg 	 = 0;
 	tb_wr_addr 	 = 0;
-	tb_read_data = 0;
-	i			 = 0;
+	tb_read_data 	 = 0;
+	i		 = 0;
 	disp             = 0;
 	
 	$display("Wait for LPIF Adapter online");
@@ -374,14 +384,15 @@ module tb_top();
 	avmm_write(32'h50002004, 32'h00000020); //Delay Y value = 32
 	avmm_write(32'h50002008, 32'h00001770); //Delay Z value = 6000
 	
-	avmm_read(32'h50001008);
+	//wait for LPIF online
+	avmm_read(REG_LINKUP_STS_ADDR);
 	while (tb_read_data[5:0] != 6'h3f)
 	  begin
-	     avmm_read(32'h50001008);
+	     avmm_read(REG_LINKUP_STS_ADDR);
 	  end
-	avmm_read(32'h50001008);
+	avmm_read(REG_LINKUP_STS_ADDR);
 	
-	//check for AIB online
+	//check for LPIF online
 	if(tb_read_data[5:0]== 6'h3F) 
 	  begin
 	     $display("\n");
@@ -392,40 +403,44 @@ module tb_top();
 	else $display("LPIF Adapter Host/Device is offline\n");
 	repeat(200) @(posedge clk_die_a);
 	
+	//Host-device write will be automatically followed by read
+	//Initiate write flits to device
 	$display("////////////////////////////////////////////////////////");
 	$display("Host-Device Write and Read for 10 flits");
 	$display("///////////////////////////////////////////////////////\n");
-	
-	//Enable write
-	avmm_write(32'h50001000,32'h00000001);
+	avmm_write(REG_DIE_A_CTRL_ADDR,32'h00000001);
 	repeat(4) @(posedge clk_die_a);
-	avmm_write(32'h50001000,32'h00000000);
+	avmm_write(REG_DIE_A_CTRL_ADDR,32'h00000000);
 	
+	//wait for test to complete	
 	repeat(20) @(posedge clk_die_a);
-	avmm_read(32'h50001004);
+	avmm_read(REG_DIE_A_STS_ADDR);
 	while (tb_read_data[2] != 1'b1)
 	  begin
-	     avmm_read(32'h50001004);
+	     avmm_read(REG_DIE_A_STS_ADDR);
 	  end
 	$display("\n");
+
+	//Display write flits in terminal
 	$display("Data Write: Flits from Host to Device");
-
-
 	for(i=0;i<10;i++)
 	  begin
 	     disp = wr_flit.pop_back;
 	     $display("Write Flit %2d Data: %x | Header: %x", i, disp[511:128], disp[127:0]);
 	  end
 	$display("\n");
+
+	//Display read flit in terminal. Read is auto followed after write.
 	$display("Data Read Response: Flits from Device to Host");
 	for(i=0;i<10;i++)
 	  begin
 	     disp = rd_flit.pop_back;
 	     $display("Read Flit %2d Data: %x | Header: %x", i, disp[511:128], disp[127:0]);
-	  end
-	
+	  end	
 	repeat(200) @(posedge clk_die_a);
-	avmm_read(32'h50001004);
+	
+	//check for test result
+	avmm_read(REG_DIE_A_STS_ADDR);
 	if(tb_read_data[3:0] == 4'hf)
 	  begin
 	     $display("\n\n");
@@ -478,5 +493,4 @@ module tb_top();
       $vcdplusmemon();
    end
 
-
-endmodule
+   endmodule

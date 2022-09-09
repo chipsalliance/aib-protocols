@@ -13,16 +13,16 @@ module lpif_csr_intf (
 	input 					clk,	
 	input 					rst_n,
 	
-	input	[31:0]			master_address,       // width = 32,       master.address
-    output	[31:0]			master_readdata,      // width = 32,             .readdata
-    input					master_read,          //  width = 1,             .read
-    input					master_write,         //  width = 1,             .write
-    input	[31:0]			master_writedata,     // width = 32,             .writedata
-    output					master_waitrequest,   //  width = 1,             .waitrequest
-    output					master_readdatavalid, //  width = 1,             .readdatavalid
-    output	[3:0]			master_byteenable,    //  width = 4,             .byteenable
+	input	[31:0]				master_address,       // width = 32,       master.address
+    	output	[31:0]				master_readdata,      // width = 32,             .readdata
+    	input					master_read,          //  width = 1,             .read
+    	input					master_write,         //  width = 1,             .write
+    	input	[31:0]				master_writedata,     // width = 32,             .writedata
+    	output					master_waitrequest,   //  width = 1,             .waitrequest
+    	output					master_readdatavalid, //  width = 1,             .readdatavalid
+    	output	[3:0]				master_byteenable,    //  width = 4,             .byteenable
 	
-	input 	[1:0]			chkr_pass,
+	input 	[1:0]				chkr_pass,
 	input					test_complete,
 	input					align_error,
 	input					align_done,
@@ -30,9 +30,9 @@ module lpif_csr_intf (
 	input 					die_a_rx_online,
 	input 					die_b_tx_online,
 	input 					die_b_rx_online,
-	output	[31:0]			o_delay_x_value,
-	output	[31:0]			o_delay_y_value,
-	output	[31:0]			o_delay_z_value,
+	output	[31:0]				o_delay_x_value,
+	output	[31:0]				o_delay_y_value,
+	output	[31:0]				o_delay_z_value,
 	
 	output					flit_wr_en
 
@@ -54,13 +54,13 @@ module lpif_csr_intf (
 	.rst_n (rst_n),
     
 	.master_address(master_address),       // width = 32,       master.address
-    .master_readdata(master_readdata),      // width = 32,             .readdata
-    .master_read(master_read),          //  width = 1,             .read
-    .master_write(master_write),         //  width = 1,             .write
-    .master_writedata(master_writedata),     // width = 32,             .writedata
-    .master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
-    .master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
-    .master_byteenable(master_byteenable),    //  width = 4,             .byteenable
+    	.master_readdata(master_readdata),      // width = 32,             .readdata
+    	.master_read(master_read),          //  width = 1,             .read
+    	.master_write(master_write),         //  width = 1,             .write
+    	.master_writedata(master_writedata),     // width = 32,             .writedata
+    	.master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
+    	.master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
+    	.master_byteenable(master_byteenable),    //  width = 4,             .byteenable
 	
 	.wr_rd_addr(csr_wr_rd_addr),		
 	.wr_en(csr_wr_en),

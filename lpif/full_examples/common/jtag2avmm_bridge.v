@@ -15,21 +15,21 @@ module jtag2avmm_bridge (
 	input 					clk ,
 	input 					rst_n ,
     
-	input	[31:0]			master_address,       // width = 32,       master.address
-    output	[31:0]			master_readdata,      // width = 32,             .readdata
-    input					master_read,          //  width = 1,             .read
-    input					master_write,         //  width = 1,             .write
-    input	[31:0]			master_writedata,     // width = 32,             .writedata
-    output					master_waitrequest,   //  width = 1,             .waitrequest
-    output					master_readdatavalid, //  width = 1,             .readdatavalid
-    output	[3:0]			master_byteenable,    //  width = 4,             .byteenable
+	input	[31:0]				master_address,       // width = 32,       master.address
+    	output	[31:0]				master_readdata,      // width = 32,             .readdata
+    	input					master_read,          //  width = 1,             .read
+    	input					master_write,         //  width = 1,             .write
+    	input	[31:0]				master_writedata,     // width = 32,             .writedata
+    	output					master_waitrequest,   //  width = 1,             .waitrequest
+    	output					master_readdatavalid, //  width = 1,             .readdatavalid
+    	output	[3:0]				master_byteenable,    //  width = 4,             .byteenable
 	
-	output 	[15:0]			wr_rd_addr,		
+	output 	[15:0]				wr_rd_addr,		
 	output					wr_en,
 	output					rd_en,
-	output  [31:0]			wr_data,
+	output  [31:0]				wr_data,
 	
-	input 	[31:0]			rd_datain,
+	input 	[31:0]				rd_datain,
 	input					rd_dvalid
 	
 );
@@ -39,9 +39,9 @@ module jtag2avmm_bridge (
 
 	reg [31:0]	echo_reg;      
 	reg [31:0]	r_address;      
-    reg 		r_read;         
-    reg 		r_write;        
-    reg [31:0]	r_writedata;       
+    	reg 		r_read;         
+    	reg 		r_write;        
+    	reg [31:0]	r_writedata;       
 	
 	wire 		wr_valid;
 	wire 		rd_valid;
@@ -73,8 +73,8 @@ end
     assign 	wr_data 	= r_writedata;
 	assign  rd_valid 	= (r_address[31:16] == REG_BASE_ADDR && r_read) ? 1'b1 : 1'b0;
 	
-	assign 	rd_en					= (rd_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_read : 1'b0;
-	assign  master_readdata 		= (rd_valid) ? (r_address[15:0] == ECHO_REG_ADDR) ? echo_reg : rd_datain : 'b0; 
+	assign 	rd_en			= (rd_valid && r_address[15:0] != ECHO_REG_ADDR) ? r_read : 1'b0;
+	assign  master_readdata 	= (rd_valid) ? (r_address[15:0] == ECHO_REG_ADDR) ? echo_reg : rd_datain : 'b0; 
 	assign 	master_readdatavalid 	= (rd_valid) ? (r_address[15:0] == ECHO_REG_ADDR) ? 1'b1 : rd_dvalid : 'b0;
 	
 always@(posedge clk)

@@ -12,18 +12,18 @@
 
 `timescale 1ps/1ps
 module data_checker(
-input 					clk,
-input					reset_n,
+	input 					clk,
+	input					reset_n,
 
-input 					wr_rd_done,
-input 					die_a_rwd_valid,
-input [527:0]			die_a_rwd_data,
+	input 					wr_rd_done,
+	input 					die_a_rwd_valid,
+	input [527:0]				die_a_rwd_data,
 
-input 					die_a_drs_valid,
-input [527:0]			die_a_drs_data,
+	input 					die_a_drs_valid,
+	input [527:0]				die_a_drs_data,
 
-output reg				data_error,
-output reg	[1:0]		test_done
+	output reg				data_error,
+	output reg [1:0]			test_done
 
 );
 
@@ -31,8 +31,8 @@ wire 						drs_fifo_rd_en;
 wire 						rwd_fifo_rd_en;
 wire 						rwd_fifo_empty;
 wire 						drs_fifo_empty;
-wire	[511:0] 			rwd_fifo_rdata;
-wire	[511:0] 			drs_fifo_rdata;
+wire	[511:0] 				rwd_fifo_rdata;
+wire	[511:0] 				drs_fifo_rdata;
 	
 reg 						rwd_fifo_rd_en_r;
 reg 						drs_fifo_rd_en_r;

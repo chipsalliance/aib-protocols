@@ -85,6 +85,14 @@ module lpif_aib_top(
 	input					sl_wr_clk ,
 	input					sl_rd_clk ,
 	input					sl_fwd_clk,
+
+	output 					tx_online,
+	output 					rx_online,
+
+	input 					i_w_m_wr_rst_n,
+	input 					i_w_s_wr_rst_n,
+	input 					mgmt_clk,
+
 	input					avmm_clk	,
 	input					osc_clk		,
 	input					clk_die_a ,
@@ -92,133 +100,133 @@ module lpif_aib_top(
 	input					reset_die_a ,
 	input					reset_die_b ,
 
-	input	[31:0]			master_address,       // width = 32,       master.address
-    output	[31:0]			master_readdata,      // width = 32,             .readdata
-    input					master_read,          //  width = 1,             .read
-    input					master_write,         //  width = 1,             .write
-    input	[31:0]			master_writedata,     // width = 32,             .writedata
-    output					master_waitrequest,   //  width = 1,             .waitrequest
-    output					master_readdatavalid, //  width = 1,             .readdatavalid
-    output	[3:0]			master_byteenable,    //  width = 4,             .byteenable
+	input	[31:0]				master_address,       // width = 32,       master.address
+	output	[31:0]				master_readdata,      // width = 32,             .readdata
+    	input					master_read,          //  width = 1,             .read
+    	input					master_write,         //  width = 1,             .write
+    	input	[31:0]				master_writedata,     // width = 32,             .writedata
+    	output					master_waitrequest,   //  width = 1,             .waitrequest
+    	output					master_readdatavalid, //  width = 1,             .readdatavalid
+    	output	[3:0]				master_byteenable,    //  width = 4,             .byteenable
 	
 
-    output   [7:0]          die_a_pl_stream,
-	output                  die_a_pl_error,
-	output                  die_a_pl_trainerror,
-	output                  die_a_pl_cerror,
-	output                  die_a_pl_stallreq,
-    output                  die_a_pl_phyinl1,
-	output                  die_a_pl_phyinl2,
-	output   [3:0]          die_a_pl_state_sts,
-    output                  die_a_pl_quiesce,
-	output   [2:0]          die_a_pl_lnk_cfg,
-	output                  die_a_pl_lnk_up,
-	output                  die_a_pl_rxframe_errmask,
-	output   [0:0]          die_a_pl_portmode,
-	output                  die_a_pl_portmode_val,
-	output   [2:0]          die_a_pl_speedmode,
-	output   [2:0]          die_a_pl_clr_lnkeqreq,
-	output   [2:0]          die_a_pl_set_lnkeqreq,
-	output                  die_a_pl_inband_pres,
-	output   [7:0]          die_a_pl_ptm_rx_delay,
-	output                  die_a_pl_setlabs,
-    output                  die_a_pl_surprise_lnk_down,
-    output   [2:0]          die_a_pl_protocol,
-    output                  die_a_pl_protocol_vld,
-    output                  die_a_pl_err_pipestg,
-    output                  die_a_pl_wake_ack,
-    output                  die_a_pl_phyinrecenter,
-    output   [7:0]          die_a_pl_cfg,
-    output                  die_a_pl_cfg_vld,
-	output                  die_a_pl_setlbms,
-	output                  die_a_pl_clk_req,
-	input                   die_a_lp_tmstmp,
-    input   [7:0]           die_a_lp_tmstmp_stream,
-    output                  die_a_pl_tmstmp,
-    output   [7:0]          die_a_pl_tmstmp_stream,
-    input   [7:0]           die_a_lp_stream,
-    input                   die_a_lp_stallack,
-    input                   die_a_lp_linkerror,
-    input                   die_a_lp_flushed_all,
-    input                   die_a_lp_rcvd_crc_err,
-    input                   die_a_lp_wake_req,
-    input                   die_a_lp_force_detect,
-    input   [7:0]           die_a_lp_cfg,
-    input                   die_a_lp_cfg_vld,
-	input   [15:0]          die_a_lp_crc,
-    input                   die_a_lp_crc_valid,
-    input                   die_a_lp_device_present,
-    input                   die_a_lp_clk_ack,
-    input   [1:0]           die_a_lp_pri,
-    input                   die_a_lpbk_en,
+    	output   [7:0]          		die_a_pl_stream,
+	output                  		die_a_pl_error,
+	output                  		die_a_pl_trainerror,
+	output                  		die_a_pl_cerror,
+	output                  		die_a_pl_stallreq,
+    	output                  		die_a_pl_phyinl1,
+	output                  		die_a_pl_phyinl2,
+	output   [3:0]          		die_a_pl_state_sts,
+    	output                  		die_a_pl_quiesce,
+	output   [2:0]          		die_a_pl_lnk_cfg,
+	output                  		die_a_pl_lnk_up,
+	output                  		die_a_pl_rxframe_errmask,
+	output   [0:0]          		die_a_pl_portmode,
+	output                  		die_a_pl_portmode_val,
+	output   [2:0]          		die_a_pl_speedmode,
+	output   [2:0]          		die_a_pl_clr_lnkeqreq,
+	output   [2:0]          		die_a_pl_set_lnkeqreq,
+	output                  		die_a_pl_inband_pres,
+	output   [7:0]          		die_a_pl_ptm_rx_delay,
+	output                  		die_a_pl_setlabs,
+    	output                  		die_a_pl_surprise_lnk_down,
+    	output   [2:0]          		die_a_pl_protocol,
+    	output                  		die_a_pl_protocol_vld,
+    	output                  		die_a_pl_err_pipestg,
+    	output                  		die_a_pl_wake_ack,
+    	output                  		die_a_pl_phyinrecenter,
+    	output   [7:0]          		die_a_pl_cfg,
+    	output                  		die_a_pl_cfg_vld,
+	output                  		die_a_pl_setlbms,
+	output                  		die_a_pl_clk_req,
+	input                   		die_a_lp_tmstmp,
+    	input   [7:0]           		die_a_lp_tmstmp_stream,
+    	output                  		die_a_pl_tmstmp,
+    	output   [7:0]          		die_a_pl_tmstmp_stream	,
+	input   [7:0]           		die_a_lp_stream,
+    	input                   		die_a_lp_stallack,
+    	input                   		die_a_lp_linkerror,
+    	input                   		die_a_lp_flushed_all,
+    	input                   		die_a_lp_rcvd_crc_err,
+    	input                   		die_a_lp_wake_req,
+    	input                   		die_a_lp_force_detect,
+    	input   [7:0]           		die_a_lp_cfg,
+    	input                   		die_a_lp_cfg_vld,
+	input   [15:0]          		die_a_lp_crc,
+    	input                   		die_a_lp_crc_valid,
+    	input                   		die_a_lp_device_present,
+    	input                   		die_a_lp_clk_ack,
+    	input   [1:0]           		die_a_lp_pri,
+    	input                   		die_a_lpbk_en,
 	
 	output					die_a_rwd_valid	,
-	output	[527:0]			die_a_rwd_data	,
-	output	[527:0]			die_a_drs_data	,
-	output                  die_a_drs_valid ,
-	output   [7:0]          die_b_pl_stream,
-	output                  die_b_pl_error,
-	output                  die_b_pl_trainerror,
-	output                  die_b_pl_cerror,
-	output                  die_b_pl_stallreq,
-    output                  die_b_pl_phyinl1,
-	output                  die_b_pl_phyinl2,
-	output   [3:0]          die_b_pl_state_sts,
-    output                  die_b_pl_quiesce,
-	output   [2:0]          die_b_pl_lnk_cfg,
-	output                  die_b_pl_lnk_up,
-	output                  die_b_pl_rxframe_errmask,
-	output   [0:0]          die_b_pl_portmode,
-	output                  die_b_pl_portmode_val,
-	output   [2:0]          die_b_pl_speedmode,
-	output   [2:0]          die_b_pl_clr_lnkeqreq,
-	output   [2:0]          die_b_pl_set_lnkeqreq,
-	output                  die_b_pl_inband_pres,
-	output   [7:0]          die_b_pl_ptm_rx_delay,
-	output                  die_b_pl_setlabs,
-    output                  die_b_pl_surprise_lnk_down,
-    output   [2:0]          die_b_pl_protocol,
-    output                  die_b_pl_protocol_vld,
-    output                  die_b_pl_err_pipestg,
-    output                  die_b_pl_wake_ack,
-    output                  die_b_pl_phyinrecenter,
-    output   [7:0]          die_b_pl_cfg,
-    output                  die_b_pl_cfg_vld,
-	output                  die_b_pl_setlbms,
-    output   [15:0]         die_b_pl_crc,
-    output                  die_b_pl_crc_valid,
-	output                  die_b_pl_clk_req,
-	input                   die_b_lp_tmstmp,
-    input   [7:0]           die_b_lp_tmstmp_stream,
-    output                  die_b_pl_tmstmp,
-    output   [7:0]          die_b_pl_tmstmp_stream,
-    input   [7:0]           die_b_lp_stream,
-    input                   die_b_lp_stallack,
-    input                   die_b_lp_linkerror,
-    input                   die_b_lp_flushed_all,
-    input                   die_b_lp_rcvd_crc_err,
-    input                   die_b_lp_wake_req,
-    input                   die_b_lp_force_detect,
-    input   [7:0]           die_b_lp_cfg,
-    input                   die_b_lp_cfg_vld,
-	input   [15:0]          die_b_lp_crc,
-    input                   die_b_lp_crc_valid,
-    input                   die_b_lp_device_present,
-    input                   die_b_lp_clk_ack,
-    input   [1:0]           die_b_lp_pri,
-    input                   die_b_lpbk_en
-	
+	output	[527:0]				die_a_rwd_data	,
+	output	[527:0]				die_a_drs_data	,
+	output                  		die_a_drs_valid ,
+	output   [7:0]          		die_b_pl_stream,
+	output                  		die_b_pl_error,
+	output                  		die_b_pl_trainerror,
+	output                  		die_b_pl_cerror,
+	output                  		die_b_pl_stallreq,
+	output                  		die_b_pl_phyinl1,
+	output                  		die_b_pl_phyinl2,
+	output   [3:0]          		die_b_pl_state_sts,
+    	output                  		die_b_pl_quiesce,
+	output   [2:0]          		die_b_pl_lnk_cfg,
+	output                  		die_b_pl_lnk_up,
+	output                  		die_b_pl_rxframe_errmask,
+	output   [0:0]          		die_b_pl_portmode,
+	output                  		die_b_pl_portmode_val,
+	output   [2:0]          		die_b_pl_speedmode,
+	output   [2:0]          		die_b_pl_clr_lnkeqreq,
+	output   [2:0]          		die_b_pl_set_lnkeqreq,
+	output                  		die_b_pl_inband_pres,
+	output   [7:0]          		die_b_pl_ptm_rx_delay,
+	output                  		die_b_pl_setlabs,
+    	output                  		die_b_pl_surprise_lnk_down,
+    	output   [2:0]          		die_b_pl_protocol,
+    	output                  		die_b_pl_protocol_vld,
+    	output                  		die_b_pl_err_pipestg,
+    	output                  		die_b_pl_wake_ack,
+    	output                  		die_b_pl_phyinrecenter,
+    	output   [7:0]          		die_b_pl_cfg,
+    	output                  		die_b_pl_cfg_vld,
+	output                  		die_b_pl_setlbms,
+    	output   [15:0]         		die_b_pl_crc,
+    	output                  		die_b_pl_crc_valid,
+	output                  		die_b_pl_clk_req,
+	input                   		die_b_lp_tmstmp,
+    	input   [7:0]           		die_b_lp_tmstmp_stream,
+    	output                  		die_b_pl_tmstmp,
+    	output   [7:0]          		die_b_pl_tmstmp_stream,
+    	input   [7:0]           		die_b_lp_stream,
+    	input                   		die_b_lp_stallack,
+    	input                   		die_b_lp_linkerror,
+    	input                   		die_b_lp_flushed_all,
+    	input                   		die_b_lp_rcvd_crc_err,
+    	input                   		die_b_lp_wake_req,
+    	input                   		die_b_lp_force_detect,
+    	input   [7:0]           		die_b_lp_cfg,
+    	input                   		die_b_lp_cfg_vld,
+	input   [15:0]          		die_b_lp_crc,
+    	input                   		die_b_lp_crc_valid,
+    	input                   		die_b_lp_device_present,
+    	input                   		die_b_lp_clk_ack,
+    	input   [1:0]           		die_b_lp_pri,
+    	input                   		die_b_lpbk_en
+	                        		
 );
 
 localparam 			MASTER_RATE 	= 2;
-localparam 			SLAVE_RATE 		= 2;
+localparam 			SLAVE_RATE 	= 2;
 parameter 			TOTAL_CHNL_NUM 	= 24;
-parameter 			DWIDTH 			= 40;
-parameter 			DATAWIDTH 		= 40;
+parameter 			DWIDTH 		= 40;
+parameter 			DATAWIDTH 	= 40;
 	
-wire [0:0]									die_b_pl_valid;
-wire [1:0]									remote_rate_die_a;
-wire [1:0]									remote_rate_die_b;
+wire [0:0]						die_b_pl_valid;
+wire [1:0]						remote_rate_die_a;
+wire [1:0]						remote_rate_die_b;
 wire [`TB_DIE_A_AIB_LANES-1 : 0]  			die_a_fifo_full  ;
 wire [`TB_DIE_A_AIB_LANES-1 : 0]  			die_a_fifo_pfull ;
 wire [`TB_DIE_A_AIB_LANES-1 : 0]  			die_a_fifo_empty ;
@@ -228,143 +236,148 @@ wire [`TB_DIE_B_AIB_LANES-1 : 0]  			die_b_fifo_pfull ;
 wire [`TB_DIE_B_AIB_LANES-1 : 0]  			die_b_fifo_empty ;
 wire [`TB_DIE_B_AIB_LANES-1 : 0]  			die_b_fifo_pempty;
 
-wire [31:0]  								w_mem_wr_rd_addr;
-wire [511:0] 								w_mem_wr_data;
-wire [511:0] 								w_mem_rd_data;
-wire 		 								w_mem_wr_en;
+wire [31:0]  						w_mem_wr_rd_addr;
+wire [511:0] 						w_mem_wr_data;
+wire [511:0] 						w_mem_rd_data;
+wire 		 					w_mem_wr_en;
 
-wire [159:0]								master_ll2ca_3;
-wire [159:0]								master_ll2ca_2;
-wire [159:0]								master_ll2ca_1;
-wire [159:0]								master_ll2ca_0;
-wire [159:0]								master_ca2ll_3;
-wire [159:0]								master_ca2ll_2;
-wire [159:0]								master_ca2ll_1;
-wire [159:0]								master_ca2ll_0;
-wire [159:0]								master_phy2ca_3;
-wire [159:0]								master_phy2ca_2;
-wire [159:0]								master_phy2ca_1;
-wire [159:0]								master_phy2ca_0;
-wire [159:0]								master_ca2phy_3;
-wire [159:0]								master_ca2phy_2;
-wire [159:0]								master_ca2phy_1;
-wire [159:0]								master_ca2phy_0;
+wire [159:0]						master_ll2ca_3;
+wire [159:0]						master_ll2ca_2;
+wire [159:0]						master_ll2ca_1;
+wire [159:0]						master_ll2ca_0;
+wire [159:0]						master_ca2ll_3;
+wire [159:0]						master_ca2ll_2;
+wire [159:0]						master_ca2ll_1;
+wire [159:0]						master_ca2ll_0;
+wire [159:0]						master_phy2ca_3;
+wire [159:0]						master_phy2ca_2;
+wire [159:0]						master_phy2ca_1;
+wire [159:0]						master_phy2ca_0;
+wire [159:0]						master_ca2phy_3;
+wire [159:0]						master_ca2phy_2;
+wire [159:0]						master_ca2phy_1;
+wire [159:0]						master_ca2phy_0;
 
-wire [159:0]								slave_ca2phy_3;
-wire [159:0]								slave_ca2phy_2;
-wire [159:0]								slave_ca2phy_1;
-wire [159:0]								slave_ca2phy_0;
-wire [159:0]								slave_phy2ca_3;
-wire [159:0]								slave_phy2ca_2;
-wire [159:0]								slave_phy2ca_1;
-wire [159:0]								slave_phy2ca_0;
-wire [159:0]								slave_ca2ll_3;
-wire [159:0]								slave_ca2ll_2;
-wire [159:0]								slave_ca2ll_1;
-wire [159:0]								slave_ca2ll_0;
-wire [159:0]								slave_ll2ca_3;
-wire [159:0]								slave_ll2ca_2;
-wire [159:0]								slave_ll2ca_1;
-wire [159:0]								slave_ll2ca_0;
-wire [639:0]								die_a_tx_din;
-wire [639:0]								die_b_tx_din;
-wire [639:0]								die_a_rx_dout;
-wire [639:0]								die_b_rx_dout;
-wire 										w_m0_align_fly;
-wire [7:0] 									w_m0_tx_stb_wd_sel;
-wire [39:0] 								w_m0_tx_stb_bit_sel;
-wire [15:0] 								w_m0_tx_stb_intv;
-wire [7:0] 									w_m0_rx_stb_wd_sel;
-wire [39:0] 								w_m0_rx_stb_bit_sel;
-wire [15:0] 								w_m0_rx_stb_intv;
-wire [5:0] 									w_m0_fifo_full_val  ;
-wire [5:0] 									w_m0_fifo_pfull_val ;
-wire [2:0] 									w_m0_fifo_empty_val ;
-wire [2:0] 									w_m0_fifo_pempty_val;
-wire [2:0] 									w_m0_rden_dly;
-wire 										w_m0_tx_online;
-wire 										w_m0_rx_online;
-wire 										w_s0_align_fly;
-wire [7:0] 									w_s0_tx_stb_wd_sel;
-wire [39:0] 								w_s0_tx_stb_bit_sel;
-wire [15:0] 								w_s0_tx_stb_intv;
-wire [7:0] 									w_s0_rx_stb_wd_sel;
-wire [39:0] 								w_s0_rx_stb_bit_sel;
-wire [15:0] 								w_s0_rx_stb_intv;
-wire [5:0] 									w_s0_fifo_full_val  ;
-wire [5:0] 									w_s0_fifo_pfull_val ;
-wire [2:0] 									w_s0_fifo_empty_val ;
-wire [2:0] 									w_s0_fifo_pempty_val;
-wire [2:0] 									w_s0_rden_dly;
-wire 										w_s0_tx_online;
-wire 										w_s0_rx_online;
-wire [23:0]									m1_ms_tx_transfer_en;
-wire [23:0]									m1_ms_rx_transfer_en;
-wire [23:0]									m1_sl_tx_transfer_en;
-wire [23:0]									m1_sl_rx_transfer_en;
-wire [23:0]									s1_ms_rx_transfer_en;
-wire [23:0]									s1_ms_tx_transfer_en;
-wire [23:0]									s1_sl_rx_transfer_en;
-wire [23:0]									s1_sl_tx_transfer_en;
-wire [7679:0]	  							data_in_f;
-wire 										m0_ns_mac_rdy	;
-wire [3:0]									m0_adapter_rstn;
-wire 										s0_ns_mac_rdy	;
-wire [3:0]									s0_adapter_rstn;
-wire [0:0]              				 	die_a_pl_valid;
-wire [`TB_DIE_A_LPIF_DATA_WIDTH*8-1:0]   	die_a_pl_data;
+wire [159:0]						slave_ca2phy_3;
+wire [159:0]						slave_ca2phy_2;
+wire [159:0]						slave_ca2phy_1;
+wire [159:0]						slave_ca2phy_0;
+wire [159:0]						slave_phy2ca_3;
+wire [159:0]						slave_phy2ca_2;
+wire [159:0]						slave_phy2ca_1;
+wire [159:0]						slave_phy2ca_0;
+wire [159:0]						slave_ca2ll_3;
+wire [159:0]						slave_ca2ll_2;
+wire [159:0]						slave_ca2ll_1;
+wire [159:0]						slave_ca2ll_0;
+wire [159:0]						slave_ll2ca_3;
+wire [159:0]						slave_ll2ca_2;
+wire [159:0]						slave_ll2ca_1;
+wire [159:0]						slave_ll2ca_0;
+wire [639:0]						die_a_tx_din;
+wire [639:0]						die_b_tx_din;
+wire [639:0]						die_a_rx_dout;
+wire [639:0]						die_b_rx_dout;
+wire 							w_m0_align_fly;
+wire [7:0] 						w_m0_tx_stb_wd_sel;
+wire [39:0] 						w_m0_tx_stb_bit_sel;
+wire [15:0] 						w_m0_tx_stb_intv;
+wire [7:0] 						w_m0_rx_stb_wd_sel;
+wire [39:0] 						w_m0_rx_stb_bit_sel;
+wire [15:0] 						w_m0_rx_stb_intv;
+wire [5:0] 						w_m0_fifo_full_val  ;
+wire [5:0] 						w_m0_fifo_pfull_val ;
+wire [2:0] 						w_m0_fifo_empty_val ;
+wire [2:0] 						w_m0_fifo_pempty_val;
+wire [2:0] 						w_m0_rden_dly;
+wire 							w_m0_tx_online;
+wire 							w_m0_rx_online;
+wire 							w_s0_align_fly;
+wire [7:0] 						w_s0_tx_stb_wd_sel;
+wire [39:0] 						w_s0_tx_stb_bit_sel;
+wire [15:0] 						w_s0_tx_stb_intv;
+wire [7:0] 						w_s0_rx_stb_wd_sel;
+wire [39:0] 						w_s0_rx_stb_bit_sel;
+wire [15:0] 						w_s0_rx_stb_intv;
+wire [5:0] 						w_s0_fifo_full_val  ;
+wire [5:0] 						w_s0_fifo_pfull_val ;
+wire [2:0] 						w_s0_fifo_empty_val ;
+wire [2:0] 						w_s0_fifo_pempty_val;
+wire [2:0] 						w_s0_rden_dly;
+wire 							w_s0_tx_online;
+wire 							w_s0_rx_online;
+wire [23:0]						m1_ms_tx_transfer_en;
+wire [23:0]						m1_ms_rx_transfer_en;
+wire [23:0]						m1_sl_tx_transfer_en;
+wire [23:0]						m1_sl_rx_transfer_en;
+wire [23:0]						s1_ms_rx_transfer_en;
+wire [23:0]						s1_ms_tx_transfer_en;
+wire [23:0]						s1_sl_rx_transfer_en;
+wire [23:0]						s1_sl_tx_transfer_en;
+wire [7679:0]	  					data_in_f;
+wire 							m0_ns_mac_rdy	;
+wire [3:0]						m0_adapter_rstn;
+wire 							s0_ns_mac_rdy	;
+wire [3:0]						s0_adapter_rstn;
+wire [0:0]              				die_a_pl_valid;
+wire [`TB_DIE_A_LPIF_DATA_WIDTH*8-1:0]   		die_a_pl_data;
 	
 	
-wire										die_b_pl_exit_cg_req;
-wire										die_b_pl_trdy;
+wire							die_b_pl_exit_cg_req;
+wire							die_b_pl_trdy;
 						
-wire 										die_b_lp_exit_cg_ack;
-wire 										die_b_lp_irdy;
-wire [0:0]									die_b_lp_valid;
-wire [511:0]								die_b_lp_data;
-wire [3:0]									die_b_lp_state_req;
-wire [1:0]									test_done;
+wire 							die_b_lp_exit_cg_ack;
+wire 							die_b_lp_irdy;
+wire [0:0]						die_b_lp_valid;
+wire [511:0]						die_b_lp_data;
+wire [3:0]						die_b_lp_state_req;
+wire [1:0]						test_done;
 
-wire										die_a_pl_exit_cg_req;
-wire										die_a_pl_trdy;
+wire							die_a_pl_exit_cg_req;
+wire							die_a_pl_trdy;
+wire 							die_a_lp_exit_cg_ack;
+wire 							die_a_lp_irdy;
+wire [0:0]						die_a_lp_valid;
+wire [511:0]						die_a_lp_data;
+wire [3:0]						die_a_lp_state_req;
+wire [511:0]						die_b_pl_data;
+wire [31:0]        					w_delay_x_value;
+wire [31:0]        					w_delay_y_value;
+wire [31:0]        					w_delay_z_value;
+wire [3:0]        					s0_ns_adapter_rstn;
+wire [23:0]        					w_s1_m_fs_fwd_clk;
+wire [23:0]        					w_m1_m_fs_fwd_clk;
+wire [23:0]        					w_m1_m_fs_rcv_clk;
+wire 							die_a_lp_cfg_valid;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] 		die_a_data_in_f;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] 		die_b_data_in_f;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] 		data_in;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] 		data_out_f;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] 		data_out;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] 		s_data_in_f;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] 		s_data_in;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] 		s_data_out_f;
+wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] 		s_data_out;
 
-wire 										die_a_lp_exit_cg_ack;
-wire 										die_a_lp_irdy;
-wire [0:0]									die_a_lp_valid;
-wire [511:0]								die_a_lp_data;
-wire [3:0]									die_a_lp_state_req;
-wire [511:0]								die_b_pl_data;
-wire [31:0]        							w_delay_x_value;
-wire [31:0]        							w_delay_y_value;
-wire [31:0]        							w_delay_z_value;
-wire [3:0]        							s0_ns_adapter_rstn;
-wire [23:0]        							w_s1_m_fs_fwd_clk;
-wire [23:0]        							w_m1_m_fs_fwd_clk;
-wire [23:0]        							w_m1_m_fs_rcv_clk;
-wire 										die_a_lp_cfg_valid;
-
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] die_a_data_in_f;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] die_b_data_in_f;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] data_in;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] data_out_f;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] data_out;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] s_data_in_f;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] s_data_in;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 8 -1 :0] s_data_out_f;
-wire [DATAWIDTH * TOTAL_CHNL_NUM * 2 -1 :0] s_data_out;
-
-wire [15:0]									w_die_a_lp_crc_data ;
-wire [15:0]									w_die_b_crc_data ;
-wire 										w_die_a_lp_crc_valid;
-wire 										w_die_b_crc_data_valid;
-wire 										w_test_complete;
-wire [15:0]                					die_a_pl_crc;
-wire                                    	die_a_pl_crc_valid;
-wire [1919:0]                           	gen1_data_out_f;
-wire [1919:0]                           	gen1_data_in_f;
-	
-
-
+wire [15:0]						w_die_a_lp_crc_data ;
+wire [15:0]						w_die_b_crc_data ;
+wire 							w_die_a_lp_crc_valid;
+wire 							w_die_b_crc_data_valid;
+wire 							w_test_complete;
+wire [15:0]                				die_a_pl_crc;
+wire                            			die_a_pl_crc_valid;
+wire [1919:0]                   			gen1_data_out_f;
+wire [1919:0]                   			gen1_data_in_f;
+	                        		
+                                		
+wire							master_sl_tx_transfer_en;
+wire							master_ms_tx_transfer_en;
+wire							slave_sl_tx_transfer_en;
+wire							slave_ms_tx_transfer_en;
+wire							mgmtclk_reset_n;
+wire	[1:0]						w_s_user_enable;
+wire 							master_align_done;
+wire 							slave_align_done;
 bit[15:0]  GENERIC_DELAY_X_VALUE = 16'd10 ;
 bit[15:0]  GENERIC_DELAY_Y_VALUE = 16'd30 ;
 bit[15:0]  GENERIC_DELAY_Z_VALUE = 16'd800 ; // real system value 16'd8000 ;
@@ -409,15 +422,20 @@ assign die_b_rx_dout  = {slave_ca2ll_3,slave_ca2ll_2,slave_ca2ll_1,slave_ca2ll_0
 assign remote_rate_die_a = 2'b01;
 assign remote_rate_die_b = 2'b01;
 
+assign tx_online = &{master_sl_tx_transfer_en,master_ms_tx_transfer_en,slave_sl_tx_transfer_en,slave_ms_tx_transfer_en} ;
+assign rx_online = master_align_done & slave_align_done;
+//assign test_done = test_done;
+
 assign die_a_lp_cfg_valid = 1'b0;
+
 
 top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
 	.avmm_clk(avmm_clk),
 	.osc_clk(osc_clk),
 	.m1_data_in_f(data_in_f),
-    .m1_data_out_f(data_out_f),
-    .m1_data_in(data_in), //output data to pad
-    .m1_data_out(data_out),
+    	.m1_data_out_f(data_out_f),
+    	.m1_data_in(data_in), //output data to pad
+    	.m1_data_out(data_out),
 	
 	.s1_data_in_f(s_data_in_f), 
 	.s1_data_out_f(s_data_out_f),
@@ -427,41 +445,41 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
 	.m0_adapter_rstn({6{m0_adapter_rstn}}),
 	.s0_ns_mac_rdy	(s0_ns_mac_rdy	),
 	.s0_adapter_rstn({6{s0_adapter_rstn}}),
-	
 	.m1_m_ns_fwd_clk({TOTAL_CHNL_NUM{ms_fwd_clk}}), //output data clock
-    .m1_m_ns_rcv_clk({TOTAL_CHNL_NUM{ms_fwd_clk}}),
-    .m1_m_fs_rcv_clk(w_m1_m_fs_rcv_clk),
-    .m1_m_fs_fwd_clk(w_m1_m_fs_fwd_clk),
+    	.m1_m_ns_rcv_clk({TOTAL_CHNL_NUM{ms_fwd_clk}}),
+    	.m1_m_fs_rcv_clk(w_m1_m_fs_rcv_clk),
+    	.m1_m_fs_fwd_clk(w_m1_m_fs_fwd_clk),
 	.s1_s_ns_fwd_clk({TOTAL_CHNL_NUM{sl_fwd_clk}}),
 	.s1_s_ns_rcv_clk({TOTAL_CHNL_NUM{sl_fwd_clk}}),
 	.s1_s_fs_rcv_clk(),
 	.s1_s_fs_fwd_clk(),
-    .m1_m_wr_clk({TOTAL_CHNL_NUM{ms_wr_clk}}),
-    .m1_m_rd_clk({TOTAL_CHNL_NUM{ms_rd_clk}}),
+    	.m1_m_wr_clk({TOTAL_CHNL_NUM{ms_wr_clk}}),
+    	.m1_m_rd_clk({TOTAL_CHNL_NUM{ms_rd_clk}}),
 	
 	.s1_s_wr_clk({TOTAL_CHNL_NUM{sl_wr_clk}}),
-    .s1_s_rd_clk({TOTAL_CHNL_NUM{sl_rd_clk}}),
+    	.s1_s_rd_clk({TOTAL_CHNL_NUM{sl_rd_clk}}),
 	.o_m1_conf_done(),
 	.o_s1_conf_done(),
 	.o_m1_por(w_m0_por),
 	.o_s1_por(w_s0_por),
 	.m1_ms_tx_transfer_en(m1_ms_tx_transfer_en),
-    .m1_ms_rx_transfer_en(m1_ms_rx_transfer_en),
-    .m1_sl_tx_transfer_en(m1_sl_tx_transfer_en),
-    .m1_sl_rx_transfer_en(m1_sl_rx_transfer_en),
+    	.m1_ms_rx_transfer_en(m1_ms_rx_transfer_en),
+    	.m1_sl_tx_transfer_en(m1_sl_tx_transfer_en),
+    	.m1_sl_rx_transfer_en(m1_sl_rx_transfer_en),
 	.m1_i_osc_clk(osc_clk),   //Only for master mode
 	.s1_gen1_data_in_f(gen1_data_in_f),
-    .s1_gen1_data_out_f(gen1_data_out_f),   
+	.s1_gen1_data_out_f(gen1_data_out_f),   
 	.s1_m_wr_clk({TOTAL_CHNL_NUM{sl_wr_clk}}),
-    .s1_m_rd_clk({TOTAL_CHNL_NUM{sl_rd_clk}}),
+    	.s1_m_rd_clk({TOTAL_CHNL_NUM{sl_rd_clk}}),
 	.s1_m_ns_fwd_clk({TOTAL_CHNL_NUM{sl_fwd_clk}}),
 	.s1_m_fs_fwd_clk(w_s1_m_fs_fwd_clk),
-    .s1_ms_rx_transfer_en(s1_ms_rx_transfer_en),
-    .s1_ms_tx_transfer_en(s1_ms_tx_transfer_en),
-    .s1_sl_rx_transfer_en(s1_sl_rx_transfer_en),
-    .s1_sl_tx_transfer_en(s1_sl_tx_transfer_en)
+    	.s1_ms_rx_transfer_en(s1_ms_rx_transfer_en),
+    	.s1_ms_tx_transfer_en(s1_ms_tx_transfer_en),
+    	.s1_sl_rx_transfer_en(s1_sl_rx_transfer_en),
+    	.s1_sl_tx_transfer_en(s1_sl_tx_transfer_en)
 
 );
+
 
 // DIE A
     //--------------------------------------------------------------
@@ -563,7 +581,12 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
     `endif
     .ns_mac_rdy             (m0_ns_mac_rdy),
     //INPUT                  
+    //.fs_mac_rdy             (tb_top.lpif_aib_inst.top_aib.intf_m1.fs_mac_rdy[0]),
+    `ifdef AIB_MODEL
     .fs_mac_rdy             (top_aib.intf_m1.fs_mac_rdy[0]),
+    `else
+    .fs_mac_rdy             (1'b1),
+    `endif
     .ns_adapter_rstn        (m0_adapter_rstn ), //4bits
     .sl_rx_transfer_en      (s1_sl_rx_transfer_en[3:0]), //4bits 
    `ifdef MS_AIB_GEN1
@@ -579,7 +602,11 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
     .wa_error_cnt           (4'h0     ),
     .dual_mode_select       (1'b1                          ),
     .m_gen2_mode            (`LL_MSR_GEN2_MODE             ),
-    .i_conf_done            (top_aib.intf_m1.i_conf_done   ),
+    `ifdef AIB_MODEL
+      .i_conf_done            (top_aib.intf_m1.i_conf_done   ),
+    `else
+      .i_conf_done            (1'b1),
+    `endif
     .power_on_reset         ({`TB_DIE_A_NUM_CHANNELS{w_m0_por}}),
   
       .align_done             (master_align_done   ),
@@ -712,7 +739,11 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
     `endif
     .ns_mac_rdy                (s0_ns_mac_rdy),
     //INPUT                    
+    `ifdef AIB_MODEL
     .fs_mac_rdy                (top_aib.intf_s1.fs_mac_rdy[0]),
+    `else
+  .fs_mac_rdy                (1'b1),
+    `endif
     // .ns_adapter_rstn           (s0_ns_adapter_rstn),
     .ns_adapter_rstn           (s0_adapter_rstn),
     .sl_rx_transfer_en         (s1_sl_rx_transfer_en[3:0]               ), //connect to AIB
@@ -729,7 +760,11 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
     .wa_error_cnt              (4'h0                 ),
     .dual_mode_select          (1'b1                             ),
     .m_gen2_mode               (`LL_MSR_GEN2_MODE                ),
+    `ifdef AIB_MODEL
     .i_conf_done               (top_aib.intf_s1.i_conf_done              ), //connec to AIB
+    `else
+    .i_conf_done               (1'b1), //connec to AIB
+    `endif
     .power_on_reset            ({`TB_DIE_B_NUM_CHANNELS{w_s0_por}}), //connec to AIB
 
       .align_done                (slave_align_done                ),   
@@ -996,13 +1031,13 @@ lpif_csr_intf lpif_csr(
 	.rst_n(reset_die_a),
 	
 	.master_address  (master_address  ),       // width = 32,       master.address
-    .master_readdata (master_readdata ),      // width = 32,             .readdata
-    .master_read	 (master_read	 ),          //  width = 1,             .read
-    .master_write	 (master_write	 ),         //  width = 1,             .write
-    .master_writedata(master_writedata),     // width = 32,             .writedata
-    .master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
-    .master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
-    .master_byteenable(master_byteenable),    //  width = 4,             .byteenable
+    	.master_readdata (master_readdata ),      // width = 32,             .readdata
+    	.master_read	 (master_read	 ),          //  width = 1,             .read
+    	.master_write	 (master_write	 ),         //  width = 1,             .write
+    	.master_writedata(master_writedata),     // width = 32,             .writedata
+    	.master_waitrequest(master_waitrequest),   //  width = 1,             .waitrequest
+    	.master_readdatavalid(master_readdatavalid), //  width = 1,             .readdatavalid
+    	.master_byteenable(master_byteenable),    //  width = 4,             .byteenable
 	
 	.chkr_pass(test_done),
 	.test_complete(w_test_complete),
