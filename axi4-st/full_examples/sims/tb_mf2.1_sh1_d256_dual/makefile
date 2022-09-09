@@ -80,9 +80,9 @@ compile_aibrtl:
 
 
 compile:
-	${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/ms.cf -l compile_ms1.log	
+	${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/ms.cf -l compile_aib2v1.log
 	${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK +define+AXIST_DUAL  -f ${SIM_DIR}/../flist/axi_st_d256_multichannel_f2h_dual.f -l compile_dual.log
-	${VLOG_COMM} -sverilog  +v2k -full64 -timescale=1ps/1ps +define+TIMESCALE_EN+VCS+BEHAVIORAL+MAIB_PIN96+ALTR_HPS_INTEL_MACROS_OFF  -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/sl_v1.cf -l compile_s1.log
+	 ${VLOG_COMM} -sverilog  +v2k -full64 -timescale=1ps/1ps +define+FOR_SIM_ONLY +define+TIMESCALE_EN+VCS+BEHAVIORAL+MAIB_PIN96+ALTR_HPS_INTEL_MACROS_OFF  -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/sl_v1.cf -l compile_maib1_0.log
 	${VLOG_COMM} -sverilog  +v2k -full64  -timescale=1ps/1ps +define+VCS+SL_AIB_GEN1  +define+AIB_MODEL -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/tb_dual_rtl.cf -l compile_tb.log
 	${VCS} -debug_acc+all -full64 +lint=TFIPC-L +error+100 +lint=PCWM -top top_tb -l vcs.log
 
