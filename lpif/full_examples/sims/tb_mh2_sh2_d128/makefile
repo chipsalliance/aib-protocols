@@ -105,7 +105,7 @@ sim :
 
 run : clean compile sim
 
-run_aibtrl : clean compile_aibrtl sim
+run_aibrtl : clean compile_aibrtl sim
 
 
 #-----------------------------------------------------------------------------
