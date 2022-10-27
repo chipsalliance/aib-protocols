@@ -101,7 +101,7 @@ module aximm_follower_app #(
 	
 	
 assign F_user_rdata 	= mem_rd_data;
-assign F_user_rlast 	= (rd_datacnt==r_user_arlen) ? 1'b1 : 1'b0;
+//assign F_user_rlast 	= (rd_datacnt==r_user_arlen) ? 1'b1 : 1'b0;
 assign F_user_rresp 	= r_user_rresp;
 assign F_user_rid	= r_user_rid;
 assign read_complete 	= r_read_complete;
@@ -110,6 +110,22 @@ assign mem_wr_addr	= waddr;
 assign mem_wr_data      = user_wdata;
 assign mem_wr_en        = mem_wr;
 assign mem_rd_addr	= raddr;
+
+always@(posedge clk)
+begin
+	if(!rst_n)
+	begin
+		F_user_rlast <= 1'b0;
+	end
+	else if(rd_datacnt==r_user_arlen-1) 
+	begin
+		F_user_rlast <= 1'b1;
+	end
+	else 
+	begin
+		F_user_rlast <= 1'b0;
+	end
+end
 
 always@(posedge clk)
 begin
@@ -162,6 +178,7 @@ begin
 			aximem_acc_idle :
 			begin
 			F_user_arready   <= 'b0;
+			r_user_rvalid	<= 1'b0;
 				if(F_user_awvalid==1'b1)
 				begin
 					aximm_mem_ctrl	<= aximem_wr_addr;
@@ -208,6 +225,7 @@ begin
 						F_user_bid   	<= 'h1;
 						F_user_bresp    <= 'b0;
 						F_user_bvalid   <= 'b1;
+						mem_wr		<= 1'b0;
 					end
 					else if(user_wvalid )
 					begin
@@ -219,6 +237,7 @@ begin
 			end	
 			aximem_wr_resp 	:
 			begin
+				mem_wr 			<= 1'b0;
 				if(F_user_bready)
 				begin
 					F_user_bvalid   <= 'b0;
@@ -251,13 +270,15 @@ begin
 				r_user_rid		<= 'b0;
 				if(F_user_rready)
 				begin
-					raddr		<= raddr + 1;
-					rd_datacnt	<= rd_datacnt + 1;
-						if(rd_datacnt > r_user_arlen-1)
-						begin
-							aximm_mem_ctrl	<= aximem_acc_idle;
-							r_user_rvalid	<= 1'b0;
-						end
+					if(rd_datacnt >= r_user_arlen-1)
+					begin
+						aximm_mem_ctrl	<= aximem_acc_idle;
+					end
+					else
+					begin
+						raddr		<= raddr + 1;
+						rd_datacnt	<= rd_datacnt + 1;
+					end
 				end
 			end
 		default
