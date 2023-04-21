@@ -48,6 +48,7 @@ module ca_rx_align_fifo
    input logic [2:0]                   fifo_empty_val,
    input logic [2:0]                   fifo_pempty_val,
 
+   output logic                        soft_reset_lane,
    output logic                        fifo_full,
    output logic                        fifo_pfull,
    output logic                        fifo_empty,
@@ -67,7 +68,6 @@ module ca_rx_align_fifo
 
   logic                                wr_full;
   logic                                rd_underflow_pulse;
-  logic                                soft_reset_lane_n;
 
   /* RX alignment FIFO */
 
@@ -98,7 +98,7 @@ module ca_rx_align_fifo
    .wrdata        (rx_din[]),
    .write_push    (fifo_push),
    .read_pop      (fifo_pop),
-   .wr_soft_reset (soft_reset_lane_n),
+   .wr_soft_reset (soft_reset_lane),
    .rd_soft_reset (1'b0),
    ); */
 
@@ -107,12 +107,14 @@ module ca_rx_align_fifo
    .clk_dest    (lane_clk),
    .rst_dest_n  (rst_lane_n),
    .src_data    (soft_reset),
-   .dest_data   (soft_reset_lane_n),
+   .dest_data   (soft_reset_lane),
    ); */
 
   generate
     if (SYNC_FIFO)
       begin
+        assign soft_reset_lane = soft_reset;
+
         syncfifo
           #(/*AUTOINSTPARAM*/
             // Parameters
@@ -145,7 +147,7 @@ module ca_rx_align_fifo
         level_sync_i
           (/*AUTOINST*/
            // Outputs
-           .dest_data                   (soft_reset_lane_n),     // Templated
+           .dest_data                   (soft_reset_lane),     // Templated
            // Inputs
            .rst_dest_n                  (rst_lane_n),            // Templated
            .clk_dest                    (lane_clk),              // Templated
@@ -175,7 +177,7 @@ module ca_rx_align_fifo
            .write_push                  (fifo_push),             // Templated
            .read_pop                    (fifo_pop),              // Templated
            .rd_soft_reset               (1'b0),                  // Templated
-           .wr_soft_reset               (soft_reset_lane_n));     // Templated
+           .wr_soft_reset               (soft_reset_lane));     // Templated
       end // else: !if(SYNC_FIFO)
   endgenerate
 
@@ -197,3 +199,4 @@ endmodule // ca_rx_align_fifo
 // verilog-library-directories:("." "${PROJ_DIR}/common/rtl")
 // verilog-auto-inst-param-value:t
 // End:
+

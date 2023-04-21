@@ -68,11 +68,12 @@ module ca_rx_align
   logic                                             d_align_done;
   logic                                             d_align_err;
   logic                                             fifo_soft_reset;
+  logic [NUM_CHANNELS-1:0]                          soft_reset_lane;
 
   logic [BITS_PER_CHANNEL-1:0]                      rx_din_ch [NUM_CHANNELS-1:0];
   logic [BITS_PER_CHANNEL-1:0]                      rx_dout_ch [NUM_CHANNELS-1:0];
 
-  logic [NUM_CHANNELS-1:0]                          stb_det, d_stb_det;
+  logic [NUM_CHANNELS-1:0]                          stb_det, d_stb_det,d_stb_det_state_sync;
   logic [NUM_CHANNELS-1:0]                          first_stb_det;
   logic [NUM_CHANNELS-1:0]                          first_stb_det_common;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv;
@@ -80,6 +81,7 @@ module ca_rx_align
   logic [NUM_CHANNELS-1:0]                          fifo_wr;
 //   logic [7:0]                                       timer_x [NUM_CHANNELS-1:0];
   logic                                             rx_online_delay_x;
+  wire 						    d_stb_det_state;
 
   logic [39:0]                                      word [NUM_CHANNELS-1:0];
 
@@ -94,7 +96,7 @@ module ca_rx_align
   logic [15:0]                                      stb_intv_count [NUM_CHANNELS-1:0];
 
   logic [NUM_CHANNELS-1:0]                          rd_empty;
-  logic [NUM_CHANNELS-1:0]                          wr_overflow_pulse;
+  logic [NUM_CHANNELS-1:0]                          wr_overflow_pulse, wr_overflow_pulse_sync;
 
   logic [NUM_CHANNELS-1:0]                          rx_online_sync;
   logic [NUM_CHANNELS-1:0]                          rx_online_sync_del;
@@ -200,6 +202,7 @@ module ca_rx_align
         ca_rx_align_fifo_i
           (/*AUTOINST*/
            // Outputs
+           .soft_reset_lane             (soft_reset_lane[i]),       // Templated
            .rx_dout                     (rx_dout_ch[i]),         // Templated
            .rd_empty                    (rd_empty[i]),           // Templated
            .wr_overflow_pulse           (wr_overflow_pulse[i]),  // Templated
@@ -267,8 +270,9 @@ module ca_rx_align
             endcase // case (1'b1)
           end
 
-        assign d_stb_det[i] = (rx_state_online | rx_state_aligned | rx_state_done) & |(word[i] & rx_stb_bit_sel);
-
+	assign d_stb_det[i] =  d_stb_det_state_sync[i] & |(word[i] & rx_stb_bit_sel);
+		  
+		  
         always_ff @(posedge lane_clk[i] or negedge rst_lane_n[i])
           if (~rst_lane_n[i])
             begin
@@ -283,7 +287,7 @@ module ca_rx_align
               rx_online_sync_del[i] <= rx_online_sync[i];
               if (rx_online_sync[i])
                 begin
-                  if (fifo_soft_reset)
+                  if (soft_reset_lane[i])
                     begin
                       stb_det[i] <= 1'b0;
                       first_stb_det[i] <= 1'b0;
@@ -321,6 +325,47 @@ module ca_rx_align
       end // block: stb_dets
   endgenerate
 
+  assign d_stb_det_state = rx_state_online | rx_state_aligned | rx_state_done ;
+
+	generate
+	   for (i = 0; i < NUM_CHANNELS; i++)
+            begin : d_stb_det_sync_block
+	     if (SYNC_FIFO)
+	       begin
+	          assign d_stb_det_state_sync[i]   = d_stb_det_state; 
+		  assign wr_overflow_pulse_sync[i] = wr_overflow_pulse[i];
+		end
+	     else 
+	       begin
+	         levelsync
+                  #(/*AUTOINSTPARAM*/
+                    // Parameters
+                    .RESET_VALUE                (1'b0))  
+	            level_sync_i
+                   (/*AUTOINST*/
+                   // Outputs
+                   .dest_data                   (d_stb_det_state_sync[i]),     // Templated
+                   // Inputs
+                   .rst_dest_n                  (rst_lane_n[i]),            // Templated
+                   .clk_dest                    (lane_clk[i]),              // Templated
+                   .src_data                    (d_stb_det_state));            // Templated
+	    	  
+	    	 levelsync
+                  #(/*AUTOINSTPARAM*/
+                    // Parameters
+                    .RESET_VALUE                (1'b0))  
+	            level_sync_wr_overflow_i
+                   (/*AUTOINST*/
+                   // Outputs
+                   .dest_data                   (wr_overflow_pulse_sync[i]),     // Templated
+                   // Inputs
+                   .rst_dest_n                  (rst_lane_n[i]),            // Templated
+                   .clk_dest                    (com_clk),              // Templated
+                   .src_data                    (wr_overflow_pulse[i]));            // Templated
+	       end
+	   end		
+	endgenerate
+//		 
   /* FIFO read enable delay */
 
   always_ff @(posedge com_clk or negedge rst_com_n)
@@ -400,7 +445,7 @@ module ca_rx_align
             d_rx_state = RX_ONLINE;
         end
         RX_ONLINE: begin
-          if (|wr_overflow_pulse)
+          if (|wr_overflow_pulse_sync)
             d_rx_state = align_fly ? RX_SOFT_RESET : RX_ERR;
           else if (all_fifos_not_empty)
             d_rx_state = RX_ALIGNED;
@@ -498,7 +543,7 @@ module ca_rx_align
               stb_intv_count[i] <= 16'b0;
               align_err_stb_intv[i] <= 1'b0;
             end
-          else if (fifo_soft_reset)
+          else if (soft_reset_lane[i])
             begin
               stb_intv_count[i] <= 16'b0;
               align_err_stb_intv[i] <= 1'b0;
@@ -541,3 +586,4 @@ endmodule // ca_rx_align
 // verilog-library-directories:("." "${PROJ_DIR}/common/rtl")
 // verilog-auto-inst-param-value:t
 // End:
+
