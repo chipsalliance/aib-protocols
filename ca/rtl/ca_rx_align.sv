@@ -359,7 +359,7 @@ module ca_rx_align
                    // Outputs
                    .dest_data                   (wr_overflow_pulse_sync[i]),     // Templated
                    // Inputs
-                   .rst_dest_n                  (rst_lane_n[i]),            // Templated
+                   .rst_dest_n                  (rst_com_n),            // Templated
                    .clk_dest                    (com_clk),              // Templated
                    .src_data                    (wr_overflow_pulse[i]));            // Templated
 	       end
