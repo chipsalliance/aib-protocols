@@ -67,6 +67,8 @@ module ca_rx_align_fifo
   logic [FIFO_ADDR_WID-1:0]            wr_numempty;
 
   logic                                wr_full;
+  logic                                reset_fifo_rd_empty;
+  logic                                reset_fifo_rd_pop;
   logic                                rd_underflow_pulse;
 
   /* RX alignment FIFO */
@@ -140,18 +142,34 @@ module ca_rx_align_fifo
       end
     else
       begin
-        levelsync
-          #(/*AUTOINSTPARAM*/
-            // Parameters
-            .RESET_VALUE                (1'b0))                  // Templated
-        level_sync_i
-          (/*AUTOINST*/
-           // Outputs
-           .dest_data                   (soft_reset_lane),     // Templated
-           // Inputs
-           .rst_dest_n                  (rst_lane_n),            // Templated
-           .clk_dest                    (lane_clk),              // Templated
-           .src_data                    (soft_reset));            // Templated
+	
+	asyncfifo
+        #(/*AUTOINSTPARAM*/
+          // Parameters
+          .FIFO_WIDTH_WID             (1),
+          .FIFO_DEPTH_WID             (8))
+        asyncfifo_soft_reset
+         (/*AUTOINST*/
+          // Outputs
+          .rddata                      (soft_reset_lane),// Templated
+          .rd_numfilled                (), // Templated
+          .wr_numempty                 (),// Templated
+          .wr_full                     (),
+          .rd_empty                    (reset_fifo_rd_empty),
+          .wr_overflow_pulse           (),
+          .rd_underflow_pulse          (),
+          // Inputs
+          .clk_write                   (com_clk),              // Templated
+          .rst_write_n                 (rst_com_n),            // Templated
+          .clk_read                    (lane_clk),               // Templated
+          .rst_read_n                  (rst_lane_n),             // Templated
+          .wrdata                      (soft_reset),// Templated
+          .write_push                  (1'b1),             // Templated
+          .read_pop                    (reset_fifo_rd_pop),              // Templated
+          .rd_soft_reset               (1'b0),                  // Templated
+          .wr_soft_reset               (1'b0));     // Templated
+
+	assign reset_fifo_rd_pop =  (reset_fifo_rd_empty==1'b1) ? 1'b0 : 1'b1 ;
 
         asyncfifo
           #(/*AUTOINSTPARAM*/
