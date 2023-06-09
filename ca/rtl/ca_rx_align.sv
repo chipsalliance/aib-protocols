@@ -75,7 +75,9 @@ module ca_rx_align
 
   logic [NUM_CHANNELS-1:0]                          stb_det, d_stb_det,d_stb_det_state_sync;
   logic [NUM_CHANNELS-1:0]                          first_stb_det;
-  logic [NUM_CHANNELS-1:0]                          first_stb_det_common;
+  logic [NUM_CHANNELS-1:0]                          stb_det_state_fifo_rd_empty,stb_det_state_fifo_read_pop;
+  logic [NUM_CHANNELS-1:0]                          fifo_read_pop, fifo_rd_empty;
+  logic [NUM_CHANNELS-1:0]                          first_stb_det_common,first_stb_det_fifo;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv;
   logic [NUM_CHANNELS-1:0]                          align_err_stb_intv_com;
   logic [NUM_CHANNELS-1:0]                          fifo_wr;
@@ -240,9 +242,6 @@ module ca_rx_align
         end
     end
 
-
-
-
   /* levelsync AUTO_TEMPLATE (
    .RESET_VALUE (1'b0),
    .clk_dest    (com_clk),
@@ -308,18 +307,7 @@ module ca_rx_align
           end
         else
           begin
-            levelsync
-              #(/*AUTOINSTPARAM*/
-                // Parameters
-                .RESET_VALUE                (1'b0))                  // Templated
-            level_sync_i
-              (/*AUTOINST*/
-               // Outputs
-               .dest_data                   (first_stb_det_common[i]), // Templated
-               // Inputs
-               .rst_dest_n                  (rst_com_n),             // Templated
-               .clk_dest                    (com_clk),               // Templated
-               .src_data                    (first_stb_det[i])); // Templated
+            assign first_stb_det_common[i] = first_stb_det_fifo[i];
           end
 
       end // block: stb_dets
@@ -327,44 +315,75 @@ module ca_rx_align
 
   assign d_stb_det_state = rx_state_online | rx_state_aligned | rx_state_done ;
 
-	generate
-	   for (i = 0; i < NUM_CHANNELS; i++)
-            begin : d_stb_det_sync_block
-	     if (SYNC_FIFO)
-	       begin
-	          assign d_stb_det_state_sync[i]   = d_stb_det_state; 
-		  assign wr_overflow_pulse_sync[i] = wr_overflow_pulse[i];
-		end
-	     else 
-	       begin
-	         levelsync
-                  #(/*AUTOINSTPARAM*/
-                    // Parameters
-                    .RESET_VALUE                (1'b0))  
-	            level_sync_i
-                   (/*AUTOINST*/
-                   // Outputs
-                   .dest_data                   (d_stb_det_state_sync[i]),     // Templated
-                   // Inputs
-                   .rst_dest_n                  (rst_lane_n[i]),            // Templated
-                   .clk_dest                    (lane_clk[i]),              // Templated
-                   .src_data                    (d_stb_det_state));            // Templated
-	    	  
-	    	 levelsync
-                  #(/*AUTOINSTPARAM*/
-                    // Parameters
-                    .RESET_VALUE                (1'b0))  
-	            level_sync_wr_overflow_i
-                   (/*AUTOINST*/
-                   // Outputs
-                   .dest_data                   (wr_overflow_pulse_sync[i]),     // Templated
-                   // Inputs
-                   .rst_dest_n                  (rst_com_n),            // Templated
-                   .clk_dest                    (com_clk),              // Templated
-                   .src_data                    (wr_overflow_pulse[i]));            // Templated
-	       end
-	   end		
-	endgenerate
+  generate
+     for (i = 0; i < NUM_CHANNELS; i++)
+      begin : d_stb_det_sync_block
+       if (SYNC_FIFO)
+         begin
+            assign d_stb_det_state_sync[i]   = d_stb_det_state; 
+  	  assign wr_overflow_pulse_sync[i] = wr_overflow_pulse[i];
+  	end
+       else 
+         begin
+         asyncfifo
+           #(/*AUTOINSTPARAM*/
+             // Parameters
+             .FIFO_WIDTH_WID             (1),
+             .FIFO_DEPTH_WID             (8))
+          asyncfifo_stb_det_state
+           (/*AUTOINST*/
+            // Outputs
+            .rddata                      (d_stb_det_state_sync[i]),// Templated
+            .rd_numfilled                (), // Templated
+            .wr_numempty                 (),// Templated
+            .wr_full                     (),
+            .rd_empty                    (stb_det_state_fifo_rd_empty[i]),
+            .wr_overflow_pulse           (),
+            .rd_underflow_pulse          (),
+            // Inputs
+            .clk_write                   (com_clk),              // Templated
+            .rst_write_n                 (rst_com_n),            // Templated
+            .clk_read                    (lane_clk[i]),               // Templated
+            .rst_read_n                  (rst_lane_n[i]),             // Templated
+            .wrdata                      (d_stb_det_state), // Templated
+            .write_push                  (1'b1),             // Templated
+            .read_pop                    (stb_det_state_fifo_read_pop[i]),              // Templated
+            .rd_soft_reset               (1'b0),                  // Templated
+            .wr_soft_reset               (fifo_soft_reset));     // Templated
+  
+  	assign stb_det_state_fifo_read_pop[i]  =  (stb_det_state_fifo_rd_empty[i] == 1'b1) ? 1'b0 : 1'b1;
+  
+   	asyncfifo
+           #(/*AUTOINSTPARAM*/
+             // Parameters
+             .FIFO_WIDTH_WID             (2),
+             .FIFO_DEPTH_WID             (8))
+          asyncfifo_i
+           (/*AUTOINST*/
+            // Outputs
+            .rddata                      ({first_stb_det_fifo[i],wr_overflow_pulse_sync[i]}),// Templated
+            .rd_numfilled                (), // Templated
+            .wr_numempty                 (),// Templated
+            .wr_full                     (),
+            .rd_empty                    (fifo_rd_empty[i]),
+            .wr_overflow_pulse           (),
+            .rd_underflow_pulse          (),
+            // Inputs
+            .clk_write                   (lane_clk[i]),              // Templated
+            .rst_write_n                 (rst_lane_n[i]),            // Templated
+            .clk_read                    (com_clk),               // Templated
+            .rst_read_n                  (rst_com_n),             // Templated
+            .wrdata                      ({first_stb_det[i],wr_overflow_pulse[i]}), // Templated
+            .write_push                  (1'b1),             // Templated
+            .read_pop                    (fifo_read_pop[i]),              // Templated
+            .rd_soft_reset               (1'b0),                  // Templated
+            .wr_soft_reset               (soft_reset_lane[i]));     // Templated
+  
+  	 assign fifo_read_pop[i]  =  (fifo_rd_empty[i] == 1'b1) ? 1'b0 : 1'b1;
+  
+         end
+     end		
+  endgenerate
 //		 
   /* FIFO read enable delay */
 
