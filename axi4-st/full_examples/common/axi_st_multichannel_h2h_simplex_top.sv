@@ -11,11 +11,13 @@
 
 `timescale 1ns/1ps
 
-module axi_st_multichannel_h2h_simplex_top #(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1 )
+module axi_st_multichannel_h2h_simplex_top #(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1, parameter SYNC_FIFO = 1 )
 (
 
 	input                     	m_wr_clk_in,
-	input                     	s_wr_clk_in,	
+	input                     	s_wr_clk_in,
+	input [3:0]			lane_clk_a,		
+	input [3:0]			lane_clk_b,
 	input                     	axist_rstn_in,	
 	input                     	por_in,	
 	input                     	m_gen2_mode,	
@@ -494,7 +496,7 @@ assign axist_slave_tx_online = &{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en
    ca #(.NUM_CHANNELS      (4),           // 4 Channels
         .BITS_PER_CHANNEL  (80),          // Half Rate Gen1 is 80 bits
         .AD_WIDTH          (4),           // Allows 16 deep FIFO
-        .SYNC_FIFO         (1'b1))        // Synchronous FIFO
+        .SYNC_FIFO         (SYNC_FIFO))        // Synchronous FIFO
    ca_master_i
      (
       .tx_dout				({/*w_master_ca2phy_6[39:0] , w_master_ca2phy_5[39:0] , w_master_ca2phy_4[39:0] , */w_master_ca2phy_3[79:0] , w_master_ca2phy_2[79:0] , w_master_ca2phy_1[79:0] , w_master_ca2phy_0[79:0]}), 
@@ -510,7 +512,7 @@ assign axist_slave_tx_online = &{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en
       .fifo_empty			(),	
       .fifo_pempty		(),
    
-      .lane_clk				({4{m_wr_clk}}),	
+      .lane_clk				(lane_clk_a),	
       .com_clk				(m_wr_clk),	
       .rst_n				(m_wr_rst_n),	
     
@@ -543,7 +545,7 @@ assign axist_slave_tx_online = &{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en
    ca #(.NUM_CHANNELS      (4),           // 4 Channels
         .BITS_PER_CHANNEL  (80),          // Half Rate Gen1 is 80 bits
         .AD_WIDTH          (4),           // Allows 16 deep FIFO
-        .SYNC_FIFO         (1'b1))        // Synchronous FIFO
+        .SYNC_FIFO         (SYNC_FIFO))        // Synchronous FIFO
    ca_slave_i
      (
       .tx_dout				({/*slave_ca2phy_6[79:0] , slave_ca2phy_5[79:0] , slave_ca2phy_4[79:0] ,*/ slave_ca2phy_3[79:0] , slave_ca2phy_2[79:0] , slave_ca2phy_1[79:0] , slave_ca2phy_0[79:0]}), 
@@ -559,7 +561,7 @@ assign axist_slave_tx_online = &{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en
       .fifo_empty			(),	
       .fifo_pempty			(),	
      
-      .lane_clk				({4{s_wr_clk}}),
+      .lane_clk				(lane_clk_b),
       .com_clk				(s_wr_clk),		
       .rst_n				(s_wr_rst_n & usermode_en),		
       .tx_online			(ca_slave_tx_online), 

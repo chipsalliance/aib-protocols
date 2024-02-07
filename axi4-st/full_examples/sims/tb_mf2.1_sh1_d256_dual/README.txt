@@ -40,14 +40,18 @@ Commands to run simulation :
 
 To run complete simulation execute :
 
-	 > make run
+	> make run
 	
-	The above command will perform clean, generate config files, compile aib model, elaborates and simulate.
+	The above command will perform clean, generate config files, configures CA module in synchronous mode(SYNC_FIFO=1), compile aib model, elaborates and simulate.
 
 	> make run_aibrtl
 
-	The above command will perform clean, generate config files, compile aib rtl, elaborates and simulate.
+	The above command will perform clean, generate config files, configures CA module in synchronous mode(SYNC_FIFO=1), compile aib rtl, elaborates and simulate.
 
+	> make run_asyncfifo
+
+	The above command will perform clean, generate config files, configures CA module in asynchronous mode(SYNC_FIFO=0), compile aib model, 
+	elaborates and simulate.
 	
 To run test step by step execute following commands:
 
@@ -66,6 +70,11 @@ To run test step by step execute following commands:
 	To compile aib rtl source files execute :
 		
 		>make compile_aibrtl
+	
+	To compile aib model source files with CA in asynchronous mode
+
+		>make compile_asyncfifo
+
 	To run simulation execute:
 		
 		>make sim

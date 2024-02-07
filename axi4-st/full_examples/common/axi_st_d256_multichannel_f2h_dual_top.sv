@@ -11,10 +11,12 @@
 
 `timescale 1ns/1ps
 
-module axi_st_d256_multichannel_f2h_dual_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1 )(
+module axi_st_d256_multichannel_f2h_dual_top #(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 1, parameter SYNC_FIFO = 0)(
 
 	input                     	m_wr_clk_in,
 	input                     	s_wr_clk_in,	
+	input [6:0]			lane_clk_a,
+	input [6:0]			lane_clk_b,
 	input                     	axist_rstn_in,	
 	input                     	por_in,	
 	input                     	m_gen2_mode,	
@@ -651,7 +653,7 @@ always@(posedge s_wr_clk)
    ca #(.NUM_CHANNELS      (7),           // 2 Channels
         .BITS_PER_CHANNEL  (40),          // Half Rate Gen1 is 80 bits
         .AD_WIDTH          (4),           // Allows 16 deep FIFO
-        .SYNC_FIFO         (1'b1))        // Synchronous FIFO
+        .SYNC_FIFO         (SYNC_FIFO))        // Synchronous FIFO
    ca_master_i
      (/*AUTOINST*/
       // Outputs
@@ -668,7 +670,7 @@ always@(posedge s_wr_clk)
       .fifo_empty			(),			 // Templated
       .fifo_pempty			(),			 // Templated
       // Inputs
-      .lane_clk				({7{m_wr_clk}}),	 // Templated
+      .lane_clk				(lane_clk_a),	 // Templated
       .com_clk				(m_wr_clk),		 // Templated
       .rst_n				(m_wr_rst_n),		 // Templated
       .tx_online			(&{master_sl_tx_transfer_en[6:0],master_ms_tx_transfer_en[6:0]}), // Templated
@@ -740,7 +742,7 @@ always@(posedge s_wr_clk)
    ca #(.NUM_CHANNELS      (7),           // 2 Channels
         .BITS_PER_CHANNEL  (80),          // Half Rate Gen1 is 80 bits
         .AD_WIDTH          (4),           // Allows 16 deep FIFO
-        .SYNC_FIFO         (1'b1))        // Synchronous FIFO
+        .SYNC_FIFO         (SYNC_FIFO))        // Synchronous FIFO
    ca_slave_i
      (/*AUTOINST*/
       // Outputs
@@ -757,7 +759,7 @@ always@(posedge s_wr_clk)
       .fifo_empty			(),			 // Templated
       .fifo_pempty			(),			 // Templated
       // Inputs
-      .lane_clk				({7{s_wr_clk}}),	 // Templated
+      .lane_clk				(lane_clk_b),	 // Templated
       .com_clk				(s_wr_clk),		 // Templated
       .rst_n				(s_wr_rst_n & usermode_en),		 // Templated
       .tx_online			(&{slave_sl_tx_transfer_en[6:0],slave_ms_tx_transfer_en[6:0]}), // Templated

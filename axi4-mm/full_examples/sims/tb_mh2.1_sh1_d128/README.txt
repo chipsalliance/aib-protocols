@@ -49,7 +49,13 @@ To run complete simulation with AIB2v1.1/MAIBv1.1 execute :
 	 > make run_aibrtl
 
 	
-	The above commands will perform clean, generate config files, compile, elaborate and simulate.
+	The above commands will perform clean, generate config files, configures CA module in synchronous mode(SYNC_FIFO=1), compile, elaborate and simulate.
+
+To run complete simulation with AIB2v1.0/MAIBv1.0 and CA in asynchronous mode execute :
+
+	> make run_asyncfifo
+
+	The above command performs clean, generate config files, cinfigures CA module in aynchronous mode(SYNC_FIFO=0), comiles, elaborate and simulate.
 	
 To run test step by step execute following commands:
 
@@ -68,8 +74,11 @@ To run test step by step execute following commands:
 	To compile source files for AIB2v1.1/MAIBv1.1, execute :
 		
 		>make compile_aibrtl
-
 	
+	To compile aib model source files with CA in asynchronous mode
+
+		>make compile_asyncfifo
+
 	To run simulation, execute:
 		
 		>make sim

@@ -196,8 +196,9 @@ assign fifo_out_data = (axist_valid && fifo_rd_en_r1) ? w_fifo_out_data[(LEADER_
 		// for(i=0;i<7;i=i+1) begin 
 		for(i=0;i<(2*AXI_CHNL_NUM)-1;i=i+1) begin 
 			assign w_patgen_dout[((i*(LEADER_MODE*40))+((LEADER_MODE*40)-1)):(i*(LEADER_MODE*40))] = (axist_valid )? fifo_out_data[(LEADER_MODE*40)-1 : 0] : 'b0;
-			assign w_patgen_dout[(AXI_CHNL_NUM*64)-1:(((2*AXI_CHNL_NUM)-1)*40)] = (axist_valid) ? fifo_out_data[((AXI_CHNL_NUM*64)-(((2*AXI_CHNL_NUM)-1)*40))-1:0] : 'b0;
+	//		assign w_patgen_dout[(AXI_CHNL_NUM*64)-1:(((2*AXI_CHNL_NUM)-1)*40)] = (axist_valid) ? fifo_out_data[((AXI_CHNL_NUM*64)-(((2*AXI_CHNL_NUM)-1)*40))-1:0] : 'b0;
 		end
+			assign w_patgen_dout[(AXI_CHNL_NUM*64)-1:(((2*AXI_CHNL_NUM)-1)*40)] = (axist_valid) ? fifo_out_data[((AXI_CHNL_NUM*64)-(((2*AXI_CHNL_NUM)-1)*40))-1:0] : 'b0;
 	endgenerate
 	
-endmodule;
+endmodule

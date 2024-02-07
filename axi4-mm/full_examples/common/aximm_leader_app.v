@@ -291,12 +291,12 @@ begin
 	begin
 		data_wr_cnt		<= data_wr_cnt + 1;
 	end
-	else if(aximm_wr_rd_ctrl == bus_idle)
-	begin
-		data_wr_cnt		<= 'b0;
-	end
-
 end
+else if(aximm_wr_rd_ctrl == bus_idle)
+begin
+	data_wr_cnt		<= 'b0;
+end
+
 end
 end 
 

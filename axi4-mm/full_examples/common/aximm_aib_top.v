@@ -10,11 +10,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 `timescale 1ps/1ps
 `define SIMULATION
-module aximm_aib_top#(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2,parameter DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24, parameter ADDRWIDTH = 32, parameter DWIDTH = 128)
+module aximm_aib_top#(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2,parameter DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24, parameter ADDRWIDTH = 32, parameter DWIDTH = 128, parameter SYNC_FIFO = 0)
   (
 	input 			i_w_m_wr_rst_n,
 	input 			i_w_s_wr_rst_n,
-	
+	input [1:0]		lane_clk_a,	
+	input [1:0]		lane_clk_b,
 	input			rst_phy_n,
 	input			clk_phy,
 	input			clk_p_div2,
@@ -260,7 +261,11 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
 );
 
 
-aximm_d128_h2h_wrapper_top #(.AXI_CHNL_NUM(AXI_CHNL_NUM)) aximm_inst(
+aximm_d128_h2h_wrapper_top #(.AXI_CHNL_NUM(AXI_CHNL_NUM),
+                             .SYNC_FIFO(SYNC_FIFO)
+ ) aximm_inst(
+  .lane_clk_a		 (lane_clk_a),  
+  .lane_clk_b		 (lane_clk_b),
   .L_clk_wr              (ms_wr_clk),
   .L_rst_wr_n            (i_w_m_wr_rst_n),
   .por_in		 (por_out),

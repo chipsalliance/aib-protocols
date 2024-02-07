@@ -26,7 +26,6 @@ parameter FULL 			= 1;
 parameter HALF 			= 2;
 parameter CLKL_HALF_CYCLE 	= 500;
 
-
 localparam 		REG_AXI_CTRL_ADDR		= 32'h50003000;
 localparam 		REG_LINKUP_STS_ADDR		= 32'h50001008;
 localparam 		REG_TX_PKT_CTRL_ADDR 		= 32'h50001000;
@@ -84,8 +83,11 @@ axist_aib_h2h_top #(.AXI_CHNL_NUM(1),
 		    .LEADER_MODE(HALF), 
 		    .FOLLOWER_MODE(HALF),
 		    .DATAWIDTH(DATAWIDTH), 
-		    .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) 
+		    .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)
+	         ) 
 axist_aib_h2h_dut(
+	.lane_clk_a({4{ms_wr_clk}}),
+	.lane_clk_b({4{sl_wr_clk}}),
 	.i_w_m_wr_rst_n(tb_w_m_wr_rst_n),
 	.i_w_s_wr_rst_n(tb_w_s_wr_rst_n),
 	.mgmt_clk(tb_mgmt_clk),

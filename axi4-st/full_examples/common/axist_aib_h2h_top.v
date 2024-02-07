@@ -10,12 +10,13 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 `timescale 1ps/1ps
-module axist_aib_h2h_top#(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2, parameter  DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24)
+module axist_aib_h2h_top#(parameter AXI_CHNL_NUM = 1, parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2, parameter  DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24, parameter SYNC_FIFO = 1)
   (
 	input 				i_w_m_wr_rst_n,
 	input 				i_w_s_wr_rst_n,
 	input 				mgmt_clk,
-	
+	input [3:0]			lane_clk_a,	
+	input [3:0]			lane_clk_b,
 	input				rst_phy_n,
 	input				clk_phy,
 	input				clk_p_div2,
@@ -176,10 +177,12 @@ assign test_done = patchkr_out;
 	
 	);
 	
-axi_st_multichannel_h2h_simplex_top #(.AXI_CHNL_NUM(AXI_CHNL_NUM), .LEADER_MODE(LEADER_MODE), .FOLLOWER_MODE(FOLLOWER_MODE)) axi_st_inst(
+axi_st_multichannel_h2h_simplex_top #(.AXI_CHNL_NUM(AXI_CHNL_NUM), .LEADER_MODE(LEADER_MODE), .FOLLOWER_MODE(FOLLOWER_MODE), .SYNC_FIFO(SYNC_FIFO)) axi_st_inst(
 
 	.m_wr_clk_in(ms_wr_clk),
-	.s_wr_clk_in(sl_wr_clk),	
+	.s_wr_clk_in(sl_wr_clk),
+	.lane_clk_a(lane_clk_a),		
+	.lane_clk_b(lane_clk_b),
 	.axist_rstn_in(w_axist_rstn),
 	.usermode_en(usermode_en),
 	`ifdef AIB_MODEL

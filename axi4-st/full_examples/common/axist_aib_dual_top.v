@@ -12,12 +12,13 @@
 
 `timescale 1ps/1ps
 
-module axist_aib_dual_top#(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2,parameter DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24)
+module axist_aib_dual_top#(parameter LEADER_MODE = 1, parameter FOLLOWER_MODE = 2,parameter DATAWIDTH = 40, parameter TOTAL_CHNL_NUM = 24, parameter SYNC_FIFO = 0)
   (
 	input 			i_w_m_wr_rst_n,
 	input 			i_w_s_wr_rst_n,
 	input 			mgmt_clk,
-	
+	input [6:0]		lane_clk_a,
+	input [6:0]		lane_clk_b,
 	input			rst_phy_n,
 	input			clk_phy,
 	input			clk_p_div2,
@@ -210,8 +211,10 @@ top_aib #(.DWIDTH(DATAWIDTH), .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) aib_model_inst(
 );
 
 
-axi_st_d256_multichannel_f2h_dual_top #(.LEADER_MODE(LEADER_MODE), .FOLLOWER_MODE(FOLLOWER_MODE)) axi_st_inst(
-
+axi_st_d256_multichannel_f2h_dual_top #(.LEADER_MODE(LEADER_MODE), .FOLLOWER_MODE(FOLLOWER_MODE),.SYNC_FIFO(SYNC_FIFO)
+) axi_st_inst(
+	.lane_clk_a(lane_clk_a),
+	.lane_clk_b(lane_clk_b),
 	.m_wr_clk_in(ms_wr_clk),
 	.s_wr_clk_in(sl_wr_clk),	
 	.axist_rstn_in(w_axist_rstn),	

@@ -8,11 +8,12 @@
 // Change log
 // 
 /////////////////////////////////////////////////////////////////////////////////////////
-module aximm_d128_h2h_wrapper_top#(parameter AXI_CHNL_NUM = 1)(
+module aximm_d128_h2h_wrapper_top#(parameter AXI_CHNL_NUM = 1, parameter SYNC_FIFO = 0)(
   input  logic               L_clk_wr              ,
   input  logic               L_rst_wr_n            ,
   input  logic               por_in            ,
-
+  input [1:0]		     lane_clk_a,
+  input [1:0]		     lane_clk_b,
   input  logic [7:0]         init_ar_credit      ,
   input  logic [7:0]         init_aw_credit      ,
   input  logic [7:0]         init_w_credit       ,
@@ -478,10 +479,10 @@ endgenerate
      .NUM_CHANNELS(2),
      .BITS_PER_CHANNEL(80),
      .AD_WIDTH (8),
-     .SYNC_FIFO(1)
+     .SYNC_FIFO(SYNC_FIFO)
      )
   ca_leader(
-    .lane_clk({2{L_clk_wr}}),
+    .lane_clk(lane_clk_a),
     .com_clk(L_clk_wr),
     .rst_n(L_rst_wr_n),
     .tx_online(&{master_sl_tx_transfer_en,master_ms_tx_transfer_en}),
@@ -523,10 +524,10 @@ endgenerate
    .NUM_CHANNELS(2),
      .BITS_PER_CHANNEL(80),
      .AD_WIDTH (8),
-     .SYNC_FIFO(1)
+     .SYNC_FIFO(SYNC_FIFO)
      )
    ca_follower(
-    .lane_clk({2{F_clk_wr}}),
+    .lane_clk(lane_clk_b),
     .com_clk(F_clk_wr),
     .rst_n(F_rst_wr_n & usermode_en),
     .tx_online(&{slave_sl_tx_transfer_en,slave_ms_tx_transfer_en}),

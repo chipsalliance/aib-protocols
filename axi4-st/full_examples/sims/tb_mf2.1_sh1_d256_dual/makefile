@@ -86,6 +86,12 @@ compile:
 	${VLOG_COMM} -sverilog  +v2k -full64  -timescale=1ps/1ps +define+VCS+SL_AIB_GEN1  +define+AIB_MODEL -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/tb_dual_rtl.cf -l compile_tb.log
 	${VCS} -debug_acc+all -full64 +lint=TFIPC-L +error+100 +lint=PCWM -top top_tb -l vcs.log
 
+compile_asyncfifo:
+	${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/ms.cf -l compile_aib2v1.log
+	${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK +define+AXIST_DUAL  -f ${SIM_DIR}/../flist/axi_st_d256_multichannel_f2h_dual.f -l compile_dual.log
+	 ${VLOG_COMM} -sverilog  +v2k -full64 -timescale=1ps/1ps +define+FOR_SIM_ONLY +define+TIMESCALE_EN+VCS+BEHAVIORAL+MAIB_PIN96+ALTR_HPS_INTEL_MACROS_OFF  -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/sl_v1.cf -l compile_maib1_0.log
+	${VLOG_COMM} -sverilog  +v2k -full64  -timescale=1ps/1ps +define+VCS+SL_AIB_GEN1  +define+ASYNC_FIFO +define+AIB_MODEL -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/tb_dual_rtl.cf -l compile_tb.log
+	${VCS} -debug_acc+all -full64 +lint=TFIPC-L +error+100 +lint=PCWM -top top_tb -l vcs.log
 sim :
 
 	./simv -l simulation.log
@@ -94,6 +100,7 @@ run : clean gen_cfg compile sim
 
 run_aibrtl : clean gen_cfg compile_aibrtl sim
 
+run_asyncfifo : clean gen_cfg compile_asyncfifo sim
 
 gen_cfg :
 	python ${PROJ_DIR}/llink/script/dual_axist_llink_gen.py --cfg axi_st_d256_dual_multichannel.cfg

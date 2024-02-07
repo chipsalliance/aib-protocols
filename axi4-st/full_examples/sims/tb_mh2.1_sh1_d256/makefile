@@ -83,6 +83,13 @@ compile:
 	 ${VLOG_COMM} -sverilog  +v2k -full64 -timescale=1ps/1ps +define+FOR_SIM_ONLY +define+TIMESCALE_EN+VCS+BEHAVIORAL+MAIB_PIN96+ALTR_HPS_INTEL_MACROS_OFF  -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/sl_v1.cf -l compile_maib1_0.log
 	 ${VLOG_COMM} -sverilog  +v2k -full64  -timescale=1ps/1ps +define+VCS+SL_AIB_GEN1 +define+FOUR_CHNL +define+AIB_MODEL -work WORK -f ${SIM_DIR}/../flist/tb_rtl_h2h.cf -l compile_tb.log
 	 ${VCS} -debug_acc+all -full64 +lint=TFIPC-L +error+100 +lint=PCWM -top top_tb -l vcs.log
+compile_asyncfifo:
+	 
+	 ${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/ms.cf -l compile_aib2v1.log
+	 ${VLOG_COMM} -sverilog +v2k -full64 -timescale=1ps/1ps +define+FOUR_CHNL  +define+VCS+SL_AIB_GEN1 +define+SIM_DIR=${SIM_DIR} +define+AIB_MODEL -work WORK -ntb_opts uvm -f ${SIM_DIR}/../flist/axi_st_d256_multichannel_h2h_simplex.f -l compile_h2h_4ch.log
+	 ${VLOG_COMM} -sverilog  +v2k -full64 -timescale=1ps/1ps +define+FOR_SIM_ONLY +define+TIMESCALE_EN+VCS+BEHAVIORAL+MAIB_PIN96+ALTR_HPS_INTEL_MACROS_OFF  -work WORK -ntb_opts uvm -f ${AIBV1_DV_ROOT}/flist/sl_v1.cf -l compile_maib1_0.log
+	 ${VLOG_COMM} -sverilog  +v2k -full64  -timescale=1ps/1ps +define+VCS+SL_AIB_GEN1 +define+ASYNC_FIFO +define+FOUR_CHNL +define+AIB_MODEL -work WORK -f ${SIM_DIR}/../flist/tb_rtl_h2h.cf -l compile_tb.log
+	 ${VCS} -debug_acc+all -full64 +lint=TFIPC-L +error+100 +lint=PCWM -top top_tb -l vcs.log
 
 sim :
 
@@ -91,6 +98,8 @@ sim :
 run : clean gen_cfg compile sim
 
 run_aibrtl : clean gen_cfg compile_aibrtl sim
+
+run_asyncfifo : clean gen_cfg compile_asyncfifo sim
 
 gen_cfg :
 	python ${PROJ_DIR}/llink/script/llink_gen.py --cfg axist_ll.cfg

@@ -64,6 +64,8 @@ aximm_aib_top #(.AXI_CHNL_NUM(1),
 		.DATAWIDTH(DATAWIDTH), 
 		.TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) 
 aximm_aib_dut(
+.lane_clk_a({2{ms_wr_clk}}),
+.lane_clk_b({2{sl_wr_clk}}),
 .i_w_m_wr_rst_n(tb_w_m_wr_rst_n),
 .i_w_s_wr_rst_n(tb_w_s_wr_rst_n),
 .i_wr_addr(tb_wr_addr), 

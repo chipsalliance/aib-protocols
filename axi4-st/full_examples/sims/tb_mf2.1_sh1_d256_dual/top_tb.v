@@ -26,7 +26,13 @@ parameter DATAWIDTH 		= 40;
 parameter FULL 			= 1;
 parameter HALF 			= 2;
 parameter CLKL_HALF_CYCLE 	= 500;
+`ifdef ASYNC_FIFO
+  parameter SYNC_FIFO		= 0;
+`else
+  parameter SYNC_FIFO		= 1;
+`endif
 
+localparam		NUM_CHANNELS		= 7;
 localparam 		REG_AXI_CTRL_ADDR		= 32'h50003000;
 localparam 		REG_TX_PKT_CTRL_ADDR 		= 32'h50001000;
 localparam 		REG_RX_CKR_STS_ADDR	 	= 32'h50001004;
@@ -49,7 +55,8 @@ reg 				ms_fwd_clk;
 reg 				sl_wr_clk;
 reg 				sl_rd_clk;
 reg 				sl_fwd_clk;
-			
+reg [NUM_CHANNELS-1 : 0]	lane_clk_a;
+reg [NUM_CHANNELS-1 : 0]	lane_clk_b;	
 reg				avmm_clk;
 reg  [5:0]			count;
 reg  [255:0]			f2l_dout_last;
@@ -92,13 +99,19 @@ int 				i;
 reg 				flag;
 reg 				flag1;
 reg 				tb_mgmt_clk;
+wire [NUM_CHANNELS-1 : 0]	lane_clk_a_in;
+wire [NUM_CHANNELS-1 : 0]	lane_clk_b_in;
 
 
 axist_aib_dual_top #(.LEADER_MODE(FULL), 
 		     .FOLLOWER_MODE(HALF),
 		     .DATAWIDTH(DATAWIDTH), 
-		     .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM)) 
+		     .TOTAL_CHNL_NUM(TOTAL_CHNL_NUM),
+		     .SYNC_FIFO(SYNC_FIFO)
+	     ) 
 axist_aib_dual_dut(
+ .lane_clk_a(lane_clk_a_in),
+ .lane_clk_b(lane_clk_b_in),
 .i_w_m_wr_rst_n(tb_w_m_wr_rst_n),
 .i_w_s_wr_rst_n(tb_w_s_wr_rst_n),
 .mgmt_clk(tb_mgmt_clk),
@@ -148,6 +161,30 @@ begin
 	osc_clk		= 1'b0;
 	tb_mgmt_clk	= 1'b0;
 end
+
+genvar j;
+generate
+	for(j = 0;j < NUM_CHANNELS;j = j+1)
+	initial
+	begin
+		lane_clk_a	= {NUM_CHANNELS{1'b0}};
+		#(50*$urandom_range(5,10)); 
+		forever #(WR_CYCLE/2) lane_clk_a[j] = ~lane_clk_a[j];
+	end
+endgenerate
+
+generate 
+	for(j = 0;j < NUM_CHANNELS;j = j+1)
+	initial
+	begin
+		lane_clk_b	= {NUM_CHANNELS{1'b0}};
+		#(50*$urandom_range(1,10)); 
+		forever #(WR_CYCLE) lane_clk_b[j] = ~lane_clk_b[j];
+	end
+endgenerate
+
+assign lane_clk_a_in	= (SYNC_FIFO == 1'b1)? {NUM_CHANNELS{ms_wr_clk}} :  lane_clk_a;
+assign lane_clk_b_in	= (SYNC_FIFO == 1'b1)? {NUM_CHANNELS{sl_wr_clk}} :  lane_clk_b;
 
 always #(WR_CYCLE/2)   ms_wr_clk   	= ~ms_wr_clk;
 always #(RD_CYCLE/2)   ms_rd_clk   	= ~ms_rd_clk;
