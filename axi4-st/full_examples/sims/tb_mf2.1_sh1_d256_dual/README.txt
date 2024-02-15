@@ -1,7 +1,7 @@
-08-09-2022 - Readme.txt
+15-02-2024 - Readme.txt
 
 
-This readme file contains procedure to run AXI-ST H2H simulation with AIB Model and AIB rtl.
+This readme file contains procedure to run AXI-ST F2H simulation with AIB Model and AIB rtl.
 
 
 ===================================
