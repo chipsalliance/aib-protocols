@@ -24,7 +24,9 @@ aib-phy-hardware-master.zip : https://github.com/chipsalliance/aib-phy-hardware
 
 aib-protocols-main.zip : https://github.com/chipsalliance/aib-protocols
 
-1. Unzip both the files in same hierarchy 
+1. Unzip both the files in same hierarchy as shown. And Rename aib-phy-hardware-master to aib-phy-hardware.
+
+Make sure to maintain directory names as below or it will throw error during compilation. 
 
 		|			
 		|--- aib-protocols-main
